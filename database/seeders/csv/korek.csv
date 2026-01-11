@@ -1,0 +1,53 @@
+ket;kode;uraian_singkat;singkat
+5.1.02.01.01.0012 Belanja Bahan-Bahan Lainnya;5.1.02.01.01.0012;Belanja Bahan-Bahan Lainnya;BAHAN LAINNYA
+5.1.02.01.01.0016 Belanja Suku Cadang - Suku Cadang Alat Laboratorium;5.1.02.01.01.0016;Belanja Suku Cadang - Suku Cadang Alat Laboratorium;SUKU CADANG LABORATORIUM
+5.1.02.01.01.0024 Belanja Alat/Bahan untuk Kegiatan Kantor-Alat Tulis Kantor;5.1.02.01.01.0024;Belanja Alat/Bahan untuk Kegiatan Kantor-Alat Tulis Kantor;ATK
+5.1.02.01.01.0026 Belanja Alat/Bahan untuk Kegiatan Kantor Bahan Cetak dan Penggandaan;5.1.02.01.01.0026;Belanja Alat/Bahan untuk Kegiatan Kantor Bahan Cetak dan Penggandaan;CETAK DAN PENGGANDAAN
+5.1.02.01.01.0030 Belanja Alat / Bahan untuk Kegiatan Kantor - Perabot Kantor;5.1.02.01.01.0030;Belanja Alat / Bahan untuk Kegiatan Kantor - Perabot Kantor;PERABOT KANTOR
+5.1.02.01.01.0031 Belanja Alat / Bahan untuk Kegiatan Kantor - Alat Listrik;5.1.02.01.01.0031;Belanja Alat / Bahan untuk Kegiatan Kantor - Alat Listrik;ALAT LISTRIK
+5.1.02.01.01.0036 Belanja Alat / Bahan untuk Kegiatan Kantor - Alat / Bahan untuk Kegiatan Kantor Lainnya;5.1.02.01.01.0036;Belanja Alat / Bahan untuk Kegiatan Kantor - Alat / Bahan untuk Kegiatan Kantor Lainnya;KANTOR LAINNYA
+5.1.02.01.01.0052 Belanja Makanan dan Minuman Rapat;5.1.02.01.01.0052;Belanja Makanan dan Minuman Rapat;MAMIN RAPAT
+5.1.02.01.01.0055 Belanja Makanan dan Minuman pada Fasilitas Pelayanan Urusan Pendidikan;5.1.02.01.01.0055;Belanja Makanan dan Minuman pada Fasilitas Pelayanan Urusan Pendidikan;MAMIN PENDIDIKAN
+5.1.02.01.01.0058 Belanja Makanan dan Minuman Aktivitas Lapangan;5.1.02.01.01.0058;Belanja Makanan dan Minuman Aktivitas Lapangan;MAMIN LAPANGAN
+5.1.02.01.04.0710 Belanja Aset Tetap Lainnya-Bahan Perpustakaan-Bahan Perpustakaan Tercetak- Buku Umum;5.1.02.01.04.0710;Belanja Aset Tetap Lainnya-Bahan Perpustakaan-Bahan Perpustakaan Tercetak- Buku Umum;BUKU UMUM
+5.1.02.01.04.0712 Belanja Aset Tetap Lainnya-Bahan Perpustakaan-Bahan Perpustakaan Tercetak- Buku Agama;5.1.02.01.04.0712;Belanja Aset Tetap Lainnya-Bahan Perpustakaan-Bahan Perpustakaan Tercetak- Buku Agama;BUKU AGAMA
+5.1.02.01.04.0713 Belanja Aset Tetap Lainnya-Bahan Perpustakaan-Bahan Perpustakaan Tercetak- Buku Ilmu Sosial;5.1.02.01.04.0713;Belanja Aset Tetap Lainnya-Bahan Perpustakaan-Bahan Perpustakaan Tercetak- Buku Ilmu Sosial;BUKU ILMU BAHASA
+5.1.02.01.04.0714 Belanja Aset Tetap Lainnya-Bahan Perpustakaan-Bahan Perpustakaan Tercetak- Buku Ilmu Bahasa;5.1.02.01.04.0714;Belanja Aset Tetap Lainnya-Bahan Perpustakaan-Bahan Perpustakaan Tercetak- Buku Ilmu Bahasa;BUKU ILMU BAHABA
+5.1.02.01.04.0715 Belanja Aset Tetap Lainnya-Bahan Perpustakaan-Bahan Perpustakaan Tercetak- Buku Matematika dan Pengetahuan Alam;5.1.02.01.04.0715;Belanja Aset Tetap Lainnya-Bahan Perpustakaan-Bahan Perpustakaan Tercetak- Buku Matematika dan Pengetahuan Alam;BUKU MATEMATIKA DAN IPA
+5.1.02.01.04.0716 Belanja Aset Tetap Lainnya-Bahan Perpustakaan-Bahan Perpustakaan Tercetak- Buku Ilmu Pengetahuan Praktis;5.1.02.01.04.0716;Belanja Aset Tetap Lainnya-Bahan Perpustakaan-Bahan Perpustakaan Tercetak- Buku Ilmu Pengetahuan Praktis;BUKU PRAKTIS
+5.1.02.01.04.0717 Belanja Aset Tetap Lainnya-Bahan Perpustakaan-Bahan Perpustakaan Tercetak- Buku Arsitektur, Kesenian dan Olahraga;5.1.02.01.04.0717;Belanja Aset Tetap Lainnya-Bahan Perpustakaan-Bahan Perpustakaan Tercetak- Buku Arsitektur, Kesenian dan Olahraga;BUKU KESENIAN OLAHRAGA
+5.1.02.01.04.0718 Belanja Aset Tetap Lainnya-Bahan Perpustakaan-Bahan Perpustakaan Tercetak- Buku Geografi, Biografi dan Sejarah;5.1.02.01.04.0718;Belanja Aset Tetap Lainnya-Bahan Perpustakaan-Bahan Perpustakaan Tercetak- Buku Geografi, Biografi dan Sejarah;BUKU GEOGRAFI, BIOGRAFI SEJARAH
+5.1.02.02.01.0003 Honorarium Narasumber atau Pembahas, Moderator, Pembawa Acara, dan Panitia;5.1.02.02.01.0003;Honorarium Narasumber atau Pembahas, Moderator, Pembawa Acara, dan Panitia;NARASUMBER
+5.1.02.02.01.0013 Belanja Jasa Tenaga Pendidikan / Honorarium Guru;5.1.02.02.01.0013;Belanja Jasa Tenaga Pendidikan / Honorarium Guru;HONOR
+5.1.02.02.01.0042 Belanja Jasa Pelaksanaan Transaksi Keuangan;5.1.02.02.01.0042;Belanja Jasa Pelaksanaan Transaksi Keuangan;TRANSAKSI KEUANGAN
+5.1.02.02.01.0047 Belanja Jasa Penyelenggaraan Acara;5.1.02.02.01.0047;Belanja Jasa Penyelenggaraan Acara;JASA ACARA
+5.1.02.02.01.0059 Belanja Tagihan Telepon;5.1.02.02.01.0059;Belanja Tagihan Telepon;TELEPON
+5.1.02.02.01.0060 Belanja Tagihan Air;5.1.02.02.01.0060;Belanja Tagihan Air;AIR
+5.1.02.02.01.0061 Belanja Tagihan Listrik;5.1.02.02.01.0061;Belanja Tagihan Listrik;LISTRIK
+5.1.02.02.01.0063 Belanja Kawat/ Faksimili/ Internet/ TV Berlangganan;5.1.02.02.01.0063;Belanja Kawat/ Faksimili/ Internet/ TV Berlangganan;INTERNET
+5.1.02.02.04.0036 Belanja Sewa Kendaraan Bermotor Penumpang;5.1.02.02.04.0036;Belanja Sewa Kendaraan Bermotor Penumpang;SEWA KENDARAAN
+5.1.02.02.04.0115 Belanja Sewa Alat Reproduksi (Penggandaan);5.1.02.02.04.0115;Belanja Sewa Alat Reproduksi (Penggandaan);PENGGANDAAN
+5.1.02.02.04.0411 Belanja Sewa Peralatan Komputer Lainnya;5.1.02.02.04.0411;Belanja Sewa Peralatan Komputer Lainnya;PERALATAN KOMPUTER LAINNYA
+5.1.02.02.12.0001 Belanja Kursus - Kursus Singkat / Pelatihan;5.1.02.02.12.0001;Belanja Kursus - Kursus Singkat / Pelatihan;KURSUS
+5.2.02.05.01.0005 Belanja Modal Alat Kantor Lainnya;5.2.02.05.01.0005;Belanja Modal Alat Kantor Lainnya;MODAL LAINNYA
+5.2.02.05.02.0001 Belanja Modal Mebel;5.2.02.05.02.0001;Belanja Modal Mebel;MODAL MEBEL
+5.2.02.05.02.0004 Belanja Modal Alat Pendingin;5.2.02.05.02.0004;Belanja Modal Alat Pendingin;MODAL ALAT PENDINGIN
+5.2.02.07.02.0007 Belanja Modal Alat Pemadam Kebakaran;5.2.02.07.02.0007;Belanja Modal Alat Pemadam Kebakaran;MODAL ALAT PEMADAM
+5.2.02.08.03.0013 Belanja Modal Alat Peraga Luar Biasa (Tuna Netra, Terapi Fisik, Tuna Daksa, dan Tuna Rungu);5.2.02.08.03.0013;Belanja Modal Alat Peraga Luar Biasa (Tuna Netra, Terapi Fisik, Tuna Daksa, dan Tuna Rungu);MODAL PERAGA LUAR BIASA
+5.2.02.08.03.0014 Belanja Modal Alat Peraga Kejuruan;5.2.02.08.03.0014;Belanja Modal Alat Peraga Kejuruan;MODAL PERAGA KEJURUAN
+5.2.02.08.03.0016 Belanja Modal Alat Peraga Praktik Sekolah Lainnya;5.2.02.08.03.0016;Belanja Modal Alat Peraga Praktik Sekolah Lainnya;MODAL PERAGA PRAKTIK LAINNYA
+5.2.02.10.01.0002 Belanja Modal Personal Computer;5.2.02.10.01.0002;Belanja Modal Personal Computer;MODAL PC
+5.2.02.10.02.0005 Belanja Modal Peralatan Komputer Lainnya;5.2.02.10.02.0005;Belanja Modal Peralatan Komputer Lainnya;MODAL KOMPUTER LAINNYA
+5.2.02.19.01.0001 Belanja Modal Peralatan Olahraga Atletik;5.2.02.19.01.0001;Belanja Modal Peralatan Olahraga Atletik;MODAL ATLETIK
+5.2.02.19.01.0004 Belanja Modal Peralatan Olahraga Air;5.2.02.19.01.0004;Belanja Modal Peralatan Olahraga Air;MODAL OLAHRAGA AIR
+5.2.05.01.01.0001 Belanja Modal Buku Umum;5.2.05.01.01.0001;Belanja Modal Buku Umum;MODAL BUKU UMUM
+5.2.05.01.01.0003 Belanja Modal Buku Agama;5.2.05.01.01.0003;Belanja Modal Buku Agama;MODAL BUKU AGAMA
+5.2.05.01.01.0004 Belanja Modal Buku Ilmu Sosial;5.2.05.01.01.0004;Belanja Modal Buku Ilmu Sosial;MODAL ILMU SOSIAL
+5.2.05.01.01.0005 Belanja Modal Buku Ilmu Bahasa;5.2.05.01.01.0005;Belanja Modal Buku Ilmu Bahasa;MODAL BAHASA
+5.2.05.01.01.0006 Belanja Modal Buku Matematika dan Pengetahuan Alam;5.2.05.01.01.0006;Belanja Modal Buku Matematika dan Pengetahuan Alam;MODAL MATEMATIKA DAN IPA
+5.2.05.01.01.0007 Belanja Modal Buku Ilmu Pengetahuan Praktis;5.2.05.01.01.0007;Belanja Modal Buku Ilmu Pengetahuan Praktis;MODAL PRAKTIS
+5.2.05.01.01.0008 Belanja Modal Buku Arsitektur, Kesenian, dan Olahraga;5.2.05.01.01.0008;Belanja Modal Buku Arsitektur, Kesenian, dan Olahraga;MODAL KESENIAN DAN OLAHRAGA
+5.2.05.01.01.0009 Belanja Modal Buku Geografi, Biografi, dan Sejarah;5.2.05.01.01.0009;Belanja Modal Buku Geografi, Biografi, dan Sejarah;MODAL GEOGRAFI DAN SEJARAH
+5.1.02.03.02.0409 Belanja Pemeliharaan Komputer - Peralatan Komputer - Peralatan Personal Computer;5.1.02.03.02.0409;Belanja Pemeliharaan Komputer - Peralatan Komputer - Peralatan Personal Computer;PEMELIHARAAN PC
+5.1.02.03.02.0411 Belanja Pemeliharaan Komputer - Peralatan Komputer - Peralatan Komputer Lainnya;5.1.02.03.02.0411;Belanja Pemeliharaan Komputer - Peralatan Komputer - Peralatan Komputer Lainnya;PEMELIHARAAN KOMPUTER LAINNYA
+5.1.02.03.03.0010 Belanja Pemeliharaan Bangunan Gedung - Bangunan Gedung Tempat Kerja - Bangunan Gedung Tempat Pendidikan;5.1.02.03.03.0010;Belanja Pemeliharaan Bangunan Gedung - Bangunan Gedung Tempat Kerja - Bangunan Gedung Tempat Pendidikan;PEMELIHARAAN GEDUNG
