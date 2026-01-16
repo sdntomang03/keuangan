@@ -14,7 +14,7 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         User::create([
-            'name' => 'Administrator RKAS',
+            'name' => 'Admin',
             'email' => 'admin@mail.com',
             'password' => Hash::make('12345678'),
             'email_verified_at' => now(), // Langsung terverifikasi

@@ -12,4 +12,9 @@ class Kegiatan extends Model
     {
         return $this->hasMany(Rkas::class, 'idbl', 'idbl');
     }
+
+    public function belanjas()
+    {
+        return $this->hasMany(Belanja::class, 'idbl', 'idbl');
+    }
 }

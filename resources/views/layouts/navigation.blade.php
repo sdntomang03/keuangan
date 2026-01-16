@@ -42,6 +42,9 @@
             </x-slot>
         </x-dropdown>
     </div>
+        <x-nav-link :href="route('belanja.index')" :active="request()->routeIs('belanja.index')">
+        {{ __('Belanja') }}
+    </x-nav-link>
 </div>
 
             </div>

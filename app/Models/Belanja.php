@@ -16,6 +16,8 @@ class Belanja extends Model
         'ppn',
         'pph',
         'transfer',
+        'idbl',
+        'kodeakun',
     ];
 
     public function rekanan()
@@ -31,5 +33,10 @@ class Belanja extends Model
     public function pajaks()
     {
         return $this->hasMany(Pajak::class);
+    }
+
+    public function kegiatans()
+    {
+        return $this->belongsTo(Kegiatan::class);
     }
 }

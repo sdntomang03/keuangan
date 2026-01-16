@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Belanja;
 use App\Models\DasarPajak;
+use App\Models\Kegiatan;
 use App\Models\Rekanan;
 use App\Models\Rkas;
 use Illuminate\Http\Request;
@@ -59,6 +60,7 @@ class BelanjaController extends Controller
 
     public function getKomponen(Request $request)
     {
+
         $userId = auth()->id();
         $setting = DB::table('settings')->where('user_id', $userId)->first();
 
@@ -85,6 +87,7 @@ class BelanjaController extends Controller
             ->whereIn('akb_rincis.bulan', $bulanRange)
             ->select(
                 'rkas.id',
+                'rkas.idblrinci',
                 'rkas.namakomponen',
                 'rkas.hargasatuan',
                 'rkas.spek',
@@ -100,7 +103,8 @@ class BelanjaController extends Controller
 
     public function store(Request $request)
     {
-        // 1. Validasi
+        // dd($request->all());
+        // 1. Validasi Input Dasar
         $request->validate([
             'tanggal' => 'required|date',
             'no_bukti' => 'required|string|unique:belanjas,no_bukti',
@@ -108,10 +112,52 @@ class BelanjaController extends Controller
             'items' => 'required|array|min:1',
         ]);
 
-        try {
-            return DB::transaction(function () use ($request) {
+        // 2. Ambil Setting Triwulan Aktif dan Mapping Bulan (Angka)
+        $setting = DB::table('settings')->first();
+        $twAktif = $setting->triwulan_aktif ?? 1;
 
-                // 2. Simpan Header Belanja
+        $mappingBulan = [
+            1 => [1, 2, 3],
+            2 => [4, 5, 6],
+            3 => [7, 8, 9],
+            4 => [10, 11, 12],
+        ];
+        $bulanDicheck = $mappingBulan[$twAktif];
+
+        try {
+            return DB::transaction(function () use ($request, $bulanDicheck, $twAktif) {
+
+                // --- VALIDASI PAGU KOMPONEN ---
+                foreach ($request->items as $item) {
+                    $totalBrutoInput = $item['volume'] * $item['harga_satuan'];
+
+                    // Ambil total nominal di table akb_rincis untuk triwulan terkait
+                    $totalPaguAnggaran = DB::table('akb_rincis')
+                        ->where('idblrinci', $item['idblrinci'])
+                        ->whereIn('bulan', $bulanDicheck)
+                        ->sum('nominal');
+
+                    // Opsional: Jika ingin menghitung sisa (dikurangi belanja yang sudah diposting sebelumnya)
+                    $sudahDibelanjakan = DB::table('belanja_rincis')
+                        ->where('idblrinci', $item['idblrinci'])
+                        ->sum('total_bruto');
+
+                    $sisaPaguTersedia = $totalPaguAnggaran - $sudahDibelanjakan;
+
+                    if ($totalPaguAnggaran <= 0) {
+                        throw new \Exception('Komponen ['.$item['namakomponen']."] tidak memiliki anggaran di Triwulan $twAktif.");
+                    }
+
+                    if ($totalBrutoInput > $sisaPaguTersedia) {
+                        throw new \Exception(
+                            'Pagu Tidak Cukup! '.$item['namakomponen'].
+                            ". Sisa Pagu TW $twAktif: Rp ".number_format($sisaPaguTersedia, 0, ',', '.').
+                            '. Input: Rp '.number_format($totalBrutoInput, 0, ',', '.')
+                        );
+                    }
+                }
+
+                // 3. Simpan Header Belanja
                 $belanja = Belanja::create([
                     'user_id' => Auth::id(),
                     'rekanan_id' => $request->rekanan_id,
@@ -122,23 +168,27 @@ class BelanjaController extends Controller
                     'ppn' => $request->ppn ?? 0,
                     'pph' => $request->pph ?? 0,
                     'transfer' => $request->transfer,
+                    'idbl' => $request->idbl,
+                    'kodeakun' => $request->kodeakun,
                 ]);
-
-                // 3. Simpan Rincian
+                $hasPpn = $request->ppn > 0;
+                // 4. Simpan Rincian
+                $brutoDasar = $item['volume'] * $item['harga_satuan'];
+                $totalBrutoFinal = $hasPpn ? ($brutoDasar * 1.11) : $brutoDasar;
                 foreach ($request->items as $item) {
                     $belanja->rincis()->create([
+                        'idblrinci' => $item['idblrinci'],
                         'namakomponen' => $item['namakomponen'],
                         'spek' => $item['spek'] ?? '-',
                         'harga_satuan' => $item['harga_satuan'],
                         'volume' => $item['volume'],
-                        'total_bruto' => $item['volume'] * $item['harga_satuan'],
+                        'total_bruto' => $totalBrutoFinal,
                     ]);
                 }
 
-                // 4. Simpan Pajak (SESUAIKAN KEY DISINI)
+                // 5. Simpan Pajak
                 if ($request->has('pajaks')) {
                     foreach ($request->pajaks as $pajak) {
-                        // Gunakan 'dasar_pajak_id' sesuai hasil dd() Anda
                         if (! empty($pajak['dasar_pajak_id']) && $pajak['nominal'] > 0) {
                             $belanja->pajaks()->create([
                                 'dasar_pajak_id' => $pajak['dasar_pajak_id'],
@@ -153,12 +203,40 @@ class BelanjaController extends Controller
                 return redirect()->route('belanja.index')->with('success', 'Posting BKU Berhasil!');
             });
         } catch (\Exception $e) {
-            return back()->with('error', 'Gagal menyimpan: '.$e->getMessage())->withInput();
+            // Pesan error akan muncul di halaman jika pagu tidak cukup
+            return back()->with('error', $e->getMessage())->withInput();
         }
     }
 
     public function index()
     {
-        echo 'ok';
+        $belanjas = Belanja::with('rekanan')
+            ->orderBy('tanggal', 'desc')
+            ->paginate(10);
+
+        return view('belanja.index', compact('belanjas'));
+    }
+
+    public function destroy($id)
+    {
+        // Cari data belanja
+        $belanja = Belanja::findOrFail($id);
+
+        // Hapus header belanja
+        $belanja->delete();
+
+        // Kembalikan ke halaman index dengan pesan sukses
+        return redirect()->route('belanja.index')->with('success', 'Transaksi berhasil dihapus.');
+    }
+
+    public function show($id)
+    {
+        // Mengambil data belanja beserta relasinya
+        $belanja = Belanja::with(['rekanan', 'rincis', 'pajaks.masterPajak'])->findOrFail($id);
+
+        // Mengambil data kegiatan untuk menampilkan nama kegiatan (opsional jika idbl adalah foreign key)
+        $kegiatan = Kegiatan::where('idbl', $belanja->idbl)->first();
+
+        return view('belanja.show', compact('belanja', 'kegiatan'));
     }
 }

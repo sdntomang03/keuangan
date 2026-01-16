@@ -14,6 +14,8 @@ return new class extends Migration
         Schema::create('belanjas', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained();
+            $table->string('idbl')->nullable();
+            $table->string('kodeakun')->nullable();
             $table->foreignId('rekanan_id')->constrained('rekanans'); // Relasi ke master rekanan
             $table->date('tanggal');
             $table->string('no_bukti');

@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('belanja_rincis', function (Blueprint $table) {
             $table->id();
             $table->foreignId('belanja_id')->constrained('belanjas')->onDelete('cascade');
+            $table->string('idblrinci');
             $table->string('namakomponen');
             $table->text('spek')->nullable();
             $table->decimal('harga_satuan', 15, 2);

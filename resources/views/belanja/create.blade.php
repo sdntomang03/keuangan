@@ -97,21 +97,26 @@
                                         <td class="px-6 py-4">
                                             <input type="text" :name="'items['+index+'][namakomponen]'" x-model="item.namakomponen" class="w-full border-gray-200 rounded-lg text-sm font-bold p-1.5 mb-1">
                                             <input type="text" :name="'items['+index+'][spek]'" x-model="item.spek" class="w-full border-gray-200 rounded-lg text-[11px] italic text-blue-600 p-1.5">
-                                            
+                                            <input type="hidden" :name="'items['+index+'][idblrinci]'" x-model="item.idblrinci">
                                         </td>
                                         <td class="px-6 py-4 text-center">
                                             <input type="number" step="any" :name="'items['+index+'][volume]'" x-model="item.volume" @input="validateVolume(item); calculateTotal()" class="w-20 border-gray-200 rounded-lg text-center font-bold text-blue-700">
                                             <p class="text-[9px] text-gray-500 mt-1 uppercase">Maks: <span x-text="item.max_volume"></span></p>
                                         </td>
-                                     <td class="px-6 py-4">
+                                     <td class="px-5 py-4">
     <div class="relative flex items-center">
         <span class="absolute left-2 text-gray-400 text-xs">Rp</span>
         
-        <input type="number" step="any" 
-               :name="'items['+index+'][harga_satuan]'" 
-               x-model="item.harga_satuan" 
-               @input="calculateTotal()" 
-               class="w-full pl-7 pr-9 py-1.5 border-gray-200 rounded-lg text-right text-sm font-bold focus:ring-blue-500 shadow-sm">
+       <div class="relative">
+    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <span class="text-gray-500 text-xs">Rp</span>
+    </div>
+    <input type="number" step="any" 
+           :name="'items['+index+'][harga_satuan]'" 
+           x-model="item.harga_satuan" 
+           @input="calculateTotal()" 
+           class="w-full pl-8 pr-3 py-1.5 border-gray-200 rounded-lg text-right text-sm font-bold focus:ring-blue-500 shadow-sm">
+</div>
         
         <button type="button" 
                 @click="roundDownThousand(item)"
@@ -216,6 +221,8 @@
                 <input type="hidden" name="ppn" :value="totalPenambah">
                 <input type="hidden" name="pph" :value="totalPajak">
                 <input type="hidden" name="transfer" :value="totalTransfer">
+                <input type="hidden" name="idbl" x-model="selectedIdbl">
+<input type="hidden" name="kodeakun" x-model="selectedRekening">
             </form>
         </div>
     </div>
@@ -252,6 +259,7 @@
                     const data = await res.json();
                     this.items = data.map(komp => ({
                         rkas_id: komp.id,
+                        idblrinci: komp.idblrinci,
                         namakomponen: komp.namakomponen,
                         spek: komp.spek || '-',
                         volume: komp.volume_bulan, 
@@ -278,22 +286,46 @@
                     }
                 },
 
-                roundAllPricesDown() {
-            if (confirm('Bulatkan semua harga satuan ke ribuan bawah?')) {
-                this.items.forEach(item => {
-                    if (item.harga_satuan && item.harga_satuan >= 1000) {
-                        item.harga_satuan = Math.floor(parseFloat(item.harga_satuan) / 1000) * 1000;
-                    }
-                });
-                this.calculateTotal(); // Hitung ulang total bruto & pajak setelah perubahan
-            }
-        },
-        roundDownThousand(item) {
+roundAllPricesDown() {
+    if (confirm('Bulatkan semua harga satuan sesuai ketentuan (Ribuan/Puluh Ribu/Ratus Ribu)?')) {
+        this.items.forEach(item => {
             if (item.harga_satuan) {
-                item.harga_satuan = Math.floor(parseFloat(item.harga_satuan) / 1000) * 1000;
-                this.calculateTotal();
+                let harga = parseFloat(item.harga_satuan);
+                
+                if (harga < 100000) {
+                    // Di bawah 100.000 -> Bulatkan ke 1.000 bawah
+                    item.harga_satuan = Math.floor(harga / 1000) * 1000;
+                } 
+                else if (harga >= 100000 && harga <= 5000000) {
+                    // Sampai 5.000.000 -> Bulatkan ke 10.000 bawah
+                    item.harga_satuan = Math.floor(harga / 10000) * 10000;
+                } 
+                else if (harga > 5000000) {
+                    // Di atas 5.000.000 -> Bulatkan ke 100.000 bawah
+                    item.harga_satuan = Math.floor(harga / 50000) * 50000;
+                }
             }
-        },
+        });
+        this.calculateTotal();
+    }
+},
+       roundDownThousand(item) {
+    if (item.harga_satuan) {
+        let harga = parseFloat(item.harga_satuan);
+        
+        if (harga < 100000) {
+            item.harga_satuan = Math.floor(harga / 1000) * 1000;
+        } 
+        else if (harga <= 5000000) {
+            item.harga_satuan = Math.floor(harga / 10000) * 10000;
+        } 
+        else {
+            item.harga_satuan = Math.floor(harga / 50000) * 50000;
+        }
+        
+        this.calculateTotal();
+    }
+},
 
                 removeItem(index) {
                     if(confirm('Hapus item?')) {

@@ -8,6 +8,7 @@ class BelanjaRinci extends Model
 {
     protected $fillable = [
         'spek',
+        'idblrinci',
         'belanja_id',
         'namakomponen',
         'harga_satuan',
