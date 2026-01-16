@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Belanja;
+use App\Models\Bku;
 use App\Models\DasarPajak;
 use App\Models\Kegiatan;
 use App\Models\Rekanan;
@@ -170,6 +171,7 @@ class BelanjaController extends Controller
                     'transfer' => $request->transfer,
                     'idbl' => $request->idbl,
                     'kodeakun' => $request->kodeakun,
+                    'status' => 'draft',
                 ]);
                 $hasPpn = $request->ppn > 0;
                 // 4. Simpan Rincian
@@ -185,13 +187,13 @@ class BelanjaController extends Controller
                         'total_bruto' => $totalBrutoFinal,
                     ]);
                 }
-
+                // dd($request->pajaks);
                 // 5. Simpan Pajak
                 if ($request->has('pajaks')) {
                     foreach ($request->pajaks as $pajak) {
-                        if (! empty($pajak['dasar_pajak_id']) && $pajak['nominal'] > 0) {
+                        if (! empty($pajak['id_master']) && $pajak['nominal'] > 0) {
                             $belanja->pajaks()->create([
-                                'dasar_pajak_id' => $pajak['dasar_pajak_id'],
+                                'dasar_pajak_id' => $pajak['id_master'],
                                 'nominal' => $pajak['nominal'],
                                 'is_terima' => false,
                                 'is_setor' => false,
@@ -210,7 +212,7 @@ class BelanjaController extends Controller
 
     public function index()
     {
-        $belanjas = Belanja::with('rekanan')
+        $belanjas = Belanja::with(['rekanan', 'kegiatan', 'korek'])
             ->orderBy('tanggal', 'desc')
             ->paginate(10);
 
@@ -238,5 +240,44 @@ class BelanjaController extends Controller
         $kegiatan = Kegiatan::where('idbl', $belanja->idbl)->first();
 
         return view('belanja.show', compact('belanja', 'kegiatan'));
+    }
+
+    public function post($id)
+    {
+        $belanja = Belanja::with('pajaks.masterPajak')->findOrFail($id);
+
+        DB::transaction(function () use ($belanja) {
+            // 1. Catat Transaksi Belanja Utama
+            Bku::catat(
+                $belanja->tanggal,
+                $belanja->no_bukti,
+                'Dibayar '.$belanja->uraian,
+                0,                  // debit
+                $belanja->subtotal + $belanja->ppn, // kredit
+                $belanja->id,       // belanja_id
+                null                // pajak_id (kosong)
+            );
+
+            // 2. Catat Tiap Pajak yang ada di Belanja tersebut
+            foreach ($belanja->pajaks as $pajak) {
+                Bku::catat(
+                    $belanja->tanggal,
+                    $belanja->no_bukti,
+                    'Diterima '.$pajak->masterPajak->nama_pajak.' '.$belanja->uraian,
+                    $pajak->nominal, // debit
+                    0,               // kredit
+                    $belanja->id,    // tetap masukkan belanja_id sebagai referensi induk
+                    $pajak->id       // masukkan pajak_id
+                );
+
+                // Tandai pajak sudah diterima di tabel pajaks
+                $pajak->update(['is_terima' => true]);
+            }
+
+            // 3. Update status belanja agar tidak diposting ulang
+            $belanja->update(['status' => 'posted']);
+        });
+
+        return back()->with('success', 'Transaksi dan Pajak berhasil dicatat di BKU');
     }
 }

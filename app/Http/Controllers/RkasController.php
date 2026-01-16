@@ -14,6 +14,8 @@ class RkasController extends Controller
 
     protected $userId;
 
+    protected $setting_id;
+
     public function __construct(RekeningService $rekeningService)
     {
         // 1. Inisialisasi Service (Dependency Injection)
@@ -22,6 +24,7 @@ class RkasController extends Controller
         // 2. Inisialisasi User ID via Middleware Closure
         $this->middleware(function ($request, $next) {
             $this->userId = Auth::id();
+            $this->setting_id = auth()->user()->setting_id;
 
             return $next($request);
         });
@@ -34,6 +37,9 @@ class RkasController extends Controller
 
     public function import(Request $request)
     {
+        if (! $this->setting_id) {
+            return back()->with('error', 'Profil sekolah belum diatur. Silahkan isi Pengaturan terlebih dahulu.');
+        }
         // 1. Validasi bahwa yang diupload adalah array file
         $request->validate([
             'json_files' => 'required|array',
@@ -81,6 +87,7 @@ class RkasController extends Controller
                         'giatsubteks' => $item['giatsubteks'],
                         'jenis_anggaran' => $request->jenis_anggaran,
                         'tahun' => $tahunAnggaran,
+                        'setting_id' => $this->setting_id,
                         'created_at' => now(),
                         'updated' => now(),
                     ]
@@ -98,5 +105,20 @@ class RkasController extends Controller
         $data = Rkas::with(['kegiatan', 'korek'])->paginate(25);
 
         return view('rkas.rincian', compact('data'));
+    }
+
+    public function anggaran(Request $request)
+    {
+        $tahun = $request->get('tahun', '2026');
+        $jenis = $request->get('jenis_anggaran');
+        $tampilan = $request->get('tampilan', 'bulanan');
+
+        $dataRkas = Rkas::with(['akbrincis', 'kegiatan', 'korek'])
+            ->when($tahun, fn ($q) => $q->where('tahun', $tahun))
+            ->when($jenis, fn ($q) => $q->where('jenis_anggaran', $jenis))
+            ->get()
+            ->groupBy(['idbl', 'kodeakun']); // Tetap kelompokkan agar mudah diloop
+
+        return view('rkas.anggaran', compact('dataRkas', 'tampilan'));
     }
 }

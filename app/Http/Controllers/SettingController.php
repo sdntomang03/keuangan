@@ -29,11 +29,20 @@ class SettingController extends Controller
             'anggaran_aktif' => 'required',
         ]);
 
-        Setting::updateOrCreate(
-            ['user_id' => Auth::id()], // Cari berdasarkan user yang login
-            $request->all()            // Update/Insert sisa datanya
+        // 1. Simpan hasil updateOrCreate ke dalam variabel $setting
+        $setting = Setting::updateOrCreate(
+            ['user_id' => Auth::id()],
+            $request->all()
         );
 
-        return back()->with('success', 'Pengaturan berhasil disimpan!');
+        // 2. Ambil user yang sedang login
+        $user = Auth::user();
+
+        // 3. Update setting_id di tabel users jika belum terisi atau berubah
+        $user->update([
+            'setting_id' => $setting->id,
+        ]);
+
+        return back()->with('success', 'Pengaturan berhasil disimpan dan profil diperbarui!');
     }
 }

@@ -33,12 +33,55 @@
                             <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-100 dark:divide-gray-700">
                                 @forelse($belanjas as $belanja)
                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                                    <td class="px-4 py-4">
-                                        <div class="text-sm font-bold text-gray-900 dark:text-gray-100">{{ $belanja->no_bukti }}</div>
-                                        <div class="text-[11px] text-gray-500 uppercase">{{ \Carbon\Carbon::parse($belanja->tanggal)->translatedFormat('d F Y') }}</div>
-                                        <div class="text-[11px] text-indigo-600 dark:text-indigo-400 font-medium truncate w-48">{{ $belanja->rekanan->nama_rekanan ?? '-' }}</div>
-                                        <div class="text-[11px] text-indigo-600 dark:text-indigo-400 font-medium truncate w-48">{{ $belanja->uraian ?? '-' }}</div>
-                                    </td>
+                                    <td class="px-4 py-4" x-data="{ expanded: false }">
+    <div class="flex flex-col space-y-1">
+        <div class="flex justify-between items-start mb-1">
+            <div>
+                <div class="text-sm font-bold text-gray-900 dark:text-gray-100">{{ $belanja->no_bukti }}</div>
+                <div class="text-[10px] text-gray-500 uppercase">{{ \Carbon\Carbon::parse($belanja->tanggal)->translatedFormat('d F Y') }}</div>
+            </div>
+            <span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-md text-[9px] font-black italic uppercase">{{ $belanja->status }}</span>
+        </div>
+
+        <div class="space-y-0.5">
+            <div class="text-[11px] text-indigo-600 font-bold uppercase">{{ $belanja->rekanan->nama_rekanan ?? 'Internal' }}</div>
+            <div class="text-[11px] text-gray-700 leading-relaxed">{{ $belanja->uraian ?? '-' }}</div>
+        </div>
+
+        <button @click="expanded = !expanded" class="flex items-center text-[10px] font-bold text-gray-400 hover:text-indigo-500 mt-1 focus:outline-none">
+            <svg class="w-3 h-3 mr-1 transition-transform duration-300" :class="expanded ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+            <span x-text="expanded ? 'Sembunyikan Detail' : 'Lihat Detail Akun & Kegiatan'"></span>
+        </button>
+
+        <div x-show="expanded" x-collapse x-cloak>
+            <div class="mt-2 p-3 bg-gray-50 dark:bg-slate-800/50 border-l-4 border-indigo-500 rounded-r-xl space-y-3 shadow-inner">
+                
+                <div>
+                    <span class="block text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-1">Kode Rekening</span>
+                    @php
+                        $korek = \DB::table('koreks')->where('id', $belanja->kodeakun)->first();
+                    @endphp
+                    <div class="flex flex-col">
+                        <span class="text-[10px] font-medium text-gray-600 uppercase">{{ $korek->ket ?? 'Nama Rekening Tidak Ditemukan' }}</span>
+                    </div>
+                </div>
+
+                <div>
+                    <span class="block text-[9px] font-black text-emerald-500 uppercase tracking-widest mb-1">Kegiatan (IDBL: {{ $belanja->idbl }})</span>
+                    <p class="text-[11px] font-bold text-gray-800 leading-tight uppercase">
+                        @php
+                            $kegiatan = \DB::table('kegiatans')->where('idbl', $belanja->idbl)->first();
+                        @endphp
+                        {{ $kegiatan->namagiat ?? 'Data Kegiatan Tidak Ditemukan' }}
+                    </p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</td>
 
                                     <td class="px-4 py-4 text-right text-sm text-gray-700 dark:text-gray-300 font-medium">
                                         {{ number_format($belanja->subtotal, 0, ',', '.') }}
@@ -82,6 +125,26 @@
                                                     </svg>
                                                 </button>
                                             </form>
+                                           @if($belanja->status == 'draft')
+    <form action="{{ route('belanja.post', $belanja->id) }}" method="POST" class="inline-block">
+        @csrf
+        <button type="submit" 
+                onclick="return confirm('Apakah Anda yakin ingin memposting belanja ini ke BKU? Data tidak akan bisa diedit setelah diposting.')"
+                class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold py-2.5 px-6 rounded-xl shadow-md shadow-emerald-200 transition-all duration-200 active:scale-95">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+            </svg>
+            Posting BKU
+        </button>
+    </form>
+@else
+    <div class="inline-flex items-center gap-2 bg-slate-50 text-slate-600 px-5 py-2.5 rounded-xl border border-slate-200 text-sm font-bold">
+        <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+        </svg>
+        Terposting di BKU
+    </div>
+@endif
                                         </div>
                                     </td>
                                 </tr>

@@ -45,7 +45,8 @@ return new class extends Migration
 
             $table->timestamps();
             $table->foreign('idbl')->references('idbl')->on('kegiatans')->onDelete('set null');
-            $table->foreignId('user_id')->after('id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('setting_id')->constrained('settings')->onDelete('cascade');
         });
     }
 

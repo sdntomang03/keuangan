@@ -24,6 +24,7 @@ return new class extends Migration
             $table->decimal('ppn', 15, 2);    // Total Bruto (Sum of belanja_rincis)
             $table->decimal('pph', 15, 2);    // Total Bruto (Sum of belanja_rincis)
             $table->decimal('transfer', 15, 2); // Netto (Total - Pajak)
+            $table->enum('status', ['draft', 'posted', 'deleted'])->default('draft');
             $table->timestamps();
         });
     }

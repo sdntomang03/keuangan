@@ -21,33 +21,57 @@
                 
                 <div class="lg:col-span-2 space-y-6">
                     
-                    <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div>
-                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Informasi Kegiatan</label>
-                                <p class="text-sm font-bold text-blue-600 mb-1">{{ $belanja->kodeakun }}</p>
-                                <p class="text-lg font-black text-gray-800 leading-tight">{{ $kegiatan->namagiat ?? 'Kegiatan Tidak Ditemukan' }}</p>
-                                <p class="text-xs text-gray-500 mt-2 italic">IDBL: {{ $belanja->idbl }}</p>
-                            </div>
-                            <div class="md:border-l md:pl-8">
-                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Rekanan / Toko</label>
-                                <p class="text-lg font-black text-gray-800">{{ $belanja->rekanan->nama_rekanan ?? 'N/A' }}</p>
-                                <p class="text-sm text-gray-600">{{ $belanja->rekanan->alamat ?? '-' }}</p>
-                                <div class="mt-4 p-3 bg-gray-50 rounded-2xl">
-                                    <p class="text-[10px] font-bold text-gray-400 uppercase mb-1">Uraian Transaksi</p>
-                                    <p class="text-sm text-gray-700 leading-relaxed">{{ $belanja->uraian }}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <div class="bg-white p-6 md:p-8 rounded-2xl border border-gray-100 shadow-sm">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+        
+        <div class="space-y-4">
+            <div>
+                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Informasi Kegiatan</span>
+                <div class="flex items-baseline gap-2 mb-1">
+                    <span class="text-xs font-mono font-medium text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">{{ $belanja->korek->ket }}</span>
+                </div>
+                <h3 class="text-lg font-bold text-gray-900 leading-snug">
+                    {{ $kegiatan->namagiat ?? 'Kegiatan Tidak Ditemukan' }}
+                </h3>
+                      <div class="pt-4 border-t border-gray-50">
+                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1.5">Uraian Transaksi</span>
+                <p class="text-sm text-gray-600 leading-relaxed italic">
+                    {{ $belanja->uraian }}
+                </p>
+            </div>
+            </div>
+        </div>
+
+        <div class="md:border-l border-gray-100 md:pl-10 space-y-5">
+            <div>
+                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Rekanan</span>
+                <p class="text-lg font-bold text-gray-900 mb-1 leading-tight">
+                    {{ $belanja->rekanan->nama_rekanan ?? 'N/A' }}
+                </p>
+                <div class="flex flex-col gap-0.5">
+                    <p class="text-sm text-gray-500 flex items-center gap-2">
+                        <span class="font-semibold text-gray-700">{{ $belanja->rekanan->nama_bank ?? '-' }}</span>
+                        <span class="text-gray-300">•</span>
+                        <span class="font-mono">{{ $belanja->rekanan->no_rekening ?? '-' }}</span>
+                    </p>
+                    <p class="text-xs text-gray-400 font-medium">NPWP: {{ $belanja->rekanan->npwp ?? '-' }}</p>
+                </div>
+            </div>
+
+      
+        </div>
+
+    </div>
+</div>
 
                     <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
                         <div class="p-6 border-b border-gray-50">
-                            <h3 class="font-black text-gray-800 uppercase tracking-tighter">Rincian Komponen Belanja</h3>
+                            <h3 class="font-black text-gray-800 uppercase tracking-tighter">Rincian Belanja</h3>
                         </div>
                         <table class="w-full">
                             <thead class="bg-gray-50">
                                 <tr>
+                                    <th class="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">No.</th>
                                     <th class="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Komponen / Spesifikasi</th>
                                     <th class="px-6 py-4 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">Volume</th>
                                     <th class="px-6 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Harga Satuan</th>
@@ -57,17 +81,18 @@
                             <tbody class="divide-y divide-gray-50">
                                 @foreach($belanja->rincis as $rinci)
                                 <tr>
-                                    <td class="px-6 py-5">
+                                    <td class="px-1 py-5 text-center">{{ $loop->iteration }}</td>
+                                    <td class="px-3 py-5">
                                         <p class="text-sm font-bold text-gray-800">{{ $rinci->namakomponen }}</p>
                                         <p class="text-[11px] text-blue-500 italic">{{ $rinci->spek }}</p>
                                     </td>
-                                    <td class="px-6 py-5 text-center text-sm font-black text-gray-600">
+                                    <td class="px-3 py-5 text-center text-sm font-black text-gray-600">
                                         {{ $rinci->volume }}
                                     </td>
-                                    <td class="px-6 py-5 text-right text-sm font-bold text-gray-700">
+                                    <td class="px-3 py-5 text-right text-sm font-bold text-gray-700">
                                         Rp {{ number_format($rinci->harga_satuan, 0, ',', '.') }}
                                     </td>
-                                    <td class="px-6 py-5 text-right text-sm font-black text-gray-900">
+                                    <td class="px-3 py-5 text-right text-sm font-black text-gray-900">
                                         Rp {{ number_format($rinci->total_bruto, 0, ',', '.') }}
                                     </td>
                                 </tr>

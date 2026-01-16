@@ -21,6 +21,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'setting_id',
     ];
 
     /**
@@ -48,6 +49,6 @@ class User extends Authenticatable
 
     public function setting()
     {
-        return $this->hasOne(Setting::class);
+        return $this->belongsTo(Setting::class, 'setting_id');
     }
 }

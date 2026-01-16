@@ -42,7 +42,9 @@ class RekananSeeder extends Seeder
                         'nama_rekanan' => $data[0] ?? null,
                         'no_rekening' => $data[1] ?? null,
                         'nama_bank' => $data[2] ?? null,
-                        'npwp' => $data[2] ?? null,
+                        'npwp' => $data[3] ?? null,
+                        'created_at' => now(),
+                        'updated_at' => now(),
 
                     ]
                 );

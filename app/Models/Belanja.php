@@ -6,6 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class Belanja extends Model
 {
+    const STATUS_DRAFT = 'draft';
+
+    const STATUS_POSTED = 'posted';
+
+    const STATUS_DELETED = 'deleted';
+
     protected $fillable = [
         'user_id',
         'rekanan_id',
@@ -18,7 +24,13 @@ class Belanja extends Model
         'transfer',
         'idbl',
         'kodeakun',
+        'status',
     ];
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', self::STATUS_POSTED);
+    }
 
     public function rekanan()
     {
@@ -35,8 +47,14 @@ class Belanja extends Model
         return $this->hasMany(Pajak::class);
     }
 
-    public function kegiatans()
+    public function kegiatan()
     {
-        return $this->belongsTo(Kegiatan::class);
+        return $this->belongsTo(Kegiatan::class, 'idbl', 'idbl');
+    }
+
+    public function korek()
+    {
+        // Jika di tabel koreks kolom kuncinya adalah 'id'
+        return $this->belongsTo(Korek::class, 'kodeakun', 'id');
     }
 }

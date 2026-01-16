@@ -22,6 +22,8 @@ return new class extends Migration
             $table->year('tahun_aktif');
             $table->string('anggaran_aktif');
             $table->integer('triwulan_aktif');
+            $table->text('alamat')->nullable();
+            $table->string('logo')->nullable(); // Jika ingin upload logo sekolah
             $table->timestamps();
         });
     }

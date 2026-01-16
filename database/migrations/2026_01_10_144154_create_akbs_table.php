@@ -40,7 +40,7 @@ return new class extends Migration
             $table->decimal('realtw4', 15, 2)->default(0);
             $table->string('jenis_anggaran')->nullable(); // BOS / BOP
             $table->integer('tahun')->default(2026);
-
+            $table->foreignId('setting_id')->constrained('settings')->onDelete('cascade');
             $table->timestamps();
             $table->unique(['idblrinci', 'tipe_anggaran'], 'unique_akb_per_tipe');
             $table->foreign('idblrinci')->references('idblrinci')->on('rkas')->onDelete('cascade');

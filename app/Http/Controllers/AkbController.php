@@ -16,11 +16,14 @@ class AkbController extends Controller
 {
     protected $userId;
 
+    protected $setting_id;
+
     public function __construct()
     {
         // Gunakan middleware closure untuk menangkap User ID setelah login tervalidasi
         $this->middleware(function ($request, $next) {
             $this->userId = Auth::id();
+            $this->setting_id = auth()->user()->setting_id;
 
             return $next($request);
         });
@@ -34,6 +37,9 @@ class AkbController extends Controller
     public function import(Request $request)
     {
 
+        if (! $this->setting_id) {
+            return back()->with('error', 'Profil sekolah belum diatur. Silahkan isi Pengaturan terlebih dahulu.');
+        }
         $request->validate([
             'json_files' => 'required|array',
             'json_files.*' => 'required|mimes:json,txt',
@@ -91,6 +97,7 @@ class AkbController extends Controller
                         'realtw4' => (float) ($item['realtw4'] ?? 0),
                         'jenis_anggaran' => $request->jenis_anggaran,
                         'tahun' => $tahunAnggaran,
+                        'setting_id' => $this->setting_id,
                         'created_at' => now(),
                         'updated' => now(),
                     ]
@@ -103,12 +110,18 @@ class AkbController extends Controller
 
     }
 
-    public function rincian()
+    public function rincian(Request $request)
     {
-        // Eager loading semua relasi: kegiatan (idbl), akb (idblrinci), korek (kodeakun)
-        $data = Rkas::with(['kegiatan', 'akb', 'korek'])->paginate(20);
+        $tahun = $request->get('tahun');
+        $jenis = $request->get('jenis_anggaran');
+        $tampilan = $request->get('tampilan', 'bulanan'); // Default ke bulanan
 
-        return view('akb.rincian', compact('data'));
+        $dataRkas = Rkas::with(['akbrincis', 'kegiatan'])
+            ->when($tahun, fn ($q) => $q->where('tahun', $tahun))
+            ->when($jenis, fn ($q) => $q->where('jenis_anggaran', $jenis))
+            ->get();
+
+        return view('akb.rkas', compact('dataRkas', 'tampilan'));
     }
 
     public function generate()

@@ -16,4 +16,15 @@ class Setting extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    // Jika satu sekolah bisa punya banyak user (misal: Bendahara & Operator)
+    public function users()
+    {
+        return $this->hasMany(User::class, 'setting_id');
+    }
 }

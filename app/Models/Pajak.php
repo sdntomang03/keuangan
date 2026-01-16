@@ -12,4 +12,10 @@ class Pajak extends Model
     {
         return $this->belongsTo(Belanja::class);
     }
+
+    public function masterPajak()
+    {
+
+        return $this->belongsTo(DasarPajak::class, 'dasar_pajak_id');
+    }
 }

@@ -36,14 +36,20 @@
                 <x-dropdown-link :href="route('akb.index')">
                     {{ __('AKB') }}
                 </x-dropdown-link>
-                <x-dropdown-link :href="route('akb.indexrincian')">
-                    {{ __('Rincian') }}
+                <x-dropdown-link :href="route('rkas.anggaran')">
+                    {{ __('Rincian Per Korek') }}
+                </x-dropdown-link>
+                <x-dropdown-link :href="route('akb.rincian')">
+                    {{ __('Rincian Per Komponen') }}
                 </x-dropdown-link>
             </x-slot>
         </x-dropdown>
     </div>
         <x-nav-link :href="route('belanja.index')" :active="request()->routeIs('belanja.index')">
         {{ __('Belanja') }}
+    </x-nav-link>
+        <x-nav-link :href="route('bku.index')" :active="request()->routeIs('bku.index')">
+        {{ __('BKU') }}
     </x-nav-link>
 </div>
 

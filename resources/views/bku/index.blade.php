@@ -1,0 +1,173 @@
+<x-app-layout>
+    <div class="py-12 bg-gray-50" x-data="{ openModal: false }">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+                <div>
+                    <h2 class="text-2xl font-black text-gray-800 tracking-tight uppercase">Buku Kas Umum</h2>
+                    <p class="text-sm text-gray-500">Pantau arus kas masuk, keluar, dan kewajiban pajak.</p>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <button @click="openModal = true" class="inline-flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl shadow-sm transition">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        Tambah Penerimaan
+                    </button>
+                    
+                    <a href="{{ route('pajak.siap-setor') }}" class="inline-flex items-center px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold rounded-xl shadow-sm transition">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        Setor Pajak
+                    </a>
+                </div>
+            </div>
+
+            <div class="bg-white border border-gray-200 shadow-sm rounded-3xl overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left">
+                        <thead class="bg-gray-50 border-b border-gray-100 text-[10px] uppercase tracking-widest font-black text-gray-500">
+                            <tr>
+                                <th class="px-6 py-4 text-center w-16">No</th>
+                                <th class="px-6 py-4">Tanggal</th>
+                                <th class="px-6 py-4">No. Bukti</th>
+                                <th class="px-6 py-4">Uraian / Keterangan</th>
+                                <th class="px-6 py-4 text-right">Debit (Masuk)</th>
+                                <th class="px-6 py-4 text-right">Kredit (Keluar)</th>
+                                <th class="px-6 py-4 text-right bg-blue-50/50">Saldo</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            @forelse($bkus as $item)
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="px-6 py-4 text-center font-mono text-gray-400 italic">
+                                    {{ str_pad($loop->iteration, 3, '0', STR_PAD_LEFT) }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap italic">
+                                    {{ \Carbon\Carbon::parse($item->tanggal)->format('d/m/Y') }}
+                                </td>
+                                <td class="px-6 py-4 font-bold text-blue-600 uppercase text-[11px] italic">
+                                    {{ $item->no_bukti }}
+                                </td>
+                            <td class="px-6 py-4" x-data="{ expanded: false }">
+    <div class="flex flex-col">
+        <div @click="expanded = !expanded" class="flex items-center cursor-pointer group">
+            <span :class="expanded ? 'text-blue-600 font-bold' : 'text-gray-700 font-medium'" class="transition-all">
+                {{ $item->uraian }}
+            </span>
+            
+            @if($item->belanja)
+            <svg class="w-4 h-4 ml-2 text-gray-400 transition-transform duration-300" :class="expanded ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+            @endif
+        </div>
+
+        @if($item->belanja)
+        <div x-show="expanded" x-collapse x-cloak class="mt-3 overflow-hidden">
+            <div class="bg-gray-50 border-l-4 border-emerald-500 rounded-r-xl p-3 space-y-3 shadow-inner">
+                
+                <div class="pb-2 border-b border-gray-200">
+                    <span class="block text-[9px] uppercase font-black text-emerald-600 tracking-widest">
+                        Nama Kegiatan
+                    </span>
+                    <span class="text-[11px] font-bold text-gray-800 leading-tight block uppercase mt-1">
+                        {{ $item->belanja->kegiatan->namagiat ?? '⚠️ Data Kegiatan Tidak Ditemukan' }}
+                    </span>
+                </div>
+
+             @if(isset($item->belanja->korek))
+<div>
+    <span class="block text-[9px] uppercase font-black text-gray-400 tracking-widest">Kode Rekening</span>
+    <div class="flex flex-col">
+        <span class="text-[10px] font-medium text-gray-500 uppercase leading-tight">
+            {{ $item->belanja->korek->uraian ?? $item->belanja->korek->singkat }}
+        </span>
+    </div>
+</div>
+@endif
+
+                <div class="grid grid-cols-2 gap-2 pt-1">
+                    <div>
+                        <span class="block text-[9px] uppercase font-black text-blue-400 tracking-widest">Rekanan</span>
+                        <span class="text-gray-800 font-bold uppercase text-[10px]">
+                            {{ $item->belanja->rekanan->nama_rekanan ?? 'Internal' }}
+                        </span>
+                    </div>
+                    <div>
+                        <span class="block text-[9px] uppercase font-black text-blue-400 tracking-widest">Uraian</span>
+                        <span class="text-gray-800 font-mono text-[10px]">
+                            {{ $item->belanja->uraian }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+    </div>
+</td>
+                                <td class="px-6 py-4 text-right text-emerald-600 font-bold italic">
+                                    {{ $item->debit > 0 ? number_format($item->debit, 0, ',', '.') : '-' }}
+                                </td>
+                                <td class="px-6 py-4 text-right text-orange-600 font-bold italic">
+                                    {{ $item->kredit > 0 ? number_format($item->kredit, 0, ',', '.') : '-' }}
+                                </td>
+                                <td class="px-6 py-4 text-right font-black text-gray-900 bg-blue-50/20 italic">
+                                    {{ number_format($item->saldo, 0, ',', '.') }}
+                                </td>
+                            </tr>
+                            @empty
+                            @endforelse
+                        </tbody>
+                        </table>
+                </div>
+            </div>
+        </div>
+
+        <div x-show="openModal" 
+             class="fixed inset-0 z-50 overflow-y-auto" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             style="display: none;">
+            
+            <div class="flex items-center justify-center min-h-screen px-4">
+                <div class="fixed inset-0 bg-gray-600 bg-opacity-50 transition-opacity" @click="openModal = false"></div>
+
+                <div class="relative bg-white rounded-3xl shadow-2xl max-w-lg w-full p-8 overflow-hidden transform transition-all">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-black text-gray-800 uppercase tracking-tight">Tambah Penerimaan</h3>
+                        <button @click="openModal = false" class="text-gray-400 hover:text-gray-600">&times;</button>
+                    </div>
+
+                    <form action="{{ route('penerimaan.store') }}" method="POST">
+                        @csrf
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-[10px] font-black uppercase text-gray-400 mb-1">Tanggal Transaksi</label>
+                                <input type="date" name="tanggal" required class="w-full border-gray-200 rounded-xl focus:ring-emerald-500">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black uppercase text-gray-400 mb-1">Nomor Bukti</label>
+                                <input type="text" name="no_bukti" placeholder="Contoh: KM-01" required class="w-full border-gray-200 rounded-xl focus:ring-emerald-500">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black uppercase text-gray-400 mb-1">Uraian / Keterangan</label>
+                                <textarea name="uraian" rows="2" placeholder="Input keterangan penerimaan..." required class="w-full border-gray-200 rounded-xl focus:ring-emerald-500"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black uppercase text-gray-400 mb-1">Nominal (Rp)</label>
+                                <input type="number" name="nominal" step="0.01" required class="w-full border-gray-200 rounded-xl focus:ring-emerald-500 font-bold text-emerald-600 text-lg">
+                            </div>
+                        </div>
+
+                        <div class="mt-8 flex gap-3">
+                            <button type="button" @click="openModal = false" class="flex-1 px-4 py-3 border border-gray-200 text-gray-500 text-xs font-black uppercase rounded-xl hover:bg-gray-50 transition">Batal</button>
+                            <button type="submit" class="flex-1 px-4 py-3 bg-emerald-600 text-white text-xs font-black uppercase rounded-xl hover:bg-emerald-700 shadow-lg transition shadow-emerald-200">Simpan Transaksi</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</x-app-layout>
