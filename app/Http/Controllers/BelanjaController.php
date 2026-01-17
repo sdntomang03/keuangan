@@ -27,17 +27,19 @@ class BelanjaController extends Controller
                 ->with('error', 'Silakan atur Tahun dan Anggaran Aktif di Pengaturan terlebih dahulu.');
         }
 
-        $rekanans = Rekanan::where('user_id', $userId)->get();
+        $rekanans = Rekanan::where('user_id', $userId)
+            ->orderBy('nama_rekanan', 'asc') // 'asc' untuk A-Z, 'desc' untuk Z-A
+            ->get();
 
         // 2. Ambil list kegiatan sesuai Tahun dan Anggaran (BOS/BOP) yang aktif
         $listKegiatan = DB::table('rkas')
-            ->join('kegiatans', 'rkas.idbl', '=', 'kegiatans.idbl')
-            ->where('rkas.user_id', $userId)
-            ->where('rkas.tahun', $setting->tahun_aktif)       // Filter Tahun
-            ->where('rkas.jenis_anggaran', $setting->anggaran_aktif) // Filter BOS atau BOP
+            ->leftJoin('kegiatans', 'rkas.idbl', '=', 'kegiatans.idbl') // Gunakan Left Join
+            ->where('rkas.setting_id', auth()->user()->setting_id)
+            ->where('rkas.tahun', $setting->tahun_aktif)
+            ->where('rkas.jenis_anggaran', 'LIKE', '%'.$setting->anggaran_aktif.'%')
             ->select(
-                'kegiatans.idbl',
-                'kegiatans.namagiat'
+                'rkas.idbl', // Ambil idbl dari tabel rkas saja dulu
+                DB::raw('COALESCE(kegiatans.namagiat, rkas.giatsubteks) as namagiat')
             )
             ->distinct()
             ->get();
@@ -61,29 +63,28 @@ class BelanjaController extends Controller
 
     public function getKomponen(Request $request)
     {
+        $user = auth()->user();
+        // Gunakan relasi agar lebih clean, atau ambil dari tabel settings
+        $setting = DB::table('settings')->where('id', $user->setting_id)->first();
 
-        $userId = auth()->id();
-        $setting = DB::table('settings')->where('user_id', $userId)->first();
+        if (! $setting) {
+            return response()->json([]);
+        }
 
-        // Pastikan triwulan dikonversi dengan aman
+        // Konversi triwulan ke range bulan
         $tw = (int) filter_var($setting->triwulan_aktif, FILTER_SANITIZE_NUMBER_INT);
-
         $bulanRange = match ($tw) {
             1 => [1, 2, 3],
             2 => [4, 5, 6],
             3 => [7, 8, 9],
             4 => [10, 11, 12],
-            default => [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] // Jika TW aneh, ambil semua bulan saja
+            default => range(1, 12)
         };
 
-        $query = Rkas::where('rkas.user_id', $userId)
+        return Rkas::where('rkas.setting_id', $user->setting_id) // Ganti user_id menjadi setting_id
             ->join('akb_rincis', 'rkas.idblrinci', '=', 'akb_rincis.idblrinci')
             ->where('rkas.idbl', $request->idbl)
-            // Gunakan where mencakup string/int untuk kodeakun
-            ->where(function ($q) use ($request) {
-                $q->where('rkas.kodeakun', $request->koderekening)
-                    ->orWhere('rkas.kodeakun', (int) $request->koderekening);
-            })
+            ->where('rkas.kodeakun', $request->koderekening)
             ->where('rkas.jenis_anggaran', 'LIKE', '%'.$setting->anggaran_aktif.'%')
             ->whereIn('akb_rincis.bulan', $bulanRange)
             ->select(
@@ -94,12 +95,9 @@ class BelanjaController extends Controller
                 'rkas.spek',
                 DB::raw('SUM(akb_rincis.volume) as volume_bulan')
             )
-            ->groupBy('rkas.id', 'rkas.namakomponen', 'rkas.hargasatuan', 'rkas.spek');
-
-        // DEBUG: Jalankan ini di browser untuk melihat SQL aslinya jika tetap kosong
-        // dd($query->toSql(), $query->getBindings());
-
-        return $query->get();
+            // Tambahkan idblrinci ke groupBy agar tidak error di beberapa database engine
+            ->groupBy('rkas.id', 'rkas.idblrinci', 'rkas.namakomponen', 'rkas.hargasatuan', 'rkas.spek')
+            ->get();
     }
 
     public function store(Request $request)
@@ -212,7 +210,12 @@ class BelanjaController extends Controller
 
     public function index()
     {
+        $userId = auth()->id();
+        $setting = DB::table('settings')->where('user_id', $userId)->first();
+        $kode = $setting->anggaran_aktif === 'bos' ? '3.01' : '3.04';
+
         $belanjas = Belanja::with(['rekanan', 'kegiatan', 'korek'])
+            ->whereRelation('kegiatan', 'kodedana', $kode)
             ->orderBy('tanggal', 'desc')
             ->paginate(10);
 
@@ -221,14 +224,24 @@ class BelanjaController extends Controller
 
     public function destroy($id)
     {
-        // Cari data belanja
+        // 1. Cari data belanja
         $belanja = Belanja::findOrFail($id);
 
-        // Hapus header belanja
+        // 2. Cek apakah status sudah 'posted'
+        // Asumsi: Nama kolom di database Anda adalah 'status'
+        if ($belanja->status === 'posted') {
+            return redirect()->route('belanja.index')
+                ->with('error', 'Transaksi tidak dapat dihapus karena sudah diposting.');
+        }
+
+        // 3. Hapus data belanja
+        // Catatan: Jika Anda menggunakan detail belanja, pastikan relasi diset cascade
+        // atau hapus detailnya secara manual sebelum baris ini.
         $belanja->delete();
 
-        // Kembalikan ke halaman index dengan pesan sukses
-        return redirect()->route('belanja.index')->with('success', 'Transaksi berhasil dihapus.');
+        // 4. Kembalikan ke halaman index dengan pesan sukses
+        return redirect()->route('belanja.index')
+            ->with('success', 'Transaksi berhasil dihapus.');
     }
 
     public function show($id)

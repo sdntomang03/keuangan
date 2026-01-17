@@ -57,4 +57,14 @@ class Belanja extends Model
         // Jika di tabel koreks kolom kuncinya adalah 'id'
         return $this->belongsTo(Korek::class, 'kodeakun', 'id');
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function anggaran()
+    {
+        return $this->belongsTo(Anggaran::class);
+    }
 }

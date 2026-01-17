@@ -13,6 +13,13 @@ return new class extends Migration
     {
         Schema::create('bkus', function (Blueprint $table) {
             $table->id();
+
+            // 1. Identitas Sekolah (Multi-School)
+            $table->foreignId('setting_id')->constrained('settings')->onDelete('cascade');
+
+            // 2. Identitas Anggaran & Tahun (Multi-Year & Multi-Budget)
+            $table->string('jenis_anggaran');
+
             $table->integer('no_urut');
             $table->date('tanggal');
             $table->string('no_bukti');
@@ -21,11 +28,14 @@ return new class extends Migration
             $table->decimal('kredit', 15, 2)->default(0);
             $table->decimal('saldo', 15, 2)->default(0);
 
-            // Kolom Relasi Spesifik
-            $table->foreignId('belanja_id')->nullable()->constrained('belanjas')->onDelete('cascade');
-            $table->foreignId('pajak_id')->nullable()->constrained('pajaks')->onDelete('cascade');
+            // Relasi opsional untuk tracking sumber data
+            $table->foreignId('belanja_id')->nullable()->constrained('belanjas')->onDelete('set null');
+            $table->foreignId('pajak_id')->nullable()->constrained('pajaks')->onDelete('set null');
 
             $table->timestamps();
+
+            // Indexing agar query cepat saat data sudah ribuan
+            $table->index(['setting_id', 'anggaran_id']);
         });
     }
 

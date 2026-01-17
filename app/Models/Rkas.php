@@ -51,4 +51,9 @@ class Rkas extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function belanjaRincis()
+    {
+        return $this->hasMany(BelanjaRinci::class, 'idblrinci', 'idblrinci');
+    }
 }

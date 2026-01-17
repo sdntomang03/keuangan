@@ -15,4 +15,10 @@ class BelanjaRinci extends Model
         'volume',
         'total_bruto', // harga_satuan * volume
     ];
+
+    public function rkas()
+    {
+        // Menghubungkan akb_rincis ke rkas berdasarkan idblrinci
+        return $this->belongsTo(Rkas::class, 'idblrinci', 'idblrinci');
+    }
 }

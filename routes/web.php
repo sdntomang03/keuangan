@@ -8,8 +8,10 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PajakController;
 use App\Http\Controllers\PenerimaanController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RealisasiController;
 use App\Http\Controllers\RkasController;
 use App\Http\Controllers\SettingController;
+use App\Http\Controllers\SuratController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -51,6 +53,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Otomatis mencakup: index, create, store, show, edit, update, destroy
     Route::resource('belanja', BelanjaController::class);
+
     Route::post('/{id}/post', [BelanjaController::class, 'post'])->name('belanja.post');
     // Rute API tambahan untuk pencarian data
     Route::prefix('api')->group(function () {
@@ -70,6 +73,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Route Pajak
     Route::get('/pajak/siap-setor', [PajakController::class, 'siapSetor'])->name('pajak.siap-setor');
     Route::post('/pajak/setor/{id}', [PajakController::class, 'prosesSetor'])->name('pajak.proses-setor');
+    Route::get('/realisasi/komponen', [RealisasiController::class, 'komponen'])->name('realisasi.komponen');
+    Route::get('/realisasi/korek', [RealisasiController::class, 'korek'])->name('realisasi.korek');
+    Route::get('/belanja/cetak/{id}', [SuratController::class, 'cetakDokumenLengkap'])->name('belanja.print');
+    Route::get('/rekap/export', [SuratController::class, 'exportExcel'])->name('belanja.export');
 });
 
 Route::get('/coba', [Coba::class, 'index'])->name('index');
