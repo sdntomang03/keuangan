@@ -6,24 +6,6 @@
     {{-- Filter Form (Sama seperti sebelumnya) --}}
     <div class="bg-white p-4 mb-6 rounded-lg shadow-sm border border-gray-200">
         <form action="{{ route('rkas.anggaran') }}" method="GET" class="flex flex-wrap items-end gap-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Tahun</label>
-                <select name="tahun" class="mt-1 block w-40 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                    <option value="">-- Semua Tahun --</option>
-                    @foreach([2024, 2025, 2026] as $th)
-                        <option value="{{ $th }}" {{ request('tahun') == $th ? 'selected' : '' }}>{{ $th }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Jenis Anggaran</label>
-                <select name="jenis_anggaran" class="mt-1 block w-40 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                    <option value="">-- Semua Jenis --</option>
-                    <option value="bos" {{ request('jenis_anggaran') == 'bos' ? 'selected' : '' }}>BOS</option>
-                    <option value="bop" {{ request('jenis_anggaran') == 'bop' ? 'selected' : '' }}>BOP</option>
-                </select>
-            </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 font-bold text-indigo-600">Mode Tampilan</label>
@@ -35,7 +17,7 @@
 
             <div class="flex gap-2">
                 <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm">Filter</button>
-                <a href="{{ route('coba.rkas') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm">Reset</a>
+
             </div>
         </form>
     </div>
@@ -68,10 +50,10 @@
     </thead>
     <tbody>
         @forelse ($dataRkas as $idbl => $groupsByKorek)
-            @php 
-                $firstItem = $groupsByKorek->first()->first(); 
+            @php
+                $firstItem = $groupsByKorek->first()->first();
                 $namaKegiatan = $firstItem->kegiatan->namagiat ?? 'Kegiatan #'.$idbl;
-                
+
                 // Menyiapkan data koleksi untuk total per kegiatan
                 $allRkasInKegiatan = $groupsByKorek->flatten();
             @endphp
@@ -87,7 +69,7 @@
             @foreach ($groupsByKorek as $kodeakun => $items)
                 <tr class="hover:bg-gray-50">
                     <td class="border border-gray-300 px-6 py-2">
-                    
+
                         <div class="text-gray-500">{{ $items->first()->namaakun }}</div>
                     </td>
                     <td class="border border-gray-300 px-2 py-2 text-right font-semibold">
@@ -121,7 +103,7 @@
                 <td class="border border-gray-300 px-2 py-2 text-right text-blue-900">
                     {{ number_format($allRkasInKegiatan->sum('totalharga'), 0, ',', '.') }}
                 </td>
-                
+
                 @if(request('tampilan') == 'triwulan')
                     @php $tws = [1 => [1,2,3], 2 => [4,5,6], 3 => [7,8,9], 4 => [10,11,12]]; @endphp
                     @foreach($tws as $months)
@@ -144,7 +126,7 @@
             </tr>
         @endforelse
     </tbody>
-    
+
     {{-- FOOTER GRAND TOTAL (TOTAL SEMUA KEGIATAN) --}}
     <tfoot class="bg-gray-800 text-white font-bold">
         <tr>

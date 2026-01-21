@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('anggarans', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('setting_id')->constrained('settings')->onDelete('cascade');
             $table->string('tahun', 4); // Contoh: "2025", "2026"
             $table->string('singkatan'); // Contoh: "Dana BOS Reguler 2025"
             $table->string('nama_anggaran'); // Contoh: "Dana BOS Reguler 2025"
             $table->boolean('is_aktif')->default(false); // Untuk menandai tahun yang sedang berjalan
+            $table->integer('sekolah_id');
             $table->timestamps();
         });
     }

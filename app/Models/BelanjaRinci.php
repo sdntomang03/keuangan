@@ -13,6 +13,7 @@ class BelanjaRinci extends Model
         'namakomponen',
         'harga_satuan',
         'volume',
+        'bulan',
         'total_bruto', // harga_satuan * volume
     ];
 
@@ -20,5 +21,10 @@ class BelanjaRinci extends Model
     {
         // Menghubungkan akb_rincis ke rkas berdasarkan idblrinci
         return $this->belongsTo(Rkas::class, 'idblrinci', 'idblrinci');
+    }
+
+    public function belanja()
+    {
+        return $this->belongsTo(Belanja::class, 'belanja_id');
     }
 }

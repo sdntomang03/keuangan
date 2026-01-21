@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('penerimaans', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('anggaran_id')->constrained('anggarans')->onDelete('cascade');
             $table->date('tanggal');
             $table->string('no_bukti');
             $table->string('uraian');

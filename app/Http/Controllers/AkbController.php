@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Exports\RincianAkbExport;
 use App\Models\Akb;
 use App\Models\AkbRinci;
 use App\Models\Rkas;
@@ -37,21 +36,21 @@ class AkbController extends Controller
     public function import(Request $request)
     {
 
-        if (! $this->setting_id) {
-            return back()->with('error', 'Profil sekolah belum diatur. Silahkan isi Pengaturan terlebih dahulu.');
+        $anggaran = $request->anggaran_data;
+        if (! $anggaran) {
+            return back()->with('error', 'Silakan pilih Anggaran Aktif di Pengaturan terlebih dahulu.');
         }
         $request->validate([
             'json_files' => 'required|array',
             'json_files.*' => 'required|mimes:json,txt',
-            'jenis_anggaran' => 'required',
-            'tahun' => 'required',
+
         ]);
         $mapAnggaran = [
             'bos' => 10,
             'bop' => 20,
         ];
-        $jenisAnggaran = $mapAnggaran[$request->jenis_anggaran] ?? 0;
-        $tahunAnggaran = $request->tahun;
+        $singkatan = strtolower($anggaran->singkatan);
+        $jenisAnggaran = $mapAnggaran[$singkatan] ?? 30; // Default 30 jika tidak terdaftar
         $count = 0;
         foreach ($request->file('json_files') as $file) {
             $content = json_decode(file_get_contents($file), true);
@@ -95,8 +94,7 @@ class AkbController extends Controller
                         'realtw2' => (float) ($item['realtw2'] ?? 0),
                         'realtw3' => (float) ($item['realtw3'] ?? 0),
                         'realtw4' => (float) ($item['realtw4'] ?? 0),
-                        'jenis_anggaran' => $request->jenis_anggaran,
-                        'tahun' => $tahunAnggaran,
+                        'anggaran_id' => $anggaran->id,
                         'setting_id' => $this->setting_id,
                         'created_at' => now(),
                         'updated' => now(),
@@ -112,29 +110,58 @@ class AkbController extends Controller
 
     public function rincian(Request $request)
     {
-        $tahun = $request->get('tahun');
-        $jenis = $request->get('jenis_anggaran');
-        $tampilan = $request->get('tampilan', 'bulanan'); // Default ke bulanan
+        // 1. Ambil data anggaran aktif dari middleware
+        $anggaran = $request->anggaran_data;
 
-        $dataRkas = Rkas::with(['akbrincis', 'kegiatan'])
-            ->when($tahun, fn ($q) => $q->where('tahun', $tahun))
-            ->when($jenis, fn ($q) => $q->where('jenis_anggaran', $jenis))
+        // Proteksi jika user belum memilih anggaran aktif
+        if (! $anggaran) {
+            return redirect()->route('sekolah.index')
+                ->with('error', 'Silakan tentukan Anggaran Aktif terlebih dahulu.');
+        }
+
+        // 2. Ambil parameter tampilan (tetap dipertahankan jika user ingin ganti view)
+        $tampilan = $request->get('tampilan', 'bulanan');
+
+        // 3. Query RKAS berdasarkan anggaran_id yang sedang aktif
+        // Kita tidak perlu lagi menggunakan $tahun dan $jenis karena sudah terwakili oleh $anggaran->id
+        $dataRkas = Rkas::with([
+            'akbrincis',
+            'kegiatan',
+            'korek',
+        ])
+            ->where('anggaran_id', $anggaran->id)
             ->get();
 
-        return view('akb.rkas', compact('dataRkas', 'tampilan'));
+        // 4. Kirim data ke view beserta informasi anggaran aktifnya
+        return view('akb.rkas', compact('dataRkas', 'tampilan', 'anggaran'));
     }
 
-    public function generate()
+    public function generate(Request $request)
     {
-        // Mengambil data AKB Master beserta data RKAS (untuk ambil harga & idbl)
-        $records = Akb::with('rkas')->get();
+        // 1. Ambil data anggaran aktif dari middleware
+        $anggaran = $request->anggaran_data;
 
-        DB::transaction(function () use ($records) {
-            // Kosongkan tabel rincian sebelum isi ulang
-            AkbRinci::truncate();
+        if (! $anggaran) {
+            return back()->with('error', 'Pilih Anggaran Aktif di Pengaturan terlebih dahulu.');
+        }
+
+        // 2. Filter AKB Master hanya untuk anggaran yang sedang aktif
+        // Penting agar tidak mengolah data tahun/sumber dana lain
+        $records = Akb::with('rkas')
+            ->where('anggaran_id', $anggaran->id)
+            ->get();
+
+        if ($records->isEmpty()) {
+            return back()->with('error', 'Data AKB Master untuk anggaran ini kosong.');
+        }
+
+        DB::transaction(function () use ($records, $anggaran) {
+            // 3. JANGAN gunakan truncate(). Gunakan delete() dengan filter anggaran_id.
+            // Truncate akan menghapus SELURUH data di tabel, termasuk milik sekolah/anggaran lain.
+            AkbRinci::where('anggaran_id', $anggaran->id)->delete();
 
             foreach ($records as $record) {
-                // Validasi: Jika data induk RKAS tidak ditemukan, lewati baris ini
+                // Validasi relasi RKAS
                 if (! $record->rkas) {
                     continue;
                 }
@@ -143,7 +170,6 @@ class AkbController extends Controller
                 $hargaSatuan = (float) $record->rkas->hargasatuan;
                 $pajak = (float) ($record->pajak ?? 0);
 
-                // Jika harga nol, tidak bisa dibagi (menghindari division by zero)
                 if ($hargaSatuan <= 0) {
                     continue;
                 }
@@ -153,33 +179,30 @@ class AkbController extends Controller
                     $nominalBulan = (float) $record->$fieldBulan;
 
                     if ($nominalBulan > 0) {
-                        // Kalkulasi Volume: Nominal / (Harga * (1 + Pajak%))
                         $faktorPajak = ($pajak > 0) ? (1 + ($pajak / 100)) : 1;
                         $volume = $nominalBulan / ($hargaSatuan * $faktorPajak);
 
                         $dataToInsert[] = [
-
                             'akb_id' => $record->id,
                             'idblrinci' => $record->idblrinci,
                             'bulan' => $i,
                             'nominal' => $nominalBulan,
                             'volume' => $volume,
-                            'tahun' => $record->tahun ?? 2026,
-                            'jenis_anggaran' => $record->jenis_anggaran,
+                            'anggaran_id' => $anggaran->id, // Set ke ID aktif
                             'created_at' => now(),
                             'updated_at' => now(),
                         ];
                     }
                 }
 
-                // Simpan per kelompok record untuk efisiensi
+                // Simpan per baris AKB (isi 12 bulan sekaligus)
                 if (! empty($dataToInsert)) {
                     AkbRinci::insert($dataToInsert);
                 }
             }
         });
 
-        return back()->with('success', 'Rincian volume bulanan berhasil di-generate!');
+        return back()->with('success', "Rincian bulanan untuk anggaran {$anggaran->singkatan} berhasil di-generate!");
     }
 
     // File: app/Http/Controllers/AkbController.php
@@ -213,8 +236,20 @@ class AkbController extends Controller
 
     public function exportExcel(Request $request)
     {
-        $namaFile = 'Rincian_Anggaran_'.($request->tahun ?? 'Semua').'.xlsx';
+        // 1. Ambil data anggaran aktif dari middleware
+        $anggaran = $request->anggaran_data;
 
-        return Excel::download(new RincianAkbExport($request), $namaFile);
+        if (! $anggaran) {
+            return back()->with('error', 'Pilih anggaran aktif terlebih dahulu untuk melakukan export.');
+        }
+
+        // 2. Buat nama file yang dinamis (Contoh: Rincian_AKB_BOS_2025.xlsx)
+        $namaFile = 'Rincian_AKB_'.strtoupper($anggaran->singkatan).'_'.$anggaran->tahun.'.xlsx';
+
+        // 3. Kirim objek $anggaran ke dalam class Export agar data di dalam Excel terfilter
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\RincianAkbExport($anggaran),
+            $namaFile
+        );
     }
 }

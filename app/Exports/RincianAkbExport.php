@@ -12,30 +12,26 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class RincianAkbExport implements FromCollection, ShouldAutoSize, WithHeadings, WithMapping, WithStyles
 {
-    protected $request;
+    // Ubah dari $request menjadi $anggaran
+    protected $anggaran;
 
-    public function __construct($request)
+    public function __construct($anggaran)
     {
-        $this->request = $request;
+        $this->anggaran = $anggaran;
     }
 
     public function collection()
     {
-        // Logika query SAMA dengan yang ada di Controller agar data sinkron
+        // Filter langsung menggunakan anggaran_id yang aktif
         return Rkas::with(['kegiatan', 'korek', 'akb', 'akbRincis'])
-            ->when($this->request->tahun, function ($q) {
-                return $q->where('tahun', $this->request->tahun);
-            })
-            ->when($this->request->jenis_anggaran, function ($q) {
-                return $q->where('jenis_anggaran', $this->request->jenis_anggaran);
-            })
+            ->where('anggaran_id', $this->anggaran->id)
             ->get();
     }
 
     public function headings(): array
     {
-        // Header sesuai dengan tabel di View Anda
-        $headers = ['Program', 'Kegiatan', 'Sub Kegiatan', 'Keterangan', 'Kode Rekening', 'Id Komp', 'Nama Komponen', 'Spesifikasi', 'Satuan', 'Harga Satuan',  'Pajak'];
+        // Header tetap sama
+        $headers = ['Program', 'Kegiatan', 'Sub Kegiatan', 'Keterangan', 'Kode Rekening', 'Id Komp', 'Nama Komponen', 'Spesifikasi', 'Satuan', 'Harga Satuan', 'Pajak'];
 
         for ($i = 1; $i <= 12; $i++) {
             $headers[] = 'Bln '.$i;
@@ -55,7 +51,7 @@ class RincianAkbExport implements FromCollection, ShouldAutoSize, WithHeadings, 
         $totalVolRinci = $item->akbRincis->sum('volume');
         $selisih = $volAkb - $totalVolRinci;
 
-        // Menentukan teks status
+        // Logika status tetap sama
         if ($selisih == 0 && $volAkb > 0) {
             $status = 'MATCH '.$volAkb;
         } elseif ($selisih > 0) {
@@ -65,8 +61,9 @@ class RincianAkbExport implements FromCollection, ShouldAutoSize, WithHeadings, 
         } else {
             $status = 'OVER';
         }
+
         $statusPajak = ($item->totalpajak > 0) ? 'PPN' : '';
-        // Data Dasar
+
         $data = [
             $item->kegiatan->snp ?? '-',
             $item->kegiatan->namagiat,
@@ -81,13 +78,11 @@ class RincianAkbExport implements FromCollection, ShouldAutoSize, WithHeadings, 
             $statusPajak,
         ];
 
-        // Loop Volume Bulanan
         for ($m = 1; $m <= 12; $m++) {
             $rowBulan = $item->akbRincis->firstWhere('bulan', $m);
             $data[] = $rowBulan ? $rowBulan->volume : 0;
         }
 
-        // Data Akhir
         $data[] = $totalVolRinci;
         $data[] = $item->totalharga;
         $data[] = $item->totalpajak;
@@ -99,7 +94,7 @@ class RincianAkbExport implements FromCollection, ShouldAutoSize, WithHeadings, 
     public function styles(Worksheet $sheet)
     {
         return [
-            1 => ['font' => ['bold' => true]], // Bold header baris pertama
+            1 => ['font' => ['bold' => true]],
         ];
     }
 }

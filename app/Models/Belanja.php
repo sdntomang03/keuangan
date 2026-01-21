@@ -25,6 +25,8 @@ class Belanja extends Model
         'idbl',
         'kodeakun',
         'status',
+        'anggaran_id',
+
     ];
 
     public function scopeActive($query)

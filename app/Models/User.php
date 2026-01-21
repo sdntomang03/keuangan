@@ -47,8 +47,9 @@ class User extends Authenticatable
         ];
     }
 
-    public function setting()
+    public function sekolah()
     {
-        return $this->belongsTo(Setting::class, 'setting_id');
+        // Pastikan diarahkan ke model Sekolah
+        return $this->hasOne(Sekolah::class);
     }
 }

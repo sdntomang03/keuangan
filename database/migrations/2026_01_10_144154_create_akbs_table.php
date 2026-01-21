@@ -38,13 +38,9 @@ return new class extends Migration
             $table->decimal('realtw2', 15, 2)->default(0);
             $table->decimal('realtw3', 15, 2)->default(0);
             $table->decimal('realtw4', 15, 2)->default(0);
-            $table->string('jenis_anggaran')->nullable(); // BOS / BOP
-            $table->integer('tahun')->default(2026);
-            $table->foreignId('setting_id')->constrained('settings')->onDelete('cascade');
+            $table->foreignId('anggaran_id')->constrained('anggarans')->onDelete('cascade');
             $table->timestamps();
-            $table->unique(['idblrinci', 'tipe_anggaran'], 'unique_akb_per_tipe');
-            $table->foreign('idblrinci')->references('idblrinci')->on('rkas')->onDelete('cascade');
-            $table->foreignId('user_id')->after('id')->constrained('users')->onDelete('cascade');
+            $table->unique(['idblrinci'], 'unique_akb_per_tipe');
         });
     }
 

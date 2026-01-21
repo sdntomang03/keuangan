@@ -11,21 +11,25 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('settings', function (Blueprint $table) {
+        Schema::create('sekolahs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            // Relasi ke User (Owner/Admin Sekolah)
+
+            // Identitas Sekolah
             $table->string('nama_sekolah');
+            $table->string('npsn')->nullable(); // Tambahan standar untuk data sekolah
             $table->string('nama_kepala_sekolah');
             $table->string('nip_kepala_sekolah');
             $table->string('nama_bendahara');
             $table->string('nip_bendahara');
-            $table->year('tahun_aktif');
-            $table->string('anggaran_aktif');
-            $table->integer('triwulan_aktif');
-            $table->text('alamat')->nullable();
+            $table->foreignId('user_id');
+            // Status Aktif (Sekarang menggunakan ID Anggaran)
+            $table->integer('anggaran_id_aktif')->nullable();
+            $table->integer('triwulan_aktif')->default(1);
 
-            // Tambahan Kolom Baru
-            $table->string('kelurahan')->nullable(); // Ditambahkan karena di template ada variabel ${kelurahan}
+            // Alamat Lengkap
+            $table->text('alamat')->nullable();
+            $table->string('kelurahan')->nullable();
             $table->string('kecamatan')->nullable();
             $table->string('kota')->nullable();
             $table->string('kodepos')->nullable();
@@ -42,6 +46,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('settings');
+        Schema::dropIfExists('sekolahs');
     }
 };

@@ -7,7 +7,7 @@
 
     <div class="py-12 bg-gray-50 dark:bg-gray-900 min-h-screen">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            
+
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-2xl border border-gray-100 dark:border-gray-700">
                 <div class="p-8">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -21,13 +21,22 @@
                                 <h3 class="text-2xl font-black text-gray-800 dark:text-white uppercase tracking-tight">
                                     {{ $setting->nama_sekolah ?? 'NAMA SEKOLAH BELUM DIATUR' }}
                                 </h3>
-                                <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center mt-1">
-                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                    Tahun Anggaran Aktif: <span class="ml-1 font-bold text-indigo-600 dark:text-indigo-400">{{ $setting->tahun_aktif ?? '-' }}</span>
-                                </p>
+
+                          <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center mt-1">
+    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Tahun Anggaran Aktif:
+    <span class="ml-1 font-bold text-indigo-600 dark:text-indigo-400">
+        {{ $anggaranAktif->tahun ?? '-' }}
+        @if(isset($anggaranAktif->singkatan))
+            ({{ strtoupper($anggaranAktif->singkatan) }})
+        @endif
+    </span>
+</p>
                             </div>
                         </div>
-                        <a href="{{ route('settings.index') }}" class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg font-semibold text-xs text-gray-700 dark:text-gray-300 uppercase tracking-widest shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 transition ease-in-out duration-150">
+                        <a href="{{ route('sekolah.index') }}" class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg font-semibold text-xs text-gray-700 dark:text-gray-300 uppercase tracking-widest shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 transition ease-in-out duration-150">
                             Pengaturan Profil
                         </a>
                     </div>
@@ -57,7 +66,7 @@
                 </div>
             </div>
 
-            
+
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
         <div class="flex justify-between items-start mb-4">
@@ -67,7 +76,7 @@
             </div>
             <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-[10px] font-bold uppercase">BOS</span>
         </div>
-        
+
         <div class="space-y-2 border-t pt-4">
             <div class="flex justify-between items-center">
                 <span class="text-xs text-gray-500">Total Harga</span>

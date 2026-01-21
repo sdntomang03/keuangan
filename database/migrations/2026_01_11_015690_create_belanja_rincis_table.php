@@ -19,6 +19,7 @@ return new class extends Migration
             $table->text('spek')->nullable();
             $table->decimal('harga_satuan', 15, 2);
             $table->integer('volume');
+            $table->integer('bulan');
             $table->decimal('total_bruto', 15, 2);
             $table->timestamps();
         });

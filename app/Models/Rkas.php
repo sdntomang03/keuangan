@@ -12,17 +12,17 @@ class Rkas extends Model
         'satuan', 'koefisien', 'hargasatuan', 'hargabaru', 'totalharga',
         'totalpajak', 'createduser', 'createddate', 'createdtime',
         'updateduser', 'updateddate', 'updatedtime', 'giatsubteks',
-        'action', 'user1', 'user2', 'jenis_anggaran', 'tahun', 'user_id', 'setting_id',
+        'action', 'user1', 'user2', 'user_id', 'anggaran_id',
     ];
 
-    protected static function booted()
-    {
-        static::addGlobalScope('setting', function ($builder) {
-            if (auth()->check() && auth()->user()->setting_id) {
-                $builder->where('setting_id', auth()->user()->setting_id);
-            }
-        });
-    }
+    // protected static function booted()
+    // {
+    //     static::addGlobalScope('setting', function ($builder) {
+    //         if (auth()->check() && auth()->user()->setting_id) {
+    //             $builder->where('setting_id', auth()->user()->setting_id);
+    //         }
+    //     });
+    // }
 
     public function kegiatan()
     {

@@ -40,13 +40,9 @@ return new class extends Migration
 
             // Tambahan
             $table->string('giatsubteks')->nullable();
-            $table->string('jenis_anggaran')->nullable(); // BOS / BOP
-            $table->integer('tahun')->nullable();          // 2026 / 2027
 
             $table->timestamps();
-            $table->foreign('idbl')->references('idbl')->on('kegiatans')->onDelete('set null');
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('setting_id')->constrained('settings')->onDelete('cascade');
+
         });
     }
 

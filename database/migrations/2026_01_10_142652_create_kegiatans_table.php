@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('kodegiat')->nullable();      // Kode Kegiatan
             $table->string('namagiat')->nullable();      // Nama Kegiatan
             $table->text('kegiatan')->nullable();        // Deskripsi panjang kegiatan
-            $table->integer('idbl')->unique();            // ID unik (Primary Key Referensi)
+            $table->string('idbl')->unique();
             $table->text('link')->nullable();            // URL atau Link terkait
             $table->timestamps();
         });

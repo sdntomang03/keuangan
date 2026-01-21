@@ -20,8 +20,7 @@ return new class extends Migration
             $table->integer('bulan');
             $table->decimal('nominal', 15, 2);
             $table->decimal('volume', 15, 4);
-            $table->integer('tahun')->default(2026);
-            $table->string('jenis_anggaran')->nullable();
+            $table->foreignId('anggaran_id')->constrained('anggarans')->onDelete('cascade');
             $table->timestamps();
         });
     }

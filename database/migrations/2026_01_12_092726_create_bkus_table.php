@@ -15,10 +15,7 @@ return new class extends Migration
             $table->id();
 
             // 1. Identitas Sekolah (Multi-School)
-            $table->foreignId('setting_id')->constrained('settings')->onDelete('cascade');
-
-            // 2. Identitas Anggaran & Tahun (Multi-Year & Multi-Budget)
-            $table->string('jenis_anggaran');
+            $table->foreignId('anggaran_id')->constrained('anggarans')->onDelete('cascade');
 
             $table->integer('no_urut');
             $table->date('tanggal');
@@ -29,13 +26,13 @@ return new class extends Migration
             $table->decimal('saldo', 15, 2)->default(0);
 
             // Relasi opsional untuk tracking sumber data
-            $table->foreignId('belanja_id')->nullable()->constrained('belanjas')->onDelete('set null');
-            $table->foreignId('pajak_id')->nullable()->constrained('pajaks')->onDelete('set null');
-
+            $table->foreignId('belanja_id')->nullable()->constrained('belanjas')->onDelete('cascade');
+            $table->foreignId('pajak_id')->nullable()->constrained('pajaks')->onDelete('cascade');
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->timestamps();
 
             // Indexing agar query cepat saat data sudah ribuan
-            $table->index(['setting_id', 'anggaran_id']);
+            $table->index(['anggaran_id']);
         });
     }
 

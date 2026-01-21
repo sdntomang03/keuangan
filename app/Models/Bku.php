@@ -8,11 +8,18 @@ class Bku extends Model
 {
     protected $guarded = [];
 
-    public static function catat($tanggal, $no_bukti, $uraian, $debit, $kredit, $belanjaId = null, $pajakId = null)
+    // Tambahkan $anggaranId sebagai parameter ke-8
+    public static function catat($tanggal, $no_bukti, $uraian, $debit, $kredit, $belanjaId = null, $pajakId = null, $anggaranId = null)
     {
-        // 1. Ambil data terakhir untuk saldo dan nomor urut
-        $terakhir = self::orderBy('id', 'desc')->first();
+        // 1. Ambil data terakhir KHUSUS untuk anggaran yang dipilih
+        // Ini penting agar saldo BOS dan BOP tidak bercampur
+        $terakhir = self::where('anggaran_id', $anggaranId)
+            ->orderBy('id', 'desc')
+            ->first();
+
         $saldoTerakhir = $terakhir ? $terakhir->saldo : 0;
+
+        // No urut juga sebaiknya per anggaran atau per tahun
         $noUrutTerakhir = $terakhir ? $terakhir->no_urut : 0;
 
         // 2. Hitung saldo baru
@@ -29,6 +36,8 @@ class Bku extends Model
             'saldo' => $saldoBaru,
             'belanja_id' => $belanjaId,
             'pajak_id' => $pajakId,
+            'anggaran_id' => $anggaranId, // Sekarang variabel ini sudah ada dari parameter
+            'user_id' => auth()->id(), // Tambahkan juga user_id jika kolomnya ada
         ]);
     }
 
@@ -37,9 +46,13 @@ class Bku extends Model
         return $this->belongsTo(Belanja::class, 'belanja_id');
     }
 
-    // Relasi ke tabel Pajak (opsional, jika ingin menampilkan detail pajak juga)
     public function pajak()
     {
         return $this->belongsTo(Pajak::class, 'pajak_id');
+    }
+
+    public function anggaran()
+    {
+        return $this->belongsTo(Anggaran::class, 'anggaran_id');
     }
 }

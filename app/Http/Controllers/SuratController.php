@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Exports\BelanjaExport;
 use App\Models\Belanja;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use PhpOffice\PhpWord\TemplateProcessor;
 
@@ -154,11 +155,15 @@ class SuratController extends Controller
         }
     }
 
-    public function exportExcel()
+    public function exportExcel(Request $request)
     {
-        // Nama file yang dihasilkan
+        // 1. Ambil data anggaran dari request/middleware
+        $anggaran = $request->anggaran_data;
+
+        // 2. Tentukan nama file
         $fileName = 'Laporan_Rincian_Belanja_'.date('YmdHis').'.xlsx';
 
-        return Excel::download(new BelanjaExport, $fileName);
+        // 3. Masukkan variabel $anggaran ke dalam Constructor class Export
+        return Excel::download(new BelanjaExport($anggaran), $fileName);
     }
 }

@@ -1,0 +1,197 @@
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+            {{ __('Pengaturan Instansi') }}
+        </h2>
+    </x-slot>
+
+    <div class="py-12">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6 text-gray-900 dark:text-gray-100">
+
+                    <form action="{{ route('sekolah.store') }}" method="POST" enctype="multipart/form-data">
+                        @csrf
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <div class="md:col-span-1">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nama
+                                    Sekolah</label>
+                                <input type="text" name="nama_sekolah" value="{{ $setting->nama_sekolah ?? '' }}"
+                                    required
+                                    class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            </div>
+
+                            <div class="md:col-span-1">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">NPSN</label>
+                                <input type="text" name="npsn" value="{{ $setting->npsn ?? '' }}"
+                                    class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            </div>
+
+                            <div class="md:col-span-1">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Anggaran &
+                                    Tahun Aktif</label>
+                                <select name="anggaran_id_aktif" required
+                                    class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    <option value="">-- Pilih Anggaran --</option>
+                                    @foreach($anggarans as $anggaran)
+                                    <option value="{{ $anggaran->id }}" {{ $anggaran->is_aktif ? 'selected' : '' }}>
+                                        {{ $anggaran->tahun }} - {{ strtoupper($anggaran->singkatan) }} ({{
+                                        $anggaran->nama_anggaran }})
+                                    </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email
+                                    Sekolah</label>
+                                <input type="email" name="email" value="{{ $setting->email ?? '' }}"
+                                    class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">No.
+                                    Telepon</label>
+                                <input type="text" name="telp" value="{{ $setting->telp ?? '' }}"
+                                    class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Logo
+                                    Sekolah</label>
+                                <input type="file" name="logo"
+                                    class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                            </div>
+                        </div>
+
+                        <div
+                            class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 mb-6 bg-gray-50 dark:bg-gray-800/30">
+                            <h3 class="text-xs font-bold text-gray-400 uppercase mb-4">Detail Lokasi</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div class="md:col-span-2">
+                                    <label
+                                        class="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Alamat
+                                        Jalan</label>
+                                    <input type="text" name="alamat" value="{{ $setting->alamat ?? '' }}"
+                                        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 shadow-sm text-sm">
+                                </div>
+                                <div>
+                                    <label
+                                        class="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Kelurahan</label>
+                                    <input type="text" name="kelurahan" value="{{ $setting->kelurahan ?? '' }}"
+                                        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 shadow-sm text-sm">
+                                </div>
+                                <div>
+                                    <label
+                                        class="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Kecamatan</label>
+                                    <input type="text" name="kecamatan" value="{{ $setting->kecamatan ?? '' }}"
+                                        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 shadow-sm text-sm">
+                                </div>
+                                <div>
+                                    <label
+                                        class="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Kota</label>
+                                    <input type="text" name="kota" value="{{ $setting->kota ?? '' }}"
+                                        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 shadow-sm text-sm">
+                                </div>
+                                <div>
+                                    <label
+                                        class="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Kode
+                                        Pos</label>
+                                    <input type="text" name="kodepos" value="{{ $setting->kodepos ?? '' }}"
+                                        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 shadow-sm text-sm">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <div class="md:col-span-1">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Triwulan /
+                                    Tahap Aktif</label>
+                                <select name="triwulan_aktif" required
+                                    class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    @for($tw = 1; $tw <= 4; $tw++) <option value="{{ $tw }}" {{ ($sekolah->
+                                        triwulan_aktif ?? '') == $tw ? 'selected' : '' }}>
+                                        Triwulan {{ $tw }}
+                                        </option>
+                                        @endfor
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                            <div
+                                class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                                <h3
+                                    class="text-sm font-bold text-indigo-600 dark:text-indigo-400 uppercase mb-4 flex items-center">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg>
+                                    Kepala Sekolah
+                                </h3>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label
+                                            class="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Nama
+                                            Lengkap</label>
+                                        <input type="text" name="nama_kepala_sekolah"
+                                            value="{{ $setting->nama_kepala_sekolah ?? '' }}" required
+                                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 shadow-sm text-sm">
+                                    </div>
+                                    <div>
+                                        <label
+                                            class="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">NIP</label>
+                                        <input type="text" name="nip_kepala_sekolah"
+                                            value="{{ $setting->nip_kepala_sekolah ?? '' }}" required
+                                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 shadow-sm text-sm">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div
+                                class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                                <h3
+                                    class="text-sm font-bold text-emerald-600 dark:text-emerald-400 uppercase mb-4 flex items-center">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                                    </svg>
+                                    Bendahara Sekolah
+                                </h3>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label
+                                            class="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Nama
+                                            Lengkap</label>
+                                        <input type="text" name="nama_bendahara"
+                                            value="{{ $setting->nama_bendahara ?? '' }}" required
+                                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 shadow-sm text-sm">
+                                    </div>
+                                    <div>
+                                        <label
+                                            class="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">NIP</label>
+                                        <input type="text" name="nip_bendahara"
+                                            value="{{ $setting->nip_bendahara ?? '' }}" required
+                                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 shadow-sm text-sm">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end">
+                            <button type="submit"
+                                class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-10 rounded-lg transition shadow-md flex items-center">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M5 13l4 4L19 7" />
+                                </svg>
+                                Simpan Seluruh Pengaturan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</x-app-layout>
