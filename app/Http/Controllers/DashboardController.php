@@ -12,7 +12,7 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        $userId = Auth::id();
+        $sekolahId = Auth::user()->sekolah_id;
         $anggaran = $request->anggaran_data; // Data dari Middleware
 
         // 1. CEK APAKAH ANGGARAN ADA
@@ -22,7 +22,7 @@ class DashboardController extends Controller
                 'total_bos' => 0, 'harga_bos' => 0, 'pajak_bos' => 0,
                 'total_bop' => 0, 'harga_bop' => 0, 'pajak_bop' => 0,
             ];
-            $setting = Sekolah::where('user_id', $userId)->first();
+            $setting = Sekolah::where('id', $sekolahId)->first();
 
             // Anda bisa tambahkan pesan warning untuk ditampilkan di dashboard
             session()->now('warning', 'Silakan pilih atau import anggaran terlebih dahulu di menu Pengaturan.');
@@ -32,7 +32,7 @@ class DashboardController extends Controller
 
         // 2. JIKA ANGGARAN ADA, JALANKAN LOGIKA NORMAL
         $tahunAktif = $anggaran->tahun;
-        $setting = Sekolah::where('user_id', $userId)->first();
+        $setting = Sekolah::where('id', $sekolahId)->first();
 
         // Gunakan query yang aman terhadap huruf besar/kecil (BOS/bos)
         $idBos = Anggaran::where('tahun', $tahunAktif)

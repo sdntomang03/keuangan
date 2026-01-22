@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\SekolahController as AdminSekolahController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\AkbController;
 use App\Http\Controllers\BelanjaController;
 use App\Http\Controllers\BkuController;
@@ -11,6 +13,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RealisasiController;
 use App\Http\Controllers\RkasController;
 use App\Http\Controllers\SekolahController;
+use App\Http\Controllers\SettingController;
 use App\Http\Controllers\SuratController;
 use Illuminate\Support\Facades\Route;
 
@@ -78,6 +81,46 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/realisasi/korek', [RealisasiController::class, 'korek'])->name('realisasi.korek');
     Route::get('/belanja/cetak/{id}', [SuratController::class, 'cetakDokumenLengkap'])->name('belanja.print');
     Route::get('/rekap/export', [SuratController::class, 'exportExcel'])->name('belanja.export');
+});
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+
+    // 1. Route Resource untuk Sekolah
+    // Ini otomatis membuat route: index, create, store, edit, update, destroy
+    // URL: /admin/sekolah
+    // Name: admin.sekolah.index, admin.sekolah.store, dst.
+    Route::resource('sekolah', AdminSekolahController::class);
+
+    // 2. Route Resource untuk Users (Manajemen Pengguna)
+    // URL: /admin/users
+    // Name: admin.users.index, admin.users.create, dst.
+    Route::resource('users', AdminUserController::class);
+
+    // (Opsional) Custom Route untuk User (misal: Reset Password manual)
+    Route::patch('/users/{user}/reset-password', [AdminUserController::class, 'resetPassword'])
+        ->name('users.reset-password');
+
+});
+// Tambahkan 'admin/' pada prefix dan 'admin.' pada name
+Route::middleware(['auth'])->prefix('settings')->name('settings.')->group(function () {
+
+    // --- REKANAN ---
+    Route::get('/rekanan/import', [SettingController::class, 'importRekananView'])->name('rekanan.import');
+    Route::get('/rekanan/template', [SettingController::class, 'downloadTemplateRekanan'])->name('rekanan.template');
+    Route::post('/rekanan/import', [SettingController::class, 'importRekananStore'])->name('rekanan.import.store');
+
+    // --- KEGIATAN ---
+    // 1. Menampilkan Halaman Form Upload
+    Route::get('/kegiatan/import', [SettingController::class, 'importKegiatanView'])
+        ->name('kegiatan.import');
+
+    // 2. Download Template Excel (.xlsx)
+    // Sekarang route ini akan bernama: 'admin.settings.kegiatan.template' (SESUAI)
+    Route::get('/kegiatan/template', [SettingController::class, 'downloadTemplateKegiatan'])
+        ->name('kegiatan.template');
+
+    // 3. Proses Eksekusi Import (POST)
+    Route::post('/kegiatan/import', [SettingController::class, 'importKegiatanStore'])
+        ->name('kegiatan.import.store');
 });
 
 Route::get('/coba', [Coba::class, 'index'])->name('index');
