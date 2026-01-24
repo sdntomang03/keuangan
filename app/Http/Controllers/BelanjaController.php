@@ -104,6 +104,7 @@ class BelanjaController extends Controller
                 'rkas.hargasatuan',
                 'rkas.satuan',
                 'rkas.spek',
+                'rkas.keterangan',
                 DB::raw('SUM(akb_rincis.volume) as volume_bulan')
             )
             ->groupBy('rkas.id', 'rkas.idblrinci', 'rkas.namakomponen', 'rkas.hargasatuan', 'rkas.satuan', 'rkas.spek')

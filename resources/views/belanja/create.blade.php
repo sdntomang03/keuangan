@@ -135,11 +135,34 @@
                                 <template x-for="(item, index) in items" :key="index">
                                     <tr class="hover:bg-blue-50/30 transition">
                                         <td class="px-6 py-4">
+                                            {{-- 1. Nama Komponen (Tetap di baris atas sendiri agar dominan) --}}
                                             <input type="text" :name="'items[' + index + '][namakomponen]'"
                                                 x-model="item.namakomponen"
-                                                class="w-full border-gray-200 rounded-lg text-sm font-bold p-1.5 mb-1">
-                                            <input type="text" :name="'items[' + index + '][spek]'" x-model="item.spek"
-                                                class="w-full border-gray-200 rounded-lg text-[11px] italic text-blue-600 p-1.5">
+                                                class="w-full border-gray-200 rounded-lg text-sm font-bold p-1.5 mb-2 shadow-sm focus:ring-blue-500">
+
+                                            {{-- 2. Baris Gabungan: Spek dan Keterangan --}}
+                                            <div class="flex items-center gap-3 px-1">
+
+                                                {{-- Input Spek (Kita beri w-1/2 agar berbagi ruang secara adil) --}}
+                                                <div class="w-2/3 flex items-center gap-1.5">
+                                                    <span
+                                                        class="text-[9px] font-black text-gray-400 uppercase italic">Spek:</span>
+                                                    <input type="text" :name="'items[' + index + '][spek]'"
+                                                        x-model="item.spek"
+                                                        class="w-full border-gray-100 rounded-md text-[11px] italic text-blue-600 p-1 bg-blue-50/30 focus:bg-white transition">
+                                                </div>
+
+                                                {{-- Menampilkan Keterangan RKAS (W-1/2 dengan border kiri sebagai
+                                                pemisah) --}}
+                                                <div class="w-1/3 pl-3 border-l border-gray-200">
+                                                    <span
+                                                        class="text-[9px] font-black text-gray-400 uppercase block tracking-tighter">Keterangan</span>
+                                                    <p class="text-[11px] text-gray-500 leading-tight truncate"
+                                                        :title="item.keterangan" x-text="item.keterangan || '-'"></p>
+                                                </div>
+                                            </div>
+
+                                            {{-- Hidden ID --}}
                                             <input type="hidden" :name="'items[' + index + '][idblrinci]'"
                                                 x-model="item.idblrinci">
                                         </td>
@@ -343,7 +366,8 @@
                         satuan: komp.satuan,
                         max_volume: komp.volume_bulan,
                         harga_satuan: komp.hargasatuan,
-                        harga_asli: komp.hargasatuan
+                        harga_asli: komp.hargasatuan,
+                        keterangan: komp.keterangan || '-'
                     }));
                     this.calculateTotal();
                 },
