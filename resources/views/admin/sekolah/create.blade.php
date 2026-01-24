@@ -69,8 +69,9 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                        {{-- Box Kepala Sekolah --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
+
+                        {{-- Box Kepala Sekolah (Blue) --}}
                         <div class="p-6 bg-blue-50/50 rounded-2xl border border-blue-100">
                             <h3 class="text-sm font-bold text-blue-600 uppercase mb-4">Pejabat Kepala Sekolah</h3>
                             <div class="space-y-4">
@@ -87,7 +88,7 @@
                             </div>
                         </div>
 
-                        {{-- Box Bendahara --}}
+                        {{-- Box Bendahara (Emerald) --}}
                         <div class="p-6 bg-emerald-50/50 rounded-2xl border border-emerald-100">
                             <h3 class="text-sm font-bold text-emerald-600 uppercase mb-4">Bendahara Pengeluaran</h3>
                             <div class="space-y-4">
@@ -103,8 +104,25 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
 
+                        {{-- Box Pengurus Barang (Indigo) --}}
+                        <div class="p-6 bg-indigo-50/50 rounded-2xl border border-indigo-100">
+                            <h3 class="text-sm font-bold text-indigo-600 uppercase mb-4">Pengurus Barang</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <x-text-input name="nama_pengurus_barang" placeholder="Nama Lengkap & Gelar"
+                                        class="w-full text-sm" :value="old('nama_pengurus_barang')" />
+                                    <x-input-error class="mt-1" :messages="$errors->get('nama_pengurus_barang')" />
+                                </div>
+                                <div>
+                                    <x-text-input name="nip_pengurus_barang" placeholder="NIP" class="w-full text-sm"
+                                        :value="old('nip_pengurus_barang')" />
+                                    <x-input-error class="mt-1" :messages="$errors->get('nip_pengurus_barang')" />
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
                     <div class="flex justify-end gap-4 border-t pt-6">
                         <button type="submit"
                             class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-12 rounded-xl transition shadow-lg flex items-center">

@@ -17,6 +17,7 @@ class Belanja extends Model
         'rekanan_id',
         'tanggal',
         'no_bukti',
+        'rincian',
         'uraian',
         'subtotal',
         'ppn',

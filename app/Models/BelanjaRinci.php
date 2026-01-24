@@ -12,6 +12,7 @@ class BelanjaRinci extends Model
         'belanja_id',
         'namakomponen',
         'harga_satuan',
+        'harga_penawaran',
         'volume',
         'bulan',
         'total_bruto', // harga_satuan * volume

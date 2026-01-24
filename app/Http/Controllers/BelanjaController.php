@@ -19,7 +19,7 @@ class BelanjaController extends Controller
     // BelanjaController.php
     public function create(Request $request)
     {
-        $userId = auth()->id();
+        $sekolahId = auth()->user()->sekolah_id;
         $user = auth()->user(); // Ambil data user login
         $listPajak = DasarPajak::all();
 
@@ -35,7 +35,7 @@ class BelanjaController extends Controller
         // Mengasumsikan User model memiliki relasi 'sekolah' atau menggunakan sekolah_id
         $sekolah = \App\Models\Sekolah::find($user->sekolah_id);
 
-        $rekanans = Rekanan::where('user_id', $userId)
+        $rekanans = Rekanan::where('sekolah_id', $sekolah->id)
             ->orderBy('nama_rekanan', 'asc')
             ->get();
 
@@ -119,6 +119,7 @@ class BelanjaController extends Controller
             'no_bukti' => 'required|string|unique:belanjas,no_bukti',
             'rekanan_id' => 'required',
             'items' => 'required|array|min:1',
+            'rincian' => 'nullable|string',
         ]);
 
         // 2. Ambil Data dari Middleware & Relasi Sekolah
@@ -185,6 +186,7 @@ class BelanjaController extends Controller
                     'rekanan_id' => $request->rekanan_id,
                     'tanggal' => $request->tanggal,
                     'no_bukti' => $request->no_bukti,
+                    'rincian' => $request->rincian,
                     'uraian' => $request->uraian,
                     'subtotal' => $request->sub_total,
                     'ppn' => $request->ppn ?? 0,
@@ -422,6 +424,7 @@ class BelanjaController extends Controller
             'no_bukti' => 'required|string|unique:belanjas,no_bukti,'.$id,
             'rekanan_id' => 'required',
             'items' => 'required|array|min:1',
+            'rincian' => 'nullable|string',
         ]);
 
         $anggaran = $request->anggaran_data;
@@ -469,6 +472,7 @@ class BelanjaController extends Controller
                     'tanggal' => $request->tanggal,
                     'no_bukti' => $request->no_bukti,
                     'uraian' => $request->uraian,
+                    'rincian' => $request->rincian,
                     'subtotal' => $request->sub_total,
                     'ppn' => $request->ppn ?? 0,
                     'pph' => $request->pph ?? 0,

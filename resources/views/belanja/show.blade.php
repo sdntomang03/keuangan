@@ -67,6 +67,14 @@
                                         <p class="text-xs text-gray-400 font-medium">NPWP: {{ $belanja->rekanan->npwp ??
                                             '-' }}</p>
                                     </div>
+                                    <div class="pt-4 border-t border-gray-50">
+                                        <span
+                                            class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1.5">Rincian
+                                            Transaksi</span>
+                                        <p class="text-sm text-gray-600 leading-relaxed italic">
+                                            {{ $belanja->rincian ?? 'Tidak ada rincian tambahan.' }}
+                                        </p>
+                                    </div>
                                 </div>
 
 

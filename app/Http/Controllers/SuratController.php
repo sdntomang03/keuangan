@@ -114,17 +114,17 @@ class SuratController extends Controller
             // --- D. DATA REKANAN ---
             $templateProcessor->setValue('nama_rekanan', $belanja->rekanan->nama_rekanan ?? '................');
             $templateProcessor->setValue('alamat_surat', $belanja->rekanan->alamat ?? '-');
-            $templateProcessor->setValue('alamat_surat2', '');
+            $templateProcessor->setValue('alamat_surat2', $belanja->rekanan->alamat2 ?? '-');
             $templateProcessor->setValue('provinsi_surat', $belanja->rekanan->provinsi ?? 'Jakarta');
-            $templateProcessor->setValue('hp_surat', $belanja->rekanan->no_telp ?? '-');
-            $templateProcessor->setValue('nama_pimpinan', $belanja->rekanan->pimpinan ?? '-');
+            $templateProcessor->setValue('no_telp', $belanja->rekanan->no_telp ?? '-');
+            $templateProcessor->setValue('nama_pimpinan', $belanja->rekanan->nama_pimpinan ?? '-');
 
             // --- E. DATA PEJABAT ---
             $templateProcessor->setValue('sekolah', $sekolah->nama_sekolah);
             $templateProcessor->setValue('nama_kepala', $sekolah->nama_kepala_sekolah);
             $templateProcessor->setValue('nip_kepala', $sekolah->nip_kepala_sekolah);
-            $templateProcessor->setValue('nama_pengurus_barang', $sekolah->nama_bendahara);
-            $templateProcessor->setValue('nip_pengurus_barang', $sekolah->nip_bendahara);
+            $templateProcessor->setValue('nama_pengurus_barang', $sekolah->nama_pengurus_barang);
+            $templateProcessor->setValue('nip_pengurus_barang', $sekolah->nip_pengurus_barang);
 
             // --- F. ISI NARASI ---
             $kodeRekening = $belanja->korek->ket ?? '-';

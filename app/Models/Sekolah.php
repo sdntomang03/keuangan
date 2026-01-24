@@ -22,6 +22,8 @@ class Sekolah extends Model
         'nip_kepala_sekolah',
         'nama_bendahara',
         'nip_bendahara',
+        'nama_pengurus_barang',
+        'nip_pengurus_barang',
         'anggaran_id_aktif',
         'triwulan_aktif',
         'alamat',
@@ -55,5 +57,10 @@ class Sekolah extends Model
     public function anggaranAktif(): BelongsTo
     {
         return $this->belongsTo(Anggaran::class, 'anggaran_id_aktif');
+    }
+
+    public function rekanans()
+    {
+        return $this->hasMany(Rekanan::class, 'sekolah_id');
     }
 }

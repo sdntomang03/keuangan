@@ -31,7 +31,7 @@
                                 <strong>sumber_dana</strong>, dll.
                             </p>
                         </div>
-                        <a href="{{ route('settings.kegiatan.template') }}"
+                        <a href="{{ route('setting.kegiatan.template') }}"
                             class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 transition">
                             Download Template .XLSX
                         </a>
@@ -44,7 +44,7 @@
                     <p class="text-xs text-gray-500 mb-4">Pastikan kolom <strong>idbl</strong> unik. Jika idbl sudah
                         ada, data akan diupdate.</p>
 
-                    <form action="{{ route('settings.kegiatan.import.store') }}" method="POST"
+                    <form action="{{ route('setting.kegiatan.import.store') }}" method="POST"
                         enctype="multipart/form-data" class="space-y-4">
                         @csrf
 

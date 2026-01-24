@@ -25,9 +25,9 @@ class DatabaseSeeder extends Seeder
             KorekSeeder::class,
             KegiatanSeeder::class,
             UserSeeder::class,
-            RekananSeeder::class,
             DasarPajakSeeder::class,
             SekolahSeeder::class,
+            RekananSeeder::class,
             AnggaranSeeder::class,
             RolePermissionSeeder::class,
         ]);

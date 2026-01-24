@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('namakomponen');
             $table->text('spek')->nullable();
             $table->decimal('harga_satuan', 15, 2);
+            $table->decimal('harga_penawaran', 15, 2)->default(0);
             $table->integer('volume');
             $table->integer('bulan');
             $table->decimal('total_bruto', 15, 2);

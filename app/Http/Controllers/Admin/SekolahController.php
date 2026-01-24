@@ -45,6 +45,8 @@ class SekolahController extends Controller
             'nip_kepala_sekolah' => 'required|string|max:30',
             'nama_bendahara' => 'required|string|max:255',
             'nip_bendahara' => 'required|string|max:30',
+            'nama_pengurus_barang' => 'nullable|string|max:255',
+            'nip_pengurus_barang' => 'nullable|string|max:50',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 

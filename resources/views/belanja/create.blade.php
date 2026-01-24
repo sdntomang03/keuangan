@@ -49,6 +49,7 @@
 
                 <div
                     class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 grid grid-cols-1 md:grid-cols-3 gap-6">
+
                     <div class="space-y-4">
                         <label class="text-xs font-bold text-gray-400 uppercase tracking-wider">Detail Nota</label>
                         <input type="date" name="tanggal" class="w-full rounded-xl border-gray-200 focus:ring-blue-500"
@@ -56,27 +57,33 @@
                         <input type="text" name="no_bukti" placeholder="Nomor Bukti"
                             class="w-full rounded-xl border-gray-200" value="{{ old('no_bukti') }}" required>
                     </div>
+
                     <div x-data="{
-                        open: false,
-                        search: '',
-                        selectedId: '{{ old('rekanan_id') }}',
-    selectedName: '{{ $rekanans->where('id', old('rekanan_id'))->first()->nama_rekanan ?? '' }}',
-                        rekanans: {{ json_encode($rekanans) }},
-                        get filteredRekans() {
-                            return this.rekanans.filter(i => i.nama_rekanan.toLowerCase().includes(this.search.toLowerCase()))
-                        }
-                    }" class="relative">
+        open: false,
+        search: '',
+        selectedId: '{{ old('rekanan_id') }}',
+        selectedName: '{{ $rekanans->where('id', old('rekanan_id'))->first()->nama_rekanan ?? '' }}',
+        rekanans: {{ json_encode($rekanans) }},
+        get filteredRekans() {
+            return this.rekanans.filter(i => i.nama_rekanan.toLowerCase().includes(this.search.toLowerCase()))
+        }
+    }" class="relative">
 
                         <label class="text-xs font-bold text-gray-400 uppercase tracking-wider">Penerima / Toko</label>
 
                         <div @click="open = !open"
-                            class="cursor-pointer border border-gray-200 rounded-xl p-2 mt-4 bg-white text-sm">
+                            class="cursor-pointer border border-gray-200 rounded-xl p-2 mt-4 bg-white text-sm flex justify-between items-center">
                             <span x-text="selectedName ? selectedName : 'Pilih Rekanan...'"></span>
                             <input type="hidden" name="rekanan_id" :value="selectedId">
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7"></path>
+                            </svg>
                         </div>
 
                         <div x-show="open" @click.away="open = false"
-                            class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto p-2">
+                            class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto p-2"
+                            style="display: none;">
                             <input type="text" x-model="search" placeholder="Cari..."
                                 class="w-full mb-2 border-gray-100 rounded-lg text-sm focus:ring-indigo-500">
                             <template x-for="r in filteredRekans" :key="r.id">
@@ -85,14 +92,27 @@
                                     <span x-text="r.nama_rekanan"></span>
                                 </div>
                             </template>
+                            <div x-show="filteredRekans.length === 0" class="p-2 text-xs text-gray-400 text-center">
+                                Tidak ditemukan
+                            </div>
                         </div>
+
+                        <div class="mt-4">
+
+                            <input type="text" name="rincian" value="{{ old('rincian') }}"
+                                placeholder="Input Rincian (Opsional)"
+                                class="w-full rounded-xl border-gray-200 mt-2 text-sm focus:ring-blue-500 placeholder-gray-400">
+                        </div>
+
                     </div>
+
                     <div class="space-y-4 border-l border-gray-100 md:pl-4">
                         <label class="text-xs font-bold text-gray-400 uppercase tracking-wider">Uraian Transaksi</label>
-                        <textarea name="uraian" rows="3"
+                        <textarea name="uraian" rows="5"
                             class="w-full rounded-xl border-gray-200 text-sm focus:ring-blue-500"
                             required>{{ old('uraian') }}</textarea>
                     </div>
+
                 </div>
 
                 <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">

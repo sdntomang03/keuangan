@@ -28,6 +28,8 @@ class SekolahSeeder extends Seeder
             'nip_kepala_sekolah' => '197501012000031001',
             'nama_bendahara' => 'Siti Aminah, S.Pd',
             'nip_bendahara' => '198205122010012005',
+            'nama_pengurus_barang' => 'Rida Budi, S.Pd',
+            'nip_pengurus_barang' => '12353456789012345',
 
             // Sementara set null jika tabel anggarans belum di-seed
             'anggaran_id_aktif' => null,
@@ -51,7 +53,8 @@ class SekolahSeeder extends Seeder
             'nip_kepala_sekolah' => '196805051993032010 ',
             'nama_bendahara' => 'Muhammad Dian Nafi, S.Pd',
             'nip_bendahara' => '198205122010012005',
-
+            'nama_pengurus_barang' => 'Rida Budi, S.Pd',
+            'nip_pengurus_barang' => '12353456789012345',
             // Sementara set null jika tabel anggarans belum di-seed
             'anggaran_id_aktif' => null,
             'triwulan_aktif' => 1,

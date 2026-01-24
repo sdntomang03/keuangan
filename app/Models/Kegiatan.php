@@ -2,15 +2,29 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Kegiatan extends Model
 {
-    protected $guarded = [];
+    use HasFactory;
+
+    protected $primaryKey = 'id';
+
+    protected $fillable = [
+        'snp',
+        'sumber_dana',
+        'kodedana',
+        'namadana',
+        'kodegiat',
+        'namagiat',
+        'kegiatan',
+        'idbl',
+        'link',
+    ];
 
     // Jika idbl bukan angka yang auto-increment (misal: kode manual), tambahkan:
     // public $incrementing = false;
-    protected $primaryKey = 'idbl';
 
     public function rkas()
     {

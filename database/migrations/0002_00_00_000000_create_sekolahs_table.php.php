@@ -6,33 +6,48 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
-        Schema::create('rekanans', function (Blueprint $table) {
+        Schema::create('sekolahs', function (Blueprint $table) {
             $table->id();
+            // Relasi ke User (Owner/Admin Sekolah)
 
-            // UBAH DARI user_id KE sekolah_id
-            // Pastikan tabel 'sekolahs' sudah ada sebelum migration ini jalan
-            $table->foreignId('sekolah_id')->constrained('sekolahs')->onDelete('cascade');
+            // Identitas Sekolah
+            $table->string('nama_sekolah');
+            $table->string('npsn')->nullable(); // Tambahan standar untuk data sekolah
+            $table->string('nama_kepala_sekolah');
+            $table->string('nip_kepala_sekolah');
+            $table->string('nama_bendahara');
+            $table->string('nip_bendahara');
+            $table->string('nama_pengurus_barang');
+            $table->string('nip_pengurus_barang');
+            $table->foreignId('user_id');
+            // Status Aktif (Sekarang menggunakan ID Anggaran)
+            $table->integer('anggaran_id_aktif')->nullable();
+            $table->integer('triwulan_aktif')->default(1);
 
-            $table->string('nama_rekanan');
+            // Alamat Lengkap
+            $table->text('alamat')->nullable();
+            $table->string('kelurahan')->nullable();
+            $table->string('kecamatan')->nullable();
+            $table->string('kota')->nullable();
+            $table->string('kodepos')->nullable();
+            $table->string('telp')->nullable();
+            $table->string('email')->nullable();
 
-            // Tambahan Kolom (PENTING untuk Cetak SPJ/Word)
-            $table->text('alamat')->nullable();         // Alamat Toko
-            $table->string('provinsi')->nullable();     // Provinsi (untuk kop surat rekanan)
-            $table->string('pimpinan')->nullable();     // Nama Pimpinan Toko (untuk TTD)
-            $table->string('no_telp')->nullable();      // No HP Toko
-
-            $table->string('npwp')->nullable();
-            $table->string('nama_bank')->nullable();
-            $table->string('no_rekening')->nullable();
-
+            $table->string('logo')->nullable();
             $table->timestamps();
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
-        Schema::dropIfExists('rekanans');
+        Schema::dropIfExists('sekolahs');
     }
 };

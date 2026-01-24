@@ -19,6 +19,7 @@ return new class extends Migration
             $table->foreignId('rekanan_id')->constrained('rekanans'); // Relasi ke master rekanan
             $table->date('tanggal');
             $table->string('no_bukti');
+            $table->string('rincian')->nullable();
             $table->string('uraian');
             $table->decimal('subtotal', 15, 2);    // Total Bruto (Sum of belanja_rincis)
             $table->decimal('ppn', 15, 2);    // Total Bruto (Sum of belanja_rincis)

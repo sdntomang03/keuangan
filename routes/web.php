@@ -8,10 +8,12 @@ use App\Http\Controllers\BelanjaController;
 use App\Http\Controllers\BkuController;
 use App\Http\Controllers\Coba;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\KegiatanController;
 use App\Http\Controllers\PajakController;
 use App\Http\Controllers\PenerimaanController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RealisasiController;
+use App\Http\Controllers\RekananController;
 use App\Http\Controllers\RkasController;
 use App\Http\Controllers\SekolahController;
 use App\Http\Controllers\SettingController;
@@ -113,7 +115,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
 
 });
 // Tambahkan 'admin/' pada prefix dan 'admin.' pada name
-Route::middleware(['auth'])->prefix('settings')->name('settings.')->group(function () {
+Route::middleware(['auth'])->prefix('setting')->name('setting.')->group(function () {
 
     // --- REKANAN ---
     Route::get('/rekanan/import', [SettingController::class, 'importRekananView'])->name('rekanan.import');
@@ -133,6 +135,9 @@ Route::middleware(['auth'])->prefix('settings')->name('settings.')->group(functi
     // 3. Proses Eksekusi Import (POST)
     Route::post('/kegiatan/import', [SettingController::class, 'importKegiatanStore'])
         ->name('kegiatan.import.store');
+
+    Route::resource('rekanan', RekananController::class);
+    Route::resource('kegiatan', KegiatanController::class);
 });
 
 Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['auth', 'role:admin']], function () {
@@ -146,6 +151,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['auth', 'r
     // Action Hapus
     Route::delete('/rkas/cleanup/destroy', [RkasCleanupController::class, 'destroy'])->name('rkas.cleanup.destroy');
 });
+
 Route::get('/coba', [Coba::class, 'index'])->name('index');
 Route::get('/banding', [Coba::class, 'banding'])->name('banding');
 Route::get('/coba/rkas', [Coba::class, 'rkas'])->name('coba.rkas');
