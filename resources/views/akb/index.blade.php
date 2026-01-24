@@ -5,7 +5,8 @@
                 {{ __('Halaman AKB') }}
             </h2>
             <div class="flex items-center space-x-2">
-                <span class="px-3 py-1 bg-indigo-100 text-indigo-800 text-xs font-medium rounded-full dark:bg-indigo-900 dark:text-indigo-200 shadow-sm border border-indigo-200">
+                <span
+                    class="px-3 py-1 bg-indigo-100 text-indigo-800 text-xs font-medium rounded-full dark:bg-indigo-900 dark:text-indigo-200 shadow-sm border border-indigo-200">
                     {{ strtoupper($anggaranAktif->singkatan ?? '-') }} {{ $anggaranAktif->tahun ?? '' }}
                 </span>
             </div>
@@ -19,14 +20,17 @@
 
                     <div class="mb-6 p-4 bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500 rounded-r-lg">
                         <div class="flex items-center">
-                            <svg class="w-5 h-5 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            <svg class="w-5 h-5 text-blue-500 mr-2" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             <span class="text-sm font-medium">
                                 Mode Kerja Aktif:
                                 <strong class="text-blue-700 dark:text-blue-300">
                                     {{ $anggaranAktif->nama_anggaran ?? 'Belum Diatur' }}
-                                    ({{ strtoupper($anggaranAktif->singkatan ?? '-') }} Tahun {{ $anggaranAktif->tahun ?? '-' }})
+                                    ({{ strtoupper($anggaranAktif->singkatan ?? '-') }} Tahun {{ $anggaranAktif->tahun
+                                    ?? '-' }})
                                 </strong>
                             </span>
                         </div>
@@ -45,18 +49,20 @@
                         </div>
 
                         <div class="flex flex-wrap gap-4 mt-6 items-center">
-                            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg transition flex items-center shadow-md">
+                            <button type="submit"
+                                class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg transition flex items-center shadow-md">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
                                 </svg>
                                 Simpan Data
                             </button>
 
-                            <a href="{{ route('akb.generate') }}"
-                               onclick="return confirm('Apakah Anda yakin ingin menjalankan proses generate rincian untuk {{ $anggaranAktif->singkatan ?? 'anggaran' }} {{ $anggaranAktif->tahun ?? '' }}? Proses ini akan menghapus rincian lama pada anggaran tersebut.')"
-                               class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-6 rounded-lg transition flex items-center shadow-md text-sm">
+                            <a href="{{ route('akb.generate') }}" onclick="confirmGenerate(event, this.href)"
+                                class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-6 rounded-lg transition flex items-center shadow-md text-sm">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13 10V3L4 14h7v7l9-11h-7z" />
                                 </svg>
                                 Generate Rincian Bulanan
                             </a>
@@ -67,4 +73,43 @@
             </div>
         </div>
     </div>
+    <script>
+        function confirmGenerate(event, url) {
+        // Mencegah link terbuka otomatis
+        event.preventDefault();
+
+        Swal.fire({
+            title: 'Jalankan Proses Generate?',
+            text: "Proses ini akan menghapus rincian lama pada {{ $anggaranAktif->singkatan ?? 'anggaran' }} {{ $anggaranAktif->tahun ?? '' }} dan menggantinya dengan yang baru.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#f97316', // Warna orange-500 sesuai class tombol Anda
+            cancelButtonColor: '#6b7280',  // Warna gray-500
+            confirmButtonText: 'Ya, Generate!',
+            cancelButtonText: 'Batal',
+            reverseButtons: true,
+            customClass: {
+                popup: 'rounded-3xl',
+                confirmButton: 'rounded-xl px-6 py-3 font-bold',
+                cancelButton: 'rounded-xl px-6 py-3 font-bold'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Tampilkan loading karena proses generate biasanya memakan waktu
+                Swal.fire({
+                    title: 'Sedang Memproses...',
+                    text: 'Mohon tunggu sebentar, sistem sedang menyusun rincian bulanan.',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading()
+                    }
+                });
+
+                // Arahkan ke route generate
+                window.location.href = url;
+            }
+        })
+    }
+    </script>
+
 </x-app-layout>

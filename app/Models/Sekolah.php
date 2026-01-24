@@ -34,12 +34,11 @@ class Sekolah extends Model
         'logo',
     ];
 
-    /**
-     * Relasi ke User (Owner Sekolah)
-     */
-    public function user(): BelongsTo
+    // app/Models/Sekolah.php
+    public function users(): HasMany
     {
-        return $this->belongsTo(User::class);
+        // Nama method dibuat jamak (users) karena jumlahnya banyak
+        return $this->hasMany(User::class, 'sekolah_id');
     }
 
     /**

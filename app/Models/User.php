@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
@@ -24,7 +25,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'setting_id',
+        'sekolah_id',
     ];
 
     /**
@@ -50,9 +51,8 @@ class User extends Authenticatable
         ];
     }
 
-    public function sekolah()
+    public function sekolah(): BelongsTo
     {
-        // Pastikan diarahkan ke model Sekolah
-        return $this->hasOne(Sekolah::class);
+        return $this->belongsTo(Sekolah::class, 'sekolah_id');
     }
 }

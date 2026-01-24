@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\RkasCleanupController;
 use App\Http\Controllers\Admin\SekolahController as AdminSekolahController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\AkbController;
@@ -134,6 +135,17 @@ Route::middleware(['auth'])->prefix('settings')->name('settings.')->group(functi
         ->name('kegiatan.import.store');
 });
 
+Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['auth', 'role:admin']], function () {
+
+    // Halaman Menu Penghapusan
+    Route::get('/rkas/cleanup', [RkasCleanupController::class, 'index'])->name('rkas.cleanup');
+
+    // API untuk mengambil anggaran berdasarkan sekolah (AJAX)
+    Route::get('/api/anggaran-by-sekolah/{sekolahId}', [RkasCleanupController::class, 'getAnggaranBySekolah']);
+
+    // Action Hapus
+    Route::delete('/rkas/cleanup/destroy', [RkasCleanupController::class, 'destroy'])->name('rkas.cleanup.destroy');
+});
 Route::get('/coba', [Coba::class, 'index'])->name('index');
 Route::get('/banding', [Coba::class, 'banding'])->name('banding');
 Route::get('/coba/rkas', [Coba::class, 'rkas'])->name('coba.rkas');

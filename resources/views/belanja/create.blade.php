@@ -1,5 +1,21 @@
 <x-app-layout>
-    <div class="py-12 bg-gray-50 min-h-screen" x-data="belanjaForm()">
+    @if(session('error'))
+    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 mt-4">
+        <div
+            class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-xl shadow-sm flex justify-between items-center">
+            <div class="flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd"
+                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                        clip-rule="evenodd" />
+                </svg>
+                <span class="text-sm font-bold">{{ session('error') }}</span>
+            </div>
+            <button onclick="this.parentElement.remove()" class="text-red-500 hover:text-red-700">&times;</button>
+        </div>
+    </div>
+    @endif
+    <div class="py-12 bg-gray-50 min-h-screen" x-data="belanjaForm()" x-init="init()">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
 
             <div
@@ -36,15 +52,15 @@
                     <div class="space-y-4">
                         <label class="text-xs font-bold text-gray-400 uppercase tracking-wider">Detail Nota</label>
                         <input type="date" name="tanggal" class="w-full rounded-xl border-gray-200 focus:ring-blue-500"
-                            required>
+                            value="{{ old('tanggal') }}" required>
                         <input type="text" name="no_bukti" placeholder="Nomor Bukti"
-                            class="w-full rounded-xl border-gray-200" required>
+                            class="w-full rounded-xl border-gray-200" value="{{ old('no_bukti') }}" required>
                     </div>
                     <div x-data="{
                         open: false,
                         search: '',
-                        selectedId: '',
-                        selectedName: '',
+                        selectedId: '{{ old('rekanan_id') }}',
+    selectedName: '{{ $rekanans->where('id', old('rekanan_id'))->first()->nama_rekanan ?? '' }}',
                         rekanans: {{ json_encode($rekanans) }},
                         get filteredRekans() {
                             return this.rekanans.filter(i => i.nama_rekanan.toLowerCase().includes(this.search.toLowerCase()))
@@ -74,7 +90,8 @@
                     <div class="space-y-4 border-l border-gray-100 md:pl-4">
                         <label class="text-xs font-bold text-gray-400 uppercase tracking-wider">Uraian Transaksi</label>
                         <textarea name="uraian" rows="3"
-                            class="w-full rounded-xl border-gray-200 text-sm focus:ring-blue-500" required></textarea>
+                            class="w-full rounded-xl border-gray-200 text-sm focus:ring-blue-500"
+                            required>{{ old('uraian') }}</textarea>
                     </div>
                 </div>
 
@@ -98,7 +115,9 @@
                                 class="w-full rounded-xl border-gray-200">
                                 <option value="">-- Pilih Rekening --</option>
                                 <template x-for="rek in rekenings" :key="rek.koderekening">
+                                    {{-- Pastikan :selected juga dicek agar browser membantu rendering --}}
                                     <option :value="rek.koderekening"
+                                        :selected="rek.koderekening == '{{ old('kodeakun') }}'"
                                         x-text="rek.koderekening + ' - ' + rek.namarekening"></option>
                                 </template>
                             </select>
@@ -117,7 +136,7 @@
                                             <span>Harga Satuan</span>
                                             <button type="button" @click="roundAllPricesDown()"
                                                 x-show="items.length > 0" title="Bulatkan semua harga"
-                                                class="bg-red-500 hover:bg-red-400 text-white p-1 rounded transition-all shadow-sm active:rotate-180 duration-300">
+                                                class="bg-green-500 hover:bg-green-400 text-white p-1 rounded transition-all shadow-sm active:rotate-180 duration-300">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none"
                                                     viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -133,7 +152,8 @@
                             </thead>
                             <tbody class="divide-y divide-gray-100 bg-white">
                                 <template x-for="(item, index) in items" :key="index">
-                                    <tr class="hover:bg-blue-50/30 transition">
+                                    <tr
+                                        class="hover:bg-emerald-50 hover:ring-1 hover:ring-inset hover:ring-emerald-200 transition-all duration-200 group">
                                         <td class="px-6 py-4">
                                             {{-- 1. Nama Komponen (Tetap di baris atas sendiri agar dominan) --}}
                                             <input type="text" :name="'items[' + index + '][namakomponen]'"
@@ -320,78 +340,97 @@
                 <input type="hidden" name="ppn" :value="totalPenambah">
                 <input type="hidden" name="pph" :value="totalPajak">
                 <input type="hidden" name="transfer" :value="totalTransfer">
-                <input type="hidden" name="idbl" x-model="selectedIdbl">
-                <input type="hidden" name="kodeakun" x-model="selectedRekening">
+                <input type="hidden" name="idbl" x-model="selectedIdbl" x-init="selectedIdbl = '{{ old('idbl') }}'">
+                <input type="hidden" name="kodeakun" x-model="selectedRekening"
+                    x-init="selectedRekening = '{{ old('kodeakun') }}'">
             </form>
         </div>
     </div>
 
     <script>
         function belanjaForm() {
-            return {
-                selectedIdbl: '',
-                selectedRekening: '',
-                rekenings: [],
-                items: [],
-                pajaks: [],
+        return {
+            selectedIdbl: '{{ old('idbl') }}',
+            selectedRekening: '{{ old('kodeakun') }}',
+            rekenings: [],
+            items: @json(old('items')) || [],
+            pajaks: @json(old('pajaks')) || [],
+            masterPajaks: @json($listPajak),
 
-                totalHargaBersih: 0,
-                totalPenambah: 0,
-                totalBruto: 0,
-                totalPajak: 0,
-                totalTransfer: 0,
+            // Variabel hitung
+            totalHargaBersih: 0, totalPenambah: 0, totalBruto: 0, totalPajak: 0, totalTransfer: 0,
 
-                masterPajaks: @json($listPajak),
-
-                async fetchRekening() {
-                    if (!this.selectedIdbl) return;
+            async init() {
+                // Pulihkan list rekening jika ada IDBL lama
+                if (this.selectedIdbl) {
                     const res = await fetch(`/api/get-rekening?idbl=${this.selectedIdbl}`);
                     this.rekenings = await res.json();
-                    this.selectedRekening = '';
-                    this.items = [];
-                    this.calculateTotal();
-                },
 
-                async fetchKomponen() {
-                    if (!this.selectedRekening) return;
-                    const res = await fetch(
-                        `/api/get-komponen?idbl=${this.selectedIdbl}&koderekening=${this.selectedRekening}`);
-                    const data = await res.json();
-                    this.items = data.map(komp => ({
-                        rkas_id: komp.id,
-                        idblrinci: komp.idblrinci,
-                        namakomponen: komp.namakomponen,
-                        spek: komp.spek || '-',
-                        volume: komp.volume_bulan,
-                        satuan: komp.satuan,
-                        max_volume: komp.volume_bulan,
-                        harga_satuan: komp.hargasatuan,
-                        harga_asli: komp.hargasatuan,
-                        keterangan: komp.keterangan || '-'
-                    }));
-                    this.calculateTotal();
-                },
-
-                addPajak() {
-                    this.pajaks.push({
-                        id_master: '',
-                        nominal: 0
+                    // Pastikan selectedRekening terpasang SETELAH list rekening ada
+                    this.$nextTick(() => {
+                        this.selectedRekening = '{{ old('kodeakun') }}';
                     });
-                },
+                }
+                this.calculateTotal();
+            },
 
-                removePajak(index) {
-                    this.pajaks.splice(index, 1);
-                    this.calculateTotal();
-                },
+            async fetchRekening() {
+                if (!this.selectedIdbl) return;
+                const res = await fetch(`/api/get-rekening?idbl=${this.selectedIdbl}`);
+                this.rekenings = await res.json();
+                this.selectedRekening = '';
+                this.items = [];
+                this.calculateTotal();
+            },
 
-                validateVolume(item) {
-                    if (parseFloat(item.volume) > parseFloat(item.max_volume)) {
-                        alert(`Maksimal volume adalah ${item.max_volume}`);
-                        item.volume = item.max_volume;
+            async fetchKomponen() {
+                if (!this.selectedRekening) return;
+                // Jangan ambil dari DB jika ini adalah proses recovery (old input)
+                if (this.items.length > 0 && '{{ old('kodeakun') }}' === this.selectedRekening) return;
+
+                const res = await fetch(`/api/get-komponen?idbl=${this.selectedIdbl}&koderekening=${this.selectedRekening}`);
+                const data = await res.json();
+                this.items = data.map(komp => ({
+                    rkas_id: komp.id,
+                    idblrinci: komp.idblrinci,
+                    namakomponen: komp.namakomponen,
+                    spek: komp.spek || '-',
+                    volume: komp.volume_bulan,
+                    satuan: komp.satuan,
+                    max_volume: komp.volume_bulan,
+                    harga_satuan: komp.hargasatuan,
+                    harga_asli: komp.hargasatuan,
+                    keterangan: komp.keterangan || '-'
+                }));
+                this.calculateTotal();
+            },
+
+            calculateTotal() {
+                this.totalHargaBersih = this.items.reduce((sum, item) =>
+                    sum + (parseFloat(item.volume || 0) * parseFloat(item.harga_satuan || 0)), 0);
+
+                let penambah = 0;
+                let potonganPPH = 0;
+
+                this.pajaks.forEach(p => {
+                    const master = this.masterPajaks.find(m => m.id == p.id_master);
+                    if (master) {
+                        p.nominal = Math.round(this.totalHargaBersih * (parseFloat(master.persen) / 100));
+                        if (master.jenis === 'penambah') penambah += p.nominal;
+                        else potonganPPH += p.nominal;
                     }
-                },
+                });
 
-                roundAllPricesDown() {
+                this.totalPenambah = penambah;
+                this.totalBruto = this.totalHargaBersih + penambah;
+                this.totalPajak = potonganPPH;
+                this.totalTransfer = this.totalHargaBersih - potonganPPH;
+            },
+
+            formatRupiah(val) {
+                return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val || 0);
+            },
+            roundAllPricesDown() {
                     if (confirm('Bulatkan semua harga satuan sesuai ketentuan (Ribuan/Puluh Ribu/Ratus Ribu)?')) {
                         this.items.forEach(item => {
                             if (item.harga_satuan) {
@@ -427,61 +466,17 @@
                         this.calculateTotal();
                     }
                 },
-
-                removeItem(index) {
-
-                        this.items.splice(index, 1);
-                        this.calculateTotal();
-
-                },
-
-                calculateTotal() {
-                    // 1. Hitung Dasar Harga Bersih (Total item belanja)
-                    this.totalHargaBersih = this.items.reduce((sum, item) =>
-                        sum + (parseFloat(item.volume || 0) * parseFloat(item.harga_satuan || 0)), 0);
-
-                    let penambah = 0;
-                    let potonganPPH = 0; // Inisialisasi khusus untuk PPH/Pengurang
-
-                    // 2. Hitung Pajak berdasarkan DasarPajak
-                    this.pajaks.forEach(p => {
-                        const master = this.masterPajaks.find(m => m.id == p.id_master);
-                        if (master) {
-                            // Hitung nominal pajak: Dasar x Persen
-                            p.nominal = Math.round(this.totalHargaBersih * (parseFloat(master.persen) / 100));
-
-                            // Logika Pemisahan:
-                            if (master.jenis === 'penambah') {
-                                // Biasanya PPN: Menambah total tagihan (Bruto)
-                                penambah += p.nominal;
-                            } else if (master.jenis === 'pengurang') {
-                                // Biasanya PPH: Mengurangi pembayaran ke toko/penerima
-                                potonganPPH += p.nominal;
-                            }
-                        }
-                    });
-
-                    // 3. Set nilai ke variabel state
-                    this.totalPenambah = penambah;
-
-                    // Total Bruto: Harga Bersih + PPN (Nilai Kwitansi)
-                    this.totalBruto = this.totalHargaBersih + this.totalPenambah;
-
-                    // Total Pajak: Sekarang hanya berisi akumulasi pajak pengurang (PPH)
-                    this.totalPajak = potonganPPH;
-
-                    // Total Transfer (Netto): Uang yang benar-benar dibayarkan
-                    this.totalTransfer = this.totalHargaBersih - this.totalPajak;
-                },
-
-                formatRupiah(val) {
-                    return new Intl.NumberFormat('id-ID', {
-                        style: 'currency',
-                        currency: 'IDR',
-                        maximumFractionDigits: 0
-                    }).format(val || 0);
+            // Tambahkan fungsi pendukung lainnya (removeItem, addPajak, dll) di sini...
+            addPajak() { this.pajaks.push({ id_master: '', nominal: 0 }); },
+            removePajak(index) { this.pajaks.splice(index, 1); this.calculateTotal(); },
+            removeItem(index) { this.items.splice(index, 1); this.calculateTotal(); },
+            validateVolume(item) {
+                if (parseFloat(item.volume) > parseFloat(item.max_volume)) {
+                    alert(`Maksimal volume adalah ${item.max_volume}`);
+                    item.volume = item.max_volume;
                 }
             }
         }
+    }
     </script>
 </x-app-layout>

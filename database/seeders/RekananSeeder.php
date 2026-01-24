@@ -38,7 +38,7 @@ class RekananSeeder extends Seeder
                 // Menggunakan updateOrInsert agar jika seeder dijalankan ulang tidak error karena duplicate 'kode'
                 DB::table('rekanans')->Insert(
                     [
-                        'user_id' => 1,
+                        'sekolah_id' => 1,
                         'nama_rekanan' => $data[0] ?? null,
                         'no_rekening' => $data[1] ?? null,
                         'nama_bank' => $data[2] ?? null,

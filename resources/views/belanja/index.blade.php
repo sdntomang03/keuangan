@@ -195,10 +195,10 @@
                                                 </svg>
                                             </a>
                                             <form action="{{ route('belanja.destroy', $belanja->id) }}" method="POST"
-                                                onsubmit="return confirm('Hapus transaksi ini?')">
+                                                id="delete-form-{{ $belanja->id }}">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit"
+                                                <button type="button" onclick="confirmDelete('{{ $belanja->id }}')"
                                                     class="text-gray-400 hover:text-red-600 transition-colors">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
                                                         viewBox="0 0 24 24" stroke="currentColor">
@@ -266,4 +266,40 @@
             </div>
         </div>
     </div>
+
+
+    <script>
+        function confirmDelete(id) {
+        Swal.fire({
+            title: 'Hapus Transaksi?',
+            text: "Data rincian belanja ini akan dihapus secara permanen!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626', // Warna merah (red-600)
+            cancelButtonColor: '#6b7280',  // Warna abu-abu (gray-500)
+            confirmButtonText: 'Ya, Hapus!',
+            cancelButtonText: 'Batal',
+            reverseButtons: true, // Tombol batal di kiri, hapus di kanan
+            customClass: {
+                popup: 'rounded-3xl',
+                confirmButton: 'rounded-xl px-6 py-3 font-bold',
+                cancelButton: 'rounded-xl px-6 py-3 font-bold'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Tampilkan loading saat proses hapus
+                Swal.fire({
+                    title: 'Memproses...',
+                    text: 'Sedang menghapus data',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading()
+                    }
+                });
+                // Submit form
+                document.getElementById('delete-form-' + id).submit();
+            }
+        })
+    }
+    </script>
 </x-app-layout>

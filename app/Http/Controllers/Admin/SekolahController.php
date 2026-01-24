@@ -15,7 +15,8 @@ class SekolahController extends Controller
      */
     public function index()
     {
-        $sekolahs = Sekolah::with('user')->paginate(10);
+        // Memuat relasi anggaranAktif tidak akan menduplikasi baris sekolah
+        $sekolahs = Sekolah::with('anggaranAktif')->paginate(10);
 
         return view('admin.sekolah.index', compact('sekolahs'));
     }

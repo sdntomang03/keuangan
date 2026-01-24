@@ -11,18 +11,15 @@ class SekolahController extends Controller
 {
     public function index()
     {
-        // Ambil sekolah_id dari user yang sedang login
-        $sekolahId = Auth::user()->sekolah_id;
+        // Ambil data sekolah langsung melalui relasi user yang login
+        $setting = Auth::user()->sekolah;
 
-        // Cari data sekolah berdasarkan ID tersebut
-        $setting = Sekolah::find($sekolahId);
-
-        // Beri peringatan jika data tidak ditemukan
         if (! $setting) {
             return redirect()->route('dashboard')->with('error', 'Instansi Anda belum terdaftar.');
         }
 
-        $anggarans = Anggaran::where('sekolah_id', $setting->id)->get();
+        // Ambil anggaran melalui relasi sekolah
+        $anggarans = $setting->anggarans;
 
         return view('sekolah.index', compact('setting', 'anggarans'));
     }
@@ -66,10 +63,13 @@ class SekolahController extends Controller
             $data['logo'] = $path;
         }
 
-        // 1. Simpan/Update data Sekolah
+        // Ambil ID sekolah dari user yang sedang login
+        $sekolahId = Auth::user()->sekolah_id;
+
+        // Simpan atau Update
         $sekolah = Sekolah::updateOrCreate(
-            ['user_id' => Auth::id()],
-            $data
+            ['id' => $sekolahId], // Kunci pencarian: Cari sekolah yang ID-nya ini
+            $data                 // Data yang akan diupdate/diisi
         );
 
         // 2. Update user (pastikan foreign key sinkron)
