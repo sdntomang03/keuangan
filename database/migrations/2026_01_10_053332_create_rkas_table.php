@@ -37,7 +37,7 @@ return new class extends Migration
             $table->decimal('hargabaru', 15, 2)->nullable();
             $table->decimal('totalharga', 15, 2)->default(0);
             $table->decimal('totalpajak', 15, 2)->default(0);
-
+            $table->foreignId('anggaran_id')->constrained('anggarans')->onDelete('cascade');
             // Tambahan
             $table->string('giatsubteks')->nullable();
 

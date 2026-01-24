@@ -9,7 +9,7 @@ class Bku extends Model
     protected $guarded = [];
 
     // Tambahkan $anggaranId sebagai parameter ke-8
-    public static function catat($tanggal, $no_bukti, $uraian, $debit, $kredit, $belanjaId = null, $pajakId = null, $anggaranId = null)
+    public static function catat($tanggal, $no_bukti, $uraian, $debit, $kredit, $belanjaId = null, $pajakId = null, $anggaranId = null, $penerimaanId = null)
     {
         // 1. Ambil data terakhir KHUSUS untuk anggaran yang dipilih
         // Ini penting agar saldo BOS dan BOP tidak bercampur
@@ -17,13 +17,8 @@ class Bku extends Model
             ->orderBy('id', 'desc')
             ->first();
 
-        $saldoTerakhir = $terakhir ? $terakhir->saldo : 0;
-
         // No urut juga sebaiknya per anggaran atau per tahun
         $noUrutTerakhir = $terakhir ? $terakhir->no_urut : 0;
-
-        // 2. Hitung saldo baru
-        $saldoBaru = $saldoTerakhir + ($debit - $kredit);
 
         // 3. Simpan data
         return self::create([
@@ -33,12 +28,22 @@ class Bku extends Model
             'uraian' => $uraian,
             'debit' => $debit,
             'kredit' => $kredit,
-            'saldo' => $saldoBaru,
             'belanja_id' => $belanjaId,
             'pajak_id' => $pajakId,
             'anggaran_id' => $anggaranId, // Sekarang variabel ini sudah ada dari parameter
             'user_id' => auth()->id(), // Tambahkan juga user_id jika kolomnya ada
+            'penerimaan_id' => $penerimaanId,
         ]);
+    }
+
+    protected static function booted()
+    {
+        static::deleted(function ($bku) {
+            // Jika baris BKU yang dihapus memiliki relasi penerimaan
+            if ($bku->penerimaan_id) {
+                $bku->penerimaan()->delete();
+            }
+        });
     }
 
     public function belanja()
@@ -54,5 +59,10 @@ class Bku extends Model
     public function anggaran()
     {
         return $this->belongsTo(Anggaran::class, 'anggaran_id');
+    }
+
+    public function penerimaan()
+    {
+        return $this->belongsTo(Penerimaan::class);
     }
 }

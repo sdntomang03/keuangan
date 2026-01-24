@@ -116,7 +116,7 @@ class SingleBelanjaSheet implements FromCollection, ShouldAutoSize, WithEvents, 
                 // --- LOOPING RINCIAN POTONGAN PAJAK (PPh) ---
                 $firstPphRow = $currentRow;
                 $listPajak = $this->belanja->pajaks; // Data dari relasi pajaks.masterPajak
-
+                $pphcek = false;
                 if ($listPajak && $listPajak->count() > 0) {
                     foreach ($listPajak as $pajak) {
                         // Mengambil nama dari relasi masterPajak sesuai tampilan web
@@ -127,11 +127,13 @@ class SingleBelanjaSheet implements FromCollection, ShouldAutoSize, WithEvents, 
                         $sheet->setCellValue("F{$currentRow}", $namaPajak);
                         $sheet->setCellValue("G{$currentRow}", $pajak->nominal);
                         $currentRow++;
+                        $pphcek = true;
                     }
                 } else {
                     // Jika tidak ada pajak, tampilkan satu baris PPh 0
                     $sheet->setCellValue("F{$currentRow}", 'Total PPh');
                     $sheet->setCellValue("G{$currentRow}", 0);
+                    $pphcek = false;
                     $currentRow++;
                 }
                 $lastPphRow = $currentRow - 1;
@@ -140,7 +142,12 @@ class SingleBelanjaSheet implements FromCollection, ShouldAutoSize, WithEvents, 
                 $transferRow = $currentRow;
                 $sheet->setCellValue("F{$transferRow}", 'Transfer Rekanan');
                 // Rumus: Bruto dikurangi jumlah seluruh baris pajak di atasnya
-                $sheet->setCellValue("G{$transferRow}", "=G{$brutoRow}-SUM(G{$firstPphRow}:G{$lastPphRow})");
+                if ($pphcek) {
+                    $sheet->setCellValue("G{$transferRow}", "=G{$brutoRow}-SUM(G{$ppnRow}:G{$lastPphRow})");
+                } else {
+                    // Jika hanya ada PPN, langsung kurangi saja tanpa SUM
+                    $sheet->setCellValue("G{$transferRow}", "=G{$brutoRow}-G{$ppnRow}");
+                }
 
                 // --- 4. FINAL STYLING ---
 

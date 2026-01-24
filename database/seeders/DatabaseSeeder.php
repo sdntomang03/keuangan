@@ -29,6 +29,7 @@ class DatabaseSeeder extends Seeder
             DasarPajakSeeder::class,
             SekolahSeeder::class,
             AnggaranSeeder::class,
+            RolePermissionSeeder::class,
         ]);
 
     }

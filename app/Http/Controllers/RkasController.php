@@ -72,7 +72,7 @@ class RkasController extends Controller
                         // Unique Key: Gabungan kode jenis dan ID Rinci asli
                         ['idblrinci' => $jenisAnggaran.$item['idblrinci']],
                         [
-                            'user_id' => auth()->id(), // Langsung ambil dari auth
+
                             'idbl' => $item['idbl'],
                             'idsubtitle' => $item['idsubtitle'],
                             'keterangan' => $item['keterangan'],

@@ -23,7 +23,6 @@ return new class extends Migration
             $table->string('uraian');
             $table->decimal('debit', 15, 2)->default(0);
             $table->decimal('kredit', 15, 2)->default(0);
-            $table->decimal('saldo', 15, 2)->default(0);
 
             // Relasi opsional untuk tracking sumber data
             $table->foreignId('belanja_id')->nullable()->constrained('belanjas')->onDelete('cascade');

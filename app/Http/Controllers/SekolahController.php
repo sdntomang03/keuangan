@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Anggaran;
 use App\Models\Sekolah;
-use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -12,8 +11,17 @@ class SekolahController extends Controller
 {
     public function index()
     {
-        // Mengambil setting milik user yang sedang login
-        $setting = Sekolah::where('user_id', Auth::id())->first();
+        // Ambil sekolah_id dari user yang sedang login
+        $sekolahId = Auth::user()->sekolah_id;
+
+        // Cari data sekolah berdasarkan ID tersebut
+        $setting = Sekolah::find($sekolahId);
+
+        // Beri peringatan jika data tidak ditemukan
+        if (! $setting) {
+            return redirect()->route('dashboard')->with('error', 'Instansi Anda belum terdaftar.');
+        }
+
         $anggarans = Anggaran::where('sekolah_id', $setting->id)->get();
 
         return view('sekolah.index', compact('setting', 'anggarans'));

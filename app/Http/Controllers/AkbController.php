@@ -65,7 +65,6 @@ class AkbController extends Controller
                     [
 
                         // Identitas Akun & Komponen
-                        'user_id' => $this->userId,
                         'idakun' => $item['idakun'] ?? null,
                         // Detail Satuan & Volume
                         'volume' => $item['volume'] ?? null,

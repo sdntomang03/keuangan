@@ -43,6 +43,29 @@ class SekolahSeeder extends Seeder
             'logo' => null,
         ]);
 
+        Sekolah::create([
+            'user_id' => $user->id,
+            'nama_sekolah' => 'SD Negeri Tomang 03',
+            'npsn' => '20101172',
+            'nama_kepala_sekolah' => ' Limah Yuhana, S. Pd. MM',
+            'nip_kepala_sekolah' => '196805051993032010 ',
+            'nama_bendahara' => 'Muhammad Dian Nafi, S.Pd',
+            'nip_bendahara' => '198205122010012005',
+
+            // Sementara set null jika tabel anggarans belum di-seed
+            'anggaran_id_aktif' => null,
+            'triwulan_aktif' => 1,
+
+            'alamat' => 'Jl. Gelong Baru No.29A Rt. 001/003',
+            'kelurahan' => 'Tomang',
+            'kecamatan' => 'Grogol Petamburan',
+            'kota' => 'Jakarta Barat',
+            'kodepos' => '11440',
+            'telp' => '02156960149',
+            'email' => 'sdntomang03pagi@yahoo.co.id',
+            'logo' => null,
+        ]);
+
         // Jika ingin membuat banyak sekolah secara otomatis (Mass Seeding)
         // Sekolah::factory()->count(5)->create();
     }

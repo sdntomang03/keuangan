@@ -34,7 +34,7 @@ class PenerimaanController extends Controller
                     'uraian' => $request->uraian,
                     'nominal' => $request->nominal,
                     'anggaran_id' => $anggaran->id,
-                    'user_id' => auth()->id(),
+
                 ]);
 
                 // 3. Masuk ke DEBIT BKU dengan anggaran_id (Parameter ke-8)
@@ -47,7 +47,8 @@ class PenerimaanController extends Controller
                     0,           // Kredit
                     null,        // belanja_id
                     null,        // pajak_id
-                    $anggaran->id // anggaran_id
+                    $anggaran->id, // anggaran_id
+                    $p->id,      // penerimaan_id
                 );
             });
 
@@ -56,5 +57,49 @@ class PenerimaanController extends Controller
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Terjadi kesalahan: '.$e->getMessage());
         }
+    }
+
+    public function edit(Request $request, $id)
+    {
+        // Ambil anggaran_id dari middleware/request
+        $anggaran = $request->anggaran_data;
+
+        // Cari data yang ID-nya cocok DAN berada dalam lingkup anggaran aktif
+        $penerimaan = Penerimaan::where('anggaran_id', $anggaran->id)
+            ->findOrFail($id);
+
+        return response()->json($penerimaan);
+    }
+
+    // app/Http/Controllers/PenerimaanController.php
+
+    public function update(Request $request, $id) // Urutan: Request dulu, baru ID
+    {
+        $anggaran = $request->anggaran_data;
+
+        // Tambahkan pengaman: pastikan data yang diedit milik anggaran sekolah yang aktif
+        $penerimaan = Penerimaan::where('anggaran_id', $anggaran->id)
+            ->findOrFail($id);
+
+        $validated = $request->validate([
+            'tanggal' => 'required|date',
+            'no_bukti' => 'required|string',
+            'uraian' => 'required|string',
+            'nominal' => 'required|numeric',
+        ]);
+
+        DB::transaction(function () use ($penerimaan, $validated) {
+            $penerimaan->update($validated);
+
+            // Sinkronkan ke BKU
+            DB::table('bkus')->where('penerimaan_id', $penerimaan->id)->update([
+                'tanggal' => $validated['tanggal'],
+                'no_bukti' => $validated['no_bukti'],
+                'uraian' => $validated['uraian'],
+                'debit' => $validated['nominal'],
+            ]);
+        });
+
+        return back()->with('success', 'Data berhasil diperbarui.');
     }
 }

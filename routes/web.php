@@ -68,10 +68,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/bku', [BkuController::class, 'index'])->name('bku.index');
+    Route::put('/{belanja_id}/unpost', [BkuController::class, 'unpost'])->name('bku.unpost');
+    Route::delete('/{id}', [BkuController::class, 'destroy'])->name('bku.destroy');
 });
 Route::middleware(['auth', 'verified'])->group(function () {
-    // Route Penerimaan
-    Route::post('/penerimaan/store', [PenerimaanController::class, 'store'])->name('penerimaan.store');
+
+    // Kelompokkan agar URL lebih spesifik dan tidak bentrok
+    Route::prefix('penerimaan')->name('penerimaan.')->group(function () {
+        Route::post('/store', [PenerimaanController::class, 'store'])->name('store');
+
+        // Perbaikan URL: sekarang menjadi /penerimaan/{id}/edit
+        Route::get('/{id}/edit', [PenerimaanController::class, 'edit'])->name('edit');
+
+        // Perbaikan URL: sekarang menjadi /penerimaan/{id}
+        Route::put('/{id}', [PenerimaanController::class, 'update'])->name('update');
+    });
 });
 Route::middleware(['auth', 'verified'])->group(function () {
     // Route Pajak
@@ -82,7 +93,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/belanja/cetak/{id}', [SuratController::class, 'cetakDokumenLengkap'])->name('belanja.print');
     Route::get('/rekap/export', [SuratController::class, 'exportExcel'])->name('belanja.export');
 });
-Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
 
     // 1. Route Resource untuk Sekolah
     // Ini otomatis membuat route: index, create, store, edit, update, destroy

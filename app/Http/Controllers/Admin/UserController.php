@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
@@ -98,13 +99,13 @@ class UserController extends Controller
 
             // Penanganan Khusus SQLite untuk "Foreign Key Mismatch"
             if (config('database.default') === 'sqlite') {
-                \DB::statement('PRAGMA foreign_keys = OFF');
+                DB::statement('PRAGMA foreign_keys = OFF');
             }
 
             $user->delete();
 
             if (config('database.default') === 'sqlite') {
-                \DB::statement('PRAGMA foreign_keys = ON');
+                DB::statement('PRAGMA foreign_keys = ON');
             }
 
             return redirect()->route('admin.users.index')

@@ -4,131 +4,211 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <title>{{ config('app.name', 'Laravel') }}</title>
+    <title>{{ config('app.name', 'E-Keuangan') }} | Sistem Informasi Keuangan Instansi</title>
 
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800" rel="stylesheet" />
 
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @else
     <script src="https://cdn.tailwindcss.com"></script>
     @endif
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+        }
+    </style>
 </head>
 
-<body
-    class="bg-[#FDFDFC] dark:bg-[#0a0a0a] text-[#1b1b18] flex p-6 lg:p-8 items-center lg:justify-center min-h-screen flex-col">
-    <header class="w-full lg:max-w-4xl max-w-[335px] text-sm mb-6">
-        @if (Route::has('login'))
-        <nav class="flex items-center justify-end gap-4">
-            @auth
-            <a href="{{ url('/dashboard') }}"
-                class="inline-block px-5 py-1.5 dark:text-[#EDEDEC] border-[#19140035] hover:border-[#1915014a] border text-[#1b1b18] dark:border-[#3E3E3A] dark:hover:border-[#62605b] rounded-sm text-sm leading-normal transition">
-                Dashboard
-            </a>
-            @else
-            <a href="{{ route('login') }}"
-                class="inline-block px-5 py-1.5 dark:text-[#EDEDEC] text-[#1b1b18] border border-transparent hover:border-[#19140035] dark:hover:border-[#3E3E3A] rounded-sm text-sm leading-normal transition">
-                Log in
-            </a>
+<body class="bg-slate-50 dark:bg-[#050505] text-slate-900 dark:text-slate-100 antialiased">
 
-            @if (Route::has('register'))
-            <a href="{{ route('register') }}"
-                class="inline-block px-5 py-1.5 dark:text-[#EDEDEC] border-[#19140035] hover:border-[#1915014a] border text-[#1b1b18] dark:border-[#3E3E3A] dark:hover:border-[#62605b] rounded-sm text-sm leading-normal transition">
-                Register
-            </a>
-            @endif
-            @endauth
-        </nav>
-        @endif
-    </header>
-
-    <div class="flex items-center justify-center w-full transition-opacity opacity-100 duration-750 lg:grow">
-        <main
-            class="flex max-w-[335px] w-full flex-col lg:max-w-4xl lg:flex-row shadow-xl rounded-lg overflow-hidden border border-gray-100 dark:border-[#3E3E3A]">
-
-            <div class="text-[13px] leading-[20px] flex-1 p-8 lg:p-20 bg-white dark:bg-[#161615] dark:text-[#EDEDEC]">
-                <div class="mb-8">
-                    <h1 class="text-2xl font-bold mb-2">Sistem Informasi Instansi</h1>
-                    <p class="text-[#706f6c] dark:text-[#A1A09A] text-base">Selamat datang di platform pengelolaan
-                        administrasi dan anggaran sekolah terpadu.</p>
-                </div>
-
-                <div class="space-y-6">
-                    <div class="flex items-start gap-4">
-                        <div
-                            class="w-8 h-8 rounded-full bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center shrink-0">
-                            <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                            </svg>
-                        </div>
-                        <div>
-                            <h3 class="font-medium text-sm">Manajemen Sekolah</h3>
-                            <p class="text-[#706f6c] dark:text-[#A1A09A]">Kelola data profil, NPSN, hingga legalitas
-                                instansi secara digital.</p>
-                        </div>
+    <nav class="fixed top-0 w-full z-50 border-b border-slate-200/60 dark:border-slate-800/60 glass-effect">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="w-10 h-10 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-200 flex items-center justify-center text-white">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
                     </div>
-
-                    <div class="flex items-start gap-4">
-                        <div
-                            class="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
-                            <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <h3 class="font-medium text-sm">Kontrol Anggaran</h3>
-                            <p class="text-[#706f6c] dark:text-[#A1A09A]">Pantau penggunaan anggaran aktif per triwulan
-                                secara real-time.</p>
-                        </div>
+                    <div class="flex flex-col">
+                        <span class="text-sm font-extrabold tracking-tight leading-none uppercase">SI-KEUANGAN</span>
+                        <span class="text-[10px] text-slate-500 font-medium tracking-widest uppercase">Portal
+                            Terintegrasi</span>
                     </div>
                 </div>
 
-                <div class="mt-10 flex gap-4">
-                    <a href="{{ route('login') }}"
-                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-md font-medium transition duration-200">
-                        Mulai Sekarang
+                <div class="flex items-center gap-6">
+                    @auth
+                    <a href="{{ url('/login') }}"
+                        class="text-sm font-semibold text-indigo-600 hover:text-indigo-700 transition">Dashboard
+                        &rarr;</a>
+                    @else
+                    <a href="{{ route('login') }}" class="text-sm font-medium hover:text-indigo-600 transition">Log
+                        in</a>
+                    @if (Route::has('register'))
+                    <a href="{{ route('register') }}"
+                        class="bg-slate-900 dark:bg-slate-100 dark:text-slate-900 text-white px-5 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-slate-800 transition">
+                        Daftar Instansi
                     </a>
-                    <a href="#"
-                        class="border border-gray-200 dark:border-gray-700 px-6 py-2 rounded-md font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition duration-200">
-                        Pelajari Fitur
-                    </a>
+                    @endif
+                    @endauth
                 </div>
             </div>
+        </div>
+    </nav>
 
-            <div
-                class="lg:w-[350px] bg-gray-50 dark:bg-[#1b1b18] p-8 lg:p-12 flex flex-col justify-center border-t lg:border-t-0 lg:border-l border-gray-100 dark:border-[#3E3E3A]">
-                <div class="relative group">
+    <main class="pt-32 pb-16 px-4">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid lg:grid-cols-12 gap-12 items-center">
+
+                <div class="lg:col-span-7 space-y-8">
                     <div
-                        class="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-emerald-500 rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-1000">
+                        class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800">
+                        <span class="relative flex h-2 w-2">
+                            <span
+                                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                        </span>
+                        <span
+                            class="text-[11px] font-bold text-indigo-700 dark:text-indigo-300 uppercase tracking-wider">Update
+                            Anggaran TA 2026</span>
                     </div>
-                    <div class="relative bg-white dark:bg-[#161615] p-6 rounded-lg shadow-sm">
-                        <div class="text-xs font-bold text-indigo-600 uppercase mb-2">Status Sistem</div>
-                        <div class="text-2xl font-bold mb-1">2026</div>
-                        <div class="text-[#706f6c] dark:text-[#A1A09A] leading-tight">Tahun Anggaran Berjalan
-                            Terintegrasi.</div>
+
+                    <h1
+                        class="text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] text-slate-900 dark:text-white">
+                        Transformasi Digital <br>
+                        <span
+                            class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-emerald-600">Keuangan
+                            Instansi.</span>
+                    </h1>
+
+                    <p class="text-lg text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed">
+                        Sistem pengelolaan administrasi sekolah yang mengedepankan transparansi, akurasi data, dan
+                        kemudahan pelaporan anggaran triwulan dalam satu ekosistem digital.
+                    </p>
+
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <a href="{{ route('login') }}"
+                            class="bg-indigo-600 text-white px-8 py-4 rounded-xl font-bold shadow-xl shadow-indigo-200 dark:shadow-none hover:bg-indigo-700 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2">
+                            Akses Portal Utama
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                        </a>
+                        <a href="#"
+                            class="border-2 border-slate-200 dark:border-slate-800 px-8 py-4 rounded-xl font-bold hover:bg-white dark:hover:bg-slate-900 transition-all text-center">
+                            Dokumentasi Sistem
+                        </a>
+                    </div>
+
+                    <div class="pt-8 flex items-center gap-8 border-t border-slate-200 dark:border-slate-800">
+                        <div>
+                            <p class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-2">Keamanan
+                                Data</p>
+                            <p class="text-sm font-bold text-slate-700 dark:text-slate-300">SSL Encrypted</p>
+                        </div>
+                        <div class="w-px h-8 bg-slate-200 dark:bg-slate-800"></div>
+                        <div>
+                            <p class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-2">Kepatuhan
+                            </p>
+                            <p class="text-sm font-bold text-slate-700 dark:text-slate-300">Standar ARKAS 2026</p>
+                        </div>
                     </div>
                 </div>
 
-                <div class="mt-8">
-                    <p
-                        class="text-[11px] text-[#706f6c] dark:text-[#A1A09A] uppercase tracking-wider font-bold mb-4 text-center lg:text-left">
-                        Didukung Oleh</p>
+                <div class="lg:col-span-5 relative">
+                    <div class="absolute -top-20 -right-20 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl"></div>
+                    <div class="absolute -bottom-20 -left-20 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl"></div>
+
                     <div
-                        class="flex justify-center lg:justify-start gap-4 grayscale opacity-50 hover:grayscale-0 transition duration-500">
-                        <span class="font-bold text-lg tracking-tighter italic">E-INSTANSI</span>
+                        class="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden p-2">
+                        <div
+                            class="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-6 border border-slate-100 dark:border-slate-700">
+                            <div class="flex justify-between items-center mb-6">
+                                <span class="text-xs font-bold text-slate-400 uppercase tracking-tighter">Ringkasan
+                                    Realisasi</span>
+                                <span
+                                    class="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded">Live</span>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="h-2 bg-slate-200 dark:bg-slate-700 rounded-full w-full">
+                                    <div class="h-2 bg-indigo-600 rounded-full w-3/4"></div>
+                                </div>
+                                <div class="flex justify-between items-end">
+                                    <div>
+                                        <p class="text-[10px] text-slate-400 uppercase font-bold">Total Dana BOS</p>
+                                        <p class="text-xl font-black text-slate-900 dark:text-white">Rp 450.000.000</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-[10px] text-emerald-500 font-bold">75% Terserap</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-6 grid grid-cols-2 gap-4">
+                            <div
+                                class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 hover:border-indigo-200 transition">
+                                <div
+                                    class="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center mb-3 text-indigo-600">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                                        <path fill-rule="evenodd"
+                                            d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z"
+                                            clip-rule="evenodd" />
+                                    </svg>
+                                </div>
+                                <p class="text-xs font-bold mb-1">E-RKAS</p>
+                                <p class="text-[10px] text-slate-500 leading-tight">Digitalisasi rencana kegiatan.</p>
+                            </div>
+                            <div
+                                class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 hover:border-emerald-200 transition">
+                                <div
+                                    class="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center mb-3 text-emerald-600">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path
+                                            d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+                                    </svg>
+                                </div>
+                                <p class="text-xs font-bold mb-1">Rekanan</p>
+                                <p class="text-[10px] text-slate-500 leading-tight">Database pihak ketiga terpusat.</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
             </div>
-        </main>
-    </div>
+        </div>
+    </main>
 
-    <footer class="mt-8 text-xs text-[#706f6c] dark:text-[#A1A09A]">
-        &copy; 2026 {{ config('app.name') }}. Semua Hak Dilindungi.
+    <footer class="mt-auto py-12 border-t border-slate-200 dark:border-slate-800 w-full bg-white dark:bg-[#050505]">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="flex items-center gap-2 grayscale opacity-60">
+                <span class="font-black tracking-tighter text-xl italic">E-INSTANSI</span>
+                <span class="text-[10px] font-bold bg-slate-200 px-2 py-1 rounded">2026</span>
+            </div>
+            <div class="flex gap-8 text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                <a href="#" class="hover:text-indigo-600">Panduan</a>
+                <a href="#" class="hover:text-indigo-600">Kebijakan Privasi</a>
+                <a href="#" class="hover:text-indigo-600">Kontak</a>
+            </div>
+            <p class="text-xs text-slate-400 font-medium">
+                &copy; 2026 Sistem Manajemen Keuangan Sekolah.
+            </p>
+        </div>
     </footer>
+
 </body>
 
 </html>
