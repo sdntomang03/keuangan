@@ -6,6 +6,7 @@ use App\Models\Anggaran;
 use App\Models\Sekolah;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class SekolahController extends Controller
 {
@@ -40,6 +41,9 @@ class SekolahController extends Controller
 
             // Field Baru
             'alamat' => 'nullable|string',
+            'latitude' => 'nullable|string',
+            'longitude' => 'nullable|string',
+            'nomor_surat' => 'nullable|string',
             'kelurahan' => 'nullable|string|max:100',
             'kecamatan' => 'nullable|string|max:100',
             'kota' => 'nullable|string|max:100',
@@ -57,7 +61,7 @@ class SekolahController extends Controller
             // Ambil data sekolah lama untuk hapus logo lama jika ada
             $sekolahLama = Sekolah::where('user_id', Auth::id())->first();
             if ($sekolahLama && $sekolahLama->logo) {
-                \Storage::disk('public')->delete($sekolahLama->logo);
+                Storage::disk('public')->delete($sekolahLama->logo);
             }
 
             // Simpan logo baru

@@ -34,6 +34,9 @@ class Sekolah extends Model
         'telp',
         'email',
         'logo',
+        'latitude',
+        'longitude',
+        'nomor_surat',
     ];
 
     // app/Models/Sekolah.php

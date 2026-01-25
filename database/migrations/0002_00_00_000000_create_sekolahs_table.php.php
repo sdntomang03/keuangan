@@ -38,6 +38,8 @@ return new class extends Migration
             $table->string('telp')->nullable();
             $table->string('email')->nullable();
 
+            $table->string('latitude')->nullable()->default('000');
+            $table->string('longitude')->nullable()->default('000');
             $table->string('logo')->nullable();
             $table->string('nomor_surat')->nullable()->default('000');
             $table->timestamps();

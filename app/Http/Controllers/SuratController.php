@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exports\BelanjaExport;
 use App\Models\Belanja;
+use App\Models\BelanjaFoto;
 use App\Models\Sekolah;
 use App\Models\Surat;
 use Carbon\Carbon;
@@ -11,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use Intervention\Image\Drivers\Gd\Driver;
 use Intervention\Image\ImageManager;
 use Maatwebsite\Excel\Facades\Excel;
@@ -211,7 +213,37 @@ class SuratController extends Controller
                 $templateProcessor->cloneRow('no2', 1);
                 $templateProcessor->cloneRow('no3', 1);
             }
+            // --- G. LAMPIRAN FOTO DOKUMENTASI (HANYA FOTO) ---
+            $fotos = $belanja->fotos;
+            $countFoto = $fotos->count();
 
+            if ($countFoto > 0) {
+                // 1. Clone Baris Tabel berdasarkan variabel ${foto}
+                $templateProcessor->cloneRow('foto', $countFoto);
+
+                foreach ($fotos as $index => $foto) {
+                    $i = $index + 1; // Index dimulai dari 1 (foto#1, foto#2, dst)
+
+                    // Pastikan path fisik file benar
+                    $pathFisik = storage_path('app/public/'.$foto->path);
+
+                    // 2. Tempel Gambar
+                    if (file_exists($pathFisik)) {
+                        $templateProcessor->setImageValue("foto#$i", [
+                            'path' => $pathFisik,
+                            'width' => 500,        // Lebar diperbesar karena tanpa teks samping
+                            'height' => 350,       // Tinggi proporsional
+                            'ratio' => true,        // Jaga aspek rasio agar foto tidak gepeng
+                        ]);
+                    } else {
+                        // Fallback: Jika file fisik terhapus, ganti dengan teks error
+                        $templateProcessor->setValue("foto#$i", 'File foto fisik tidak ditemukan.');
+                    }
+                }
+            } else {
+                // Jika tidak ada foto, hapus placeholder ${foto} agar bersih (kosong)
+                $templateProcessor->setValue('foto', '');
+            }
             // --- DOWNLOAD ---
             $cleanNoBukti = str_replace(['/', '\\'], '-', $belanja->no_bukti);
             $fileName = 'Dokumen_Lengkap_'.$cleanNoBukti.'.docx';
@@ -420,63 +452,102 @@ class SuratController extends Controller
      */
     public function storeParsial(Request $request, $belanjaId)
     {
-        $request->validate([
+        // 1. VALIDASI DINAMIS (Sesuai Pilihan Combo Box)
+        // Kita buat aturan dasar dulu
+        $rules = [
+            'jenis_surat' => 'required|in:SP,BAPB',
             'keterangan' => 'required|string', // Tahap 1, dll
-            'nomor_sp' => 'required',
-            'tanggal_sp' => 'required|date',
-            'nomor_bapb' => 'required',
-            'tanggal_bapb' => 'required|date',
             'items' => 'required|array',
-        ]);
+        ];
+
+        // Tambahkan aturan khusus jika pilih SP
+        if ($request->jenis_surat == 'SP') {
+            $rules['nomor_sp'] = 'required';
+            $rules['tanggal_sp'] = 'required|date';
+        }
+        // Tambahkan aturan khusus jika pilih BAPB
+        elseif ($request->jenis_surat == 'BAPB') {
+            $rules['nomor_bapb'] = 'required';
+            $rules['tanggal_bapb'] = 'required|date';
+            $rules['no_bast'] = 'required';      // Wajib karena BAPB butuh BAST
+            $rules['tanggal_bast'] = 'required|date';
+        }
+
+        // Jalankan Validasi
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
+        }
 
         $belanja = Belanja::findOrFail($belanjaId);
         $user = Auth::user();
 
         DB::transaction(function () use ($request, $belanjaId, $user) {
 
-            // 1. SIAPKAN DATA PIVOT (Rincian Barang)
-            // Kita siapkan dulu array rinciannya karena akan dipakai oleh KEDUA surat
+            // 2. SIAPKAN DATA PIVOT (Rincian Barang)
             $pivotData = [];
             foreach ($request->items as $rinciId => $data) {
-                if (isset($data['selected'])) {
-                    $pivotData[$rinciId] = ['volume' => $data['volume']];
+                // Hanya ambil item yang dicentang
+                if (isset($data['selected']) && $data['selected'] == 1) {
+                    // Pastikan volume ada isinya, kalau kosong anggap 0 atau skip
+                    if ($data['volume'] > 0) {
+                        $pivotData[$rinciId] = ['volume' => $data['volume']];
+                    }
                 }
             }
 
             if (empty($pivotData)) {
-                throw new \Exception('Harus memilih minimal satu barang.');
+                throw new \Exception('Harus memilih minimal satu barang dengan volume > 0.');
             }
 
-            // 2. BUAT SURAT PESANAN (SP)
-            $sp = Surat::create([
-                'sekolah_id' => $user->sekolah_id,
-                'belanja_id' => $belanjaId,
-                'triwulan' => $user->sekolah->triwulan_aktif ?? 1,
-                'jenis_surat' => 'SP',
-                'nomor_surat' => $request->nomor_sp,
-                'tanggal_surat' => $request->tanggal_sp,
-                'is_parsial' => true,                // <--- TANDAI PARSIAL
-                'keterangan' => $request->keterangan, // <--- TAHAP 1
-            ]);
-            $sp->rincis()->attach($pivotData); // Hubungkan barang
+            // 3. LOGIKA PENYIMPANAN BERDASARKAN JENIS
 
-            // 3. BUAT BERITA ACARA (BAPB)
-            $bapb = Surat::create([
-                'sekolah_id' => $user->sekolah_id,
-                'belanja_id' => $belanjaId,
-                'triwulan' => $user->sekolah->triwulan_aktif ?? 1,
-                'jenis_surat' => 'BAPB',
-                'nomor_surat' => $request->nomor_bapb,
-                'tanggal_surat' => $request->tanggal_bapb,
-                'tanggal_bast' => $request->tanggal_bapb,
-                'no_bast' => $request->no_bast,    // Gunakan no_bast dari Belanja
-                'is_parsial' => true,                // <--- TANDAI PARSIAL
-                'keterangan' => $request->keterangan, // <--- TAHAP 1
-            ]);
-            $bapb->rincis()->attach($pivotData); // Hubungkan barang yang sama
+            // --- SKENARIO A: BUAT SURAT PESANAN (SP) ---
+            if ($request->jenis_surat == 'SP') {
+                $sp = Surat::create([
+                    'sekolah_id' => $user->sekolah_id,
+                    'belanja_id' => $belanjaId,
+                    'triwulan' => $user->sekolah->triwulan_aktif ?? 1,
+                    'jenis_surat' => 'SP',
+                    'nomor_surat' => $request->nomor_sp,
+                    'tanggal_surat' => $request->tanggal_sp,
+                    'is_parsial' => true,
+                    'keterangan' => $request->keterangan,
+                    'sp_referensi_id' => null, // SP adalah induk, tidak punya referensi
+                ]);
+
+                // Simpan Rincian Barang
+                $sp->rincis()->attach($pivotData);
+            }
+
+            // --- SKENARIO B: BUAT BAPB (& DATA BAST) ---
+            elseif ($request->jenis_surat == 'BAPB') {
+                $bapb = Surat::create([
+                    'sekolah_id' => $user->sekolah_id,
+                    'belanja_id' => $belanjaId,
+                    'triwulan' => $user->sekolah->triwulan_aktif ?? 1,
+                    'jenis_surat' => 'BAPB',
+                    'nomor_surat' => $request->nomor_bapb,
+                    'tanggal_surat' => $request->tanggal_bapb,
+
+                    // Data BAST (Disimpan di kolom milik BAPB atau Surat)
+                    'no_bast' => $request->no_bast,
+                    'tanggal_bast' => $request->tanggal_bast,
+
+                    'is_parsial' => true,
+                    'keterangan' => $request->keterangan,
+
+                    // Sambungkan ke SP Induk (Jika user memilihnya di dropdown)
+                    'sp_referensi_id' => $request->sp_referensi_id ?: null,
+                ]);
+
+                // Simpan Rincian Barang
+                $bapb->rincis()->attach($pivotData);
+            }
+
         });
 
-        return back()->with('success', 'Paket surat parsial (SP & BAPB) berhasil dibuat.');
+        return back()->with('success', 'Data parsial ('.$request->jenis_surat.') berhasil disimpan.');
     }
 
     public function destroy($id)
@@ -522,85 +593,92 @@ class SuratController extends Controller
     {
         $request->validate(['foto' => 'required|image|max:10240']);
 
+        // 1. Ambil Data Relasi Berantai
         $belanja = Belanja::with('anggaran.sekolah', 'surats')->findOrFail($id);
-
-        // 1. Ambil data object sekolah (Gunakan nama variabel yang berbeda agar tidak tertimpa)
         $objSekolah = $belanja->anggaran->sekolah;
 
-        // 2. Olah data teks (Gunakan Null Coalescing agar tidak error jika data kosong)
+        // 2. Olah Data Teks
         $namaSekolah = strtoupper($objSekolah->nama_sekolah ?? 'NAMA SEKOLAH');
         $alamatSekolah = strtoupper($objSekolah->alamat_sekolah ?? $objSekolah->alamat ?? 'ALAMAT SEKOLAH');
-        $alamatSekolah2 = strtoupper('Kel. '.$objSekolah->kelurahan.', Kec. '.$objSekolah->kecamatan.' ' ?? '');
-        $lat = $objSekolah->latitude ?? '-6.1754';
-        $lng = $objSekolah->longitude ?? '106.8272';
+        $alamatSekolah2 = strtoupper('Kel. '.($objSekolah->kelurahan ?? '-').', Kec. '.($objSekolah->kecamatan ?? '-'));
+        $lat = $objSekolah->latitude ?? '-6.176717';
+        $lng = $objSekolah->longitude ?? '106.796351';
 
-        $jamAcak = sprintf('%02d', rand(9, 15));
-        $menitAcak = sprintf('%02d', rand(0, 59));
+        // 3. Generate Waktu Acak
         $detikAcak = sprintf('%02d', rand(0, 59));
 
-        $waktuAcak = "$jamAcak:$menitAcak:$detikAcak";
+        // 2. Cek apakah ada input waktu dari form
+        if ($request->has('waktu_foto') && $request->waktu_foto != null) {
+            // Ambil input form (format H:i, misal 10:30) dan gabungkan dengan detik acak
+            $waktuAcak = $request->waktu_foto.':'.$detikAcak;
+        } else {
+            // Cadangan: Jika form kosong, random jam 9-15 seperti sebelumnya
+            $waktuAcak = sprintf('%02d:%02d:%02d', rand(9, 15), rand(0, 59), $detikAcak);
+        }
 
-        // 3. Ambil Tanggal BAST
+        // 4. Ambil Tanggal BAST
         $suratBast = $belanja->surats->where('jenis_surat', 'BAPB')->first();
         $tanggalBast = $suratBast && $suratBast->tanggal_surat
             ? $suratBast->tanggal_surat->translatedFormat('l, d F Y')
             : now()->translatedFormat('l, d F Y');
 
+        // 5. Inisialisasi Image Manager
         $file = $request->file('foto');
         $manager = new ImageManager(new Driver);
         $img = $manager->read($file);
 
-        // Standardisasi Canvas
-        $img->scale(width: 1600);
+        // 6. Standardisasi Canvas (1600px agar huruf & peta proporsional)
+        $img->scale(width: 1200);
         $width = $img->width();
         $height = $img->height();
 
-        // --- PENYESUAIAN UNTUK 5 BARIS TEKS ---
-        $fontSizeLarge = 36; // Perkecil sedikit dari 42
-        $fontSizeSmall = 28; // Perkecil dari 26 agar tidak sesak
-        $rectHeight = 300;   // Ditinggikan dari 220 ke 250 untuk menampung total 5 baris
+        // 7. Tambahkan Peta Statis (OpenStreetMap via Yandex Static)
+        try {
+            // Kita ambil peta ukuran 350x350 agar terlihat jelas
+            $mapUrl = "https://static-maps.yandex.ru/1.x/?lang=en_US&ll=$lng,$lat&z=16&l=map&size=250,250&pt=$lng,$lat,pm2rdm";
+            $mapContent = file_get_contents($mapUrl);
+            if ($mapContent) {
+                $mapImage = $manager->read($mapContent);
+                // Tempel di pojok kanan bawah dengan margin 20px
+                $img->place($mapImage, 'bottom-right', 20, 20);
+            }
+        } catch (\Exception $e) {
+            // Jika internet mati, proses lanjut tanpa peta
+        }
+
+        // 8. Setting Ukuran Watermark
+        $fontSizeLarge = 36;
+        $fontSizeSmall = 26;
         $padding = 60;
-
-        // Overlay Hitam
-        $img->drawRectangle(0, $height - $rectHeight, function ($draw) use ($width, $rectHeight) {
-            $draw->size($width, $rectHeight);
-            $draw->background('rgba(0, 0, 0, 0.7)');
-        });
-
-        // Font Path
         $fontReg = public_path('fonts/Roboto-Regular.ttf');
 
-        // 1. Render Teks Baris 1: Judul (Uraian Belanja)
-        // Koordinat Y dinaikkan ke -210 (semakin besar minusnya, semakin ke atas)
-        $img->text(strtoupper($belanja->uraian), $padding, $height - 260, function ($font) use ($fontSizeLarge, $fontReg) {
+        // 10. Render Teks Baris 1: Judul
+        $img->text(strtoupper($belanja->uraian), $padding, $height - 210, function ($font) use ($fontSizeLarge, $fontReg) {
             if (file_exists($fontReg)) {
                 $font->filename($fontReg);
             }
             $font->size($fontSizeLarge);
-            $font->lineHeight(1.2);
             $font->color('ffffff');
             $font->valign('top');
         });
 
-        // 2. Susunan Detail (4 Baris Detail)
+        // 11. Render Teks Baris 2-5: Detail
         $watermarkDetail = "$tanggalBast $waktuAcak\n$alamatSekolah ($lat, $lng)\n$alamatSekolah2\n$namaSekolah";
 
-        // 3. Render Teks Detail
-        // Koordinat Y dinaikkan ke -150 agar baris terakhir (Nama Sekolah) terangkat
-        $img->text($watermarkDetail, $padding, $height - 200, function ($font) use ($fontSizeSmall, $fontReg) {
+        $img->text($watermarkDetail, $padding, $height - 140, function ($font) use ($fontSizeSmall, $fontReg) {
             if (file_exists($fontReg)) {
                 $font->filename($fontReg);
             }
             $font->size($fontSizeSmall);
-            $font->lineHeight(2); // Line height dikurangi sedikit agar rapat dan muat
+            $font->lineHeight(1.8); // Disesuaikan agar 4 baris detail rapi
             $font->color('ffffff');
             $font->valign('top');
         });
 
-        // Simpan
-        $filename = time().'.webp';
+        // 12. Simpan File & Database
+        $filename = time().'.jpg';
         $path = 'dokumentasi/'.$filename;
-        Storage::disk('public')->put($path, $img->toWebp(80));
+        Storage::disk('public')->put($path, $img->toJpeg(80));
 
         $belanja->fotos()->create([
             'path' => $path,
@@ -608,6 +686,268 @@ class SuratController extends Controller
             'longitude' => $lng,
         ]);
 
-        return back()->with('success', 'Foto SPJ berhasil diproses dengan watermark proporsional.');
+        return back()->with('success', 'Foto SPJ Berhasil diunggah dengan Peta.');
+    }
+
+    public function destroyFoto($id)
+    {
+        $foto = BelanjaFoto::findOrFail($id);
+        Storage::disk('public')->delete($foto->path);
+        $foto->delete();
+
+        return back()->with('success', 'Foto berhasil dihapus');
+    }
+
+    public function cetakSpParsial($id)
+    {
+        // 1. AMBIL DATA SP YANG DIPILIH
+        $suratDipilih = Surat::with(['belanja.rekanan', 'belanja.korek', 'belanja.user.sekolah'])
+            ->findOrFail($id);
+
+        $belanja = $suratDipilih->belanja;
+        $sekolah = $belanja->user->sekolah;
+        $rekanan = $belanja->rekanan;
+
+        // 2. AMBIL BARANG DARI SEMUA BAPB TERKAIT
+        $daftarBapb = Surat::where('belanja_id', $belanja->id)
+            ->where('jenis_surat', 'BAPB')
+            ->with(['rincis.rkas'])
+            ->orderBy('tanggal_surat', 'asc')
+            ->get();
+
+        // 3. LOAD TEMPLATE
+        $pathTemplate = storage_path('app/templates/template_surat_pesanan.docx');
+        if (! file_exists($pathTemplate)) {
+            return back()->with('error', 'Template surat pesanan tidak ditemukan.');
+        }
+
+        try {
+            $templateProcessor = new \PhpOffice\PhpWord\TemplateProcessor($pathTemplate);
+            \Carbon\Carbon::setLocale('id');
+
+            // --- A. HEADER (KOP SURAT) ---
+            $templateProcessor->setValue('nama_sekolah', strtoupper($sekolah->nama_sekolah));
+            $templateProcessor->setValue('alamat', $sekolah->alamat);
+            $templateProcessor->setValue('kelurahan', $sekolah->kelurahan ?? '-');
+            $templateProcessor->setValue('kecamatan', $sekolah->kecamatan ?? '-');
+            $templateProcessor->setValue('telepon', $sekolah->no_telp ?? '-');
+            $templateProcessor->setValue('email', $sekolah->email ?? '-');
+            $templateProcessor->setValue('kode_pos', $sekolah->kodepos ?? '-');
+
+            // --- B. INFO SURAT ---
+            $templateProcessor->setValue('no_pesanan', $suratDipilih->nomor_surat);
+            $templateProcessor->setValue('tanggal_pesanan', $suratDipilih->tanggal_surat->translatedFormat('d F Y'));
+            $templateProcessor->setValue('title', $belanja->uraian);
+
+            // Data Rekanan
+            $templateProcessor->setValue('nama_rekanan', $rekanan->nama_rekanan);
+            $templateProcessor->setValue('alamat_surat', $rekanan->alamat);
+            $templateProcessor->setValue('alamat_surat2', $rekanan->kota ?? 'Jakarta');
+            $templateProcessor->setValue('provinsi_surat', 'DKI Jakarta');
+
+            // --- C. ISI PESANAN (UPDATE PERMINTAAN ANDA) ---
+
+            // 1. Siapkan Variabel Pendukung
+            $mapRomawi = [1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV'];
+            $tw_romawi = $mapRomawi[$belanja->triwulan ?? 1] ?? 'I';
+
+            $tahunAktif = $sekolah->tahun_aktif ?? date('Y');
+            $kodeRekening = $belanja->korek->ket ?? '-';
+            $namaAnggaran = $belanja->sumber_dana ?? 'BOSP'; // Default BOSP jika null
+            $namaRekanan = $rekanan->nama_rekanan ?? '-';
+
+            // 2. Susun Kalimat (Concatenation)
+            $isiPesanan = "Berdasarkan Surat Kesepakatan Negosiasi yang kami terima dari {$namaRekanan}, serta berdasarkan Anggaran {$namaAnggaran} Triwulan {$tw_romawi} Tahun Anggaran {$tahunAktif} dengan Kode Rekening {$kodeRekening} di {$sekolah->nama_sekolah} pada kegiatan {$belanja->uraian}. Maka dengan ini kami bermaksud untuk melakukan pemesanan Barang/Jasa sesuai dengan Komponen Barang / Jasa yang kami perlukan sebagai berikut :";
+
+            // 3. Set Value ke Template
+            $templateProcessor->setValue('isi_pesanan', $isiPesanan);
+
+            // --- D. TABEL BARANG ---
+            $dataRows = [];
+            $nomorUrut = 1;
+
+            foreach ($daftarBapb as $bapb) {
+                $tanggalKirim = $bapb->tanggal_surat->translatedFormat('d F Y');
+
+                foreach ($bapb->rincis as $item) {
+                    $volumeParsial = $item->pivot->volume;
+
+                    if ($volumeParsial <= 0) {
+                        continue;
+                    }
+
+                    $satuan = $item->rkas ? $item->rkas->satuan : $item->satuan;
+
+                    $dataRows[] = [
+                        'krm' => $nomorUrut++,
+                        'tanggal_kirim' => $tanggalKirim,
+                        'barang' => $item->namakomponen,
+                        'jml' => number_format($volumeParsial, 0, ',', '.'),
+                        'sat' => $satuan,
+                    ];
+                }
+            }
+
+            if (count($dataRows) > 0) {
+                $templateProcessor->cloneRowAndSetValues('krm', $dataRows);
+            } else {
+                $templateProcessor->cloneRowAndSetValues('krm', [['krm' => '-', 'tanggal_kirim' => '-', 'barang' => 'Belum ada realisasi', 'jml' => '0', 'sat' => '-']]);
+            }
+
+            // --- E. FOOTER ---
+            $templateProcessor->setValue('sekolah', $sekolah->nama_sekolah);
+            $templateProcessor->setValue('nama_kepala', $sekolah->nama_kepala_sekolah);
+            $templateProcessor->setValue('nip_kepala', $sekolah->nip_kepala_sekolah);
+
+            // --- DOWNLOAD ---
+            $filename = 'SP_'.str_replace(['/', '\\'], '-', $suratDipilih->nomor_surat).'.docx';
+
+            header('Content-Description: File Transfer');
+            header('Content-Disposition: attachment; filename="'.$filename.'"');
+            header('Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+            header('Content-Transfer-Encoding: binary');
+            header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+            header('Expires: 0');
+
+            $templateProcessor->saveAs('php://output');
+            exit;
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal mencetak: '.$e->getMessage());
+        }
+    }
+
+    public function cetakBapbParsial($id)
+    {
+        // 1. AMBIL DATA BAPB YANG DIPILIH
+        // Load relasi user->sekolah karena BAPB butuh data pengurus barang
+        $suratDipilih = Surat::with(['rincis.rkas', 'belanja.rekanan', 'belanja.korek', 'belanja.user.sekolah'])
+            ->findOrFail($id);
+
+        $belanja = $suratDipilih->belanja;
+        $sekolah = $belanja->user->sekolah;
+        $rekanan = $belanja->rekanan;
+
+        // Pastikan ini BAPB
+        if ($suratDipilih->jenis_surat != 'BAPB') {
+            return back()->with('error', 'Surat ini bukan BAPB.');
+        }
+
+        // 2. LOAD TEMPLATE
+        $pathTemplate = storage_path('app/templates/template_surat_bapb.docx');
+        if (! file_exists($pathTemplate)) {
+            return back()->with('error', 'Template BAPB tidak ditemukan.');
+        }
+
+        try {
+            $templateProcessor = new \PhpOffice\PhpWord\TemplateProcessor($pathTemplate);
+            \Carbon\Carbon::setLocale('id');
+
+            // --- A. HEADER (KOP SURAT) ---
+            $templateProcessor->setValue('nama_sekolah', strtoupper($sekolah->nama_sekolah));
+            $templateProcessor->setValue('alamat', $sekolah->alamat);
+            $templateProcessor->setValue('kelurahan', $sekolah->kelurahan ?? '-');
+            $templateProcessor->setValue('kecamatan', $sekolah->kecamatan ?? '-');
+            $templateProcessor->setValue('telepon', $sekolah->no_telp ?? '-');
+            $templateProcessor->setValue('email', $sekolah->email ?? '-');
+            $templateProcessor->setValue('kode_pos', $sekolah->kodepos ?? '-');
+
+            // --- B. INFO BAPB ---
+            $templateProcessor->setValue('no_bapb1', $suratDipilih->nomor_surat);
+
+            // Logic Kalimat Pembuka "Pada hari ini..."
+            $dt = $suratDipilih->tanggal_surat;
+            $hari = $dt->translatedFormat('l');
+            $dt = Carbon::parse($suratDipilih->tanggal_surat);
+
+            $namaHari = $dt->translatedFormat('l'); // Senin, Selasa...
+            $namaBulan = $dt->translatedFormat('F'); // Januari, Februari...
+
+            // Konversi angka ke teks
+            $tglText = trim($this->terbilang($dt->day));   // dua puluh lima
+            $thnText = trim($this->terbilang($dt->year));  // dua ribu dua puluh enam
+
+            // Susun Kalimat: "hari Minggu tanggal dua puluh lima bulan Januari tahun dua ribu dua puluh enam"
+            $tglHariH = "$namaHari tanggal $tglText bulan $namaBulan tahun $thnText";
+
+            $templateProcessor->setValue('isi_bapb1', "Pada hari ini, {$tglHariH}, sesuai dengan:");
+
+            // Tabel Detail
+            $templateProcessor->setValue('no_bast1', $suratDipilih->no_bast ?? '-');
+            // Gunakan tanggal BAST jika ada, jika tidak gunakan tanggal BAPB
+            $tglBast = $suratDipilih->tanggal_bast ? \Carbon\Carbon::parse($suratDipilih->tanggal_bast) : $dt;
+            $templateProcessor->setValue('tanggal_kirim1', $tglBast->translatedFormat('d F Y'));
+            $templateProcessor->setValue('title', $belanja->uraian);
+            $templateProcessor->setValue('tahun', $dt->format('Y'));
+
+            // --- C. PIHAK PIHAK ---
+            // Pihak 1 (Sekolah - Pengurus Barang)
+            $templateProcessor->setValue('nama_pengurus_barang', $sekolah->nama_pengurus_barang ?? '-');
+            $templateProcessor->setValue('nip_pengurus_barang', $sekolah->nip_pengurus_barang ?? '-');
+            $templateProcessor->setValue('sekolah', $sekolah->nama_sekolah);
+            // $templateProcessor->setValue('alamat', $sekolah->alamat); // Sudah di set di header
+
+            // Pihak 2 (Rekanan)
+            $templateProcessor->setValue('nama_pimpinan', $rekanan->nama_pimpinan);
+            $templateProcessor->setValue('nama_rekanan', $rekanan->nama_rekanan);
+            $templateProcessor->setValue('alamat_surat', $rekanan->alamat);
+            $templateProcessor->setValue('hp_surat', $rekanan->no_telp ?? '-'); // Sesuai template ${hp_surat}
+
+            // --- D. TABEL RINCIAN BARANG ---
+            // Khusus BAPB, kita HANYA mencetak barang yang ada di surat ini saja (rincis)
+            // Tidak perlu mengambil dari BAPB lain.
+
+            $dataRows = [];
+            $nomorUrut = 1;
+
+            foreach ($suratDipilih->rincis as $item) {
+
+                // Ambil Volume Parsial dari Pivot
+                $volumeParsial = $item->pivot->volume;
+
+                if ($volumeParsial <= 0) {
+                    continue;
+                }
+
+                // Logic Satuan
+                $satuan = $item->rkas ? $item->rkas->satuan : $item->satuan;
+                $qtyFormat = number_format($volumeParsial, 0, ',', '.');
+
+                $dataRows[] = [
+                    'krm1' => $nomorUrut++,
+                    'barang1' => $item->namakomponen,
+                    'jml1' => $qtyFormat, // Jumlah Dipesan = Jumlah Diterima = Jumlah Sesuai
+                    'sat1' => $satuan,
+                ];
+            }
+
+            // Clone Baris Tabel (Target variabel: ${krm1})
+            if (count($dataRows) > 0) {
+                $templateProcessor->cloneRowAndSetValues('krm1', $dataRows);
+            } else {
+                $templateProcessor->cloneRowAndSetValues('krm1', [[
+                    'krm1' => '-',
+                    'barang1' => 'Tidak ada barang',
+                    'jml1' => '0',
+                    'sat1' => '-',
+                ]]);
+            }
+
+            // --- E. DOWNLOAD FILE ---
+            $filename = 'BAPB_'.str_replace(['/', '\\'], '-', $suratDipilih->nomor_surat).'.docx';
+
+            header('Content-Description: File Transfer');
+            header('Content-Disposition: attachment; filename="'.$filename.'"');
+            header('Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+            header('Content-Transfer-Encoding: binary');
+            header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+            header('Expires: 0');
+
+            $templateProcessor->saveAs('php://output');
+            exit;
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal mencetak BAPB: '.$e->getMessage());
+        }
     }
 }

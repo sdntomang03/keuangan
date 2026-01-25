@@ -28,8 +28,8 @@ return new class extends Migration
             $table->date('tanggal_surat');
             $table->boolean('is_parsial')->default(false); // Penanda Parsial
             $table->string('keterangan')->nullable();      // Contoh: "Tahap 1", "Pengiriman Awal"
-            $table->string('no_bast')->nullable()->after('keterangan');
-            $table->date('tanggal_bast')->nullable()->after('no_bast');
+            $table->string('no_bast')->nullable();
+            $table->date('tanggal_bast')->nullable();
             $table->timestamps();
         });
     }

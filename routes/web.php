@@ -158,14 +158,16 @@ Route::prefix('surat')->group(function () {
     Route::put('/update/{id}', [SuratController::class, 'update'])->name('surat.update');
     Route::post('/store/{belanjaId}', [SuratController::class, 'store'])->name('surat.store');
     Route::post('/store-parsial/{belanjaId}', [SuratController::class, 'storeParsial'])->name('surat.store_parsial');
+    Route::get('/cetak-sp/{id}', [SuratController::class, 'cetakSpParsial'])->name('surat.cetak_sp');
+    Route::get('/cetak-bapb/{id}', [App\Http\Controllers\SuratController::class, 'cetakBapbParsial'])->name('surat.cetak_bapb');
     Route::get('/{id}/edit-penawaran', [BelanjaController::class, 'editPenawaran'])->name('belanja.edit_penawaran');
     Route::delete('/destroy/{id}', [SuratController::class, 'destroy'])->name('surat.destroy');
     Route::post('/{id}/upload-foto', [SuratController::class, 'uploadFoto'])
         ->name('belanja.upload_foto');
 
     // Route untuk Hapus Foto (Karena tadi kita tambahkan tombol hapus)
-    Route::delete('/foto/{id}', [SuratController::class, 'deleteFoto'])
-        ->name('belanja.delete_foto');
+    Route::delete('/foto/{id}', [SuratController::class, 'destroyFoto'])
+        ->name('surat.delete_foto');
     // Proses Simpan
     Route::put('/{id}/update-penawaran', [BelanjaController::class, 'updatePenawaran'])->name('belanja.update_penawaran');
 });
