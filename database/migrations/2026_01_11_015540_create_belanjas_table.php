@@ -18,6 +18,8 @@ return new class extends Migration
             $table->string('kodeakun')->nullable();
             $table->foreignId('rekanan_id')->constrained('rekanans'); // Relasi ke master rekanan
             $table->date('tanggal');
+            $table->date('tanggal_bast')->nullable(); // Tanggal BAST
+            $table->string('no_bast')->nullable();
             $table->string('no_bukti');
             $table->string('rincian')->nullable();
             $table->string('uraian');

@@ -33,7 +33,7 @@ class BelanjaController extends Controller
 
         // 2. Ambil Data Sekolah Aktif
         // Mengasumsikan User model memiliki relasi 'sekolah' atau menggunakan sekolah_id
-        $sekolah = \App\Models\Sekolah::find($user->sekolah_id);
+        $sekolah = Sekolah::find($user->sekolah_id);
 
         $rekanans = Rekanan::where('sekolah_id', $sekolah->id)
             ->orderBy('nama_rekanan', 'asc')
@@ -521,5 +521,44 @@ class BelanjaController extends Controller
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage())->withInput();
         }
+    }
+
+    public function editPenawaran($id)
+    {
+        $belanja = Belanja::with('rincis')->findOrFail($id);
+
+        return view('belanja.edit_penawaran', compact('belanja'));
+    }
+
+    /**
+     * Proses Update Harga Penawaran Massal
+     */
+    public function updatePenawaran(Request $request, $id)
+    {
+        $request->validate([
+            'no_bast' => 'nullable|string',
+            'tanggal_bast' => 'nullable|date',
+            'items' => 'required|array',
+        ]);
+
+        $belanja = Belanja::findOrFail($id);
+
+        DB::transaction(function () use ($request, $belanja) {
+
+            // 1. UPDATE DATA BAST DI TABEL BELANJA (PARENT)
+            $belanja->update([
+                'no_bast' => $request->no_bast,
+                'tanggal_bast' => $request->tanggal_bast,
+            ]);
+
+            // 2. UPDATE HARGA BARANG (CHILD)
+            foreach ($request->items as $rinciId => $hargaPenawaran) {
+                \App\Models\BelanjaRinci::where('id', $rinciId)->update([
+                    'harga_penawaran' => $hargaPenawaran,
+                ]);
+            }
+        });
+
+        return redirect()->route('surat.index', $id)->with('success', 'Data BAST dan Harga Penawaran berhasil disimpan.');
     }
 }

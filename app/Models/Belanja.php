@@ -27,6 +27,8 @@ class Belanja extends Model
         'kodeakun',
         'status',
         'anggaran_id',
+        'tanggal_bast',
+        'no_bast',
 
     ];
 
@@ -69,5 +71,10 @@ class Belanja extends Model
     public function anggaran()
     {
         return $this->belongsTo(Anggaran::class);
+    }
+
+    public function surats()
+    {
+        return $this->hasMany(Surat::class);
     }
 }

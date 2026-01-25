@@ -152,6 +152,19 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['auth', 'r
     Route::delete('/rkas/cleanup/destroy', [RkasCleanupController::class, 'destroy'])->name('rkas.cleanup.destroy');
 });
 
+Route::prefix('surat')->group(function () {
+    Route::get('/manage/{belanjaId}', [SuratController::class, 'index'])->name('surat.index');
+    Route::post('/generate/{belanjaId}', [SuratController::class, 'generateDefault'])->name('surat.generate');
+    Route::put('/update/{id}', [SuratController::class, 'update'])->name('surat.update');
+    Route::post('/store/{belanjaId}', [SuratController::class, 'store'])->name('surat.store');
+    Route::post('/store-parsial/{belanjaId}', [SuratController::class, 'storeParsial'])->name('surat.store_parsial');
+    Route::get('/{id}/edit-penawaran', [BelanjaController::class, 'editPenawaran'])->name('belanja.edit_penawaran');
+    Route::delete('/destroy/{id}', [SuratController::class, 'destroy'])->name('surat.destroy');
+
+    // Proses Simpan
+    Route::put('/{id}/update-penawaran', [BelanjaController::class, 'updatePenawaran'])->name('belanja.update_penawaran');
+});
+
 Route::get('/coba', [Coba::class, 'index'])->name('index');
 Route::get('/banding', [Coba::class, 'banding'])->name('banding');
 Route::get('/coba/rkas', [Coba::class, 'rkas'])->name('coba.rkas');
