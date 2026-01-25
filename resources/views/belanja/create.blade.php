@@ -207,7 +207,7 @@
                                                 x-model="item.idblrinci">
                                         </td>
                                         <td class="px-6 py-4 text-center">
-                                            <input type="number" step="any" :name="'items[' + index + '][volume]'"
+                                            <input type="number" step="1" :name="'items[' + index + '][volume]'"
                                                 x-model="item.volume" @input="validateVolume(item); calculateTotal()"
                                                 class="w-20 border-gray-200 rounded-lg text-center font-bold text-blue-700 p-1">
 

@@ -10,6 +10,9 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\ImageManager;
 use Maatwebsite\Excel\Facades\Excel;
 use PhpOffice\PhpWord\TemplateProcessor;
 
@@ -132,7 +135,11 @@ class SuratController extends Controller
             $templateProcessor->setValue('nip_pengurus_barang', $sekolah->nip_pengurus_barang);
 
             // --- E. ISI NARASI ---
+
             $kodeRekening = $belanja->korek->ket ?? '-';
+            $templateProcessor->setValue('jenis_anggaran', $namaAnggaran);
+            $templateProcessor->setValue('korek', $kodeRekening);
+            $templateProcessor->setValue('triwulan', $tw_romawi);
             $dt = Carbon::parse($suratBAPB->tanggal_surat);
 
             $namaHari = $dt->translatedFormat('l'); // Senin, Selasa...
@@ -179,14 +186,14 @@ class SuratController extends Controller
                     // Mapping ke 4 Tabel
                     $templateProcessor->setValue("no#$i", $i);
                     $templateProcessor->setValue("nama_barang#$i", $item->namakomponen);
-                    $templateProcessor->setValue("spek_barang#$i", $item->spek);
+                    // $templateProcessor->setValue("spek_barang#$i", $item->spek);
                     $templateProcessor->setValue("satuan#$i", $satuan);
 
                     $templateProcessor->setValue("no1#$i", $i);
                     $templateProcessor->setValue("nama_barang1#$i", $item->namakomponen);
                     $templateProcessor->setValue("satuan1#$i", $satuan);
-                    $templateProcessor->setValue("harga1#$i", $hargaFmt);
-                    $templateProcessor->setValue("nego1#$i", $hargaPenawaran);
+                    $templateProcessor->setValue("harga1#$i", $hargaPenawaran);
+                    $templateProcessor->setValue("nego1#$i", $hargaFmt);
 
                     $templateProcessor->setValue("no2#$i", $i);
                     $templateProcessor->setValue("nama_barang2#$i", $item->namakomponen);
@@ -226,7 +233,7 @@ class SuratController extends Controller
      */
     public function index($belanjaId)
     {
-        $belanja = Belanja::with('surats')->findOrFail($belanjaId);
+        $belanja = Belanja::with(['surats', 'rincis', 'fotos'])->findOrFail($belanjaId);
 
         $jenisSuratList = [
             'PH' => 'Permintaan Harga',
@@ -280,7 +287,7 @@ class SuratController extends Controller
 
             // B. Re-sequence
             $tahun = $baseDate->format('Y');
-            $this->urutkanUlangNomorSurat($sekolahId, $tahun);
+            $this->urutkanUlangNomorSurat($sekolahId, $baseDate->format('Y'), $triwulanAktif);
         });
 
         return back()->with('success', 'Surat berhasil digenerate dan diurutkan sesuai tanggal.');
@@ -289,15 +296,40 @@ class SuratController extends Controller
     /**
      * 5. Helper Pengurutan Ulang
      */
-    private function urutkanUlangNomorSurat($sekolahId, $tahun)
+    private function urutkanUlangNomorSurat($sekolahId, $tahun, $triwulanAktif)
     {
+        // 1. Ambil data sekolah untuk mendapatkan "nomor_surat" awal/terakhir
+        $sekolah = Sekolah::find($sekolahId);
+
+        // Default jika field kosong
+        $baseNumber = 0;
+
+        if ($sekolah && $sekolah->nomor_surat) {
+            // Ambil angka depan dari field nomor_surat di tabel sekolahs
+            // Contoh isi field: "045" atau "045/UD.02.02"
+            $parts = explode('/', $sekolah->nomor_surat);
+            $baseNumber = (int) $parts[0];
+        }
+
+        // 2. Ambil total surat yang sudah ada di triwulan SEBELUMNYA
+        // Ini penting agar nomor di TW 2 melanjutkan nomor yang sudah terpakai di TW 1
+        $suratTerpakaiLalu = Surat::where('sekolah_id', $sekolahId)
+            ->whereYear('tanggal_surat', $tahun)
+            ->where('triwulan', '<', $triwulanAktif)
+            ->count();
+
+        // 3. Ambil surat di triwulan aktif untuk diurutkan
         $surats = Surat::where('sekolah_id', $sekolahId)
             ->whereYear('tanggal_surat', $tahun)
+            ->where('triwulan', $triwulanAktif)
             ->orderBy('tanggal_surat', 'asc')
             ->orderBy('id', 'asc')
             ->get();
 
-        $noUrut = 1;
+        // 4. Hitung Nomor Mulai
+        // Rumus: (Nomor di Profil Sekolah) + (Surat yang sudah dibuat di triwulan lalu) + 1
+        $noUrut = $baseNumber + $suratTerpakaiLalu + 1;
+
         foreach ($surats as $surat) {
             $strNoUrut = str_pad($noUrut, 3, '0', STR_PAD_LEFT);
             $nomorBaru = "{$strNoUrut}/UD.02.02";
@@ -327,7 +359,7 @@ class SuratController extends Controller
         ]);
 
         // Urutkan ulang jika tanggal berubah agar konsisten
-        $this->urutkanUlangNomorSurat($surat->sekolah_id, $surat->tanggal_surat->format('Y'));
+        $this->urutkanUlangNomorSurat($surat->sekolah_id, $surat->tanggal_surat->format('Y'), $surat->triwulan);
 
         return back()->with('success', 'Data surat diperbarui.');
     }
@@ -436,6 +468,8 @@ class SuratController extends Controller
                 'jenis_surat' => 'BAPB',
                 'nomor_surat' => $request->nomor_bapb,
                 'tanggal_surat' => $request->tanggal_bapb,
+                'tanggal_bast' => $request->tanggal_bapb,
+                'no_bast' => $request->no_bast,    // Gunakan no_bast dari Belanja
                 'is_parsial' => true,                // <--- TANDAI PARSIAL
                 'keterangan' => $request->keterangan, // <--- TAHAP 1
             ]);
@@ -482,5 +516,98 @@ class SuratController extends Controller
         } elseif ($x < 1000000) {
             return $this->terbilang($x / 1000).' ribu'.$this->terbilang($x % 1000);
         }
+    }
+
+    public function uploadFoto(Request $request, $id)
+    {
+        $request->validate(['foto' => 'required|image|max:10240']);
+
+        $belanja = Belanja::with('anggaran.sekolah', 'surats')->findOrFail($id);
+
+        // 1. Ambil data object sekolah (Gunakan nama variabel yang berbeda agar tidak tertimpa)
+        $objSekolah = $belanja->anggaran->sekolah;
+
+        // 2. Olah data teks (Gunakan Null Coalescing agar tidak error jika data kosong)
+        $namaSekolah = strtoupper($objSekolah->nama_sekolah ?? 'NAMA SEKOLAH');
+        $alamatSekolah = strtoupper($objSekolah->alamat_sekolah ?? $objSekolah->alamat ?? 'ALAMAT SEKOLAH');
+        $alamatSekolah2 = strtoupper('Kel. '.$objSekolah->kelurahan.', Kec. '.$objSekolah->kecamatan.' ' ?? '');
+        $lat = $objSekolah->latitude ?? '-6.1754';
+        $lng = $objSekolah->longitude ?? '106.8272';
+
+        $jamAcak = sprintf('%02d', rand(9, 15));
+        $menitAcak = sprintf('%02d', rand(0, 59));
+        $detikAcak = sprintf('%02d', rand(0, 59));
+
+        $waktuAcak = "$jamAcak:$menitAcak:$detikAcak";
+
+        // 3. Ambil Tanggal BAST
+        $suratBast = $belanja->surats->where('jenis_surat', 'BAPB')->first();
+        $tanggalBast = $suratBast && $suratBast->tanggal_surat
+            ? $suratBast->tanggal_surat->translatedFormat('l, d F Y')
+            : now()->translatedFormat('l, d F Y');
+
+        $file = $request->file('foto');
+        $manager = new ImageManager(new Driver);
+        $img = $manager->read($file);
+
+        // Standardisasi Canvas
+        $img->scale(width: 1600);
+        $width = $img->width();
+        $height = $img->height();
+
+        // --- PENYESUAIAN UNTUK 5 BARIS TEKS ---
+        $fontSizeLarge = 36; // Perkecil sedikit dari 42
+        $fontSizeSmall = 28; // Perkecil dari 26 agar tidak sesak
+        $rectHeight = 300;   // Ditinggikan dari 220 ke 250 untuk menampung total 5 baris
+        $padding = 60;
+
+        // Overlay Hitam
+        $img->drawRectangle(0, $height - $rectHeight, function ($draw) use ($width, $rectHeight) {
+            $draw->size($width, $rectHeight);
+            $draw->background('rgba(0, 0, 0, 0.7)');
+        });
+
+        // Font Path
+        $fontReg = public_path('fonts/Roboto-Regular.ttf');
+
+        // 1. Render Teks Baris 1: Judul (Uraian Belanja)
+        // Koordinat Y dinaikkan ke -210 (semakin besar minusnya, semakin ke atas)
+        $img->text(strtoupper($belanja->uraian), $padding, $height - 260, function ($font) use ($fontSizeLarge, $fontReg) {
+            if (file_exists($fontReg)) {
+                $font->filename($fontReg);
+            }
+            $font->size($fontSizeLarge);
+            $font->lineHeight(1.2);
+            $font->color('ffffff');
+            $font->valign('top');
+        });
+
+        // 2. Susunan Detail (4 Baris Detail)
+        $watermarkDetail = "$tanggalBast $waktuAcak\n$alamatSekolah ($lat, $lng)\n$alamatSekolah2\n$namaSekolah";
+
+        // 3. Render Teks Detail
+        // Koordinat Y dinaikkan ke -150 agar baris terakhir (Nama Sekolah) terangkat
+        $img->text($watermarkDetail, $padding, $height - 200, function ($font) use ($fontSizeSmall, $fontReg) {
+            if (file_exists($fontReg)) {
+                $font->filename($fontReg);
+            }
+            $font->size($fontSizeSmall);
+            $font->lineHeight(2); // Line height dikurangi sedikit agar rapat dan muat
+            $font->color('ffffff');
+            $font->valign('top');
+        });
+
+        // Simpan
+        $filename = time().'.webp';
+        $path = 'dokumentasi/'.$filename;
+        Storage::disk('public')->put($path, $img->toWebp(80));
+
+        $belanja->fotos()->create([
+            'path' => $path,
+            'latitude' => $lat,
+            'longitude' => $lng,
+        ]);
+
+        return back()->with('success', 'Foto SPJ berhasil diproses dengan watermark proporsional.');
     }
 }

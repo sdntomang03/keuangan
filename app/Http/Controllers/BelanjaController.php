@@ -216,6 +216,7 @@ class BelanjaController extends Controller
                         'namakomponen' => $item['namakomponen'],
                         'spek' => $item['spek'] ?? '-',
                         'harga_satuan' => $item['harga_satuan'],
+                        'harga_penawaran' => 0,
                         'volume' => $item['volume'],
                         'total_bruto' => $brutoDasar,
                         'bulan' => Carbon::parse($request->tanggal)->month,

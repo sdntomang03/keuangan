@@ -67,6 +67,7 @@ class SekolahSeeder extends Seeder
             'telp' => '02156960149',
             'email' => 'sdntomang03pagi@yahoo.co.id',
             'logo' => null,
+            'nomor_surat' => '001',
         ]);
 
         // Jika ingin membuat banyak sekolah secara otomatis (Mass Seeding)

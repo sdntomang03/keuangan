@@ -1,314 +1,424 @@
 <x-app-layout>
-    {{-- Tambahkan AlpineJS untuk menangani Modal (Biasanya sudah ada di Breeze/Jetstream) --}}
-    {{-- Jika belum ada, tambahkan: <script src="//unpkg.com/alpinejs" defer></script> --}}
-
-    <div class="py-12" x-data="{ showModal: false }">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-
-            {{-- ALERT --}}
-            {{-- ALERT SUKSES (BISA DICLOSE) --}}
-            @if(session('success'))
-            <div x-data="{ show: true }" x-show="show" x-transition.duration.300ms
-                class="mb-4 bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded shadow-sm flex justify-between items-start">
-
-                {{-- Pesan --}}
-                <div class="flex items-center">
-                    <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span>{{ session('success') }}</span>
-                </div>
-
-                {{-- Tombol Close --}}
-                <button @click="show = false" type="button"
-                    class="text-green-500 hover:text-green-800 focus:outline-none transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-            @endif
-
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-
-                {{-- HEADER & TOMBOL --}}
-                <div class="flex justify-between items-center mb-6">
-                    <div>
-                        <h2 class="text-xl font-bold text-gray-800">Manajemen Surat</h2>
-                        <p class="text-sm text-gray-500">{{ $belanja->uraian }}</p>
-                    </div>
-
-                    <div class="flex gap-2">
-
-                        {{-- 1. TOMBOL INPUT HARGA PENAWARAN (BARU) --}}
-                        <a href="{{ route('belanja.edit_penawaran', $belanja->id) }}"
-                            class="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 text-sm font-bold shadow-md transition flex items-center gap-2">
-                            {{-- Icon Dollar/Money --}}
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            Input Harga Penawaran
-                        </a>
-
-                        {{-- 2. Tombol Generate Standar --}}
-                        <form action="{{ route('surat.generate', $belanja->id) }}" method="POST">
-                            @csrf
-                            <button type="submit"
-                                class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 text-sm font-bold transition shadow-sm border border-gray-300">
-                                Generate Full
-                            </button>
-                        </form>
-
-                        {{-- 3. TOMBOL BUKA MODAL PARSIAL --}}
-                        <button @click="showModal = true"
-                            class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 text-sm font-bold shadow-md transition flex items-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
-                            + Tambah Parsial
-                        </button>
-                    </div>
-                </div>
-
-                {{-- TABEL SURAT --}}
-                <div class="overflow-x-auto rounded-lg border border-gray-200">
-                    <table class="w-full text-sm text-left text-gray-500">
-                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b">
-                            <tr>
-                                <th class="px-6 py-3">Jenis Surat</th>
-                                <th class="px-6 py-3">Nomor Surat</th>
-                                <th class="px-6 py-3">Tanggal</th>
-                                <th class="px-6 py-3 text-center">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-200">
-                            @foreach($belanja->surats as $surat)
-                            <tr class="bg-white hover:bg-gray-50 transition">
-
-                                {{-- KOLOM JENIS & BADGE PARSIAL --}}
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center gap-2">
-                                        <span class="font-bold text-gray-900">{{ $surat->jenis_surat }}</span>
-
-                                        {{-- TANDAI JIKA PARSIAL --}}
-                                        @if($surat->is_parsial)
-                                        <span
-                                            class="bg-purple-100 text-purple-800 text-xs font-semibold px-2.5 py-0.5 rounded border border-purple-200">
-                                            {{ $surat->keterangan ?? 'Parsial' }}
-                                        </span>
-                                        @endif
-                                    </div>
-                                    <span class="text-xs text-gray-400 block mt-1">
-                                        @if($surat->jenis_surat == 'PH') Permintaan Harga
-                                        @elseif($surat->jenis_surat == 'SP') Surat Pesanan
-                                        @elseif($surat->jenis_surat == 'BAPB') Berita Acara
-                                        @endif
-                                    </span>
-                                </td>
-
-                                {{-- Kolom Nomor & Tanggal (Editable Form) --}}
-                                <td class="px-6 py-4">
-                                    <input type="text" name="nomor_surat" value="{{ $surat->nomor_surat }}"
-                                        form="form-update-{{ $surat->id }}"
-                                        class="w-full border-gray-300 rounded-md text-sm focus:ring-indigo-500 font-mono">
-                                </td>
-                                <td class="px-6 py-4">
-                                    <input type="date" name="tanggal_surat"
-                                        value="{{ $surat->tanggal_surat ? $surat->tanggal_surat->format('Y-m-d') : '' }}"
-                                        form="form-update-{{ $surat->id }}"
-                                        class="w-full border-gray-300 rounded-md text-sm focus:ring-indigo-500">
-                                </td>
-
-                                {{-- Aksi --}}
-                                <td class="px-6 py-4">
-                                    <div class="flex justify-center items-center gap-2">
-
-                                        {{-- 1. Simpan Edit --}}
-                                        <form id="form-update-{{ $surat->id }}"
-                                            action="{{ route('surat.update', $surat->id) }}" method="POST">
-                                            @csrf @method('PUT')
-                                            <button type="submit" title="Simpan Perubahan"
-                                                class="text-green-600 hover:bg-green-50 p-2 rounded transition">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2" d="M5 13l4 4L19 7" />
-                                                </svg>
-                                            </button>
-                                        </form>
-
-                                        {{-- 2. Cetak --}}
-                                        {{-- Anda bisa memfilter cetak per ID jika mau, tapi saat ini cetak global per
-                                        belanja --}}
-                                        {{-- <a href="{{ route('cetak.dokumen_lengkap', $belanja->id) }}"
-                                            target="_blank" title="Cetak"
-                                            class="text-blue-600 hover:bg-blue-50 p-2 rounded transition">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                                            </svg>
-                                        </a> --}}
-
-                                        {{-- 3. HAPUS SURAT (BARU) --}}
-                                        <form action="{{ route('surat.destroy', $surat->id) }}" method="POST"
-                                            id="delete-surat-{{ $surat->id }}">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="button" onclick="confirmDeleteSurat('{{ $surat->id }}')"
-                                                title="Hapus Surat"
-                                                class="text-red-500 hover:bg-red-50 p-2 rounded transition">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                </svg>
-                                            </button>
-                                        </form>
-
-                                    </div>
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            {{-- MODAL PARSIAL (Hidden by default, shown by AlpineJS) --}}
-            <div x-show="showModal" style="display: none;" class="fixed inset-0 z-50 overflow-y-auto"
-                aria-labelledby="modal-title" role="dialog" aria-modal="true">
-
-                {{-- Backdrop --}}
-                <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                    <div @click="showModal = false" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity">
-                    </div>
-
-                    <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-
-                    {{-- Modal Panel --}}
-                    <div
-                        class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full">
-
-                        <form action="{{ route('surat.store_parsial', $belanja->id) }}" method="POST">
-                            @csrf
-
-                            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">
-                                    Buat Surat Parsial (SP & BAPB)
-                                </h3>
-
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                    {{-- Keterangan Tahap --}}
-                                    <div class="col-span-1 md:col-span-2">
-                                        <label class="block text-sm font-bold text-gray-700">Nama Tahapan</label>
-                                        <input type="text" name="keterangan"
-                                            placeholder="Contoh: Tahap 1, Pengiriman Awal" required
-                                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                                    </div>
-
-                                    {{-- Data SP --}}
-                                    <div class="bg-blue-50 p-3 rounded border border-blue-100">
-                                        <p class="font-bold text-blue-800 mb-2 text-sm">1. Data Surat Pesanan (SP)</p>
-                                        <div class="mb-2">
-                                            <label class="text-xs text-gray-600">Nomor SP</label>
-                                            <input type="text" name="nomor_sp" required
-                                                class="w-full text-sm border-gray-300 rounded">
-                                        </div>
-                                        <div>
-                                            <label class="text-xs text-gray-600">Tanggal SP (H-1)</label>
-                                            <input type="date" name="tanggal_sp" required
-                                                class="w-full text-sm border-gray-300 rounded">
-                                        </div>
-                                    </div>
-
-                                    {{-- Data BAPB --}}
-                                    <div class="bg-green-50 p-3 rounded border border-green-100">
-                                        <p class="font-bold text-green-800 mb-2 text-sm">2. Data Berita Acara (BAPB)</p>
-                                        <div class="mb-2">
-                                            <label class="text-xs text-gray-600">Nomor BAPB</label>
-                                            <input type="text" name="nomor_bapb" required
-                                                class="w-full text-sm border-gray-300 rounded">
-                                        </div>
-                                        <div>
-                                            <label class="text-xs text-gray-600">Tanggal BAPB (Hari H)</label>
-                                            <input type="date" name="tanggal_bapb" required
-                                                class="w-full text-sm border-gray-300 rounded">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {{-- Pilih Barang --}}
-                                <div class="bg-gray-50 p-4 rounded border border-gray-200 max-h-60 overflow-y-auto">
-                                    <p class="font-bold text-gray-700 mb-2 text-sm">3. Pilih Barang & Jumlah Kirim</p>
-                                    @foreach($belanja->rincis as $item)
-                                    <div
-                                        class="flex items-center justify-between p-2 bg-white mb-1 rounded border border-gray-200">
-                                        <div class="flex items-center flex-1">
-                                            <input type="checkbox" name="items[{{ $item->id }}][selected]" value="1"
-                                                checked class="h-4 w-4 text-indigo-600 border-gray-300 rounded">
-                                            <div class="ml-3 text-sm">
-                                                <span class="block font-medium text-gray-700">{{ $item->namakomponen ??
-                                                    $item->nama_komponen }}</span>
-                                                <span class="text-xs text-gray-500">Max: {{ $item->volume }} {{
-                                                    $item->satuan }}</span>
-                                            </div>
-                                        </div>
-                                        <div class="w-24">
-                                            <input type="number" name="items[{{ $item->id }}][volume]"
-                                                value="{{ $item->volume }}" max="{{ $item->volume }}"
-                                                class="w-full text-sm border-gray-300 rounded text-right">
-                                        </div>
-                                    </div>
-                                    @endforeach
-                                </div>
-
-                            </div>
-
-                            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                                <button type="submit"
-                                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">
-                                    Simpan Paket Parsial
-                                </button>
-                                <button @click="showModal = false" type="button"
-                                    class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                                    Batal
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-    </div>
-    {{-- SCRIPT DELETE CONFIRMATION --}}
-    <script>
-        function confirmDeleteSurat(id) {
+    <div class="py-12 bg-gray-50 min-h-screen" x-data="{
+        showModal: false,
+        activeTab: 'surat',
+        confirmDelete(id) {
             Swal.fire({
-                title: 'Hapus Surat Ini?',
-                text: "Surat beserta rincian barang di dalamnya akan dihapus.",
+                title: 'Hapus Surat?',
+                text: 'Data rincian barang di dalamnya akan ikut terhapus.',
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#dc2626',
-                cancelButtonColor: '#6b7280',
-                confirmButtonText: 'Ya, Hapus!',
-                cancelButtonText: 'Batal',
-                reverseButtons: true,
-                customClass: {
-                    popup: 'rounded-xl',
-                    confirmButton: 'rounded-lg px-4 py-2 font-bold',
-                    cancelButton: 'rounded-lg px-4 py-2 font-bold'
-                }
+                confirmButtonColor: '#ef4444',
+                confirmButtonText: 'Ya, Hapus'
             }).then((result) => {
                 if (result.isConfirmed) {
                     document.getElementById('delete-surat-' + id).submit();
                 }
             })
         }
-    </script>
+    }">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+
+            {{-- ALERT SUCCESS --}}
+            @if(session('success'))
+            <div x-data="{ show: true }" x-show="show"
+                class="mb-4 bg-emerald-50 border-l-4 border-emerald-500 p-4 rounded-xl shadow-sm flex justify-between items-center">
+                <div class="flex items-center text-emerald-700">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" />
+                    </svg>
+                    <span class="text-sm font-bold">{{ session('success') }}</span>
+                </div>
+                <button @click="show = false" class="text-emerald-500">&times;</button>
+            </div>
+            @endif
+
+            {{-- HEADER UTAMA --}}
+            <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 mb-6">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div class="flex items-center gap-4">
+                        <div class="p-4 bg-indigo-600 rounded-2xl text-white shadow-lg shadow-indigo-200">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-black text-gray-800 tracking-tight leading-none uppercase">
+                                Manajemen SPJ</h2>
+                            <p class="text-sm text-gray-400 mt-1 font-medium italic">{{ $belanja->uraian }}</p>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                        {{-- 1. TOMBOL GENERATE AWAL (Hanya muncul jika belum ada surat sama sekali) --}}
+                        @if($belanja->surats->count() == 0)
+                        <form action="{{ route('surat.generate', $belanja->id) }}" method="POST">
+                            @csrf
+                            <button type="submit"
+                                class="bg-blue-600 text-white px-5 py-2.5 rounded-2xl hover:bg-blue-700 text-xs font-black shadow-xl shadow-blue-100 transition-all flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                                GENERATE SURAT (AUTO)
+                            </button>
+                        </form>
+                        @endif
+
+                        {{-- 2. TOMBOL INPUT HARGA PENAWARAN --}}
+                        <a href="{{ route('belanja.edit_penawaran', $belanja->id) }}"
+                            class="group bg-white border-2 border-emerald-500 text-emerald-600 px-5 py-2.5 rounded-2xl hover:bg-emerald-50 text-xs font-black transition-all flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                            HARGA PENAWARAN
+                        </a>
+
+                        {{-- 3. TOMBOL TAMBAH PARSIAL --}}
+                        <button @click="showModal = true"
+                            class="bg-indigo-600 text-white px-5 py-2.5 rounded-2xl hover:bg-indigo-700 text-xs font-black shadow-xl shadow-indigo-100 transition-all flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            TAMBAH PARSIAL
+                        </button>
+
+                        {{-- 4. TOMBOL CETAK DOKUMEN (Hanya muncul jika surat sudah lengkap) --}}
+                        @if($belanja->surats->count() > 0)
+                        <a href="{{ route('surat.generate', $belanja->id) }}" target="_blank"
+                            class="bg-gray-800 text-white px-5 py-2.5 rounded-2xl hover:bg-gray-900 text-xs font-black transition-all flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                            </svg>
+                            CETAK SPJ
+                        </a>
+                        @endif
+                    </div>
+                </div>
+
+                {{-- TAB NAVIGATION --}}
+                <div class="flex gap-8 mt-10 border-b border-gray-100">
+                    <button @click="activeTab = 'surat'"
+                        :class="activeTab === 'surat' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-400'"
+                        class="pb-4 border-b-4 font-black text-xs uppercase tracking-widest transition-all">Administrasi
+                        Surat</button>
+                    <button @click="activeTab = 'barang'"
+                        :class="activeTab === 'barang' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-400'"
+                        class="pb-4 border-b-4 font-black text-xs uppercase tracking-widest transition-all">Rincian
+                        Barang</button>
+                    <button @click="activeTab = 'foto'"
+                        :class="activeTab === 'foto' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-400'"
+                        class="pb-4 border-b-4 font-black text-xs uppercase tracking-widest transition-all">Dokumentasi
+                        Fisik</button>
+                </div>
+            </div>
+
+            {{-- CONTENT SECTION --}}
+            <div class="mt-4">
+
+                {{-- TAB 1: SURAT --}}
+                <div x-show="activeTab === 'surat'" x-transition:enter="transition ease-out duration-300"
+                    class="space-y-4">
+                    @foreach($belanja->surats as $surat)
+                    <div
+                        class="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4 hover:shadow-md transition-shadow group">
+                        <div class="flex items-center gap-5 w-full md:w-auto">
+                            <div class="relative">
+                                <div
+                                    class="w-14 h-14 flex items-center justify-center rounded-2xl {{ $surat->is_parsial ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600' }} font-black text-sm">
+                                    {{ $surat->jenis_surat }}
+                                </div>
+                                @if($surat->is_parsial)
+                                <span
+                                    class="absolute -top-2 -right-2 bg-purple-600 text-white text-[8px] px-2 py-1 rounded-full font-black border-2 border-white uppercase">{{
+                                    $surat->keterangan }}</span>
+                                @endif
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex flex-col">
+                                    <input type="text" name="nomor_surat" value="{{ $surat->nomor_surat }}"
+                                        form="form-{{ $surat->id }}"
+                                        class="p-0 border-none focus:ring-0 font-mono text-base font-bold text-gray-800 bg-transparent w-full md:w-80">
+                                    <div class="flex items-center gap-2 mt-1">
+                                        <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path
+                                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                        <input type="date" name="tanggal_surat"
+                                            value="{{ $surat->tanggal_surat->format('Y-m-d') }}"
+                                            form="form-{{ $surat->id }}"
+                                            class="p-0 border-none focus:ring-0 text-xs text-gray-500 bg-transparent font-medium">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <form id="form-{{ $surat->id }}" action="{{ route('surat.update', $surat->id) }}"
+                                method="POST">
+                                @csrf @method('PUT')
+                                <button type="submit"
+                                    class="p-2 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-100 transition-colors"
+                                    title="Simpan Perubahan">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </button>
+                            </form>
+                            <form action="{{ route('surat.destroy', $surat->id) }}" method="POST"
+                                id="delete-surat-{{ $surat->id }}">
+                                @csrf @method('DELETE')
+                                <button type="button" @click="confirmDelete('{{ $surat->id }}')"
+                                    class="p-2 bg-red-50 text-red-500 rounded-xl hover:bg-red-100 transition-colors">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+
+                {{-- TAB 2: BARANG --}}
+                <div x-show="activeTab === 'barang'" x-transition style="display: none;">
+                    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-50 border-b border-gray-100">
+                                <tr class="text-gray-400 uppercase text-[10px] font-black tracking-widest">
+                                    <th class="px-8 py-5 text-left">Komponen / Spek</th>
+                                    <th class="px-8 py-5 text-center">Volume</th>
+                                    <th class="px-8 py-5 text-right">Harga Satuan</th>
+                                    <th class="px-8 py-5 text-right">Harga Penawaran</th>
+                                    <th class="px-8 py-5 text-right">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-50">
+                                @foreach($belanja->rincis as $item)
+                                <tr class="hover:bg-gray-50/50 transition">
+                                    <td class="px-8 py-5">
+                                        <p class="font-bold text-gray-800">{{ $item->namakomponen ??
+                                            $item->nama_komponen }}</p>
+                                        <p class="text-[11px] text-gray-400 mt-0.5 italic">{{ $item->spek }}</p>
+                                    </td>
+                                    <td class="px-8 py-5 text-center">
+                                        <span
+                                            class="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full font-black text-xs">
+                                            {{ number_format($item->volume, 0) }} {{ $item->satuan }}
+                                        </span>
+                                    </td>
+                                    <td class="px-8 py-5 text-right font-medium text-gray-500">Rp {{
+                                        number_format($item->harga_satuan, 0, ',', '.') }}</td>
+                                    <td class="px-8 py-5 text-right font-medium text-gray-500">Rp {{
+                                        number_format($item->harga_penawaran, 0, ',', '.') }}</td>
+                                    <td class="px-8 py-5 text-right font-black text-gray-900">Rp {{
+                                        number_format($item->volume * $item->harga_satuan, 0, ',', '.') }}</td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {{-- foto --}}
+                {{-- TAB 3: FOTO --}}
+                <div x-show="activeTab === 'foto'" x-transition x-data="{
+        loading: false,
+        lat: '',
+        lng: '',
+        previewUrl: null,
+        fileChosen(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            this.previewUrl = URL.createObjectURL(file);
+        },
+        getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(p => {
+                    this.lat = p.coords.latitude;
+                    this.lng = p.coords.longitude;
+                });
+            }
+        }
+     }" x-init="getLocation()">
+
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        {{-- AREA UPLOAD & PREVIEW --}}
+                        <div class="col-span-1 md:col-span-2">
+                            <form action="{{ route('belanja.upload_foto', $belanja->id) }}" method="POST"
+                                enctype="multipart/form-data" class="space-y-4">
+                                @csrf
+                                <input type="hidden" name="latitude" x-model="lat">
+                                <input type="hidden" name="longitude" x-model="lng">
+
+                                <div class="relative group">
+                                    <label
+                                        class="bg-white p-8 rounded-3xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-center hover:border-indigo-500 transition-all cursor-pointer min-h-[300px] overflow-hidden">
+
+                                        {{-- Tampilan Preview Jika Foto Dipilih --}}
+                                        <template x-if="previewUrl">
+                                            <div class="absolute inset-0 z-0">
+                                                <img :src="previewUrl" class="w-full h-full object-contain bg-gray-100">
+                                            </div>
+                                        </template>
+
+                                        {{-- Ikon & Teks --}}
+                                        <div
+                                            class="relative z-10 bg-white/80 backdrop-blur-sm p-4 rounded-2xl shadow-sm">
+                                            <div
+                                                class="w-12 h-12 bg-indigo-600 text-white rounded-xl flex items-center justify-center mx-auto mb-2">
+                                                <svg class="w-6 h-6" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                </svg>
+                                            </div>
+                                            <span class="text-xs font-black text-gray-700 uppercase"
+                                                x-text="previewUrl ? 'Ganti Foto' : 'Pilih Foto SPJ'"></span>
+                                        </div>
+
+                                        <input type="file" name="foto" class="hidden" accept="image/*" capture="camera"
+                                            @change="fileChosen">
+                                    </label>
+                                </div>
+
+                                {{-- Tombol Submit Muncul Setelah Foto Dipilih --}}
+                                <template x-if="previewUrl">
+                                    <button type="submit" @click="loading = true"
+                                        class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3">
+                                        <span x-show="!loading">Upload & Beri Watermark</span>
+                                        <span x-show="loading" class="animate-spin text-xl">&#9696;</span>
+                                    </button>
+                                </template>
+                            </form>
+                        </div>
+
+                        {{-- DAFTAR FOTO (FORELSE) --}}
+                        <div class="col-span-1 md:col-span-2 grid grid-cols-2 gap-4">
+                            @forelse($belanja->fotos as $foto)
+                            <div
+                                class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden aspect-square relative group">
+                                <img src="{{ asset('storage/' . $foto->path) }}" class="w-full h-full object-cover">
+                                {{-- Tombol Hapus --}}
+                            </div>
+                            @empty
+                            {{-- Empty State --}}
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
+
+                {{-- foto --}}
+            </div>
+        </div>
+
+        {{-- MODAL PARSIAL --}}
+        <div x-show="showModal" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+            <div class="flex items-center justify-center min-h-screen px-4">
+                <div @click="showModal = false"
+                    class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity"></div>
+
+                <div
+                    class="bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl relative overflow-hidden transition-all transform">
+                    <form action="{{ route('surat.store_parsial', $belanja->id) }}" method="POST">
+                        @csrf
+                        <div class="p-8">
+                            <h3 class="text-2xl font-black text-gray-800 mb-6 uppercase tracking-tight">Setup Parsial
+                            </h3>
+
+                            <div class="space-y-6">
+                                {{-- Nama Tahapan --}}
+                                <div>
+                                    <label
+                                        class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] block mb-2">Nama
+                                        Tahapan Pengiriman</label>
+                                    <input type="text" name="keterangan" placeholder="Contoh: Pengiriman Tahap I"
+                                        required
+                                        class="w-full bg-gray-50 border-none rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-indigo-500">
+                                </div>
+
+                                {{-- Row 1: SP & BAPB --}}
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="p-5 bg-blue-50/50 rounded-3xl border border-blue-100">
+                                        <p class="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-3">
+                                            1. Surat Pesanan (SP)</p>
+                                        <input type="text" name="nomor_sp" placeholder="Nomor SP" required
+                                            class="w-full text-xs border-none rounded-xl mb-2 p-3 font-bold focus:ring-1 focus:ring-blue-300">
+                                        <input type="date" name="tanggal_sp" required
+                                            class="w-full text-xs border-none rounded-xl p-3 font-bold focus:ring-1 focus:ring-blue-300">
+                                    </div>
+                                    <div class="p-5 bg-emerald-50/50 rounded-3xl border border-emerald-100">
+                                        <p
+                                            class="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-3">
+                                            2. Berita Acara (BAPB)</p>
+                                        <input type="text" name="nomor_bapb" placeholder="Nomor BAPB" required
+                                            class="w-full text-xs border-none rounded-xl mb-2 p-3 font-bold focus:ring-1 focus:ring-emerald-300">
+                                        <input type="date" name="tanggal_bapb" required
+                                            class="w-full text-xs border-none rounded-xl p-3 font-bold focus:ring-1 focus:ring-emerald-300">
+                                    </div>
+                                </div>
+
+                                {{-- Row 2: BAST REKANAN (TAMBAHAN BARU) --}}
+                                <div class="p-5 bg-orange-50/40 rounded-3xl border border-orange-100">
+                                    <p class="text-[10px] font-black text-orange-400 uppercase tracking-widest mb-3">3.
+                                        Referensi BAST / Surat Jalan Toko</p>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <input type="text" name="no_bast" placeholder="Nomor BAST/SJ Rekanan"
+                                            class="w-full text-xs border-none rounded-xl p-3 font-bold focus:ring-1 focus:ring-orange-300">
+                                        <input type="date" name="tanggal_bast"
+                                            class="w-full text-xs border-none rounded-xl p-3 font-bold focus:ring-1 focus:ring-orange-300">
+                                    </div>
+                                    <p class="text-[9px] text-orange-400/80 mt-2 ml-1 italic">* Digunakan sebagai dasar
+                                        pencatatan pada dokumen BAPB</p>
+                                </div>
+
+                                {{-- Pilih Barang --}}
+                                <div class="bg-gray-50 rounded-3xl p-5">
+                                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">4.
+                                        Pilih Barang & Qty</p>
+                                    <div class="max-h-60 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+                                        @foreach($belanja->rincis as $item)
+                                        <div
+                                            class="flex items-center justify-between p-3 bg-white rounded-2xl border border-gray-100 hover:border-indigo-200 transition-colors">
+                                            <div class="flex items-center gap-3">
+                                                <input type="checkbox" name="items[{{ $item->id }}][selected]" value="1"
+                                                    checked class="rounded text-indigo-600 focus:ring-indigo-500">
+                                                <div class="text-xs">
+                                                    <p class="font-bold text-gray-700 leading-none">{{
+                                                        $item->namakomponen }}</p>
+                                                    <p class="text-[9px] text-gray-400 mt-1">Maks: {{
+                                                        number_format($item->volume, 0) }} {{ $item->satuan }}</p>
+                                                </div>
+                                            </div>
+                                            <input type="number" name="items[{{ $item->id }}][volume]"
+                                                value="{{ $item->volume }}" max="{{ $item->volume }}"
+                                                class="w-16 bg-gray-50 border-none rounded-lg p-1 text-xs text-right font-black text-indigo-600 focus:ring-1 focus:ring-indigo-400">
+                                        </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-6 bg-gray-50 flex justify-end gap-3">
+                            <button @click="showModal = false" type="button"
+                                class="px-6 py-3 text-xs font-black text-gray-400 uppercase tracking-widest hover:text-gray-600 transition-colors">Batal</button>
+                            <button type="submit"
+                                class="bg-indigo-600 text-white px-8 py-3 rounded-2xl text-xs font-black shadow-lg shadow-indigo-100 uppercase tracking-widest hover:bg-indigo-700 transition-all">Simpan</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </x-app-layout>

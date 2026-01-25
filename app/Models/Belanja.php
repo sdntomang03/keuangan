@@ -77,4 +77,10 @@ class Belanja extends Model
     {
         return $this->hasMany(Surat::class);
     }
+
+    public function fotos()
+    {
+        // Pastikan nama modelnya benar
+        return $this->hasMany(BelanjaFoto::class, 'belanja_id');
+    }
 }

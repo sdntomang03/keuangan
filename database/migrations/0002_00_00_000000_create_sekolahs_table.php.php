@@ -39,6 +39,7 @@ return new class extends Migration
             $table->string('email')->nullable();
 
             $table->string('logo')->nullable();
+            $table->string('nomor_surat')->nullable()->default('000');
             $table->timestamps();
         });
     }
