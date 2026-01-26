@@ -7,6 +7,7 @@ use App\Models\Belanja;
 use App\Models\BelanjaFoto;
 use App\Models\Sekolah;
 use App\Models\Surat;
+use Barryvdh\DomPDF\Facade\Pdf as DomPdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -632,6 +633,12 @@ class SuratController extends Controller
         $width = $img->width();
         $height = $img->height();
 
+        $bgHeight = 300;
+        $backgroundLayer = $manager->create($width, $bgHeight)->fill('rgba(0, 0, 0, 0.5)');
+
+        // Tempelkan di bagian paling bawah gambar
+        $img->place($backgroundLayer, 'bottom-center');
+
         // 7. Tambahkan Peta Statis (OpenStreetMap via Yandex Static)
         try {
             // Kita ambil peta ukuran 350x350 agar terlihat jelas
@@ -949,5 +956,61 @@ class SuratController extends Controller
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal mencetak BAPB: '.$e->getMessage());
         }
+    }
+
+    public function cetakFotoSpj($id)
+    {
+        // 1. Ambil Data
+        $belanja = Belanja::with(['fotos', 'user.sekolah', 'korek', 'anggaran'])->findOrFail($id);
+
+        if ($belanja->fotos->isEmpty()) {
+            return back()->with('error', 'Belum ada foto dokumentasi yang diunggah.');
+        }
+
+        $sekolah = $belanja->user->sekolah;
+
+        // 2. Data Tambahan
+        $mapRomawi = [1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV'];
+        $triwulan = $mapRomawi[$belanja->triwulan ?? 1] ?? 'I';
+        $tahun = $sekolah->tahun_aktif ?? date('Y');
+
+        // 3. Load View PDF (GUNAKAN ALIAS 'DomPdf' DISINI)
+        // Perhatikan: Menggunakan DomPdf::loadView, bukan Pdf::loadView
+        $pdf = DomPdf::loadView('surat.pdf_foto_spj', compact('belanja', 'sekolah', 'triwulan', 'tahun'));
+
+        // Set ukuran kertas
+        $pdf->setPaper('a4', 'portrait');
+
+        // 4. Download / Stream
+        return $pdf->stream('Dokumentasi_SPJ_'.$belanja->id.'.pdf');
+    }
+
+    public function regenerateAllNumbers()
+    {
+        // Gunakan Transaction biar aman datanya
+        DB::transaction(function () {
+            // 1. Ambil semua kombinasi Sekolah, Tahun, dan Triwulan yang unik dari tabel surats
+            // Kita butuh grup ini agar pengurutan per sekolah/triwulan tidak tercampur
+            $groups = Surat::select(
+                'sekolah_id',
+                'triwulan',
+                DB::raw('YEAR(tanggal_surat) as tahun')
+            )
+                ->whereNotNull('tanggal_surat') // Pastikan tanggal valid
+                ->distinct() // Ambil yang unik saja
+                ->get();
+
+            // 2. Loop setiap grup dan jalankan pengurutan ulang
+            foreach ($groups as $group) {
+                // Panggil fungsi private yang sudah ada
+                $this->urutkanUlangNomorSurat(
+                    $group->sekolah_id,
+                    $group->tahun,
+                    $group->triwulan
+                );
+            }
+        });
+
+        return back()->with('success', 'Semua nomor surat di database berhasil diurutkan ulang.');
     }
 }

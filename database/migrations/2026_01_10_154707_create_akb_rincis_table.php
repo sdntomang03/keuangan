@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('idblrinci')->index();
             $table->integer('bulan');
             $table->decimal('nominal', 15, 2);
-            $table->decimal('volume', 15, 4);
+            $table->decimal('volume', 15, 2);
             $table->foreignId('anggaran_id')->constrained('anggarans')->onDelete('cascade');
             $table->timestamps();
         });

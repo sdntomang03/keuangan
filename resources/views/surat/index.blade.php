@@ -36,9 +36,12 @@
 
             {{-- HEADER UTAMA --}}
             <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 mb-6">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8">
+
+                    {{-- BAGIAN KIRI: JUDUL & IKON --}}
                     <div class="flex items-center gap-4">
-                        <div class="p-4 bg-indigo-600 rounded-2xl text-white shadow-lg shadow-indigo-200">
+                        <div
+                            class="p-4 bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-2xl text-white shadow-lg shadow-indigo-200">
                             <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -46,56 +49,83 @@
                         </div>
                         <div>
                             <h2 class="text-2xl font-black text-gray-800 tracking-tight leading-none uppercase">
-                                Manajemen SPJ</h2>
-                            <p class="text-sm text-gray-400 mt-1 font-medium italic">{{ $belanja->uraian }}</p>
+                                Manajemen SPJ
+                            </h2>
+                            <p class="text-sm text-gray-400 mt-1 font-medium italic">
+                                {{ $belanja->uraian }}
+                            </p>
                         </div>
                     </div>
 
-                    <div class="flex flex-wrap gap-2">
-                        {{-- 1. TOMBOL GENERATE AWAL --}}
+                    {{-- BAGIAN KANAN: GROUP TOMBOL AKSI --}}
+                    <div class="flex flex-wrap items-center gap-3">
+
+                        {{-- 1. GENERATE SURAT (Primary Action) --}}
                         <form action="{{ route('surat.generate', $belanja->id) }}" method="POST">
                             @csrf
                             <button type="submit"
-                                class="bg-blue-600 text-white px-5 py-2.5 rounded-2xl hover:bg-blue-700 text-xs font-black shadow-xl shadow-blue-100 transition-all flex items-center gap-2">
+                                class="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-100 transition-all hover:-translate-y-0.5">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M13 10V3L4 14h7v7l9-11h-7z" />
                                 </svg>
-                                GENERATE NOMOR
+                                <span>GENERATE SURAT</span>
                             </button>
                         </form>
 
-                        {{-- 2. TOMBOL INPUT HARGA PENAWARAN --}}
+                        {{-- 2. GENERATE ULANG NOMOR (Tombol Menarik / Warning) --}}
+                        <a href="{{ route('surat.regenerate_all') }}"
+                            onclick="return confirm('PERINGATAN: Proses ini akan mengurutkan ulang SELURUH nomor surat di database berdasarkan tanggal. Lanjutkan?')"
+                            class="group relative flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-xs font-bold rounded-xl shadow-lg shadow-orange-200 transition-all hover:-translate-y-0.5 hover:shadow-orange-300 overflow-hidden">
+
+                            {{-- Efek Kilau --}}
+                            <div
+                                class="absolute inset-0 w-full h-full bg-white/10 group-hover:bg-white/20 transition-colors">
+                            </div>
+
+                            {{-- Icon dengan Background Transparan --}}
+                            <div
+                                class="relative bg-white/20 p-1 rounded-full group-hover:rotate-180 transition-transform duration-500">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                            </div>
+                            <span class="relative tracking-wide">RESET NOMOR</span>
+                        </a>
+
+                        {{-- 3. HARGA PENAWARAN (Outline Style) --}}
                         <a href="{{ route('belanja.edit_penawaran', $belanja->id) }}"
-                            class="group bg-white border-2 border-emerald-500 text-emerald-600 px-5 py-2.5 rounded-2xl hover:bg-emerald-50 text-xs font-black transition-all flex items-center gap-2">
+                            class="flex items-center gap-2 px-4 py-2.5 bg-white border border-emerald-500 text-emerald-600 hover:bg-emerald-50 text-xs font-bold rounded-xl transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                             </svg>
-                            HARGA PENAWARAN
+                            <span>HARGA</span>
                         </a>
 
-                        {{-- 3. TOMBOL TAMBAH PARSIAL --}}
+                        {{-- 4. TAMBAH PARSIAL (Secondary Action) --}}
                         <button @click="showModal = true"
-                            class="bg-indigo-600 text-white px-5 py-2.5 rounded-2xl hover:bg-indigo-700 text-xs font-black shadow-xl shadow-indigo-100 transition-all flex items-center gap-2">
+                            class="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md shadow-indigo-100 transition-all hover:-translate-y-0.5">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                             </svg>
-                            TAMBAH PARSIAL
+                            <span>PARSIAL</span>
                         </button>
 
-                        {{-- 4. TOMBOL CETAK DOKUMEN --}}
+                        {{-- 5. CETAK SPJ (Dark Action) --}}
                         @if($belanja->surats->count() > 0)
                         <a href="{{ route('belanja.print', $belanja->id) }}" target="_blank"
-                            class="bg-gray-800 text-white px-5 py-2.5 rounded-2xl hover:bg-gray-900 text-xs font-black transition-all flex items-center gap-2">
+                            class="flex items-center gap-2 px-4 py-2.5 bg-gray-800 hover:bg-gray-900 text-white text-xs font-bold rounded-xl shadow-md transition-all hover:-translate-y-0.5">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                             </svg>
-                            CETAK SPJ
+                            <span>CETAK</span>
                         </a>
                         @endif
+
                     </div>
                 </div>
 
@@ -427,6 +457,16 @@
                                     <input type="time" name="waktu_foto" value="{{ old('waktu_foto', '09:00') }}"
                                         class="w-full rounded-lg border-gray-300 dark:border-gray-600 focus:ring-indigo-500 text-sm font-bold">
                                 </div>
+                                @if($belanja->fotos->count() > 0)
+                                <a href="{{ route('belanja.cetak_foto', $belanja->id) }}" target="_blank"
+                                    class="bg-blue-600 text-white px-5 py-2.5 rounded-2xl hover:bg-blue-700 text-xs font-black shadow-xl shadow-blue-100 transition-all flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    CETAK DOKUMENTASI (PDF)
+                                </a>
+                                @endif
                                 <template x-if="previewUrl">
                                     <button type="submit" @click="loading = true"
                                         class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3">

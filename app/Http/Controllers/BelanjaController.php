@@ -139,7 +139,6 @@ class BelanjaController extends Controller
             4 => [10, 11, 12],
         ];
         $bulanDicheck = $mappingBulan[$twAktif] ?? range(1, 12);
-
         try {
             return DB::transaction(function () use ($request, $bulanDicheck, $twAktif, $anggaran) {
 
@@ -147,9 +146,9 @@ class BelanjaController extends Controller
                 foreach ($request->items as $item) {
                     $subtotal = $item['volume'] * $item['harga_satuan'];
 
-                    $totalBrutoInput = ($request->ppn >= 0)
-                        ? $subtotal * 1.11
-                        : $subtotal;
+                    $totalBrutoInput = ($request->ppn > 0)
+                    ? $subtotal * 1.11
+                    : $subtotal;
 
                     // Ambil pagu berdasarkan anggaran_id aktif
                     $totalPaguAnggaran = DB::table('akb_rincis')

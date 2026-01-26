@@ -8,6 +8,7 @@ use App\Http\Controllers\BelanjaController;
 use App\Http\Controllers\BkuController;
 use App\Http\Controllers\Coba;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EkskulController;
 use App\Http\Controllers\KegiatanController;
 use App\Http\Controllers\PajakController;
 use App\Http\Controllers\PenerimaanController;
@@ -152,24 +153,59 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['auth', 'r
     Route::delete('/rkas/cleanup/destroy', [RkasCleanupController::class, 'destroy'])->name('rkas.cleanup.destroy');
 });
 
-Route::prefix('surat')->group(function () {
+Route::middleware(['auth'])->prefix('surat')->group(function () {
     Route::get('/manage/{belanjaId}', [SuratController::class, 'index'])->name('surat.index');
     Route::post('/generate/{belanjaId}', [SuratController::class, 'generateDefault'])->name('surat.generate');
     Route::put('/update/{id}', [SuratController::class, 'update'])->name('surat.update');
     Route::post('/store/{belanjaId}', [SuratController::class, 'store'])->name('surat.store');
     Route::post('/store-parsial/{belanjaId}', [SuratController::class, 'storeParsial'])->name('surat.store_parsial');
     Route::get('/cetak-sp/{id}', [SuratController::class, 'cetakSpParsial'])->name('surat.cetak_sp');
-    Route::get('/cetak-bapb/{id}', [App\Http\Controllers\SuratController::class, 'cetakBapbParsial'])->name('surat.cetak_bapb');
+    Route::get('/cetak-bapb/{id}', [SuratController::class, 'cetakBapbParsial'])->name('surat.cetak_bapb');
     Route::get('/{id}/edit-penawaran', [BelanjaController::class, 'editPenawaran'])->name('belanja.edit_penawaran');
     Route::delete('/destroy/{id}', [SuratController::class, 'destroy'])->name('surat.destroy');
     Route::post('/{id}/upload-foto', [SuratController::class, 'uploadFoto'])
         ->name('belanja.upload_foto');
+    Route::get('/belanja/cetak-foto/{id}', [SuratController::class, 'cetakFotoSpj'])->name('belanja.cetak_foto');
+    Route::get('/regenerate-all', [App\Http\Controllers\SuratController::class, 'regenerateAllNumbers'])
+        ->name('surat.regenerate_all');
 
     // Route untuk Hapus Foto (Karena tadi kita tambahkan tombol hapus)
     Route::delete('/foto/{id}', [SuratController::class, 'destroyFoto'])
         ->name('surat.delete_foto');
     // Proses Simpan
     Route::put('/{id}/update-penawaran', [BelanjaController::class, 'updatePenawaran'])->name('belanja.update_penawaran');
+});
+
+Route::group(['middleware' => ['auth']], function () {
+
+    Route::group(['prefix' => 'ekskul', 'as' => 'ekskul.'], function () {
+
+        // 1. Halaman Index (Daftar SPJ)
+        // {belanjaId?} tanda tanya artinya parameter ini OPSIONAL.
+        // - Akses /ekskul/index          -> Menampilkan semua data
+        // - Akses /ekskul/index/5        -> Menampilkan data milik belanja ID 5 saja
+        Route::get('/index/{belanjaId?}', [EkskulController::class, 'index'])->name('index');
+
+        Route::get('/edit/{id}', [EkskulController::class, 'edit'])->name('edit');
+
+        // Proses Update Data ke Database
+        Route::put('/update/{id}', [EkskulController::class, 'update'])->name('update');
+
+        // 2. Halaman Create (Form Input)
+        // Parameter {belanjaId} WAJIB ada, karena kita butuh ID belanja untuk dikirim ke form
+        Route::get('/create/{belanjaId}', [EkskulController::class, 'create'])->name('create');
+
+        // 3. Proses Simpan (Store)
+        Route::post('/store', [EkskulController::class, 'store'])->name('store');
+
+        // 4. Cetak Kwitansi & Lampiran
+        Route::get('/cetak/{id}', [EkskulController::class, 'cetak'])->name('cetak');
+
+        // 5. Hapus Data
+        Route::delete('/{id}', [EkskulController::class, 'destroy'])->name('destroy');
+
+    });
+
 });
 
 Route::get('/coba', [Coba::class, 'index'])->name('index');
