@@ -21,7 +21,7 @@ class SpjEkskul extends Model
         return $this->belongsTo(RefEkskul::class, 'ref_ekskul_id');
     }
 
-    public function pelatih()
+    public function rekanan()
     {
         return $this->belongsTo(Rekanan::class, 'rekanan_id');
     }

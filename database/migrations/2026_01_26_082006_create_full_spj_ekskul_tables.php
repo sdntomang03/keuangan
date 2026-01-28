@@ -12,6 +12,8 @@ return new class extends Migration
         Schema::create('ref_ekskul', function (Blueprint $table) {
             $table->id();
             $table->string('nama'); // Contoh: Pramuka, Futsal
+            $table->integer('rekanan_id')->nullable(); // Contoh: Pramuka, Futsal
+            $table->integer('sekolah_id')->nullable(); // Contoh: Pramuka, Futsal
             $table->timestamps();
         });
 

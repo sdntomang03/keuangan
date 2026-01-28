@@ -34,7 +34,8 @@ class SekolahSeeder extends Seeder
             // Sementara set null jika tabel anggarans belum di-seed
             'anggaran_id_aktif' => null,
             'triwulan_aktif' => 1,
-
+            'latitude' => '-6.176835',
+            'longitude' => '106.796505',
             'alamat' => 'Jl. Pendidikan No. 45, Kebon Jeruk',
             'kelurahan' => 'Sukabumi Selatan',
             'kecamatan' => 'Kebon Jeruk',

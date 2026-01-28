@@ -71,7 +71,6 @@
 
                                 <div class="relative" x-data="{ openSub: false }" @mouseenter="openSub = true"
                                     @mouseleave="openSub = false">
-
                                     <button
                                         class="w-full text-start flex justify-between items-center block w-full px-4 py-2 text-sm leading-5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:bg-gray-100 transition duration-150 ease-in-out">
                                         <span>{{ __('Realisasi') }}</span>
@@ -99,8 +98,14 @@
                                             </x-dropdown-link>
                                         </div>
                                     </div>
-
                                 </div>
+
+                                <div class="border-t border-gray-100 dark:border-gray-600"></div>
+
+                                <x-dropdown-link :href="route('ekskul.index')">
+                                    {{ __('Ekskul') }}
+                                </x-dropdown-link>
+
                             </x-slot>
                         </x-dropdown>
                     </div>

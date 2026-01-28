@@ -30,6 +30,7 @@ class DatabaseSeeder extends Seeder
             RekananSeeder::class,
             AnggaranSeeder::class,
             RolePermissionSeeder::class,
+            RefEkskulSeeder::class,
         ]);
 
     }

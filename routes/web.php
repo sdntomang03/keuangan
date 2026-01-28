@@ -184,7 +184,7 @@ Route::group(['middleware' => ['auth']], function () {
         // {belanjaId?} tanda tanya artinya parameter ini OPSIONAL.
         // - Akses /ekskul/index          -> Menampilkan semua data
         // - Akses /ekskul/index/5        -> Menampilkan data milik belanja ID 5 saja
-        Route::get('/index/{belanjaId?}', [EkskulController::class, 'index'])->name('index');
+        Route::get('/index/', [EkskulController::class, 'index'])->name('index');
 
         Route::get('/edit/{id}', [EkskulController::class, 'edit'])->name('edit');
 
@@ -193,16 +193,22 @@ Route::group(['middleware' => ['auth']], function () {
 
         // 2. Halaman Create (Form Input)
         // Parameter {belanjaId} WAJIB ada, karena kita butuh ID belanja untuk dikirim ke form
-        Route::get('/create/{belanjaId}', [EkskulController::class, 'create'])->name('create');
-
+        Route::get('/create/', [EkskulController::class, 'create'])->name('create');
+        // API AJAX (Penyebab Error Anda)
+        Route::get('/get-rekening', [EkskulController::class, 'getRekening'])->name('get_rekening');
+        Route::get('/get-komponen', [EkskulController::class, 'getKomponen'])->name('get_komponen');
+        Route::get('/ekskul/get-by-pelatih', [EkskulController::class, 'getByPelatih'])->name('get_by_pelatih');
         // 3. Proses Simpan (Store)
         Route::post('/store', [EkskulController::class, 'store'])->name('store');
 
         // 4. Cetak Kwitansi & Lampiran
         Route::get('/cetak/{id}', [EkskulController::class, 'cetak'])->name('cetak');
-
+        Route::get('/cetak-absensi/{id}', [EkskulController::class, 'cetakAbsensi'])->name('cetak_absensi');
         // 5. Hapus Data
         Route::delete('/{id}', [EkskulController::class, 'destroy'])->name('destroy');
+        Route::get('/manage-details/{belanjaId}', [EkskulController::class, 'manageDetails'])->name('manage_details');
+        Route::post('/store-detail', [EkskulController::class, 'storeDetail'])->name('store_detail');
+        Route::delete('/delete-detail/{id}', [EkskulController::class, 'deleteDetail'])->name('delete_detail');
 
     });
 

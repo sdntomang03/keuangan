@@ -3,255 +3,341 @@
 namespace App\Http\Controllers;
 
 use App\Models\Belanja;
+use App\Models\DasarPajak;
 use App\Models\RefEkskul;
 use App\Models\Rekanan;
 use App\Models\Sekolah;
 use App\Models\SpjEkskul;
 use App\Models\SpjEkskulDetail;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Storage; // Pastikan model ini ada
 
 class EkskulController extends Controller
 {
+    // ... method index, edit, update, dll biarkan ...
+
     /**
-     * LOGIKA UTAMA:
-     * Cek apakah SPJ sudah ada?
-     * - Jika SUDAH: Tampilkan detail pertemuan (Jurnal).
-     * - Jika BELUM: Lempar (Redirect) ke form Create.
+     * 1. FORM INPUT EKSKUL (Logic RKAS)
      */
-    public function index($belanjaId)
+    public function create(Request $request)
     {
-        // 1. Cek Data Belanja
-        $belanja = Belanja::findOrFail($belanjaId);
+        $user = auth()->user();
+        $anggaran = $request->anggaran_data;
 
-        // 2. Cek apakah SPJ Header sudah dibuat
-        $spj = SpjEkskul::with(['details', 'pelatih', 'ekskul'])
-            ->where('belanja_id', $belanjaId)
-            ->first();
-
-        // 3. JIKA BELUM ADA, Redirect ke halaman Create
-        if (! $spj) {
-            return redirect()->route('ekskul.create', $belanjaId);
+        if (! $anggaran) {
+            return redirect()->route('sekolah.index')->with('error', 'Silakan pilih Anggaran Aktif terlebih dahulu.');
         }
 
-        // 4. JIKA SUDAH ADA, Tampilkan halaman Index/Jurnal
-        return view('ekskul.index', compact('spj', 'belanja'));
+        $sekolah = Sekolah::find($user->sekolah_id);
+
+        // A. Data Pelatih
+        $pelatih = Rekanan::where('sekolah_id', $sekolah->id)
+            ->where('ket', 1)
+            ->orderBy('nama_rekanan', 'asc')
+            ->get();
+
+        // B. List Kegiatan (RKAS)
+        $listKegiatan = DB::table('rkas')
+            ->leftJoin('kegiatans', 'rkas.idbl', '=', 'kegiatans.idbl')
+            ->where('rkas.anggaran_id', $anggaran->id)
+            ->select('rkas.idbl', DB::raw('COALESCE(kegiatans.namagiat, rkas.giatsubteks) as namagiat'))
+            ->distinct()
+            ->get();
+
+        // C. Pajak PPh 21
+        $pajakPPh21 = DasarPajak::where('nama_pajak', 'like', '%PPh 21%')->get();
+
+        // D. Daftar Ekskul (Untuk Dropdown di setiap baris)
+        $daftarEkskul = RefEkskul::where('sekolah_id', $sekolah->id)
+            ->orderBy('nama', 'asc')->get();
+
+        return view('ekskul.create', compact('pelatih', 'listKegiatan', 'pajakPPh21', 'anggaran', 'sekolah', 'daftarEkskul'));
     }
 
     /**
-     * HALAMAN FORM INPUT (CREATE)
-     * Method ini yang sebelumnya error "undefined"
+     * 2. API AJAX: Ambil Rekening
      */
-    public function create(Request $request, $belanjaId)
+    public function getRekening(Request $request)
     {
-        // 1. Ambil Data Belanja beserta relasi Rekanan-nya
-        // Pastikan model Belanja punya fungsi relasi 'rekanan()'
-        $belanja = Belanja::with('rekanan', 'rincis')->findOrFail($belanjaId);
-        $sekolahId = $request->anggaran_data->sekolah_id;
-        $sekolah = Sekolah::findOrFail($sekolahId);
-        $twaktif = $sekolah->triwulan_aktif;
+        $anggaran = $request->anggaran_data;
+        $rekening = DB::table('rkas')
+            ->join('koreks', 'rkas.kodeakun', '=', 'koreks.id')
+            ->where('rkas.anggaran_id', $anggaran->id)
+            ->where('rkas.idbl', $request->idbl)
+            ->select('koreks.id as kodeakun', 'koreks.uraian_singkat as namarekening')
+            ->distinct()
+            ->get();
 
-        // 2. Ambil Master Ekskul (tetap butuh list ini)
-        $daftarEkskul = RefEkskul::all();
+        return response()->json($rekening);
+    }
 
-        // Kita tidak butuh variabel $pelatih (list banyak orang) lagi
-        // karena pelatihnya sudah spesifik ada di $belanja->rekanan
+    public function getByPelatih(Request $request)
+    {
+        // Pastikan Anda sudah import model RefEkskul di bagian atas file
+        // use App\Models\RefEkskul;
 
-        return view('ekskul.create', compact('belanja', 'daftarEkskul', 'twaktif'));
+        if (! $request->rekanan_id) {
+            return response()->json(null);
+        }
+
+        $ekskul = RefEkskul::where('rekanan_id', $request->rekanan_id)->first();
+
+        return response()->json($ekskul);
     }
 
     /**
-     * PROSES SIMPAN DATA
+     * 3. API AJAX: Ambil Komponen
+     */
+    public function getKomponen(Request $request)
+    {
+        $anggaran = $request->anggaran_data;
+        $sekolah = Sekolah::find(auth()->user()->sekolah_id);
+
+        $tw = (int) filter_var($sekolah->triwulan_aktif, FILTER_SANITIZE_NUMBER_INT);
+        $bulanRange = match ($tw) {
+            1 => [1, 2, 3], 2 => [4, 5, 6], 3 => [7, 8, 9], 4 => [10, 11, 12], default => range(1, 12)
+        };
+
+        $komponen = \App\Models\Rkas::join('akb_rincis', 'rkas.idblrinci', '=', 'akb_rincis.idblrinci')
+            ->where('rkas.anggaran_id', $anggaran->id)
+            ->where('rkas.idbl', $request->idbl)
+            ->where('rkas.kodeakun', $request->kodeakun)
+            ->whereIn('akb_rincis.bulan', $bulanRange)
+            ->select(
+                'rkas.id', 'rkas.idblrinci', 'rkas.namakomponen', 'rkas.hargasatuan', 'rkas.satuan', 'rkas.keterangan',
+                DB::raw('SUM(akb_rincis.volume) as volume_tersedia')
+            )
+            ->groupBy('rkas.id', 'rkas.idblrinci', 'rkas.namakomponen', 'rkas.hargasatuan', 'rkas.satuan')
+            ->havingRaw('SUM(akb_rincis.volume) > 0')
+            ->get();
+
+        return response()->json($komponen);
+    }
+
+    /**
+     * 4. PROSES SIMPAN (Looping Belanja)
      */
     public function store(Request $request)
     {
-        // 1. Validasi tetap sama
+        // 1. Validasi
         $request->validate([
-            'belanja_id' => 'required|exists:belanjas,id',
-            'rekanan_id' => 'required|exists:rekanans,id',
-            'ref_ekskul_id' => 'required|exists:ref_ekskul,id',
-            'tw' => 'required|integer|min:1|max:4',
-            'honor' => 'required',
-            'pertemuan' => 'required|array|min:1',
-            'pertemuan.*.tanggal' => 'required|date',
-            'pertemuan.*.materi' => 'required|string',
-            'pertemuan.*.foto' => 'required|image|max:10240', // Max 10MB
+            'tanggal' => 'required|date',
+            'no_bukti' => 'nullable',
+            'idbl' => 'required',
+            'kodeakun' => 'required',
+            'items' => 'required|array|min:1',
+            'items.*.rekanan_id' => 'required',
+            'items.*.ref_ekskul_id' => 'required',
+            'items.*.volume' => 'required|numeric|min:1',
+            'pph21_id' => 'nullable|exists:dasar_pajaks,id',
         ]);
 
-        DB::beginTransaction();
+        $anggaran = $request->anggaran_data;
+        $sekolah = Sekolah::find(auth()->user()->sekolah_id);
+
+        // Data Pendukung
+        $twAktif = (int) filter_var($sekolah->triwulan_aktif, FILTER_SANITIZE_NUMBER_INT);
+        $romawiTW = match ($twAktif) {
+            1 => 'TWI', 2 => 'TWII', 3 => 'TWIII', 4 => 'TWIV', default => 'TW'
+        };
+        $kodeAnggaran = strtoupper($anggaran->singkatan ?? 'BOS');
+        $tahun = Carbon::parse($request->tanggal)->format('Y');
+
+        // Mapping Bulan untuk Pagu Check
+        $mappingBulan = [1 => [1, 2, 3], 2 => [4, 5, 6], 3 => [7, 8, 9], 4 => [10, 11, 12]];
+        $bulanDicheck = $mappingBulan[$twAktif] ?? range(1, 12);
 
         try {
-            $pelatih = Rekanan::findOrFail($request->rekanan_id);
-            $tarifPajak = ! empty($pelatih->npwp) ? 5 : 6;
+            DB::transaction(function () use ($request, $anggaran, $bulanDicheck, $kodeAnggaran, $romawiTW, $tahun, $twAktif) {
 
-            $honorPerPertemuan = (float) str_replace('.', '', $request->honor);
-            $jumlahPertemuan = count($request->pertemuan);
-
-            $totalBruto = $jumlahPertemuan * $honorPerPertemuan;
-            $pphNominal = $totalBruto * ($tarifPajak / 100);
-            $totalNetto = $totalBruto - $pphNominal;
-
-            // Simpan Header
-            $spj = SpjEkskul::create([
-                'belanja_id' => $request->belanja_id,
-                'rekanan_id' => $pelatih->id,
-                'ref_ekskul_id' => $request->ref_ekskul_id,
-                'tw' => $request->tw,
-                'jumlah_pertemuan' => $jumlahPertemuan,
-                'honor' => $honorPerPertemuan,
-                'total_honor' => $totalBruto,
-                'pph_persen' => $tarifPajak,
-                'pph_nominal' => $pphNominal,
-                'total_netto' => $totalNetto,
-            ]);
-
-            // Simpan Detail + Proses Watermark
-            foreach ($request->pertemuan as $item) {
-                // Panggil fungsi privat untuk olah foto
-                $pathFoto = $this->processWatermark($item['foto'], $request->belanja_id, $item['tanggal']);
-
-                SpjEkskulDetail::create([
-                    'spj_ekskul_id' => $spj->id,
-                    'tanggal_kegiatan' => $item['tanggal'],
-                    'materi' => $item['materi'],
-                    'foto_kegiatan' => $pathFoto,
-                ]);
-            }
-
-            DB::commit();
-
-            return redirect()->route('ekskul.index', $request->belanja_id)->with('success', 'SPJ Berhasil disimpan.');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            return back()->with('error', 'Kesalahan: '.$e->getMessage())->withInput();
-        }
-    }
-
-    /**
-     * CETAK KWITANSI
-     */
-    public function cetak($id)
-    {
-        $spj = SpjEkskul::with(['details', 'pelatih', 'ekskul', 'belanja'])->findOrFail($id);
-
-        return view('ekskul.cetak_kwitansi', compact('spj'));
-    }
-
-    /**
-     * HAPUS DATA
-     */
-    public function destroy($id)
-    {
-        $spj = SpjEkskul::with('details')->findOrFail($id);
-
-        // Hapus Foto Fisik
-        foreach ($spj->details as $detail) {
-            if ($detail->foto_kegiatan) {
-                Storage::disk('public')->delete($detail->foto_kegiatan);
-            }
-        }
-
-        $belanjaId = $spj->belanja_id; // Simpan ID belanja untuk redirect
-        $spj->delete();
-
-        // Redirect kembali ke halaman Create (karena data sudah habis)
-        return redirect()->route('ekskul.create', $belanjaId)
-            ->with('success', 'Data SPJ berhasil dihapus.');
-    }
-
-    /**
-     * HALAMAN EDIT
-     */
-    public function edit($id)
-    {
-        $spj = SpjEkskul::with(['details', 'belanja.rekanan', 'belanja.rincis'])->findOrFail($id);
-        $belanja = $spj->belanja;
-        $daftarEkskul = RefEkskul::all();
-
-        // Ambil TW Aktif dari Sekolah (Sama seperti create)
-        $sekolah = \App\Models\Sekolah::first();
-        $twaktif = $sekolah->triwulan_aktif ?? ceil(date('n') / 3);
-
-        return view('ekskul.edit', compact('spj', 'belanja', 'daftarEkskul', 'twaktif'));
-    }
-
-    /**
-     * PROSES UPDATE
-     */
-    public function update(Request $request, $id)
-    {
-        // 1. Validasi (Mirip Store, tapi foto pertemuan boleh null/kosong jika tidak diganti)
-        $request->validate([
-            'ref_ekskul_id' => 'required',
-            'pertemuan' => 'required|array|min:1',
-            'pertemuan.*.tanggal' => 'required|date',
-            'pertemuan.*.materi' => 'required|string',
-            'pertemuan.*.foto' => 'nullable|image|max:2048', // Boleh null kalau pakai foto lama
-            'pertemuan.*.old_foto' => 'nullable|string', // Path foto lama
-        ]);
-
-        DB::beginTransaction();
-
-        try {
-            $spj = SpjEkskul::findOrFail($id);
-
-            // A. Hitung Ulang Keuangan (Siapa tahu jumlah pertemuan berubah)
-            // Ambil tarif pajak & honor lama (karena read only)
-            $tarifPajak = $spj->pph_persen;
-            $honorPerPertemuan = $spj->honor;
-
-            $jumlahPertemuan = count($request->pertemuan);
-            $totalBruto = $jumlahPertemuan * $honorPerPertemuan;
-            $pphNominal = $totalBruto * ($tarifPajak / 100);
-            $totalNetto = $totalBruto - $pphNominal;
-
-            // B. Update Header SPJ
-            $spj->update([
-                'ref_ekskul_id' => $request->ref_ekskul_id,
-                'jumlah_pertemuan' => $jumlahPertemuan,
-                'total_honor' => $totalBruto,
-                'pph_nominal' => $pphNominal,
-                'total_netto' => $totalNetto,
-            ]);
-
-            // C. Update Detail (Strategi: Hapus Semua Detail Lama -> Insert Ulang)
-            // 1. Tapi jangan hapus file fisiknya dulu, karena mungkin dipakai lagi
-            SpjEkskulDetail::where('spj_ekskul_id', $id)->delete();
-
-            // 2. Insert Ulang
-            foreach ($request->pertemuan as $item) {
-                // Logika Foto: Pakai foto baru KALO ADA, kalau tidak pakai foto lama
-                $fotoPath = $item['old_foto'] ?? null;
-
-                if (isset($item['foto']) && $item['foto']) {
-                    // Jika user upload foto baru, simpan & update path
-                    $fotoPath = $item['foto']->store('spj/foto_kegiatan', 'public');
-
-                    // (Opsional) Hapus file lama jika ingin hemat storage
-                    // if ($item['old_foto']) Storage::disk('public')->delete($item['old_foto']);
+                // Logic Counter Nomor Bukti
+                $inputNo = $request->no_bukti;
+                if ($inputNo && is_numeric($inputNo)) {
+                    $counter = (int) $inputNo;
+                } else {
+                    $lastNumber = Belanja::where('anggaran_id', $anggaran->id)
+                        ->whereYear('tanggal', $tahun)
+                        ->where('no_bukti', 'LIKE', "%/KW/{$kodeAnggaran}/{$romawiTW}/{$tahun}")
+                        ->get()
+                        ->map(fn ($row) => (int) explode('/', $row->no_bukti)[0])
+                        ->max() ?? 0;
+                    $counter = $lastNumber + 1;
                 }
 
-                SpjEkskulDetail::create([
-                    'spj_ekskul_id' => $spj->id,
-                    'tanggal_kegiatan' => $item['tanggal'],
-                    'materi' => $item['materi'],
-                    'foto_kegiatan' => $fotoPath,
-                ]);
-            }
+                $items = array_values($request->items);
 
-            DB::commit();
+                foreach ($items as $index => $item) {
 
-            return redirect()->route('ekskul.index', $spj->belanja_id)
-                ->with('success', 'Data SPJ berhasil diperbarui.');
+                    // A. Hitung Subtotal & Validasi Pagu
+                    $subtotal = $item['volume'] * $item['harga_satuan'];
+
+                    // ... (Validasi Pagu logic sama seperti sebelumnya) ...
+                    $totalPagu = DB::table('akb_rincis')->where('idblrinci', $item['idblrinci'])->whereIn('bulan', $bulanDicheck)->sum('nominal');
+                    $terpakai = DB::table('belanja_rincis')->join('belanjas', 'belanja_rincis.belanja_id', '=', 'belanjas.id')->where('belanja_rincis.idblrinci', $item['idblrinci'])->where('belanjas.anggaran_id', $anggaran->id)->sum('total_bruto');
+
+                    if (($totalPagu - $terpakai) < $subtotal) {
+                        throw new \Exception('Pagu tidak cukup untuk: '.$item['namakomponen']);
+                    }
+
+                    // B. Hitung Pajak & Persentase
+                    $nominalPPh = 0;
+                    $persenPajak = 0; // Default 0%
+
+                    if ($request->pph21_id) {
+                        $masterPajak = DasarPajak::find($request->pph21_id);
+                        if ($masterPajak) {
+                            $persenPajak = $masterPajak->persen; // Ambil persen (misal 5 atau 2.5)
+                            $nominalPPh = floor($subtotal * ($persenPajak / 100));
+                        }
+                    }
+
+                    // Hitung Netto untuk SPJ Ekskul
+                    $totalNetto = $subtotal - $nominalPPh;
+
+                    // C. Generate Nomor
+                    $nomorUrutStr = str_pad($counter, 3, '0', STR_PAD_LEFT);
+                    $finalNoBukti = "{$nomorUrutStr}/KW/{$kodeAnggaran}/{$romawiTW}/{$tahun}";
+
+                    // D. Simpan Header Belanja
+                    $namaEkskul = RefEkskul::find($item['ref_ekskul_id'])->nama ?? '-';
+                    $pelatih = Rekanan::find($item['rekanan_id']);
+                    $namaPelatih = $pelatih->nama_rekanan ?? '-';
+
+                    $belanja = Belanja::create([
+                        'user_id' => auth()->id(),
+                        'anggaran_id' => $anggaran->id,
+                        'rekanan_id' => $item['rekanan_id'],
+                        'tanggal' => $request->tanggal,
+                        'no_bukti' => $finalNoBukti,
+                        'uraian' => "Honor $namaEkskul ($namaPelatih) - ".$item['namakomponen'],
+                        'rincian' => $request->rincian ?? 'Honorarium Pelatih Ekskul',
+                        'subtotal' => $subtotal,
+                        'ppn' => 0,
+                        'pph' => $nominalPPh,
+                        'transfer' => false,
+                        'idbl' => $request->idbl,
+                        'kodeakun' => $request->kodeakun,
+                        'status' => 'draft',
+                    ]);
+
+                    // E. Simpan Rincian Belanja
+                    $belanja->rincis()->create([
+                        'idblrinci' => $item['idblrinci'],
+                        'namakomponen' => $item['namakomponen'],
+                        'spek' => $namaEkskul,
+                        'harga_satuan' => $item['harga_satuan'],
+                        'volume' => $item['volume'],
+                        'total_bruto' => $subtotal,
+                        'bulan' => Carbon::parse($request->tanggal)->month,
+                    ]);
+
+                    // F. Simpan Pajak Belanja
+                    if ($nominalPPh > 0) {
+                        $belanja->pajaks()->create([
+                            'dasar_pajak_id' => $request->pph21_id,
+                            'nominal' => $nominalPPh,
+                            'is_terima' => false,
+                            'is_setor' => false,
+                        ]);
+                    }
+
+                    // G. SIMPAN DATA SPJ EKSKUL (Ini Bagian Barunya)
+                    // ====================================================
+                    SpjEkskul::create([
+                        'belanja_id' => $belanja->id,
+                        'rekanan_id' => $item['rekanan_id'],
+                        'ref_ekskul_id' => $item['ref_ekskul_id'],
+                        'tw' => $twAktif, // Triwulan Sekolah Aktif
+                        'jumlah_pertemuan' => $item['volume'], // Volume dianggap jumlah pertemuan
+                        'honor' => $item['harga_satuan'], // Harga satuan dianggap honor per pertemuan
+                        'total_honor' => $subtotal, // Bruto
+                        'pph_persen' => $masterPajak->persen, // Misal 5.00
+                        'pph_nominal' => $nominalPPh,
+                        'total_netto' => $totalNetto, // Yang diterima
+                    ]);
+                    // ====================================================
+
+                    $counter++;
+                }
+            });
+
+            return redirect()->route('belanja.index')->with('success', 'Data Belanja & SPJ Ekskul berhasil disimpan!');
 
         } catch (\Exception $e) {
-            DB::rollBack();
-
-            return back()->with('error', 'Gagal update: '.$e->getMessage());
+            return back()->with('error', $e->getMessage())->withInput();
         }
+    }
+
+    public function manageDetails($belanjaId)
+    {
+        // Ambil Data SPJ Ekskul berdasarkan Belanja ID
+        $spj = \App\Models\SpjEkskul::with(['belanja', 'rekanan', 'details'])
+            ->where('belanja_id', $belanjaId)
+            ->firstOrFail();
+
+        // Hitung progres input
+        $sudahInput = $spj->details->count();
+        $targetPertemuan = $spj->jumlah_pertemuan; // Sesuai Volume saat input Belanja
+
+        return view('ekskul.manage_details', compact('spj', 'sudahInput', 'targetPertemuan'));
+    }
+
+    /**
+     * SIMPAN SATU PERTEMUAN (MATERI + FOTO)
+     */
+    public function storeDetail(Request $request)
+    {
+        $request->validate([
+            'spj_ekskul_id' => 'required',
+            'tanggal_kegiatan' => 'required|date',
+            'materi' => 'required|string',
+            'foto_kegiatan' => 'required|image|max:5120', // Max 5MB
+        ]);
+
+        try {
+            // Ambil SPJ Induk untuk referensi watermark
+            $spj = \App\Models\SpjEkskul::findOrFail($request->spj_ekskul_id);
+
+            // Cek apakah jumlah input sudah melebihi target
+            if ($spj->details()->count() >= $spj->jumlah_pertemuan) {
+                return back()->with('error', 'Jumlah pertemuan sudah memenuhi kuota ('.$spj->jumlah_pertemuan.'x). Hapus data lama jika ingin mengganti.');
+            }
+
+            // Proses Upload Foto + Watermark (Menggunakan fungsi yang sudah ada)
+            $pathFoto = $this->processWatermark($request->file('foto_kegiatan'), $spj->belanja_id, $request->tanggal_kegiatan);
+
+            // Simpan ke Database
+            \App\Models\SpjEkskulDetail::create([
+                'spj_ekskul_id' => $spj->id,
+                'tanggal_kegiatan' => $request->tanggal_kegiatan,
+                'materi' => $request->materi,
+                'foto_kegiatan' => $pathFoto,
+            ]);
+
+            return back()->with('success', 'Data pertemuan berhasil ditambahkan.');
+
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * HAPUS PERTEMUAN
+     */
+    public function deleteDetail($id)
+    {
+        $detail = SpjEkskulDetail::findOrFail($id);
+
+        // Hapus file fisik
+        if ($detail->foto_kegiatan && \Illuminate\Support\Facades\Storage::disk('public')->exists($detail->foto_kegiatan)) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($detail->foto_kegiatan);
+        }
+
+        $detail->delete();
+
+        return back()->with('success', 'Data pertemuan dihapus.');
     }
 
     private function processWatermark($file, $belanjaId, $tanggalPertemuan)
@@ -268,7 +354,7 @@ class EkskulController extends Controller
 
         // 2. Olah Waktu
         $tglFormatted = \Carbon\Carbon::parse($tanggalPertemuan)->translatedFormat('l, d F Y');
-        $waktu = sprintf('%02d:%02d:%02d', rand(13, 16), rand(0, 59), rand(0, 59));
+        $waktu = sprintf('%02d:%02d:%02d', rand(12, 14), rand(0, 59), rand(0, 59));
 
         // 3. Inisialisasi Manager
         $manager = new \Intervention\Image\ImageManager(new \Intervention\Image\Drivers\Gd\Driver);
@@ -321,5 +407,91 @@ class EkskulController extends Controller
         Storage::disk('public')->put($path, $img->toJpeg(80));
 
         return $path;
+    }
+
+    public function index(Request $request)
+    {
+        $anggaran = $request->anggaran_data; // Middleware
+
+        // Ambil Belanja yang memiliki relasi ke spj_ekskul
+        // Ini memfilter agar yang tampil HANYA belanja Ekskul, bukan ATK/Lainnya
+        $belanjas = Belanja::with(['rekanan', 'spjEkskul'])
+            ->where('anggaran_id', $anggaran->id)
+            ->whereHas('spjEkskul') // Hanya ambil yang punya data SPJ Ekskul
+            ->orderBy('tanggal', 'desc')
+            ->orderBy('no_bukti', 'desc')
+            ->paginate(10);
+
+        return view('ekskul.index', compact('belanjas', 'anggaran'));
+    }
+
+    /**
+     * CETAK KWITANSI (HTML)
+     */
+    public function cetak($id)
+    {
+        // 1. Ambil Data SPJ Ekskul beserta Relasinya
+        // Kita butuh data Belanja (Header), Rekanan (Pelatih), dan Ekskul
+        $spj = \App\Models\SpjEkskul::with(['belanja.korek', 'rekanan', 'ekskul'])
+            ->findOrFail($id);
+
+        // 2. Ambil Data Sekolah (Untuk KOP & Tanda Tangan)
+        $sekolah = \App\Models\Sekolah::find(auth()->user()->sekolah_id);
+        $singkatanAnggaran = strtoupper($spj->belanja->anggaran->singkatan ?? 'BOS');
+
+        if ($singkatanAnggaran === 'BOS') {
+            $sumberDana = 'DINAS PENDIDIKAN PROVINSI DKI JAKARTA';
+        } else {
+            // Asumsi selain BOS adalah BOP
+            $sumberDana = 'SUKU DINAS PENDIDIKAN WILAYAH II KOTA ADMINISTRASI JAKARTA BARAT';
+        }
+        // 3. Konversi Angka ke Terbilang (Menggunakan Total Netto / Yang Diterima)
+        // Fungsi $this->terbilang() ada di bawah
+        $terbilang = ucwords($this->terbilang($spj->total_netto)).' Rupiah';
+
+        // 4. Tampilkan View
+        return view('ekskul.cetak_kwitansi', compact('spj', 'sekolah', 'terbilang', 'sumberDana'));
+    }
+
+    /**
+     * HELPER: FUNGSI TERBILANG
+     * Mengubah angka menjadi kalimat (Contoh: 100000 -> Seratus Ribu)
+     */
+    private function terbilang($x)
+    {
+        $angka = ['', 'satu', 'dua', 'tiga', 'empat', 'lima', 'enam', 'tujuh', 'delapan', 'sembilan', 'sepuluh', 'sebelas'];
+        $x = abs((int) $x); // Pastikan integer positif
+
+        if ($x < 12) {
+            return ' '.$angka[$x];
+        } elseif ($x < 20) {
+            return $this->terbilang($x - 10).' belas';
+        } elseif ($x < 100) {
+            return $this->terbilang($x / 10).' puluh'.$this->terbilang($x % 10);
+        } elseif ($x < 200) {
+            return ' seratus'.$this->terbilang($x - 100);
+        } elseif ($x < 1000) {
+            return $this->terbilang($x / 100).' ratus'.$this->terbilang($x % 100);
+        } elseif ($x < 2000) {
+            return ' seribu'.$this->terbilang($x - 1000);
+        } elseif ($x < 1000000) {
+            return $this->terbilang($x / 1000).' ribu'.$this->terbilang($x % 1000);
+        } elseif ($x < 1000000000) {
+            return $this->terbilang($x / 1000000).' juta'.$this->terbilang($x % 1000000);
+        }
+    }
+
+    public function cetakAbsensi($id)
+    {
+        // Ambil Data SPJ, urutkan detail pertemuannya berdasarkan tanggal
+        $spj = \App\Models\SpjEkskul::with(['rekanan', 'ekskul', 'belanja'])
+            ->with(['details' => function ($query) {
+                $query->orderBy('tanggal_kegiatan', 'asc');
+            }])
+            ->findOrFail($id);
+
+        $sekolah = \App\Models\Sekolah::find(auth()->user()->sekolah_id);
+
+        return view('ekskul.cetak_absensi', compact('spj', 'sekolah'));
     }
 }
