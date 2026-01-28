@@ -71,9 +71,10 @@
                             {{-- Materi --}}
                             <div class="mb-4">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Materi</label>
-                                <textarea name="materi" rows="3"
+
+                                <textarea name="materi" id="editor-materi"
                                     class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                                    placeholder="Contoh: Latihan Dribble dan Passing..." required></textarea>
+                                    placeholder="Contoh: Latihan Dribble dan Passing...">{{ old('materi') }}</textarea>
                             </div>
 
                             {{-- Foto --}}
@@ -126,7 +127,7 @@
                                             Y') }}
                                         </td>
                                         <td class="px-4 py-3 text-sm text-gray-700">
-                                            {{ $detail->materi }}
+                                            {!! $detail->materi !!}
                                         </td>
                                         <td class="px-4 py-3 text-center">
                                             <a href="{{ asset('storage/'.$detail->foto_kegiatan) }}" target="_blank">
@@ -157,4 +158,34 @@
             </div>
         </div>
     </div>
+    <style>
+        /* Mengatur tinggi minimal editor */
+        .ck-editor__editable_inline {
+            min-height: 150px;
+        }
+
+        /* Memperbaiki tampilan list (ul/ol) yang sering hilang kena reset CSS Tailwind */
+        .ck-content ul {
+            list-style-type: disc;
+            padding-left: 1.5rem;
+        }
+
+        .ck-content ol {
+            list-style-type: decimal;
+            padding-left: 1.5rem;
+        }
+    </style>
+
+    <script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+        ClassicEditor
+            .create(document.querySelector('#editor-materi'), {
+                toolbar: [ 'heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote', 'undo', 'redo' ]
+            })
+            .catch(error => {
+                console.error(error);
+            });
+    });
+    </script>
 </x-app-layout>

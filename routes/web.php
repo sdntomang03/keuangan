@@ -117,7 +117,8 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
 });
 // Tambahkan 'admin/' pada prefix dan 'admin.' pada name
 Route::middleware(['auth'])->prefix('setting')->name('setting.')->group(function () {
-
+    Route::post('/rekanan/{id}/toggle-status', [SuratController::class, 'toggleStatus'])
+        ->name('rekanan.toggle_status');
     // --- REKANAN ---
     Route::get('/rekanan/import', [SettingController::class, 'importRekananView'])->name('rekanan.import');
     Route::get('/rekanan/template', [SettingController::class, 'downloadTemplateRekanan'])->name('rekanan.template');
@@ -166,7 +167,8 @@ Route::middleware(['auth'])->prefix('surat')->group(function () {
     Route::post('/{id}/upload-foto', [SuratController::class, 'uploadFoto'])
         ->name('belanja.upload_foto');
     Route::get('/belanja/cetak-foto/{id}', [SuratController::class, 'cetakFotoSpj'])->name('belanja.cetak_foto');
-    Route::get('/regenerate-all', [App\Http\Controllers\SuratController::class, 'regenerateAllNumbers'])
+    Route::get('/belanja/export-excel', [SuratController::class, 'exportExcel'])->name('belanja.export_excel');
+    Route::get('/regenerate-all', [SuratController::class, 'regenerateAllNumbers'])
         ->name('surat.regenerate_all');
 
     // Route untuk Hapus Foto (Karena tadi kita tambahkan tombol hapus)
@@ -197,9 +199,13 @@ Route::group(['middleware' => ['auth']], function () {
         // API AJAX (Penyebab Error Anda)
         Route::get('/get-rekening', [EkskulController::class, 'getRekening'])->name('get_rekening');
         Route::get('/get-komponen', [EkskulController::class, 'getKomponen'])->name('get_komponen');
-        Route::get('/ekskul/get-by-pelatih', [EkskulController::class, 'getByPelatih'])->name('get_by_pelatih');
+        Route::get('/get-by-pelatih', [EkskulController::class, 'getByPelatih'])->name('get_by_pelatih');
         // 3. Proses Simpan (Store)
         Route::post('/store', [EkskulController::class, 'store'])->name('store');
+        Route::get('/referensi/ekskul', [EkskulController::class, 'refEkskulIndex'])->name('ref.index');
+        Route::post('/referensi/ekskul', [EkskulController::class, 'refEkskulStore'])->name('ref.store');
+        Route::put('/referensi/ekskul/{id}', [EkskulController::class, 'refEkskulUpdate'])->name('ref.update');
+        Route::delete('/referensi/ekskul/{id}', [EkskulController::class, 'refEkskulDestroy'])->name('ref.destroy');
 
         // 4. Cetak Kwitansi & Lampiran
         Route::get('/cetak/{id}', [EkskulController::class, 'cetak'])->name('cetak');

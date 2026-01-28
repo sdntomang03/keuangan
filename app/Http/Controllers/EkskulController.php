@@ -6,6 +6,7 @@ use App\Models\Belanja;
 use App\Models\DasarPajak;
 use App\Models\RefEkskul;
 use App\Models\Rekanan;
+use App\Models\Rkas;
 use App\Models\Sekolah;
 use App\Models\SpjEkskul;
 use App\Models\SpjEkskulDetail;
@@ -92,28 +93,77 @@ class EkskulController extends Controller
      */
     public function getKomponen(Request $request)
     {
-        $anggaran = $request->anggaran_data;
-        $sekolah = Sekolah::find(auth()->user()->sekolah_id);
+        try {
+            // 1. AMBIL USER & SEKOLAH
+            $user = auth()->user();
+            $sekolah = Sekolah::find($user->sekolah_id);
 
-        $tw = (int) filter_var($sekolah->triwulan_aktif, FILTER_SANITIZE_NUMBER_INT);
-        $bulanRange = match ($tw) {
-            1 => [1, 2, 3], 2 => [4, 5, 6], 3 => [7, 8, 9], 4 => [10, 11, 12], default => range(1, 12)
-        };
+            // 2. AMBIL DATA ANGGARAN (Dengan Fallback jika Middleware Gagal)
+            $anggaran = $request->anggaran_data;
 
-        $komponen = \App\Models\Rkas::join('akb_rincis', 'rkas.idblrinci', '=', 'akb_rincis.idblrinci')
-            ->where('rkas.anggaran_id', $anggaran->id)
-            ->where('rkas.idbl', $request->idbl)
-            ->where('rkas.kodeakun', $request->kodeakun)
-            ->whereIn('akb_rincis.bulan', $bulanRange)
-            ->select(
-                'rkas.id', 'rkas.idblrinci', 'rkas.namakomponen', 'rkas.hargasatuan', 'rkas.satuan', 'rkas.keterangan',
-                DB::raw('SUM(akb_rincis.volume) as volume_tersedia')
-            )
-            ->groupBy('rkas.id', 'rkas.idblrinci', 'rkas.namakomponen', 'rkas.hargasatuan', 'rkas.satuan')
-            ->havingRaw('SUM(akb_rincis.volume) > 0')
-            ->get();
+            // Jika null, cari manual
+            if (! $anggaran) {
+                $anggaran = Anggaran::where('sekolah_id', $user->sekolah_id)
+                    ->where('is_aktif', true)
+                    ->first();
+            }
 
-        return response()->json($komponen);
+            // Jika masih null, lempar error agar JS tahu
+            if (! $anggaran) {
+                throw new \Exception('Anggaran Tahun Aktif tidak ditemukan.');
+            }
+
+            // 3. LOGIKA TRIWULAN
+            // Bersihkan string (misal "Triwulan 1" jadi 1)
+            $tw = (int) filter_var($sekolah->triwulan_aktif, FILTER_SANITIZE_NUMBER_INT);
+
+            $bulanRange = match ($tw) {
+                1 => [1, 2, 3],
+                2 => [4, 5, 6],
+                3 => [7, 8, 9],
+                4 => [10, 11, 12],
+                default => range(1, 12) // Default setahun jika tidak ada triwulan
+            };
+
+            // 4. QUERY DATABASE (FIXED GROUP BY)
+            $komponen = Rkas::join('akb_rincis', 'rkas.idblrinci', '=', 'akb_rincis.idblrinci')
+                ->where('rkas.anggaran_id', $anggaran->id)
+                ->where('rkas.idbl', $request->idbl)
+                ->where('rkas.kodeakun', $request->kodeakun)
+                ->whereIn('akb_rincis.bulan', $bulanRange)
+                ->select(
+                    'rkas.id',
+                    'rkas.idblrinci',
+                    'rkas.namakomponen',
+                    'rkas.hargasatuan',
+                    'rkas.satuan',
+                    'rkas.keterangan', // <--- Kolom ini di-select...
+                    DB::raw('SUM(akb_rincis.volume) as volume_tersedia')
+                )
+                // ...Maka WAJIB dimasukkan ke Group By juga:
+                ->groupBy(
+                    'rkas.id',
+                    'rkas.idblrinci',
+                    'rkas.namakomponen',
+                    'rkas.hargasatuan',
+                    'rkas.satuan',
+                    'rkas.keterangan' // <--- PERBAIKAN UTAMA DISINI
+                )
+                ->havingRaw('SUM(akb_rincis.volume) > 0')
+                ->get();
+
+            return response()->json($komponen);
+
+        } catch (\Throwable $e) {
+            // 5. ERROR HANDLING JSON
+            // Ini akan mengirim detail error ke Console Browser (bukan cuma error 500)
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => basename($e->getFile()),
+            ], 500);
+        }
     }
 
     /**
@@ -211,12 +261,12 @@ class EkskulController extends Controller
                         'rekanan_id' => $item['rekanan_id'],
                         'tanggal' => $request->tanggal,
                         'no_bukti' => $finalNoBukti,
-                        'uraian' => "Honor $namaEkskul ($namaPelatih) - ".$item['namakomponen'],
+                        'uraian' => "Honor Ekskul $namaEkskul Kepada $namaPelatih",
                         'rincian' => $request->rincian ?? 'Honorarium Pelatih Ekskul',
                         'subtotal' => $subtotal,
                         'ppn' => 0,
                         'pph' => $nominalPPh,
-                        'transfer' => false,
+                        'transfer' => $subtotal - $nominalPPh,
                         'idbl' => $request->idbl,
                         'kodeakun' => $request->kodeakun,
                         'status' => 'draft',
@@ -273,7 +323,7 @@ class EkskulController extends Controller
     public function manageDetails($belanjaId)
     {
         // Ambil Data SPJ Ekskul berdasarkan Belanja ID
-        $spj = \App\Models\SpjEkskul::with(['belanja', 'rekanan', 'details'])
+        $spj = SpjEkskul::with(['belanja', 'rekanan', 'details'])
             ->where('belanja_id', $belanjaId)
             ->firstOrFail();
 
@@ -298,7 +348,7 @@ class EkskulController extends Controller
 
         try {
             // Ambil SPJ Induk untuk referensi watermark
-            $spj = \App\Models\SpjEkskul::findOrFail($request->spj_ekskul_id);
+            $spj = SpjEkskul::findOrFail($request->spj_ekskul_id);
 
             // Cek apakah jumlah input sudah melebihi target
             if ($spj->details()->count() >= $spj->jumlah_pertemuan) {
@@ -309,7 +359,7 @@ class EkskulController extends Controller
             $pathFoto = $this->processWatermark($request->file('foto_kegiatan'), $spj->belanja_id, $request->tanggal_kegiatan);
 
             // Simpan ke Database
-            \App\Models\SpjEkskulDetail::create([
+            SpjEkskulDetail::create([
                 'spj_ekskul_id' => $spj->id,
                 'tanggal_kegiatan' => $request->tanggal_kegiatan,
                 'materi' => $request->materi,
@@ -411,7 +461,11 @@ class EkskulController extends Controller
 
     public function index(Request $request)
     {
-        $anggaran = $request->anggaran_data; // Middleware
+        $anggaran = $request->anggaran_data;
+        if (! $anggaran) {
+            return back()->with('error', 'Silakan pilih Anggaran Aktif di Pengaturan terlebih dahulu.');
+        }
+        $sekolahId = auth()->user()->sekolah_id;
 
         // Ambil Belanja yang memiliki relasi ke spj_ekskul
         // Ini memfilter agar yang tampil HANYA belanja Ekskul, bukan ATK/Lainnya
@@ -432,7 +486,7 @@ class EkskulController extends Controller
     {
         // 1. Ambil Data SPJ Ekskul beserta Relasinya
         // Kita butuh data Belanja (Header), Rekanan (Pelatih), dan Ekskul
-        $spj = \App\Models\SpjEkskul::with(['belanja.korek', 'rekanan', 'ekskul'])
+        $spj = SpjEkskul::with(['belanja.korek', 'rekanan', 'ekskul'])
             ->findOrFail($id);
 
         // 2. Ambil Data Sekolah (Untuk KOP & Tanda Tangan)
@@ -493,5 +547,103 @@ class EkskulController extends Controller
         $sekolah = \App\Models\Sekolah::find(auth()->user()->sekolah_id);
 
         return view('ekskul.cetak_absensi', compact('spj', 'sekolah'));
+    }
+
+    /**
+     * HAPUS TRANSAKSI UTAMA (BELANJA + SPJ)
+     */
+    public function destroy($id)
+    {
+        // Cari data belanja beserta relasi SPJ-nya
+        $belanja = Belanja::with('spjEkskul.details')->findOrFail($id);
+
+        // 1. Hapus File Foto Kegiatan Fisik (Jika ada) agar tidak menuhin server
+        if ($belanja->spjEkskul && $belanja->spjEkskul->details) {
+            foreach ($belanja->spjEkskul->details as $detail) {
+                if ($detail->foto_kegiatan && Storage::disk('public')->exists($detail->foto_kegiatan)) {
+                    Storage::disk('public')->delete($detail->foto_kegiatan);
+                }
+            }
+        }
+
+        $belanja->delete();
+
+        return back()->with('success', 'Transaksi berhasil dihapus.');
+    }
+
+    // --- CRUD REFERENSI EKSKUL ---
+
+    public function refEkskulIndex(Request $request)
+    {
+        $anggaran = $request->anggaran_data;
+        if (! $anggaran) {
+            return back()->with('error', 'Silakan pilih Anggaran Aktif di Pengaturan terlebih dahulu.');
+        }
+        $sekolahId = auth()->user()->sekolah_id;
+
+        // TAMBAHKAN PENGECEKAN INI
+        if (! $anggaran) {
+            // Opsi A: Tampilkan error 404 jika anggaran wajib ada
+            abort(404, 'Data Anggaran tidak ditemukan.');
+
+            // Opsi B: Redirect kembali jika anggaran null
+            // return redirect()->back()->with('error', 'Anggaran tidak ditemukan');
+        }
+
+        // Ambil data ekskul + info pelatihnya
+        $ekskuls = RefEkskul::with('rekanan')
+            ->where('sekolah_id', $sekolahId)
+            ->orderBy('nama', 'asc')
+            ->paginate(10);
+
+        // Ambil list pelatih (rekanan yang jenisnya pelatih & aktif)
+        $listPelatih = Rekanan::where('sekolah_id', $sekolahId)
+
+            ->where('ket', 1) // 1 = Aktif/Pembina
+            ->orderBy('nama_rekanan', 'asc')
+            ->get();
+
+        return view('ekskul.index_ekskul', compact('ekskuls', 'listPelatih'));
+    }
+
+    public function refEkskulStore(Request $request)
+    {
+        $request->validate([
+            'nama' => 'required|string|max:255',
+            'rekanan_id' => 'nullable|exists:rekanans,id', // Validasi ke tabel rekanans
+        ]);
+
+        RefEkskul::create([
+            'sekolah_id' => auth()->user()->sekolah_id,
+            'nama' => $request->nama,
+            'rekanan_id' => $request->rekanan_id,
+        ]);
+
+        return back()->with('success', 'Ekskul berhasil ditambahkan.');
+    }
+
+    public function refEkskulUpdate(Request $request, $id)
+    {
+        $request->validate([
+            'nama' => 'required|string|max:255',
+            'rekanan_id' => 'nullable|exists:rekanans,id',
+        ]);
+
+        $ekskul = RefEkskul::where('sekolah_id', auth()->user()->sekolah_id)->findOrFail($id);
+
+        $ekskul->update([
+            'nama' => $request->nama,
+            'rekanan_id' => $request->rekanan_id,
+        ]);
+
+        return back()->with('success', 'Data Ekskul diperbarui.');
+    }
+
+    public function refEkskulDestroy($id)
+    {
+        $ekskul = RefEkskul::where('sekolah_id', auth()->user()->sekolah_id)->findOrFail($id);
+        $ekskul->delete();
+
+        return back()->with('success', 'Ekskul dihapus.');
     }
 }

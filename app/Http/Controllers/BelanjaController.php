@@ -444,7 +444,9 @@ class BelanjaController extends Controller
                 // --- VALIDASI PAGU (DENGAN EXCLUDE TRANSAKSI INI) ---
                 foreach ($request->items as $item) {
                     $subtotal = $item['volume'] * $item['harga_satuan'];
-                    $totalBrutoInput = ($request->ppn >= 0) ? $subtotal * 1.11 : $subtotal;
+                    $totalBrutoInput = ($request->ppn > 0)
+                    ? $subtotal * 1.11
+                    : $subtotal;
 
                     $totalPaguAnggaran = DB::table('akb_rincis')
                         ->where('idblrinci', $item['idblrinci'])

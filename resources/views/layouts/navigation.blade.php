@@ -69,6 +69,7 @@
 
                                 <div class="border-t border-gray-100 dark:border-gray-600"></div>
 
+                                {{-- SUB MENU REALISASI --}}
                                 <div class="relative" x-data="{ openSub: false }" @mouseenter="openSub = true"
                                     @mouseleave="openSub = false">
                                     <button
@@ -100,10 +101,45 @@
                                     </div>
                                 </div>
 
+                                {{-- SUB MENU EKSKUL (BARU) --}}
+                                <div class="relative" x-data="{ openSubEkskul: false }"
+                                    @mouseenter="openSubEkskul = true" @mouseleave="openSubEkskul = false">
+                                    <button
+                                        class="w-full text-start flex justify-between items-center block w-full px-4 py-2 text-sm leading-5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:bg-gray-100 transition duration-150 ease-in-out">
+                                        <span>{{ __('Ekskul') }}</span>
+                                        <svg class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24"
+                                            stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M9 5l7 7-7 7" />
+                                        </svg>
+                                    </button>
+
+                                    <div x-show="openSubEkskul" x-transition:enter="transition ease-out duration-200"
+                                        x-transition:enter-start="transform opacity-0 scale-95"
+                                        x-transition:enter-end="transform opacity-100 scale-100"
+                                        x-transition:leave="transition ease-in duration-75"
+                                        x-transition:leave-start="transform opacity-100 scale-100"
+                                        x-transition:leave-end="transform opacity-0 scale-95"
+                                        class="absolute left-full top-0 w-48 ml-2 origin-top-left rounded-md shadow-lg bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+
+                                        <div class="py-1">
+                                            {{-- Ganti route ini sesuai route ekskul anda --}}
+                                            <x-dropdown-link :href="route('ekskul.index')">
+                                                {{ __('Input Ekskul') }}
+                                            </x-dropdown-link>
+
+                                            <x-dropdown-link :href="route('ekskul.ref.index')">
+                                                {{ __('Pelatih Ekskul') }}
+                                            </x-dropdown-link>
+                                        </div>
+                                    </div>
+                                </div>
+                                {{-- END SUB MENU EKSKUL --}}
+
                                 <div class="border-t border-gray-100 dark:border-gray-600"></div>
 
-                                <x-dropdown-link :href="route('ekskul.index')">
-                                    {{ __('Ekskul') }}
+                                <x-dropdown-link :href="route('belanja.export_excel')">
+                                    {{ __('Download Belanja') }}
                                 </x-dropdown-link>
 
                             </x-slot>

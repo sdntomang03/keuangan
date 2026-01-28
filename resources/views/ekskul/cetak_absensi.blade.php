@@ -58,7 +58,7 @@
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
             position: relative;
             box-sizing: border-box;
-            border-top: 10px solid #1e3a8a;
+
             display: flex;
             flex-direction: column;
         }
@@ -118,14 +118,7 @@
             line-height: 1.1;
         }
 
-        .kop-sekolah {
-            font-size: 18pt;
-            font-weight: 800;
-            text-transform: uppercase;
-            color: #1e3a8a;
-            margin: 2px 0;
-            line-height: 1.1;
-        }
+
 
         .kop-alamat {
             font-size: 9pt;
@@ -379,27 +372,8 @@
     @forelse($spj->details as $index => $detail)
     <div class="page">
 
-        <div class="kop-container">
-            <div class="logo-box">
-                @if(!empty($sekolah->logo))
-                <img src="{{ asset('storage/' . $sekolah->logo) }}" alt="Logo">
-                @else
-                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Logo_Tut_Wuri_Handayani.png/800px-Logo_Tut_Wuri_Handayani.png"
-                    alt="Logo">
-                @endif
-            </div>
-            <div class="kop-text">
-                <div class="kop-pemprov">PEMERINTAH PROVINSI DKI JAKARTA</div>
-                <div class="kop-dinas">DINAS PENDIDIKAN</div>
-                <div class="kop-sekolah">{{ $sekolah->nama_sekolah }}</div>
-                <div class="kop-alamat">
-                    {{ $sekolah->alamat_sekolah ?? 'Alamat belum diisi' }}
-                    @if($sekolah->npsn) • NPSN: {{ $sekolah->npsn }} @endif
-                </div>
-            </div>
-            <div style="width: 85px;"></div>
-        </div>
-        <div class="separator-line"></div>
+        <x-kop-surat :sekolah="$sekolah" />
+
 
         <div class="content-wrapper">
             <div class="title-section">
@@ -414,9 +388,9 @@
                         \Carbon\Carbon::parse($detail->tanggal_kegiatan)->translatedFormat('l, d F Y') }}</td>
                 </tr>
                 <tr>
-                    <td class="label">Materi</td>
+                    <td class="label">Nama Pelatih</td>
                     <td>:</td>
-                    <td>{{ $detail->materi }}</td>
+                    <td>{{$spj->rekanan->nama_rekanan}}</td>
                 </tr>
             </table>
 
@@ -430,7 +404,7 @@
 
             <div class="materi-box">
                 <div class="materi-label">Uraian Kegiatan:</div>
-                <div class="materi-text">{{ $detail->materi }}</div>
+                <div class="materi-text">{!! $detail->materi !!}</div>
             </div>
         </div>
 
@@ -460,27 +434,11 @@
     ======================================================= --}}
     <div class="page-landscape">
 
-        <div class="kop-container">
-            <div class="logo-box">
-                @if(!empty($sekolah->logo))
-                <img src="{{ asset('storage/' . $sekolah->logo) }}" alt="Logo">
-                @else
-                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Logo_Tut_Wuri_Handayani.png/800px-Logo_Tut_Wuri_Handayani.png"
-                    alt="Logo">
-                @endif
-            </div>
-            <div class="kop-text">
-                <div class="kop-pemprov">PEMERINTAH PROVINSI DKI JAKARTA</div>
-                <div class="kop-dinas">DINAS PENDIDIKAN</div>
-                <div class="kop-sekolah">{{ $sekolah->nama_sekolah }}</div>
-                <div class="kop-alamat">
-                    {{ $sekolah->alamat_sekolah ?? 'Alamat belum diisi' }}
-                    @if($sekolah->npsn) • NPSN: {{ $sekolah->npsn }} @endif
-                </div>
-            </div>
-            <div style="width: 85px;"></div>
-        </div>
-        <div class="separator-line"></div>
+
+
+        <x-kop-surat :sekolah="$sekolah" />
+
+
 
         <div class="content-wrapper">
             <div class="title-section">
@@ -538,7 +496,7 @@
                             {{ \Carbon\Carbon::parse($detail->tanggal_kegiatan)->locale('id')->translatedFormat('l, d F
                             Y') }}
                         </td>
-                        <td>{{ $detail->materi }}</td>
+                        <td>{!! $detail->materi !!}</td>
                         <td class="text-center">
                             @if($detail->foto_kegiatan) Ada @else - @endif
                         </td>

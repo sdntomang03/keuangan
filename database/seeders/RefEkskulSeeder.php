@@ -26,7 +26,7 @@ class RefEkskulSeeder extends Seeder
             ['nama' => 'English CLub'],
             ['nama' => 'Seni Tari'],
             ['nama' => 'Marawis'],
-            ['nama' => 'Komputer / IT'],
+            ['nama' => 'Komputer'],
         ];
 
         $data = [];

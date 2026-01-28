@@ -18,8 +18,8 @@
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
 
+                    {{-- HEADER & TOMBOL --}}
                     <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-
                         <div class="flex items-center gap-2 self-start sm:self-center">
                             <div class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg text-blue-600 dark:text-blue-300">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
@@ -36,7 +36,6 @@
                         </div>
 
                         <div class="flex items-center gap-3 w-full sm:w-auto">
-
                             <a href="{{ route('setting.rekanan.import') }}"
                                 class="flex-1 sm:flex-none inline-flex justify-center items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg shadow-sm transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
@@ -58,28 +57,36 @@
                                 </svg>
                                 {{ __('Tambah') }}
                             </a>
-
                         </div>
                     </div>
+
+                    {{-- TABEL DATA --}}
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                             <thead class="bg-gray-50 dark:bg-gray-700">
                                 <tr>
                                     <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Nama Rekanan</th>
                                     <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Alamat / Kota</th>
                                     <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         PIC / Kontak</th>
+
+                                    {{-- HEADER KOLOM CHECKBOX --}}
                                     <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Pembina Ekskul
+                                    </th>
+
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200">
                                 @forelse ($rekanans as $rekanan)
                                 <tr>
                                     <td class="px-6 py-4 whitespace-nowrap">
@@ -97,47 +104,51 @@
                                         </div>
                                         <div class="text-sm text-gray-500">{{ $rekanan->no_telp }}</div>
                                     </td>
+
+                                    {{-- KOLOM CHECKBOX DENGAN API --}}
+                                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                                        <label class="inline-flex items-center cursor-pointer">
+                                            <input type="checkbox"
+                                                class="form-checkbox h-5 w-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 transition duration-150 ease-in-out"
+                                                {{-- PERBAIKAN: Mengirim URL Route langsung dari Blade --}}
+                                                onchange="togglePembina('{{ route('setting.rekanan.toggle_status', $rekanan->id) }}', this, {{ $rekanan->id }})"
+                                                {{ $rekanan->ket == 1 ? 'checked' : '' }}>
+                                            <span
+                                                class="ml-2 text-sm text-gray-600 dark:text-gray-400 status-label-{{ $rekanan->id }}">
+                                                {{ $rekanan->ket == 1 ? 'Ya' : 'Tidak' }}
+                                            </span>
+                                        </label>
+                                    </td>
+
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
                                         <div class="flex justify-center items-center gap-4">
-
                                             <a href="{{ route('setting.rekanan.edit', $rekanan->id) }}"
-                                                class="transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-amber-200 p-1.5 rounded-lg text-amber-500 hover:bg-white"
-                                                title="Edit Data">
-                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                                                    fill="currentColor" class="w-5 h-5">
+                                                class="text-amber-500 hover:text-amber-700">
+                                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                                     <path
-                                                        d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-8.4 8.4a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32l8.4-8.4Z" />
-                                                    <path
-                                                        d="M5.25 5.25a3 3 0 0 0-3 3v10.5a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3V13.5a.75.75 0 0 0-1.5 0v5.25a1.5 1.5 0 0 1-1.5 1.5H5.25a1.5 1.5 0 0 1-1.5-1.5V8.25a1.5 1.5 0 0 1 1.5-1.5h5.25a.75.75 0 0 0 0-1.5H5.25Z" />
+                                                        d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
                                                 </svg>
                                             </a>
-
+                                            {{-- Form Hapus --}}
                                             <form action="{{ route('setting.rekanan.destroy', $rekanan->id) }}"
                                                 method="POST" class="inline-block"
                                                 onsubmit="return confirm('Yakin ingin menghapus?');">
                                                 @csrf
                                                 @method('DELETE')
-
-                                                <button type="submit"
-                                                    class="transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-red-200 p-1.5 rounded-lg text-red-500 hover:bg-white hover:text-red-600"
-                                                    title="Hapus Data">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                                                        fill="currentColor" class="w-5 h-5">
+                                                <button type="submit" class="text-red-500 hover:text-red-700">
+                                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                                         <path fill-rule="evenodd"
-                                                            d="M16.5 4.478v.227a48.816 48.816 0 0 1 3.878.512.75.75 0 1 1-.49 1.478l-.56 12.79a2.25 2.25 0 0 1-2.142 2.158h-6.17a2.25 2.25 0 0 1-2.142-2.158L6.191 6.695a48.861 48.861 0 0 1-3.879-.512.75.75 0 1 1 .49-1.478 48.567 48.567 0 0 1 3.878-.512h1.637c.532-1.282 1.62-2.386 3.12-2.386 1.501 0 2.589 1.104 3.12 2.386h1.637ZM10.5 7.5a.75.75 0 0 1 .75.75v10.5a.75.75 0 0 1-1.5 0V8.25a.75.75 0 0 1 .75-.75Zm3.75 0a.75.75 0 0 1 .75.75v10.5a.75.75 0 0 1-1.5 0V8.25a.75.75 0 0 1 .75-.75Z"
+                                                            d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
                                                             clip-rule="evenodd" />
                                                     </svg>
                                                 </button>
                                             </form>
-
                                         </div>
                                     </td>
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="4" class="px-6 py-4 text-center text-gray-500">
-                                        Belum ada data rekanan.
-                                    </td>
+                                    <td colspan="5" class="px-6 py-4 text-center text-gray-500">Belum ada data.</td>
                                 </tr>
                                 @endforelse
                             </tbody>
@@ -152,4 +163,71 @@
             </div>
         </div>
     </div>
+
+    {{-- SCRIPT JAVASCRIPT FIX --}}
+    <script>
+        function togglePembina(url, checkbox, id) {
+            // 1. Tentukan status baru (1 jika dicentang, 0 jika tidak)
+            const newStatus = checkbox.checked ? 1 : 0;
+            const labelSpan = document.querySelector(`.status-label-${id}`);
+
+            // 2. Beri efek loading
+            checkbox.disabled = true;
+            labelSpan.innerText = 'Menyimpan...';
+            labelSpan.classList.add('text-yellow-500');
+
+            // 3. Kirim Request ke API Laravel menggunakan URL dari Blade
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // Pastikan mengambil CSRF token dengan benar
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').getAttribute('content') : ''
+                },
+                body: JSON.stringify({
+                    status: newStatus
+                })
+            })
+            .then(async response => {
+                // Cek apakah respons sukses (200 OK)
+                if (!response.ok) {
+                    // Coba ambil pesan error JSON jika ada
+                    const text = await response.text();
+                    try {
+                        const json = JSON.parse(text);
+                        throw new Error(json.message || response.statusText);
+                    } catch (e) {
+                        throw new Error(response.statusText);
+                    }
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Berhasil Update Tampilan
+                    labelSpan.innerText = newStatus ? 'Ya' : 'Tidak';
+                    labelSpan.classList.remove('text-yellow-500');
+                    console.log('Status updated successfully');
+                } else {
+                    // Gagal Logika Controller
+                    throw new Error(data.message || 'Gagal memperbarui status');
+                }
+            })
+            .catch(error => {
+                console.error('Error Detail:', error);
+                alert('Gagal: ' + error.message);
+
+                // Kembalikan posisi checkbox karena gagal
+                checkbox.checked = !checkbox.checked;
+
+                // Kembalikan label text
+                labelSpan.innerText = !newStatus ? 'Ya' : 'Tidak';
+                labelSpan.classList.remove('text-yellow-500');
+            })
+            .finally(() => {
+                // Aktifkan kembali checkbox
+                checkbox.disabled = false;
+            });
+        }
+    </script>
 </x-app-layout>

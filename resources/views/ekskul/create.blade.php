@@ -236,101 +236,128 @@
 
     // 2. FUNGSI LOAD KOMPONEN RKAS (Membuat Baris Tabel)
     function loadKomponen() {
-        const idbl = document.getElementById('idbl').value;
-        const kodeakun = document.getElementById('kodeakun').value;
-        const tabel = document.getElementById('tabelKomponen');
+    const idbl = document.getElementById('idbl').value;
+    const kodeakun = document.getElementById('kodeakun').value;
+    const tabel = document.getElementById('tabelKomponen');
 
-        // Loading State
-        tabel.innerHTML = '<tr><td colspan="7" class="px-6 py-10 text-center animate-pulse">Sedang mengambil data RKAS...</td></tr>';
-        resetTotal();
+    // 1. Loading State
+    tabel.innerHTML = '<tr><td colspan="7" class="px-6 py-10 text-center animate-pulse">Sedang mengambil data RKAS...</td></tr>';
+    resetTotal();
 
-        if(!kodeakun) return;
+    if(!kodeakun) return;
 
-        fetch(`{{ route('ekskul.get_komponen') }}?idbl=${idbl}&kodeakun=${kodeakun}`)
-            .then(res => res.json())
-            .then(data => {
-                if(data.length === 0) {
-                    tabel.innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-red-500">Tidak ada komponen tersedia / Pagu Habis untuk Triwulan ini.</td></tr>';
-                    return;
-                }
+    // 2. Request AJAX
+    fetch(`{{ route('ekskul.get_komponen') }}?idbl=${idbl}&kodeakun=${kodeakun}`)
+        .then(res => {
+            // [PENTING] Cek status HTTP (200 OK atau Error 500/404)
+            if (!res.ok) {
+                // Jika error server, lempar error agar masuk ke .catch()
+                throw new Error(`HTTP Status: ${res.status} (${res.statusText})`);
+            }
+            return res.json();
+        })
+        .then(data => {
+            // 3. Cek Data Kosong
+            if(data.length === 0) {
+                tabel.innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-red-500">Tidak ada komponen tersedia / Pagu Habis untuk Triwulan ini.</td></tr>';
+                return;
+            }
 
-                let rows = '';
+            let rows = '';
 
-                // Generate Opsi Dropdown Ekskul
-                let ekskulOptions = '<option value="">-- Pilih --</option>';
+            // Generate Opsi Dropdown Ekskul (Pastikan variabel global daftarEkskul ada)
+            let ekskulOptions = '<option value="">-- Pilih --</option>';
+            if (typeof daftarEkskul !== 'undefined') {
                 daftarEkskul.forEach(e => {
                     ekskulOptions += `<option value="${e.id}">${e.nama}</option>`;
                 });
+            }
 
-                // Generate Opsi Dropdown Pelatih
-                let pelatihOptions = '<option value="">-- Pilih --</option>';
+            // Generate Opsi Dropdown Pelatih (Pastikan variabel global daftarPelatih ada)
+            let pelatihOptions = '<option value="">-- Pilih --</option>';
+            if (typeof daftarPelatih !== 'undefined') {
                 daftarPelatih.forEach(p => {
                     pelatihOptions += `<option value="${p.id}">${p.nama_rekanan}</option>`;
                 });
+            }
 
-                data.forEach((item, index) => {
-                    const hargaFmt = new Intl.NumberFormat('id-ID').format(item.hargasatuan);
+            // 4. Generate Rows
+            data.forEach((item, index) => {
+                const hargaFmt = new Intl.NumberFormat('id-ID').format(item.hargasatuan);
+                // Handle jika keterangan null
+                const ket = item.keterangan ? item.keterangan : '-';
 
-                    rows += `
-                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition" id="row_${index}">
-                            {{-- Tombol Hapus --}}
-                            <td class="px-4 py-3 text-center">
-                                <button type="button" onclick="removeRow('row_${index}')" class="text-red-500 hover:text-red-700 bg-red-100 hover:bg-red-200 p-2 rounded transition" title="Hapus Komponen">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                </button>
-                            </td>
+                rows += `
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition" id="row_${index}">
+                        {{-- Tombol Hapus --}}
+                        <td class="px-4 py-3 text-center">
+                            <button type="button" onclick="removeRow('row_${index}')" class="text-red-500 hover:text-red-700 bg-red-100 hover:bg-red-200 p-2 rounded transition" title="Hapus Komponen">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </button>
+                        </td>
 
-                            {{-- Nama Komponen --}}
-                            <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100 font-medium">
-                                ${item.namakomponen} <br>
-                                <span class="text-xs text-gray-500">Sisa Pagu: ${item.volume_tersedia}</span>
-                                <span class="text-xs text-gray-500">Keterangan: ${item.keterangan}</span>
-                                <input type="hidden" name="items[${index}][idblrinci]" value="${item.idblrinci}">
-                                <input type="hidden" name="items[${index}][namakomponen]" value="${item.namakomponen}">
-                                <input type="hidden" name="items[${index}][harga_satuan]" value="${item.hargasatuan}">
-                            </td>
+                        {{-- Nama Komponen --}}
+                        <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100 font-medium">
+                            ${item.namakomponen} <br>
+                            <span class="text-xs text-gray-500">Sisa Pagu: ${item.volume_tersedia}</span>
+                            <span class="text-xs text-gray-500">Keterangan: ${ket}</span>
+                            <input type="hidden" name="items[${index}][idblrinci]" value="${item.idblrinci}">
+                            <input type="hidden" name="items[${index}][namakomponen]" value="${item.namakomponen}">
+                            <input type="hidden" name="items[${index}][harga_satuan]" value="${item.hargasatuan}">
+                        </td>
 
-                            {{-- Dropdown Pilih Pelatih (Trigger AJAX) --}}
-                            <td class="px-4 py-3">
-                                <select name="items[${index}][rekanan_id]"
-                                        onchange="getEkskulByPelatih(this, ${index})"
-                                        class="w-full text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-900 rounded shadow-sm py-1" required>
-                                    ${pelatihOptions}
-                                </select>
-                            </td>
+                        {{-- Dropdown Pilih Pelatih --}}
+                        <td class="px-4 py-3">
+                            <select name="items[${index}][rekanan_id]"
+                                    onchange="getEkskulByPelatih(this, ${index})"
+                                    class="w-full text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-900 rounded shadow-sm py-1" required>
+                                ${pelatihOptions}
+                            </select>
+                        </td>
 
-                            {{-- Dropdown Pilih Ekskul (Target Otomatis) --}}
-                            <td class="px-4 py-3">
-                                <select name="items[${index}][ref_ekskul_id]"
-                                        id="ekskul_select_${index}"
-                                        class="w-full text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-900 rounded shadow-sm py-1 bg-gray-50" required>
-                                    ${ekskulOptions}
-                                </select>
-                            </td>
+                        {{-- Dropdown Pilih Ekskul --}}
+                        <td class="px-4 py-3">
+                            <select name="items[${index}][ref_ekskul_id]"
+                                    id="ekskul_select_${index}"
+                                    class="w-full text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-900 rounded shadow-sm py-1 bg-gray-50" required>
+                                ${ekskulOptions}
+                            </select>
+                        </td>
 
-                            {{-- Harga Satuan --}}
-                            <td class="px-4 py-3 text-right text-sm text-gray-600 dark:text-gray-400">
-                                Rp ${hargaFmt} <input type="hidden" class="price-val" value="${item.hargasatuan}">
-                            </td>
+                        {{-- Harga Satuan --}}
+                        <td class="px-4 py-3 text-right text-sm text-gray-600 dark:text-gray-400">
+                            Rp ${hargaFmt} <input type="hidden" class="price-val" value="${item.hargasatuan}">
+                        </td>
 
-                            {{-- Input Volume --}}
-                            <td class="px-4 py-3 text-center">
-                                <input type="number" min="1" max="${item.volume_tersedia}" required
-                                    class="w-full text-center border-gray-300 dark:border-gray-600 dark:bg-gray-900 rounded shadow-sm text-sm py-1 vol-input font-bold text-indigo-600"
-                                    name="items[${index}][volume]" value="0"
-                                    oninput="hitungTotal()">
-                            </td>
+                        {{-- Input Volume --}}
+                        <td class="px-4 py-3 text-center">
+                            <input type="number" min="1" max="${item.volume_tersedia}" required
+                                class="w-full text-center border-gray-300 dark:border-gray-600 dark:bg-gray-900 rounded shadow-sm text-sm py-1 vol-input font-bold text-indigo-600"
+                                name="items[${index}][volume]" value="0"
+                                oninput="hitungTotal()">
+                        </td>
 
-                            {{-- Subtotal --}}
-                            <td class="px-4 py-3 text-right text-sm font-bold text-gray-800 dark:text-gray-200 subtotal-display">
-                                Rp 0
-                            </td>
-                        </tr>
-                    `;
-                });
-                tabel.innerHTML = rows;
+                        {{-- Subtotal --}}
+                        <td class="px-4 py-3 text-right text-sm font-bold text-gray-800 dark:text-gray-200 subtotal-display">
+                            Rp 0
+                        </td>
+                    </tr>
+                `;
             });
-    }
+            tabel.innerHTML = rows;
+        })
+        .catch(error => {
+            // 5. Error Handling
+            console.error('Fetch Error:', error);
+            tabel.innerHTML = `
+                <tr>
+                    <td colspan="7" class="px-6 py-4 text-center text-red-600 font-bold bg-red-50">
+                        Gagal mengambil data.<br>
+                        <span class="text-sm font-normal text-red-500">Pesan: ${error.message}</span>
+                    </td>
+                </tr>`;
+        });
+}
 
     // 3. FUNGSI BARU: REQUEST API SAAT PELATIH BERUBAH
     function getEkskulByPelatih(selectElement, index) {

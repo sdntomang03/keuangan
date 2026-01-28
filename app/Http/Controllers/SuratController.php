@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Exports\BelanjaExport;
 use App\Models\Belanja;
 use App\Models\BelanjaFoto;
+use App\Models\Rekanan;
 use App\Models\Sekolah;
 use App\Models\Surat;
 use Barryvdh\DomPDF\Facade\Pdf as DomPdf;
@@ -125,7 +126,7 @@ class SuratController extends Controller
             $templateProcessor->setValue('alamat_surat', $belanja->rekanan->alamat ?? '-');
             $templateProcessor->setValue('alamat_surat2', $belanja->rekanan->alamat2 ?? '-');
             $templateProcessor->setValue('provinsi_surat', $belanja->rekanan->provinsi ?? 'Jakarta');
-            $templateProcessor->setValue('no_telp', $belanja->rekanan->no_telp ?? '-');
+            $templateProcessor->setValue('telp', $belanja->rekanan->telp ?? '-');
             $templateProcessor->setValue('nama_pimpinan', $belanja->rekanan->nama_pimpinan ?? '-');
 
             // --- D. DATA PEJABAT (TERMASUK PENGURUS BARANG) ---
@@ -737,7 +738,7 @@ class SuratController extends Controller
             $templateProcessor->setValue('alamat', $sekolah->alamat);
             $templateProcessor->setValue('kelurahan', $sekolah->kelurahan ?? '-');
             $templateProcessor->setValue('kecamatan', $sekolah->kecamatan ?? '-');
-            $templateProcessor->setValue('telepon', $sekolah->no_telp ?? '-');
+            $templateProcessor->setValue('telepon', $sekolah->telp ?? '-');
             $templateProcessor->setValue('email', $sekolah->email ?? '-');
             $templateProcessor->setValue('kode_pos', $sekolah->kodepos ?? '-');
 
@@ -855,7 +856,7 @@ class SuratController extends Controller
             $templateProcessor->setValue('alamat', $sekolah->alamat);
             $templateProcessor->setValue('kelurahan', $sekolah->kelurahan ?? '-');
             $templateProcessor->setValue('kecamatan', $sekolah->kecamatan ?? '-');
-            $templateProcessor->setValue('telepon', $sekolah->no_telp ?? '-');
+            $templateProcessor->setValue('telepon', $sekolah->telp ?? '-');
             $templateProcessor->setValue('email', $sekolah->email ?? '-');
             $templateProcessor->setValue('kode_pos', $sekolah->kodepos ?? '-');
 
@@ -898,7 +899,7 @@ class SuratController extends Controller
             $templateProcessor->setValue('nama_pimpinan', $rekanan->nama_pimpinan);
             $templateProcessor->setValue('nama_rekanan', $rekanan->nama_rekanan);
             $templateProcessor->setValue('alamat_surat', $rekanan->alamat);
-            $templateProcessor->setValue('hp_surat', $rekanan->no_telp ?? '-'); // Sesuai template ${hp_surat}
+            $templateProcessor->setValue('hp_surat', $rekanan->telp ?? '-'); // Sesuai template ${hp_surat}
 
             // --- D. TABEL RINCIAN BARANG ---
             // Khusus BAPB, kita HANYA mencetak barang yang ada di surat ini saja (rincis)
@@ -1012,5 +1013,30 @@ class SuratController extends Controller
         });
 
         return back()->with('success', 'Semua nomor surat di database berhasil diurutkan ulang.');
+    }
+
+    /**
+     * API: Toggle Status Pembina (Ket)
+     */
+    public function toggleStatus(Request $request, $id)
+    {
+        try {
+            $rekanan = Rekanan::findOrFail($id);
+
+            // Update status: Jika dikirim 1 simpan 1, jika 0 simpan 0
+            $rekanan->ket = $request->status;
+            $rekanan->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Status Pembina berhasil diperbarui.',
+                'new_status' => $rekanan->ket,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memperbarui status.',
+            ], 500);
+        }
     }
 }
