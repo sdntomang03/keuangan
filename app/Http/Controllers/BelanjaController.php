@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Anggaran;
 use App\Models\Belanja;
+use App\Models\BelanjaRinci;
 use App\Models\Bku;
 use App\Models\DasarPajak;
 use App\Models\Kegiatan;
@@ -13,6 +14,7 @@ use App\Models\Sekolah;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class BelanjaController extends Controller
 {
@@ -116,15 +118,23 @@ class BelanjaController extends Controller
         // 1. Validasi Input
         $request->validate([
             'tanggal' => 'required|date',
+            // PERBAIKAN: Hapus ignore($id) karena ini Create Data Baru
             'no_bukti' => 'required|string|unique:belanjas,no_bukti',
             'rekanan_id' => 'required',
             'items' => 'required|array|min:1',
             'rincian' => 'nullable|string',
+            // Validasi struktur item agar aman
+            'items.*.volume' => 'required|numeric|min:0',
+            'items.*.harga_satuan' => 'required|numeric|min:0',
+        ], [
+            'no_bukti.unique' => 'Nomor Bukti ini sudah digunakan pada transaksi lain.',
+            'items.required' => 'Harap masukkan minimal satu rincian belanja.',
+            'tanggal.required' => 'Tanggal transaksi wajib diisi.',
         ]);
 
         // 2. Ambil Data dari Middleware & Relasi Sekolah
         $anggaran = $request->anggaran_data;
-        $sekolah = \App\Models\Sekolah::where('id', auth()->user()->sekolah_id)->first();
+        $sekolah = Sekolah::where('id', auth()->user()->sekolah_id)->first();
 
         if (! $anggaran || ! $sekolah) {
             return back()->with('error', 'Data Anggaran atau Sekolah tidak ditemukan.');
@@ -193,6 +203,7 @@ class BelanjaController extends Controller
                     'transfer' => $request->transfer,
                     'idbl' => $request->idbl,
                     'kodeakun' => $request->kodeakun,
+                    'tw' => $twAktif,
                     'status' => 'draft',
                 ]);
                 $persenPpn = DasarPajak::where('nama_pajak', 'PPN')->value('persen') ?? 0;
@@ -256,14 +267,23 @@ class BelanjaController extends Controller
                 ->with('error', 'Silakan tentukan Anggaran Aktif terlebih dahulu.');
         }
 
-        // 2. Ambil data sekolah aktif untuk info di header view
+        // 2. Ambil data sekolah aktif
         $sekolah = Sekolah::find($user->sekolah_id);
 
-        // 3. Filter Belanja berdasarkan ID Anggaran yang aktif
-        $belanjas = Belanja::with(['rekanan', 'kegiatan', 'korek'])
-            ->where('anggaran_id', $anggaran->id)
-            ->orderBy('tanggal', 'desc')
-            ->paginate(10);
+        // 3. Query Dasar
+        $query = Belanja::with(['rekanan', 'kegiatan', 'korek'])
+            ->where('anggaran_id', $anggaran->id);
+
+        // 4. FILTER TW (LOGIKA BARU)
+        // Jika di URL ada ?tw=1, maka filter ditambahkan. Jika tidak, tampilkan semua.
+        if ($request->filled('tw')) {
+            $query->where('tw', $request->tw);
+        }
+
+        // 5. Eksekusi Query dengan Pagination
+        $belanjas = $query->orderBy('tanggal', 'desc')
+            ->paginate(10)
+            ->withQueryString(); // PENTING: Agar filter tidak hilang saat klik halaman 2
 
         return view('belanja.index', compact('belanjas', 'anggaran', 'sekolah'));
     }
@@ -337,7 +357,9 @@ class BelanjaController extends Controller
                 $belanja->subtotal + $belanja->ppn, // kredit
                 $belanja->id,                       // belanja_id
                 null,                               // pajak_id
-                $anggaran->id                       // PENTING: anggaran_id dari middleware
+                $anggaran->id,                       // PENTING: anggaran_id dari middleware
+                null,
+                $belanja->tw
             );
 
             // 3. Catat Tiap Pajak yang ada di Belanja tersebut
@@ -350,7 +372,10 @@ class BelanjaController extends Controller
                     0,               // kredit
                     $belanja->id,    // referensi induk belanja
                     $pajak->id,      // pajak_id rincian
-                    $anggaran->id    // PENTING: anggaran_id
+                    $anggaran->id,   // PENTING: anggaran_id
+                    null,
+                    $belanja->tw
+
                 );
 
                 // Tandai pajak sudah diterima
@@ -421,10 +446,21 @@ class BelanjaController extends Controller
         // 1. Validasi Input (No bukti unik kecuali untuk ID ini sendiri)
         $request->validate([
             'tanggal' => 'required|date',
-            'no_bukti' => 'required|string|unique:belanjas,no_bukti,'.$id,
+            // Validasi Unique yang mengabaikan ID ini sendiri
+            'no_bukti' => [
+                'required',
+                'string',
+                Rule::unique('belanjas', 'no_bukti')->ignore($id),
+            ],
             'rekanan_id' => 'required',
             'items' => 'required|array|min:1',
             'rincian' => 'nullable|string',
+        ], [
+            // --- BAGIAN INI YANG PERLU ANDA TAMBAHKAN ---
+            // Format: 'nama_field.nama_rule' => 'Pesan Error'
+            'no_bukti.unique' => 'Nomor Bukti ini sudah digunakan pada transaksi lain. Mohon ganti dengan nomor lain.',
+            'items.required' => 'Harap masukkan minimal satu rincian belanja.',
+            'tanggal.required' => 'Tanggal transaksi wajib diisi.',
         ]);
 
         $anggaran = $request->anggaran_data;
@@ -555,7 +591,7 @@ class BelanjaController extends Controller
 
             // 2. UPDATE HARGA BARANG (CHILD)
             foreach ($request->items as $rinciId => $hargaPenawaran) {
-                \App\Models\BelanjaRinci::where('id', $rinciId)->update([
+                BelanjaRinci::where('id', $rinciId)->update([
                     'harga_penawaran' => $hargaPenawaran,
                 ]);
             }

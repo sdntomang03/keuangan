@@ -9,7 +9,7 @@ class Bku extends Model
     protected $guarded = [];
 
     // Tambahkan $anggaranId sebagai parameter ke-8
-    public static function catat($tanggal, $no_bukti, $uraian, $debit, $kredit, $belanjaId = null, $pajakId = null, $anggaranId = null, $penerimaanId = null)
+    public static function catat($tanggal, $no_bukti, $uraian, $debit, $kredit, $belanjaId = null, $pajakId = null, $anggaranId = null, $penerimaanId = null, $twAktif = null)
     {
         // 1. Ambil data terakhir KHUSUS untuk anggaran yang dipilih
         // Ini penting agar saldo BOS dan BOP tidak bercampur
@@ -33,6 +33,7 @@ class Bku extends Model
             'anggaran_id' => $anggaranId, // Sekarang variabel ini sudah ada dari parameter
             'user_id' => auth()->id(), // Tambahkan juga user_id jika kolomnya ada
             'penerimaan_id' => $penerimaanId,
+            'tw' => $twAktif,
         ]);
     }
 

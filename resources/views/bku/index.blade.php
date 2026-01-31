@@ -7,7 +7,6 @@
 
         async fetchEdit(id) {
             try {
-                // Mengambil data dari server
                 const response = await axios.get(`${window.location.origin}/penerimaan/${id}/edit`);
                 this.editData = response.data;
                 this.openEditModal = true;
@@ -23,9 +22,28 @@
             <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
                 <div>
                     <h2 class="text-2xl font-black text-gray-800 tracking-tight uppercase">Buku Kas Umum</h2>
-                    <p class="text-sm text-gray-500">Pantau arus kas masuk, keluar, dan kewajiban pajak.</p>
+                    <p class="text-sm text-gray-500">
+                        Anggaran: <span class="font-bold text-indigo-600">{{ $anggaran->nama_anggaran }}</span>
+                    </p>
                 </div>
                 <div class="flex flex-wrap gap-2">
+                    <form method="GET" action="{{ route('bku.index') }}" class="w-full sm:w-auto">
+                        <select name="tw"
+                            class="w-full sm:w-48 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-xl shadow-sm text-sm font-medium text-gray-700 py-2.5"
+                            onchange="this.form.submit()">
+
+                            {{-- Value kosong untuk Semua Triwulan --}}
+                            <option value="" {{ $filterTw=='' ? 'selected' : '' }}>-- Semua Triwulan --</option>
+
+                            {{-- Opsi Triwulan --}}
+                            <option value="1" {{ $filterTw=='1' ? 'selected' : '' }}>Triwulan 1</option>
+                            <option value="2" {{ $filterTw=='2' ? 'selected' : '' }}>Triwulan 2</option>
+                            <option value="3" {{ $filterTw=='3' ? 'selected' : '' }}>Triwulan 3</option>
+                            <option value="4" {{ $filterTw=='4' ? 'selected' : '' }}>Triwulan 4</option>
+                        </select>
+                    </form>
+
+                    {{-- Tombol Tambah & Setor (Tidak berubah) --}}
                     <button @click="openModal = true"
                         class="inline-flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl shadow-sm transition">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -34,7 +52,6 @@
                         </svg>
                         Tambah Penerimaan
                     </button>
-
                     <a href="{{ route('pajak.siap-setor') }}"
                         class="inline-flex items-center px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold rounded-xl shadow-sm transition">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -65,10 +82,33 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
+
+                            {{-- ========================================================== --}}
+                            {{-- BARIS SALDO AWAL (Hanya muncul jika filter TW > 1) --}}
+                            {{-- ========================================================== --}}
+                            @if(request('tw') && request('tw') > 1 && isset($saldoAwal))
+                            <tr class="bg-gray-100/80 font-bold text-gray-600">
+                                <td class="px-6 py-4 text-center">-</td>
+                                <td class="px-6 py-4 text-center">-</td>
+                                <td class="px-6 py-4 text-center">-</td>
+                                <td class="px-6 py-4 uppercase italic tracking-wide">
+                                    Saldo S.D. Triwulan {{ request('tw') - 1 }}
+                                </td>
+                                <td class="px-6 py-4 text-right text-gray-400">-</td>
+                                <td class="px-6 py-4 text-right text-gray-400">-</td>
+                                <td class="px-6 py-4 text-right font-black text-gray-800 bg-blue-50/50">
+                                    {{ number_format($saldoAwal, 0, ',', '.') }}
+                                </td>
+                                <td class="px-6 py-4 bg-blue-50/50"></td>
+                            </tr>
+                            @endif
+                            {{-- ========================================================== --}}
+
                             @forelse($bkus as $item)
-                            <tr class="hover:bg-gray-50 transition-colors">
+                            <tr
+                                class="hover:bg-gray-50 transition-colors {{ $item->kredit > 0 ? 'bg-red-50/30' : '' }} {{ $item->debit > 0 ? 'bg-green-50/30' : '' }}">
                                 <td class="px-6 py-4 text-center font-mono text-gray-400 italic">
-                                    {{ str_pad($loop->iteration, 3, '0', STR_PAD_LEFT) }}
+                                    {{ str_pad($item->no_urut, 3, '0', STR_PAD_LEFT) }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap italic">
                                     {{ \Carbon\Carbon::parse($item->tanggal)->format('d/m/Y') }}
@@ -95,8 +135,8 @@
                                             @endif
                                         </div>
 
+                                        {{-- Detail Collapse Belanja --}}
                                         @if($item->belanja)
-                                        {{-- x-collapse dihapus agar tidak error jika plugin belum ada --}}
                                         <div x-show="expanded" x-cloak
                                             class="mt-3 overflow-hidden transition-all duration-300">
                                             <div
@@ -115,9 +155,9 @@
                                                     <div>
                                                         <span
                                                             class="block text-[9px] uppercase font-black text-blue-400 tracking-widest">Rekanan</span>
-                                                        <span class="text-gray-800 font-bold uppercase text-[10px]">{{
-                                                            $item->belanja->rekanan->nama_rekanan ?? 'Internal'
-                                                            }}</span>
+                                                        <span class="text-gray-800 font-bold uppercase text-[10px]">
+                                                            {{ $item->belanja->rekanan->nama_rekanan ?? 'Internal' }}
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -134,7 +174,7 @@
                                 <td class="px-6 py-4 text-right font-black text-gray-900 bg-gray-50/50 text-sm">
                                     {{ number_format($item->saldo_akhir ?? 0, 0, ',', '.') }}
                                 </td>
-                                <td class="px-6 py-4 text-center">
+                                <td class="px-6 py-4 text-center bg-gray-50/50">
                                     <div class="flex items-center justify-center gap-2">
                                         @if($item->belanja_id)
                                         <form action="{{ route('bku.unpost', $item->belanja_id) }}" method="POST">
@@ -158,15 +198,20 @@
                                             </button>
                                         </form>
                                         @else
-                                        <span class="text-gray-300 italic text-[10px]">Non-Editable</span>
+                                        <span class="text-gray-300 italic text-[10px]">System</span>
                                         @endif
                                     </div>
                                 </td>
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="8" class="px-6 py-10 text-center text-gray-400 italic">Belum ada transaksi
-                                    di BKU.</td>
+                                <td colspan="8" class="px-6 py-10 text-center text-gray-400 italic">
+                                    @if(isset($saldoAwal) && $saldoAwal > 0)
+                                    Belum ada transaksi di triwulan ini.
+                                    @else
+                                    Belum ada data transaksi.
+                                    @endif
+                                </td>
                             </tr>
                             @endforelse
                         </tbody>
@@ -279,8 +324,8 @@
                     </div>
                 </div>
             </div>
-        </template>
-    </div> {{-- PENUTUP X-DATA DI SINI --}}
+
+    </div>
 
     <style>
         [x-cloak] {

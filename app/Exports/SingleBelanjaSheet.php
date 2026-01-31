@@ -143,7 +143,7 @@ class SingleBelanjaSheet implements FromCollection, ShouldAutoSize, WithEvents, 
                 $sheet->setCellValue("F{$transferRow}", 'Transfer Rekanan');
                 // Rumus: Bruto dikurangi jumlah seluruh baris pajak di atasnya
                 if ($pphcek) {
-                    $sheet->setCellValue("G{$transferRow}", "=G{$brutoRow}-SUM(G{$ppnRow}:G{$lastPphRow})");
+                    $sheet->setCellValue("G{$transferRow}", "=G{$brutoRow}-SUM(G{$firstPphRow}:G{$lastPphRow})-G{$ppnRow}");
                 } else {
                     // Jika hanya ada PPN, langsung kurangi saja tanpa SUM
                     $sheet->setCellValue("G{$transferRow}", "=G{$brutoRow}-G{$ppnRow}");

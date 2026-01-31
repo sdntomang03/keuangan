@@ -8,7 +8,7 @@ use App\Models\BelanjaFoto;
 use App\Models\Rekanan;
 use App\Models\Sekolah;
 use App\Models\Surat;
-use Barryvdh\DomPDF\Facade\Pdf as DomPdf;
+use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,6 +19,8 @@ use Intervention\Image\Drivers\Gd\Driver;
 use Intervention\Image\ImageManager;
 use Maatwebsite\Excel\Facades\Excel;
 use PhpOffice\PhpWord\TemplateProcessor;
+
+// use PhpOffice\PhpWord\Writer\PDF;
 
 class SuratController extends Controller
 {
@@ -33,7 +35,7 @@ class SuratController extends Controller
             return back()->with('error', 'Data anggaran tidak ditemukan.');
         }
 
-        $fileName = 'Laporan_Rincian_Belanja_'.date('YmdHis').'.xlsx';
+        $fileName = 'Laporan_Rincian_Belanja_'.strtoupper($anggaran->singkatan).'_'.date('YmdHis').'.xlsx';
 
         return Excel::download(new BelanjaExport($anggaran), $fileName);
     }
@@ -977,7 +979,7 @@ class SuratController extends Controller
 
         // 3. Load View PDF (GUNAKAN ALIAS 'DomPdf' DISINI)
         // Perhatikan: Menggunakan DomPdf::loadView, bukan Pdf::loadView
-        $pdf = DomPdf::loadView('surat.pdf_foto_spj', compact('belanja', 'sekolah', 'triwulan', 'tahun'));
+        $pdf = PDF::loadView('surat.pdf_foto_spj', compact('belanja', 'sekolah', 'triwulan', 'tahun'));
 
         // Set ukuran kertas
         $pdf->setPaper('a4', 'portrait');
@@ -1038,5 +1040,691 @@ class SuratController extends Controller
                 'message' => 'Gagal memperbarui status.',
             ], 500);
         }
+    }
+
+    public function cetakSatuan($id, $jenis)
+    {
+        Carbon::setLocale('id');
+
+        // 1. AMBIL DATA BELANJA (Sesuai snippet Anda)
+        $belanja = Belanja::with([
+            'rincis.rkas',
+            'rekanan',
+            'korek',
+            'user.sekolah',
+            'surats',
+            'anggaran',
+        ])->findOrFail($id);
+
+        // 2. AMBIL DATA PENDUKUNG
+        // Fallback: Jika user pembuat belanja tidak punya sekolah, ambil dari user login
+        $sekolah = $belanja->user->sekolah ?? Auth::user()->sekolah;
+
+        if (! $sekolah) {
+            $sekolah = Sekolah::find(Auth::user()->sekolah_id);
+            if (! $sekolah) {
+                return back()->with('error', 'Data Sekolah tidak ditemukan');
+            }
+        }
+
+        $rekanan = $belanja->rekanan;
+
+        // 3. MAPPING DATA PEJABAT (Agar rapi di View)
+        $kepalaSekolah = (object) [
+            'nama' => $sekolah->nama_kepala_sekolah,
+            'nip' => $sekolah->nip_kepala_sekolah,
+        ];
+
+        $pengurusBarang = (object) [
+            'nama' => $sekolah->nama_pengurus_barang ?? '...................',
+            'nip' => $sekolah->nip_pengurus_barang ?? '-',
+            'jabatan' => 'Pengurus Barang',
+        ];
+
+        // 4. LOGIKA JENIS SURAT & PENGAMBILAN DARI DB
+        $mapJenis = [
+            'permintaan' => 'PH',
+            'negosiasi' => 'NH',
+            'pesanan' => 'SP',
+            'berita_acara' => 'BAPB',
+            'pemeriksaan' => 'BAPB', // Alias
+        ];
+
+        if (! isset($mapJenis[$jenis])) {
+            abort(404, 'Jenis surat tidak valid');
+        }
+
+        // Ambil kode (PH/NH/dll)
+        $kodeJenis = $mapJenis[$jenis];
+
+        // Cari data surat di database berdasarkan jenisnya
+        $suratDb = $belanja->surats->where('jenis_surat', $kodeJenis)->first();
+
+        // 5. FORMAT DATA SURAT (Agar View tidak error jika surat belum digenerate)
+        // Default values jika surat belum ada (Draft)
+        $noSurat = 'DRAFT (Belum Generate)';
+        $tglSurat = now(); // Default hari ini
+        $sifat = 'Segera';
+        $lampiran = '-';
+
+        if ($suratDb) {
+            $noSurat = $suratDb->nomor_surat;
+            $tglSurat = $suratDb->tanggal_surat; // Carbon Object
+            $sifat = $suratDb->sifat ?? 'Segera';
+            $lampiran = $suratDb->lampiran ?? '-';
+        }
+
+        // Khusus BAPB: Cek tanggal realisasi/BAST
+        if ($kodeJenis == 'BAPB') {
+            // Prioritas: Tanggal Input BAST -> Tanggal Surat BAPB -> Hari Ini
+            $tglSurat = $belanja->tanggal_bast
+            ? Carbon::parse($belanja->tanggal_bast)
+            : ($suratDb ? $suratDb->tanggal_surat : now());
+        }
+
+        // Buat Object Surat Final untuk dikirim ke View
+        $surat = (object) [
+            'nomor_surat' => $noSurat,
+            'tanggal_surat' => $tglSurat->format('Y-m-d'), // String Y-m-d aman untuk Blade
+
+            // Data Umum Belanja
+            'anggaran' => $belanja->anggaran,
+            'periode' => 'Triwulan '.($belanja->triwulan ?? 1),
+            'kode_rekening' => $belanja->korek->ket ?? '-',
+
+            'nama_kegiatan' => $belanja->uraian,
+
+            // Data Spesifik Surat
+            'perihal' => ucwords(str_replace('_', ' ', $jenis)).' Harga '.$belanja->uraian,
+            'sifat' => $sifat,
+            'lampiran' => $lampiran,
+
+            // Data Spesifik BAPB
+            'nama_pekerjaan' => $belanja->uraian,
+            'hari_ini' => $tglSurat->translatedFormat('l'),
+            'tanggal_terbilang' => $this->terbilangTanggal($tglSurat),
+        ];
+
+        // 6. FORMAT ITEM BARANG (Mapping Harga & Satuan)
+        $items = $belanja->rincis->map(function ($item) {
+            return (object) [
+                'nama_barang' => $item->namakomponen,
+                // Logika Satuan: Ambil dari RKAS jika ada, kalau tidak ambil dari inputan
+                'satuan' => $item->rkas->satuan ?? $item->satuan,
+
+                'qty' => $item->volume,
+
+                // Harga Penawaran vs Harga Deal
+                'harga_satuan' => $item->harga_satuan, // Harga Awal
+                'harga_penawaran' => $item->harga_penawaran,
+
+                // Qty untuk BAPB
+                'qty_pesan' => $item->volume,
+                'qty_terima' => $item->volume,
+                'qty_tolak' => 0,
+                'qty_sesuai' => $item->volume,
+            ];
+        });
+
+        // Jika akses 'pemeriksaan', arahkan ke view 'berita_acara'
+        if ($jenis == 'pemeriksaan') {
+            $jenis = 'berita_acara';
+        }
+
+        return view('surat.print_manager', [
+            'mode' => 'satuan',
+            'jenis_surat' => $jenis,
+            'surat' => $surat, // Object Surat lengkap
+            'sekolah' => $sekolah,
+            'rekanan' => $rekanan,
+            'items' => $items, // Collection Items yang sudah dimapping
+            'kepala_sekolah' => $kepalaSekolah, // Object Pejabat
+            'pengurus_barang' => $pengurusBarang, // Object Pejabat
+        ]);
+    }
+
+    public function cetakBundel($id)
+    {
+        Carbon::setLocale('id');
+
+        // 1. DATA BELANJA
+        $belanja = Belanja::with([
+            'rincis.rkas',
+            'rekanan',
+            'korek',
+            'user.sekolah',
+            'surats',
+            'anggaran',
+        ])->findOrFail($id);
+
+        // 2. DATA SEKOLAH
+        $sekolah = $belanja->user->sekolah ?? Auth::user()->sekolah;
+
+        if (! $sekolah) {
+            $sekolah = Sekolah::find(Auth::user()->sekolah_id);
+            if (! $sekolah) {
+                return back()->with('error', 'Data Sekolah tidak ditemukan');
+            }
+        }
+
+        $rekanan = $belanja->rekanan;
+
+        // 3. PEJABAT
+        $kepalaSekolah = (object) [
+            'nama' => $sekolah->nama_kepala_sekolah,
+            'nip' => $sekolah->nip_kepala_sekolah,
+        ];
+
+        $pengurusBarang = (object) [
+            'nama' => $sekolah->nama_pengurus_barang ?? '...................',
+            'nip' => $sekolah->nip_pengurus_barang ?? '-',
+            'jabatan' => 'Pengurus Barang',
+        ];
+
+        // 4. ITEM (SAMA PERSIS cetakSatuan)
+        $items = $belanja->rincis->map(function ($item) {
+            return (object) [
+                'nama_barang' => $item->namakomponen,
+                'satuan' => $item->rkas->satuan ?? $item->satuan,
+                'qty' => $item->volume,
+
+                'harga_satuan' => $item->harga_satuan,
+                'harga_penawaran' => $item->harga_penawaran,
+
+                'qty_pesan' => $item->volume,
+                'qty_terima' => $item->volume,
+                'qty_tolak' => 0,
+                'qty_sesuai' => $item->volume,
+            ];
+        });
+
+        /**
+         * 5. HELPER PEMBUAT $surat
+         * IDENTIK dengan cetakSatuan
+         */
+        $buatSurat = function ($kodeJenis, $jenisLabel) use ($belanja) {
+
+            $suratDb = $belanja->surats->where('jenis_surat', $kodeJenis)->first();
+
+            $noSurat = 'DRAFT (Belum Generate)';
+            $tglSurat = now();
+            $sifat = 'Segera';
+            $lampiran = '-';
+
+            if ($suratDb) {
+                $noSurat = $suratDb->nomor_surat;
+                $tglSurat = $suratDb->tanggal_surat;
+                $sifat = $suratDb->sifat ?? 'Segera';
+                $lampiran = $suratDb->lampiran ?? '-';
+            }
+
+            if ($kodeJenis === 'BAPB') {
+                $tglSurat = $belanja->tanggal_bast
+                    ? Carbon::parse($belanja->tanggal_bast)
+                    : ($suratDb ? $suratDb->tanggal_surat : now());
+            }
+
+            return (object) [
+                'nomor_surat' => $noSurat,
+                'tanggal_surat' => $tglSurat->format('Y-m-d'),
+
+                'anggaran' => $belanja->anggaran,
+                'periode' => 'Triwulan '.($belanja->triwulan ?? 1),
+                'kode_rekening' => $belanja->korek->ket ?? '-',
+                'nama_kegiatan' => $belanja->uraian,
+
+                'perihal' => $jenisLabel.' '.$belanja->uraian,
+                'sifat' => $sifat,
+                'lampiran' => $lampiran,
+
+                'nama_pekerjaan' => $belanja->uraian,
+                'hari_ini' => $tglSurat->translatedFormat('l'),
+                'tanggal_terbilang' => $this->terbilangTanggal($tglSurat),
+            ];
+        };
+
+        /**
+         * 6. RENDER BUNDEL (loop di controller)
+         */
+        $html = '';
+
+        $jenisSurat = [
+            'permintaan' => ['PH', 'Permintaan Harga'],
+            'negosiasi' => ['NH', 'Negosiasi Harga'],
+            'pesanan' => ['SP', 'Pesanan Barang'],
+            'pemeriksaan' => ['BAPB', 'Berita Acara Pemeriksaan'],
+        ];
+
+        foreach ($jenisSurat as $jenis => [$kode, $label]) {
+            $surat = $buatSurat($kode, $label);
+
+            $html .= view('surat.print_manager', [
+                'mode' => 'satuan',
+                'jenis_surat' => $jenis === 'pemeriksaan' ? 'berita_acara' : $jenis,
+                'surat' => $surat,
+                'sekolah' => $sekolah,
+                'rekanan' => $rekanan,
+                'items' => $items,
+                'kepala_sekolah' => $kepalaSekolah,
+                'pengurus_barang' => $pengurusBarang,
+                'belanja' => $belanja,
+            ])->render();
+
+            $html .= '<div style="page-break-after: always;"></div>';
+        }
+
+        return $html;
+    }
+
+    public function cetakPdf($id)
+    {
+        Carbon::setLocale('id');
+
+        // ==========================================
+        // 1 - 5. LOGIKA DATA (SAMA PERSIS KODE ANDA)
+        // ==========================================
+
+        // 1. DATA BELANJA
+        $belanja = Belanja::with([
+            'rincis.rkas', 'rekanan', 'korek', 'user.sekolah', 'surats', 'anggaran',
+        ])->findOrFail($id);
+
+        // 2. DATA SEKOLAH
+        $sekolah = $belanja->user->sekolah ?? Auth::user()->sekolah;
+        if (! $sekolah) {
+            $sekolah = Sekolah::find(Auth::user()->sekolah_id);
+            if (! $sekolah) {
+                return back()->with('error', 'Data Sekolah tidak ditemukan');
+            }
+        }
+        $rekanan = $belanja->rekanan;
+
+        // 3. PEJABAT
+        $kepalaSekolah = (object) [
+            'nama' => $sekolah->nama_kepala_sekolah,
+            'nip' => $sekolah->nip_kepala_sekolah,
+        ];
+        $pengurusBarang = (object) [
+            'nama' => $sekolah->nama_pengurus_barang ?? '...................',
+            'nip' => $sekolah->nip_pengurus_barang ?? '-',
+            'jabatan' => 'Pengurus Barang',
+        ];
+
+        // 4. ITEM
+        $items = $belanja->rincis->map(function ($item) {
+            return (object) [
+                'nama_barang' => $item->namakomponen,
+                'satuan' => $item->rkas->satuan ?? $item->satuan,
+                'qty' => $item->volume,
+                'harga_satuan' => $item->harga_satuan,
+                'harga_penawaran' => $item->harga_penawaran,
+                'qty_pesan' => $item->volume,
+                'qty_terima' => $item->volume,
+                'qty_tolak' => 0,
+                'qty_sesuai' => $item->volume,
+            ];
+        });
+
+        // 5. HELPER PEMBUAT SURAT
+        $buatSurat = function ($kodeJenis, $jenisLabel) use ($belanja) {
+            $suratDb = $belanja->surats->where('jenis_surat', $kodeJenis)->first();
+
+            $noSurat = 'DRAFT (Belum Generate)';
+            $tglSurat = now();
+            $sifat = 'Segera';
+            $lampiran = '-';
+
+            if ($suratDb) {
+                $noSurat = $suratDb->nomor_surat;
+                $tglSurat = $suratDb->tanggal_surat;
+                $sifat = $suratDb->sifat ?? 'Segera';
+                $lampiran = $suratDb->lampiran ?? '-';
+            }
+
+            if ($kodeJenis === 'BAPB') {
+                $tglSurat = $belanja->tanggal_bast
+                    ? Carbon::parse($belanja->tanggal_bast)
+                    : ($suratDb ? $suratDb->tanggal_surat : now());
+            }
+
+            return (object) [
+                'nomor_surat' => $noSurat,
+                'tanggal_surat' => $tglSurat->format('Y-m-d'),
+                'anggaran' => $belanja->anggaran,
+                'periode' => 'Triwulan '.($belanja->triwulan ?? 1),
+                'kode_rekening' => $belanja->korek->ket ?? '-',
+                'nama_kegiatan' => $belanja->uraian,
+                'perihal' => $jenisLabel.' '.$belanja->uraian,
+                'sifat' => $sifat,
+                'lampiran' => $lampiran,
+                'nama_pekerjaan' => $belanja->uraian,
+                'hari_ini' => $tglSurat->translatedFormat('l'),
+                'tanggal_terbilang' => $this->terbilangTanggal($tglSurat),
+            ];
+        };
+
+        // ==========================================
+        // 6. RENDER LOOPING CONTENT (HTML BODY)
+        // ==========================================
+        $contentHtml = ''; // Saya rename jadi contentHtml biar jelas
+
+        $jenisSurat = [
+            'permintaan' => ['PH', 'Permintaan Harga'],
+            'negosiasi' => ['NH', 'Negosiasi Harga'],
+            'pesanan' => ['SP', 'Pesanan Barang'],
+            'pemeriksaan' => ['BAPB', 'Berita Acara Pemeriksaan'],
+        ];
+
+        // Loop Surat
+        $counter = 0;
+        $totalSurat = count($jenisSurat);
+
+        foreach ($jenisSurat as $jenis => [$kode, $label]) {
+            $counter++;
+            $surat = $buatSurat($kode, $label);
+
+            $contentHtml .= view('surat.print_manager', [
+                'mode' => 'satuan',
+                'jenis_surat' => $jenis === 'pemeriksaan' ? 'berita_acara' : $jenis,
+                'surat' => $surat,
+                'sekolah' => $sekolah,
+                'rekanan' => $rekanan,
+                'items' => $items,
+                'kepala_sekolah' => $kepalaSekolah,
+                'pengurus_barang' => $pengurusBarang,
+                'belanja' => $belanja,
+            ])->render();
+
+        }
+
+        // ==========================================
+        // 7. PEMBUNGKUS PDF (WRAPPER)
+        // ==========================================
+
+        // Tentukan path font storage (Safe Mode)
+        $fontDir = storage_path('fonts');
+        if (! file_exists($fontDir)) {
+            mkdir($fontDir, 0755, true);
+        }
+
+        // Bungkus HTML Content dengan Layout PDF, CSS, & Font Definition
+        $finalHtml = $contentHtml;
+
+        // ==========================================
+        // 8. GENERATE PDF
+        // ==========================================
+
+        $pdf = Pdf::loadHTML($finalHtml);
+
+        // Setup Opsi (Wajib mengarah ke storage/fonts)
+        $pdf->setOptions([
+            'font_dir' => $fontDir,
+            'font_cache' => $fontDir,
+            'default_font' => 'Arial',
+            'isRemoteEnabled' => true,      // Wajib TRUE agar gambar & font jalan
+            'isHtml5ParserEnabled' => true,
+        ]);
+
+        // Nama File
+        $namaFile = 'Bundel_'.preg_replace('/[^A-Za-z0-9\-]/', '-', $belanja->no_bukti).'.pdf';
+
+        return $pdf->stream($namaFile);
+    }
+
+    public function cetakSatuanPdf($id, $jenis)
+    {
+        Carbon::setLocale('id');
+
+        // ==========================================
+        // 1 - 4. LOGIKA DATA (SAMA PERSIS)
+        // ==========================================
+
+        // 1. DATA BELANJA
+        $belanja = Belanja::with([
+            'rincis.rkas', 'rekanan', 'korek', 'user.sekolah', 'surats', 'anggaran',
+        ])->findOrFail($id);
+
+        // 2. DATA SEKOLAH
+        $sekolah = $belanja->user->sekolah ?? Auth::user()->sekolah;
+        if (! $sekolah) {
+            $sekolah = Sekolah::find(Auth::user()->sekolah_id);
+            if (! $sekolah) {
+                return back()->with('error', 'Data Sekolah tidak ditemukan');
+            }
+        }
+        $rekanan = $belanja->rekanan;
+
+        // 3. PEJABAT
+        $kepalaSekolah = (object) [
+            'nama' => $sekolah->nama_kepala_sekolah,
+            'nip' => $sekolah->nip_kepala_sekolah,
+        ];
+        $pengurusBarang = (object) [
+            'nama' => $sekolah->nama_pengurus_barang ?? '...................',
+            'nip' => $sekolah->nip_pengurus_barang ?? '-',
+            'jabatan' => 'Pengurus Barang',
+        ];
+
+        // 4. ITEM
+        $items = $belanja->rincis->map(function ($item) {
+            return (object) [
+                'nama_barang' => $item->namakomponen,
+                'satuan' => $item->rkas->satuan ?? $item->satuan,
+                'qty' => $item->volume,
+                'harga_satuan' => $item->harga_satuan,
+                'harga_penawaran' => $item->harga_penawaran,
+                'qty_pesan' => $item->volume,
+                'qty_terima' => $item->volume,
+                'qty_tolak' => 0,
+                'qty_sesuai' => $item->volume,
+            ];
+        });
+
+        // ==========================================
+        // 5. MEMILIH JENIS SURAT (ADAPTASI DISINI)
+        // ==========================================
+
+        // Mapping URL param ke Kode Database & Label
+        $configSurat = [
+            'permintaan' => ['PH', 'Permintaan Harga'],
+            'negosiasi' => ['NH', 'Negosiasi Harga'],
+            'pesanan' => ['SP', 'Pesanan Barang'],
+            'berita_acara' => ['BAPB', 'Berita Acara Pemeriksaan'],
+            'pemeriksaan' => ['BAPB', 'Berita Acara Pemeriksaan'], // Alias
+        ];
+
+        if (! isset($configSurat[$jenis])) {
+            abort(404, 'Jenis surat tidak ditemukan');
+        }
+
+        // Ambil konfigurasi untuk jenis yang dipilih
+        [$kode, $label] = $configSurat[$jenis];
+
+        // Helper Pembuat Surat (Dijalankan sekali saja utk jenis ini)
+        $buatSurat = function ($kodeJenis, $jenisLabel) use ($belanja) {
+            $suratDb = $belanja->surats->where('jenis_surat', $kodeJenis)->first();
+
+            $noSurat = 'DRAFT (Belum Generate)';
+            $tglSurat = now();
+            $sifat = 'Segera';
+            $lampiran = '-';
+
+            if ($suratDb) {
+                $noSurat = $suratDb->nomor_surat;
+                $tglSurat = $suratDb->tanggal_surat;
+                $sifat = $suratDb->sifat ?? 'Segera';
+                $lampiran = $suratDb->lampiran ?? '-';
+            }
+
+            if ($kodeJenis === 'BAPB') {
+                $tglSurat = $belanja->tanggal_bast
+                    ? Carbon::parse($belanja->tanggal_bast)
+                    : ($suratDb ? $suratDb->tanggal_surat : now());
+            }
+
+            return (object) [
+                'nomor_surat' => $noSurat,
+                'tanggal_surat' => $tglSurat->format('Y-m-d'),
+                'anggaran' => $belanja->anggaran,
+                'periode' => 'Triwulan '.($belanja->triwulan ?? 1),
+                'kode_rekening' => $belanja->korek->ket ?? '-',
+                'nama_kegiatan' => $belanja->uraian,
+                'perihal' => $jenisLabel.' '.$belanja->uraian,
+                'sifat' => $sifat,
+                'lampiran' => $lampiran,
+                'nama_pekerjaan' => $belanja->uraian,
+                'hari_ini' => $tglSurat->translatedFormat('l'),
+                'tanggal_terbilang' => $this->terbilangTanggal($tglSurat),
+            ];
+        };
+
+        // Jalankan Helper
+        $surat = $buatSurat($kode, $label);
+
+        // ==========================================
+        // 6. RENDER KONTEN HTML (SATU FILE SAJA)
+        // ==========================================
+
+        // Normalisasi nama view (jika 'pemeriksaan' ubah jadi 'berita_acara')
+        $viewJenis = ($jenis == 'pemeriksaan') ? 'berita_acara' : $jenis;
+
+        // Render View Partial (Konten Bersih)
+        $contentHtml = view('surat.print_manager', [
+            'jenis_surat' => $viewJenis,
+            'surat' => $surat,
+            'sekolah' => $sekolah,
+            'rekanan' => $rekanan,
+            'items' => $items,
+            'kepala_sekolah' => $kepalaSekolah,
+            'pengurus_barang' => $pengurusBarang,
+            'belanja' => $belanja,
+        ])->render();
+
+        // ==========================================
+        // 7. WRAPPER PDF (STYLE, FONT, MARGIN)
+        // ==========================================
+
+        $fontDir = storage_path('fonts');
+        if (! file_exists($fontDir)) {
+            mkdir($fontDir, 0755, true);
+        }
+
+        // Kita bungkus $contentHtml dengan Struktur HTML Lengkap + CSS
+        // Ini PENTING agar font Arial dan Margin F4 terbaca
+        $finalHtml = '
+    <!DOCTYPE html>
+    <html lang="id">
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            /* 1. LOAD FONT ARIAL */
+            @font-face {
+                font-family: "Arial"; font-weight: normal; font-style: normal;
+                src: url("file://'.$fontDir.'/arial.ttf") format("truetype");
+            }
+            @font-face {
+                font-family: "Arial"; font-weight: bold; font-style: normal;
+                src: url("file://'.$fontDir.'/arialbd.ttf") format("truetype");
+            }
+
+            /* 2. SETUP KERTAS F4 & MARGIN AMAN */
+            @page {
+                size: 215mm 330mm;
+                /* Margin: Atas Kanan Bawah Kiri */
+                margin: 1.5cm 2cm 1.5cm 2.5cm;
+            }
+
+            body {
+                font-family: "Arial", sans-serif;
+                font-size: 11pt;
+                line-height: 1.3;
+                margin: 0; padding: 0;
+            }
+
+            /* 3. CSS TABEL ANTI-NABRAK */
+            .table-items {
+                width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 10pt;
+                table-layout: fixed; /* Kunci agar tidak melar */
+                word-wrap: break-word;
+            }
+            .table-items th, .table-items td {
+                border: 1px solid black; padding: 4px; vertical-align: top; overflow: hidden;
+            }
+            .table-items th {
+                background: #f0f0f0; text-align: center; vertical-align: middle;
+            }
+
+            /* 4. UTILITIES */
+            .text-center { text-align: center; }
+            .text-right { text-align: right; }
+            .bold { font-weight: bold; }
+
+            /* Wrapper Tanda Tangan agar tidak terpotong */
+            .ttd-container { page-break-inside: avoid; }
+        </style>
+    </head>
+    <body>
+        '.$contentHtml.'
+    </body>
+    </html>';
+
+        // ==========================================
+        // 8. GENERATE PDF
+        // ==========================================
+
+        $pdf = Pdf::loadHTML($finalHtml);
+
+        $pdf->setOptions([
+            'font_dir' => $fontDir,
+            'font_cache' => $fontDir,
+            'default_font' => 'Arial',
+            'isRemoteEnabled' => true,
+            'isHtml5ParserEnabled' => true,
+        ]);
+
+        // Nama File
+        $namaFile = strtoupper($jenis).'_'.preg_replace('/[^A-Za-z0-9\-]/', '-', $belanja->no_bukti).'.pdf';
+
+        return $pdf->stream($namaFile);
+    }
+
+    // --- Helper Terbilang (Sama seperti sebelumnya) ---
+    private function terbilangTanggal($carbonDate)
+    {
+        // 1. Pastikan angka tanggal & tahun menjadi huruf kecil (lowercase)
+        // trim() digunakan untuk menghapus spasi di depan/belakang jika ada
+        $tanggal = strtolower(trim($this->penyebut($carbonDate->day)));
+        $tahun = strtolower(trim($this->penyebut($carbonDate->year)));
+
+        // 2. Ambil nama bulan (Format 'F' di Carbon sudah otomatis Kapital di awal: "Januari")
+        $bulan = $carbonDate->translatedFormat('F');
+
+        // 3. Gabungkan manual tanpa ucwords()
+        // Output contoh: "sepuluh bulan Januari tahun dua ribu dua puluh enam"
+        return "$tanggal bulan $bulan tahun $tahun";
+    }
+
+    private function penyebut($nilai)
+    {
+        $nilai = abs($nilai);
+        $huruf = ['', 'satu', 'dua', 'tiga', 'empat', 'lima', 'enam', 'tujuh', 'delapan', 'sembilan', 'sepuluh', 'sebelas'];
+        $temp = '';
+        if ($nilai < 12) {
+            $temp = ' '.$huruf[$nilai];
+        } elseif ($nilai < 20) {
+            $temp = $this->penyebut($nilai - 10).' belas';
+        } elseif ($nilai < 100) {
+            $temp = $this->penyebut($nilai / 10).' puluh'.$this->penyebut($nilai % 10);
+        } elseif ($nilai < 200) {
+            $temp = ' seratus'.$this->penyebut($nilai - 100);
+        } elseif ($nilai < 1000) {
+            $temp = $this->penyebut($nilai / 100).' ratus'.$this->penyebut($nilai % 100);
+        } elseif ($nilai < 2000) {
+            $temp = ' seribu'.$this->penyebut($nilai - 1000);
+        } elseif ($nilai < 1000000) {
+            $temp = $this->penyebut($nilai / 1000).' ribu'.$this->penyebut($nilai % 1000);
+        }
+
+        return $temp;
     }
 }

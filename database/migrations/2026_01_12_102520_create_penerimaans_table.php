@@ -18,6 +18,9 @@ return new class extends Migration
             $table->string('no_bukti');
             $table->string('uraian');
             $table->decimal('nominal', 15, 2);
+
+            $table->integer('tw')->nullable();
+
             $table->timestamps();
         });
     }

@@ -47,6 +47,7 @@ class KegiatanSeeder extends Seeder
                         'namagiat' => $data[5] ?? null,
                         'kegiatan' => $data[6] ?? null,
                         'link' => $data[8] ?? null,
+                        'sekolah_id' => 1,
                         'created_at' => now(),
                         'updated_at' => now(),
                     ]

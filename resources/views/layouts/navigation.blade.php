@@ -14,7 +14,7 @@
                     </x-nav-link>
 
                     <div class="hidden sm:flex sm:items-center sm:ms-6">
-                        <x-dropdown align="right" width="48">
+                        <x-dropdown align="left" width="48">
                             <x-slot name="trigger">
                                 <button
                                     class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white dark:bg-gray-800 hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
@@ -36,12 +36,14 @@
                                 </x-dropdown-link>
                                 <x-dropdown-link :href="route('akb.rincian')">{{ __('Rincian Per Komponen') }}
                                 </x-dropdown-link>
+                                <x-dropdown-link :href="route('akb.satuan')">{{ __('Format Excel') }}
+                                </x-dropdown-link>
                             </x-slot>
                         </x-dropdown>
                     </div>
 
                     <div class="hidden sm:flex sm:items-center sm:ms-6">
-                        <x-dropdown align="right" width="48">
+                        <x-dropdown align="left" width="48">
 
                             <x-slot name="trigger">
                                 <button
@@ -138,16 +140,14 @@
 
                                 <div class="border-t border-gray-100 dark:border-gray-600"></div>
 
-                                <x-dropdown-link :href="route('belanja.export_excel')">
-                                    {{ __('Download Belanja') }}
-                                </x-dropdown-link>
+
 
                             </x-slot>
                         </x-dropdown>
                     </div>
 
                     <div class="hidden sm:flex sm:items-center sm:ms-6">
-                        <x-dropdown align="right" width="48">
+                        <x-dropdown align="left" width="48">
 
                             <x-slot name="trigger">
                                 <button
@@ -204,6 +204,7 @@
                                             <x-dropdown-link :href="route('realisasi.korek')">
                                                 {{ __('Per Korek') }}
                                             </x-dropdown-link>
+
                                         </div>
                                     </div>
 
@@ -214,7 +215,7 @@
 
                     @role('admin')
                     <div class="hidden sm:flex sm:items-center sm:ms-6">
-                        <x-dropdown align="right" width="48">
+                        <x-dropdown align="left" width="48">
                             <x-slot name="trigger">
                                 <button
                                     class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white dark:bg-gray-800 hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
@@ -272,7 +273,7 @@
                 </div>
                 @endif
 
-                <x-dropdown align="right" width="48">
+                <x-dropdown align="left" width="48">
                     <x-slot name="trigger">
                         <button
                             class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none transition ease-in-out duration-150">

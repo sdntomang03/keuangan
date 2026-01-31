@@ -50,6 +50,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/akb/generate', [AkbController::class, 'generate'])->name('akb.generate');
     Route::get('/akb/rincianakb', [AkbController::class, 'indexRincian'])->name('akb.indexrincian');
     Route::get('/akb/export-excel', [AkbController::class, 'exportExcel'])->name('akb.export_excel');
+    Route::get('/akb/satuan', [AkbController::class, 'satuan'])->name('akb.satuan');
 
 });
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -176,6 +177,13 @@ Route::middleware(['auth'])->prefix('surat')->group(function () {
         ->name('surat.delete_foto');
     // Proses Simpan
     Route::put('/{id}/update-penawaran', [BelanjaController::class, 'updatePenawaran'])->name('belanja.update_penawaran');
+    Route::get('/cetak-bundel/{id}', [SuratController::class, 'cetakBundel'])->name('surat.cetak_bundel');
+    Route::get('/belanja/{id}/download-bundel', [SuratController::class, 'downloadBundel'])
+        ->name('belanja.downloadBundel');
+    // Cetak Satuan (ID Belanja + Jenis Surat)
+    Route::get('/cetak-satuan/{id}/{jenis}', [SuratController::class, 'cetakSatuan'])->name('surat.cetak_satuan');
+    Route::get('/cetakpdf/{id}', [SuratController::class, 'cetakPdf'])->name('surat.cetakpdf');
+    Route::get('/tessatuan/{id}/{jenis}', [SuratController::class, 'cetakSatuanPdf']);
 });
 
 Route::group(['middleware' => ['auth']], function () {

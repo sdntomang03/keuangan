@@ -14,16 +14,36 @@ class BkuController extends Controller
     public function index(Request $request, BkuService $bkuService)
     {
         $anggaran = $request->anggaran_data;
-
         if (! $anggaran) {
-            return redirect()->route('sekolah.index')->with('error', 'Pilih Anggaran Aktif.');
+            return redirect()->route('sekolah.index');
         }
 
-        // Panggil service untuk mendapatkan data yang sudah ada saldonya
-        $bkus = $bkuService->getBkuWithBalance($anggaran->id);
+        // 1. Ambil Data Sekolah & TW Aktif
         $sekolah = Sekolah::find(auth()->user()->sekolah_id);
+        $twAktif = (int) filter_var($sekolah->triwulan_aktif, FILTER_SANITIZE_NUMBER_INT);
 
-        return view('bku.index', compact('bkus', 'anggaran', 'sekolah'));
+        // 2. LOGIKA DEFAULT FILTER
+        // Jika user memilih filter (ada ?tw=... di URL), pakai pilihan user.
+        // Jika baru buka halaman (tidak ada ?tw=), pakai TW Aktif sebagai default.
+        if ($request->has('tw')) {
+            $filterTw = $request->get('tw'); // Bisa angka '1' atau null (jika pilih Semua)
+        } else {
+            $filterTw = $twAktif; // Default otomatis ke TW Aktif
+        }
+
+        // 3. Panggil Service dengan filter yang sudah ditentukan
+        $bkus = $bkuService->getBkuWithBalance($anggaran->id, $filterTw);
+
+        // 4. Hitung Saldo Awal (Logic sama seperti sebelumnya)
+        $saldoAwal = 0;
+        if ($filterTw && $filterTw > 1) {
+            $saldoAwal = Bku::where('anggaran_id', $anggaran->id)
+                ->where('tw', '<', $filterTw)
+                ->sum(DB::raw('debit - kredit'));
+        }
+
+        // Kirim variabel $filterTw ke View agar dropdown terpilih otomatis
+        return view('bku.index', compact('bkus', 'anggaran', 'saldoAwal', 'filterTw'));
     }
 
     /**

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Bku;
 use App\Models\Penerimaan;
+use App\Models\Sekolah;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -24,17 +25,18 @@ class PenerimaanController extends Controller
         if (! $anggaran) {
             return redirect()->back()->with('error', 'Anggaran aktif tidak ditemukan.');
         }
-
         try {
             DB::transaction(function () use ($request, $anggaran) {
+                $sekolah = Sekolah::where('id', auth()->user()->sekolah_id)->first();
                 // 2. Simpan data penerimaan dengan ID anggaran & User ID
+
                 $p = Penerimaan::create([
                     'tanggal' => $request->tanggal,
                     'no_bukti' => $request->no_bukti,
                     'uraian' => $request->uraian,
                     'nominal' => $request->nominal,
                     'anggaran_id' => $anggaran->id,
-
+                    'tw' => $sekolah->triwulan_aktif,
                 ]);
 
                 // 3. Masuk ke DEBIT BKU dengan anggaran_id (Parameter ke-8)
@@ -49,6 +51,7 @@ class PenerimaanController extends Controller
                     null,        // pajak_id
                     $anggaran->id, // anggaran_id
                     $p->id,      // penerimaan_id
+                    $sekolah->triwulan_aktif,
                 );
             });
 

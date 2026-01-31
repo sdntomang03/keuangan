@@ -25,14 +25,26 @@ class BkuService
     /**
      * Mengambil data BKU sekaligus menghitung saldonya
      */
-    public function getBkuWithBalance($anggaranId)
+    // Tambahkan parameter optional $filterTw = null
+    public function getBkuWithBalance($anggaranId, $filterTw = null)
     {
+        // 1. Ambil SEMUA data dulu (Supaya perhitungan saldo berjalan benar dari awal tahun)
         $bkus = Bku::with(['belanja.kegiatan', 'belanja.rekanan', 'penerimaan'])
             ->where('anggaran_id', $anggaranId)
             ->orderBy('tanggal', 'asc')
             ->orderBy('no_urut', 'asc')
             ->get();
 
-        return $this->calculateRunningBalance($bkus);
+        // 2. Hitung Saldo Berjalan (Fungsi ini menambahkan properti 'saldo_cair' ke setiap item)
+        $bkusWithBalance = $this->calculateRunningBalance($bkus);
+
+        // 3. Baru Filter datanya JIKA ada request filter TW
+        if ($filterTw) {
+            // Kita filter Collection-nya, bukan Query SQL-nya
+            // values() digunakan untuk mereset index array agar rapi saat di-loop di View
+            return $bkusWithBalance->where('tw', $filterTw)->values();
+        }
+
+        return $bkusWithBalance;
     }
 }

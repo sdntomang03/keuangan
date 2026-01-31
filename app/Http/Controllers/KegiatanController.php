@@ -10,7 +10,10 @@ class KegiatanController extends Controller
 {
     public function index()
     {
-        $kegiatans = Kegiatan::latest()->paginate(10);
+
+        $kegiatans = Kegiatan::where('sekolah_id', auth()->user()->sekolah_id)
+            ->latest()
+            ->paginate(10);
 
         return view('kegiatan.index', compact('kegiatans'));
     }
@@ -35,6 +38,7 @@ class KegiatanController extends Controller
             'namagiat' => 'nullable|string',
             'kegiatan' => 'nullable|string', // Deskripsi
             'link' => 'nullable|url',    // Validasi URL jika diisi
+            'sekolah_id' => auth()->user()->sekolah_id,
         ]);
 
         Kegiatan::create($validated);
@@ -66,6 +70,7 @@ class KegiatanController extends Controller
             'namagiat' => 'nullable|string',
             'kegiatan' => 'nullable|string',
             'link' => 'nullable|url',
+            'sekolah_id' => auth()->user()->sekolah_id,
         ]);
 
         $kegiatan->update($validated);

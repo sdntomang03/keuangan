@@ -22,6 +22,7 @@ return new class extends Migration
             $table->text('kegiatan')->nullable();        // Deskripsi panjang kegiatan
             $table->string('idbl')->unique();
             $table->text('link')->nullable();            // URL atau Link terkait
+            $table->integer('sekolah_id')->nullable();
             $table->timestamps();
         });
     }

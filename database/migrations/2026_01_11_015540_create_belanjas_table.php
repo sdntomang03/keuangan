@@ -29,6 +29,7 @@ return new class extends Migration
             $table->decimal('transfer', 15, 2); // Netto (Total - Pajak)
             $table->enum('status', ['draft', 'posted', 'deleted'])->default('draft');
             $table->foreignId('anggaran_id')->nullable()->constrained('anggarans')->onDelete('cascade');
+            $table->integer('tw')->nullable();
             $table->timestamps();
         });
     }

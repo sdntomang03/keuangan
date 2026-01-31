@@ -1,32 +1,55 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            {{-- BAGIAN KIRI: JUDUL --}}
             <div>
                 <h2 class="text-3xl font-black text-gray-900 tracking-tight uppercase">
                     {{ __('Manajemen Belanja') }}
                 </h2>
-                <p class="text-sm text-gray-500 mt-1">Kelola data transaksi, rincian komponen, dan laporan pajak dalam
-                    satu dasbor.</p>
+                <p class="text-sm text-gray-500 mt-1">
+                    Kelola data transaksi, rincian komponen, dan laporan pajak dalam satu dasbor.
+                </p>
             </div>
 
-            <div class="flex flex-wrap gap-3">
-                <a href="{{ route('belanja.export') }}"
-                    class="inline-flex items-center px-5 py-2.5 bg-emerald-600 border border-transparent rounded-xl font-bold text-xs text-white uppercase tracking-widest hover:bg-emerald-700 active:bg-emerald-800 transition shadow-md hover:shadow-lg gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    Export Excel
-                </a>
+            {{-- BAGIAN KANAN: FILTER & TOMBOL AKSI --}}
+            <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
 
-                <a href="{{ route('belanja.create') }}"
-                    class="inline-flex items-center px-5 py-2.5 bg-indigo-600 border border-transparent rounded-xl font-bold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-900 transition shadow-md hover:shadow-lg gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
-                    Tambah Transaksi
-                </a>
+                {{-- 1. Filter Triwulan --}}
+                <form method="GET" action="{{ route('belanja.index') }}" class="w-full sm:w-auto">
+                    <select name="tw"
+                        class="w-full sm:w-48 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-xl shadow-sm text-sm font-medium text-gray-700 py-2.5"
+                        onchange="this.form.submit()">
+                        <option value="">-- Semua Triwulan --</option>
+                        <option value="1" {{ request('tw')=='1' ? 'selected' : '' }}>Triwulan 1</option>
+                        <option value="2" {{ request('tw')=='2' ? 'selected' : '' }}>Triwulan 2</option>
+                        <option value="3" {{ request('tw')=='3' ? 'selected' : '' }}>Triwulan 3</option>
+                        <option value="4" {{ request('tw')=='4' ? 'selected' : '' }}>Triwulan 4</option>
+                    </select>
+                </form>
+
+                {{-- 2. Tombol Action --}}
+                <div class="flex gap-3">
+                    {{-- Tombol Export --}}
+                    <a href="{{ route('belanja.export') }}"
+                        class="inline-flex items-center justify-center px-5 py-2.5 bg-emerald-600 border border-transparent rounded-xl font-bold text-xs text-white uppercase tracking-widest hover:bg-emerald-700 active:bg-emerald-800 transition shadow-md hover:shadow-lg gap-2 whitespace-nowrap">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Download
+                    </a>
+
+                    {{-- Tombol Tambah --}}
+                    <a href="{{ route('belanja.create') }}"
+                        class="inline-flex items-center justify-center px-5 py-2.5 bg-indigo-600 border border-transparent rounded-xl font-bold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-900 transition shadow-md hover:shadow-lg gap-2 whitespace-nowrap">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Tambah
+                    </a>
+
+                </div>
             </div>
         </div>
     </x-slot>
@@ -171,9 +194,9 @@
                                             </a>
 
                                             @if($belanja->status == 'posted')
-                                            <a href="{{ route('belanja.print', $belanja->id) }}"
-                                                title="Cetak Dokumen Word"
-                                                class="text-gray-400 hover:text-blue-600 transition-colors">
+                                            <a href="{{ route('surat.cetakpdf', $belanja->id) }}" title="Cetak PDF"
+                                                class="text-gray-400 hover:text-blue-600 transition-colors"
+                                                target="_blank">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
                                                     viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round"

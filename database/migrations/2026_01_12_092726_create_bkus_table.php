@@ -29,7 +29,7 @@ return new class extends Migration
             $table->foreignId('pajak_id')->nullable()->constrained('pajaks')->onDelete('cascade');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->timestamps();
-
+            $table->integer('tw')->nullable();
             // Indexing agar query cepat saat data sudah ribuan
             $table->index(['anggaran_id']);
         });

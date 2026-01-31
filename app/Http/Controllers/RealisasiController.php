@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DasarPajak;
 use App\Models\Rkas;
 use App\Models\Sekolah;
 use Illuminate\Http\Request;
@@ -75,7 +76,7 @@ class RealisasiController extends Controller
             default => null, // Tahunan (ambil semua)
         };
 
-        $persenPpn = \App\Models\DasarPajak::where('nama_pajak', 'PPN')->value('persen') ?? 11;
+        $persenPpn = DasarPajak::where('nama_pajak', 'PPN')->value('persen') ?? 11;
         $multiplier = 1 + ($persenPpn / 100);
 
         $dataRkas = Rkas::with(['kegiatan', 'korek'])

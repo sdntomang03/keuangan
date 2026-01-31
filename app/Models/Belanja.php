@@ -29,6 +29,7 @@ class Belanja extends Model
         'anggaran_id',
         'tanggal_bast',
         'no_bast',
+        'tw',
 
     ];
 

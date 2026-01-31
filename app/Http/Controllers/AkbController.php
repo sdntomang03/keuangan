@@ -251,4 +251,16 @@ class AkbController extends Controller
             $namaFile
         );
     }
+
+    public function satuan(Request $request)
+    {
+        // Asumsi: $anggaran diambil dari middleware atau request
+        $anggaran = $request->anggaran_data;
+
+        $rkas = Rkas::with(['kegiatan', 'korek', 'akb', 'akbRincis'])
+            ->where('anggaran_id', $anggaran->id)
+            ->get();
+
+        return view('akb.satuan', compact('rkas', 'anggaran'));
+    }
 }

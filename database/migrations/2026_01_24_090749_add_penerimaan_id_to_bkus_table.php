@@ -19,6 +19,7 @@ return new class extends Migration
                 ->after('belanja_id')
                 ->constrained('penerimaans')
                 ->onDelete('cascade');
+
         });
     }
 
