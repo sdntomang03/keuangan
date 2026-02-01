@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Rekanan;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class RekananController extends Controller
 {
@@ -134,5 +136,54 @@ class RekananController extends Controller
 
         return redirect()->route('setting.rekanan.index')
             ->with('success', 'Data Rekanan berhasil dihapus.');
+    }
+
+    public function destroyAll()
+    {
+        $sekolahId = Auth::user()->sekolah_id;
+
+        if (! $sekolahId) {
+            return redirect()->route('setting.rekanan.index')
+                ->with('error', 'Identitas Sekolah tidak ditemukan.');
+        }
+
+        // Mulai Transaksi
+        DB::beginTransaction();
+
+        try {
+            // Coba lakukan penghapusan
+            $deletedCount = Rekanan::where('sekolah_id', $sekolahId)->delete();
+
+            // Jika berhasil tanpa error, Commit perubahan
+            DB::commit();
+
+            if ($deletedCount === 0) {
+                return redirect()->route('setting.rekanan.index')
+                    ->with('warning', 'Tidak ada data rekanan yang dihapus.');
+            }
+
+            return redirect()->route('setting.rekanan.index')
+                ->with('success', "Berhasil menghapus $deletedCount data rekanan.");
+
+        } catch (QueryException $e) {
+            // Jika terjadi error database, Rollback (batalkan semua)
+            DB::rollBack();
+
+            // Cek Kode Error SQL 23000 (Integrity Constraint Violation)
+            if ($e->getCode() == '23000') {
+                return redirect()->route('setting.rekanan.index')
+                    ->with('error', 'GAGAL MENGHAPUS! Data Rekanan masih digunakan dalam data Belanja/SPJ. Silakan hapus data Belanja terkait terlebih dahulu.');
+            }
+
+            // Error lain
+            return redirect()->route('setting.rekanan.index')
+                ->with('error', 'Terjadi kesalahan sistem: '.$e->getMessage());
+        } catch (\Exception $e) {
+            // Error umum PHP
+            DB::rollBack();
+
+            return redirect()->route('setting.rekanan.index')
+                ->with('error', 'Terjadi kesalahan: '.$e->getMessage());
+        }
     }
 }

@@ -81,7 +81,7 @@
     <table class="table-items">
         <thead>
             <tr>
-                <th style="width: 10%;">No</th>
+                <th style="width: 6%;">No</th>
                 <th>Nama Barang/Jasa</th>
                 <th style="width: 15%;">Kuantitas</th>
                 <th style="width: 15%;">Satuan</th>
@@ -93,7 +93,7 @@
                 <td style="text-align:center">{{ $loop->iteration }}</td>
                 <td>{{ $item->nama_barang }}</td>
                 {{-- Menggunakan variabel dinamis qty, bukan angka 1 --}}
-                <td style="text-align:center">{{ $item->qty }}</td>
+                <td style="text-align:center">1</td>
                 <td style="text-align:center">{{ $item->satuan }}</td>
             </tr>
             @endforeach

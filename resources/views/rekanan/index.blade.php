@@ -31,13 +31,15 @@
                             </div>
                             <div>
                                 <h3 class="text-lg font-bold text-gray-800 dark:text-gray-200">Data Rekanan</h3>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Kelola daftar supplier & toko</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Kelola daftar supplier & rekanan</p>
                             </div>
                         </div>
 
-                        <div class="flex items-center gap-3 w-full sm:w-auto">
+                        <div class="flex flex-col sm:flex-row gap-3">
+
+                            {{-- TOMBOL IMPORT --}}
                             <a href="{{ route('setting.rekanan.import') }}"
-                                class="flex-1 sm:flex-none inline-flex justify-center items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg shadow-sm transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">
+                                class="inline-flex justify-center items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg shadow-sm transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 w-full sm:w-auto">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
                                     class="w-5 h-5 mr-2">
                                     <path fill-rule="evenodd"
@@ -47,8 +49,9 @@
                                 {{ __('Import') }}
                             </a>
 
+                            {{-- TOMBOL TAMBAH --}}
                             <a href="{{ route('setting.rekanan.create') }}"
-                                class="flex-1 sm:flex-none inline-flex justify-center items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                class="inline-flex justify-center items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 w-full sm:w-auto">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
                                     class="w-5 h-5 mr-2">
                                     <path fill-rule="evenodd"
@@ -57,6 +60,27 @@
                                 </svg>
                                 {{ __('Tambah') }}
                             </a>
+
+                            {{-- TOMBOL HAPUS SEMUA (Disesuaikan dengan Style Tailwind) --}}
+                            <form id="form-hapus-semua" action="{{ route('setting.rekanan.destroy_all') }}"
+                                method="POST" class="w-full sm:w-auto">
+                                @csrf
+                                @method('DELETE')
+
+                                {{-- Perhatikan: type="button" dan ada onclick --}}
+                                <button type="button" onclick="konfirmasiHapus()"
+                                    class="inline-flex justify-center items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg shadow-sm transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 w-full sm:w-auto">
+
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+                                        class="w-5 h-5 mr-2">
+                                        <path fill-rule="evenodd"
+                                            d="M16.5 4.478v.227a48.816 48.816 0 0 1 3.878.512.75.75 0 1 1-.256 1.478l-.209-.035-1.005 13.07a3 3 0 0 1-2.991 2.77H8.084a3 3 0 0 1-2.991-2.77L4.087 6.66l-.209.035a.75.75 0 0 1-.256-1.478A48.567 48.567 0 0 1 7.5 4.705v-.227c0-1.564 1.213-2.9 2.816-2.951a52.662 52.662 0 0 1 3.369 0c1.603.051 2.815 1.387 2.815 2.951Zm-6.136-1.452a51.196 51.196 0 0 1 3.273 0C14.39 3.05 15 3.684 15 4.478v.113a49.488 49.488 0 0 0-6 0v-.113c0-.794.609-1.428 1.364-1.452Zm-3.536 6.19a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v9.75a.75.75 0 0 1-.75.75h-.008a.75.75 0 0 1-.75-.75v-9.75Zm5.25-.75a.75.75 0 0 1 .75.75v9.75a.75.75 0 0 1-1.5 0v-9.75a.75.75 0 0 1 .75-.75Z"
+                                            clip-rule="evenodd" />
+                                    </svg>
+                                    {{ __('Hapus Semua Data') }}
+                                </button>
+                            </form>
+
                         </div>
                     </div>
 
@@ -229,5 +253,25 @@
                 checkbox.disabled = false;
             });
         }
+    </script>
+    <script>
+        function konfirmasiHapus() {
+        Swal.fire({
+            title: 'Apakah Anda Yakin?',
+            text: "Semua data rekanan akan dihapus permanen dan tidak bisa dikembalikan!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33', // Merah
+            cancelButtonColor: '#3085d6', // Biru
+            confirmButtonText: 'Ya, Hapus Semuanya!',
+            cancelButtonText: 'Batal',
+            reverseButtons: true // Tombol batal di kiri, hapus di kanan (opsional)
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Jika user klik Ya, submit form secara manual via ID
+                document.getElementById('form-hapus-semua').submit();
+            }
+        })
+    }
     </script>
 </x-app-layout>

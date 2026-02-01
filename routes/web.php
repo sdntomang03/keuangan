@@ -124,7 +124,8 @@ Route::middleware(['auth'])->prefix('setting')->name('setting.')->group(function
     Route::get('/rekanan/import', [SettingController::class, 'importRekananView'])->name('rekanan.import');
     Route::get('/rekanan/template', [SettingController::class, 'downloadTemplateRekanan'])->name('rekanan.template');
     Route::post('/rekanan/import', [SettingController::class, 'importRekananStore'])->name('rekanan.import.store');
-
+    Route::delete('/rekanan/destroy-all', [RekananController::class, 'destroyAll'])
+        ->name('rekanan.destroy_all');
     // --- KEGIATAN ---
     // 1. Menampilkan Halaman Form Upload
     Route::get('/kegiatan/import', [SettingController::class, 'importKegiatanView'])
@@ -183,7 +184,8 @@ Route::middleware(['auth'])->prefix('surat')->group(function () {
     // Cetak Satuan (ID Belanja + Jenis Surat)
     Route::get('/cetak-satuan/{id}/{jenis}', [SuratController::class, 'cetakSatuan'])->name('surat.cetak_satuan');
     Route::get('/cetakpdf/{id}', [SuratController::class, 'cetakPdf'])->name('surat.cetakpdf');
-    Route::get('/tessatuan/{id}/{jenis}', [SuratController::class, 'cetakSatuanPdf']);
+    Route::get('/cetaksatuanpdf/{id}/{jenis}', [SuratController::class, 'cetakSatuanPdf'])->name('surat.cetakSatuanPdf');
+    Route::get('/cetakparsialpdf/{id}', [SuratController::class, 'cetakParsialPdf'])->name('surat.cetakParsialPdf');
 });
 
 Route::group(['middleware' => ['auth']], function () {

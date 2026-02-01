@@ -36,7 +36,7 @@ $sekolah = auth()->user()->sekolah;
     }
 
     .kop-spacer-cell {
-        width: 40px;
+        width: 20px;
     }
 
     .kop-text-cell h2 {
@@ -69,16 +69,16 @@ $sekolah = auth()->user()->sekolah;
             <td class="kop-logo-cell">
                 {{-- Pastikan path storage benar --}}
                 <img src="{{ asset('storage/' . ($sekolah->logo ?? 'logo_jakarta.png')) }}" alt="Logo Sekolah"
-                    style="width: 100px; height: auto;">
+                    style="width: 90px; height: auto;">
             </td>
             <td class="kop-text-cell">
                 <h2>PEMERINTAH PROVINSI DAERAH KHUSUS IBUKOTA JAKARTA</h2>
                 <h2>DINAS PENDIDIKAN</h2>
                 <h3>{{ $sekolah->nama_sekolah }}</h3>
-                <p>{{ $sekolah->alamat }} Kel. {{ $sekolah->kelurahan }} Kec. {{ $sekolah->kecamatan }}</p>
-                <p>Telp: {{ $sekolah->telp ?? '-' }} | E-mail: {{ $sekolah->email ?? '-' }}</p>
+                <p>{{ $sekolah->alamat }}, Kel. {{ $sekolah->kelurahan }}, Kec. {{ $sekolah->kecamatan }}</p>
+                <p>Telp {{ $sekolah->telp ?? '-' }} | Email: {{ $sekolah->email ?? '-' }}</p>
                 <p style="letter-spacing: 3px;">{{ strtoupper($sekolah->provinsi ?? 'JAKARTA') }}</p>
-                <p style="text-align:right; font-size:10pt; margin-top:0px; margin-right: -50px;">
+                <p style="text-align:right; font-size:10pt; margin-top:0px; margin-right: -30px;">
                     Kode Pos: {{ $sekolah->kodepos ?? '-' }}
                 </p>
             </td>

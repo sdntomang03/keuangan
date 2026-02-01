@@ -174,14 +174,14 @@
 </table>
 
 {{-- PENUTUP --}}
-<p style="margin-top: 15px; margin-bottom: 15px; line-height: 1.2;">
+<p style="text-align: justify; text-indent: 48px; line-height: 1.6; margin-bottom: 0px;">
     Berita Acara Pemeriksaan Barang/Pekerjaan ini berfungsi sebagai bukti serah terima hasil pekerjaan kepada PIHAK
     PERTAMA.
 </p>
 {{-- BUNGKUS DENGAN DIV INI AGAR TIDAK TERPOTONG --}}
 <div style="page-break-inside: avoid; break-inside: avoid;">
 
-    <p style="margin-bottom: 15px; line-height: 1.2;">
+    <p style="text-align: justify; text-indent: 48px; line-height: 1.6; margin-top: 5px; margin-bottom: 15px;">
         Demikian Berita Acara Pemeriksaan Barang/Pekerjaan ini dibuat dengan sebenarnya untuk dipergunakan sebagaimana
         mestinya.
     </p>

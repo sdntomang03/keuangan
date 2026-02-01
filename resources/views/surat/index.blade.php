@@ -200,12 +200,34 @@
                                     </svg>
                                     <span class="hidden md:inline">Rincian</span>
                                 </button>
-
-                                {{-- 2. TOMBOL CETAK SP (Hanya Muncul Jika SP) --}}
-                                @if($surat->jenis_surat == 'SP')
-                                <a href="{{ route('surat.cetak_sp', $surat->id) }}" target="_blank"
+                                @if($surat->is_parsial == 1)
+                                <a href="{{ route('surat.cetakParsialPdf', $surat->id) }}" target="_blank"
                                     class="px-3 py-2 bg-orange-50 text-orange-600 rounded-xl hover:bg-orange-100 transition-colors text-xs font-bold flex items-center gap-2"
-                                    title="Cetak Surat Pesanan Ini">
+                                    title="Cetak PDF">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                                    </svg>
+                                    <span class="hidden md:inline">Cetak</span>
+                                </a>
+                                @else
+                                @php
+                                // 1. Mapping Kode Database ke Parameter URL Controller
+                                $mapJenis = [
+                                'PH' => 'permintaan',
+                                'NH' => 'negosiasi',
+                                'SP' => 'pesanan',
+                                'BAPB' => 'pemeriksaan',
+                                ];
+
+                                // 2. Tentukan jenis slug (Default ke 'permintaan' jika tidak ketemu)
+                                $jenisSlug = $mapJenis[$surat->jenis_surat] ?? 'permintaan';
+                                @endphp
+                                <a href="{{ route('surat.cetakSatuanPdf', ['id' => $belanja->id, 'jenis' => $jenisSlug]) }}"
+                                    target="_blank"
+                                    class="px-3 py-2 bg-green-50 text-green-600 rounded-xl hover:bg-orange-100 transition-colors text-xs font-bold flex items-center gap-2"
+                                    title="Cetak PDF">
+
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -214,18 +236,6 @@
                                 </a>
                                 @endif
 
-                                {{-- 3. TOMBOL CETAK BAPB (Hanya Muncul Jika BAPB) --}}
-                                @if($surat->jenis_surat == 'BAPB')
-                                <a href="{{ route('surat.cetak_bapb', $surat->id) }}" target="_blank"
-                                    class="px-3 py-2 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-100 transition-colors text-xs font-bold flex items-center gap-2"
-                                    title="Cetak BAPB Ini">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                    </svg>
-                                    <span class="hidden md:inline">Cetak BAPB</span>
-                                </a>
-                                @endif
 
                                 {{-- Separator Kecil --}}
                                 <div class="h-6 w-px bg-gray-200 mx-1"></div>
@@ -235,18 +245,20 @@
                                     class="flex items-center gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200">
 
                                     {{-- Form Update --}}
-                                    <form id="form-{{ $surat->id }}" action="{{ route('surat.update', $surat->id) }}"
-                                        method="POST">
-                                        @csrf @method('PUT')
-                                        <button type="submit"
-                                            class="p-2 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-100 transition-colors shadow-sm"
-                                            title="Simpan Perubahan">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M5 13l4 4L19 7" />
-                                            </svg>
-                                        </button>
-                                    </form>
+                                    <button type="button" onclick="openEditModal(
+            '{{ route('surat.update', $surat->id) }}',
+            '{{ $surat->tanggal_surat->format('Y-m-d') }}',
+            '{{ $surat->nomor_surat }}'
+        )" class="text-blue-600 hover:text-blue-900 ml-2" title="Edit Tanggal">
+
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+                                            viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                    </button>
 
                                     {{-- Form Hapus --}}
                                     <form action="{{ route('surat.destroy', $surat->id) }}" method="POST"
@@ -625,31 +637,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        {{-- B. DETAIL BAPB --}}
-                                        <div class="p-5 bg-emerald-50/50 rounded-3xl border border-emerald-100">
-                                            <p
-                                                class="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-3">
-                                                Detail Berita Acara (BAPB)</p>
-                                            <div class="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <label class="text-[10px] font-bold text-gray-400 mb-1 block">Nomor
-                                                        BAPB</label>
-                                                    <input type="text" name="nomor_bapb" placeholder="Nomor BAPB"
-                                                        :required="jenisSurat === 'BAPB'"
-                                                        class="w-full text-xs border-none rounded-xl p-3 font-bold focus:ring-1 focus:ring-emerald-300">
-                                                </div>
-                                                <div>
-                                                    <label
-                                                        class="text-[10px] font-bold text-gray-400 mb-1 block">Tanggal
-                                                        BAPB</label>
-                                                    <input type="date" name="tanggal_bapb" x-model="tgl_bapb"
-                                                        :required="jenisSurat === 'BAPB'"
-                                                        class="w-full text-xs border-none rounded-xl p-3 font-bold focus:ring-1 focus:ring-emerald-300 bg-emerald-100/50">
-                                                </div>
-                                            </div>
-                                        </div>
 
-                                        {{-- C. DETAIL BAST --}}
 
                                     </div>
                                 </div>
@@ -702,4 +690,82 @@
             </div>
         </div>
     </div>
+
+    <div id="modalEditTanggal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title"
+        role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"
+                onclick="closeModal()"></div>
+
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <div
+                class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full">
+
+                <form id="formEditTanggal" method="POST" action="">
+                    @csrf
+                    @method('PUT')
+
+                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div
+                                class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+                                <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                                    Ubah Tanggal Surat
+                                </h3>
+                                <div class="mt-2">
+                                    <p class="text-sm text-gray-500 mb-4">
+                                        Silakan ubah tanggal surat. Nomor surat akan diurutkan ulang otomatis oleh
+                                        sistem jika tanggal berubah bulan/tahun.
+                                    </p>
+
+                                    <div class="mb-4">
+                                        <label for="modal_tanggal_surat"
+                                            class="block text-sm font-medium text-gray-700">Tanggal Surat</label>
+                                        <input type="date" name="tanggal_surat" id="modal_tanggal_surat" required
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <button type="submit"
+                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                            Simpan Perubahan
+                        </button>
+                        <button type="button" onclick="closeModal()"
+                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                            Batal
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script>
+        function openEditModal(actionUrl, tanggalLama, nomorSurat) {
+        // 1. Set Action Form ke URL Update (Route: surat.update)
+        document.getElementById('formEditTanggal').action = actionUrl;
+
+        // 2. Isi value input tanggal dengan data lama
+        document.getElementById('modal_tanggal_surat').value = tanggalLama;
+
+
+        // 4. Tampilkan Modal
+        document.getElementById('modalEditTanggal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+        // Sembunyikan Modal
+        document.getElementById('modalEditTanggal').classList.add('hidden');
+    }
+    </script>
 </x-app-layout>

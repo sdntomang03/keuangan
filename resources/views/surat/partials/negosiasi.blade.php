@@ -80,7 +80,7 @@
     <table class="table-items">
         <thead>
             <tr>
-                <th style="width: 10%; text-align: center;">No</th>
+                <th style="width: 6%; text-align: center;">No</th>
                 <th>Nama Barang/Jasa</th>
                 <th style="width: 15%; text-align: center;">Kuantitas</th>
                 <th style="width: 15%; text-align: center;">Satuan</th>
