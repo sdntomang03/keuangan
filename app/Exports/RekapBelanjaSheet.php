@@ -7,8 +7,8 @@ use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\WithStyles; // Tambahkan ini
-use Maatwebsite\Excel\Concerns\WithTitle;    // Tambahkan ini
+use Maatwebsite\Excel\Concerns\WithStyles;
+use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
@@ -39,7 +39,8 @@ class RekapBelanjaSheet implements FromCollection, ShouldAutoSize, WithEvents, W
         return [
             ['REKAPITULASI SELURUH BELANJA'],
             [''],
-            ['NO', 'TANGGAL', 'NO BUKTI', 'URAIAN', 'REKANAN', 'BRUTO', 'PPN', 'PPH', 'NETTO TRANSFER'],
+            // PERUBAHAN 1: Menambahkan Kolom KEGIATAN dan KODE REKENING
+            ['NO', 'TANGGAL', 'NO BUKTI', 'KEGIATAN', 'KODE REKENING', 'URAIAN', 'REKANAN', 'BRUTO', 'PPN', 'PPH', 'NETTO TRANSFER'],
         ];
     }
 
@@ -48,10 +49,24 @@ class RekapBelanjaSheet implements FromCollection, ShouldAutoSize, WithEvents, W
         static $no = 0;
         $no++;
 
+        // PERUBAHAN 2: Logika mengambil Kegiatan & Rekening
+        // Menggunakan map & unique untuk mengantisipasi jika 1 bukti bayar terdiri dari beberapa item kegiatan berbeda
+        // Data digabung dengan new line (\n)
+
+        $kegiatan = $b->rincis->map(function ($item) {
+            return $item->rkas->kegiatan->namagiat ?? '-';
+        })->unique()->implode("\n");
+
+        $kodeRekening = $b->rincis->map(function ($item) {
+            return $item->rkas->korek->ket ?? '-';
+        })->unique()->implode("\n");
+
         return [
             $no,
             $b->tanggal,
             $b->no_bukti,
+            $kegiatan,      // Kolom D
+            $kodeRekening,  // Kolom E
             $b->uraian,
             $b->rekanan->nama_rekanan ?? '-',
             ($b->subtotal + $b->ppn),
@@ -63,7 +78,12 @@ class RekapBelanjaSheet implements FromCollection, ShouldAutoSize, WithEvents, W
 
     public function styles(Worksheet $sheet)
     {
-        $sheet->mergeCells('A1:I1');
+        // PERUBAHAN 3: Merge Header diperlebar sampai K (11 Kolom)
+        $sheet->mergeCells('A1:K1');
+
+        // Agar text panjang (seperti nama kegiatan) turun ke bawah otomatis
+        $sheet->getStyle('A:K')->getAlignment()->setWrapText(true);
+        $sheet->getStyle('A:K')->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
 
         return [
             1 => [
@@ -83,37 +103,43 @@ class RekapBelanjaSheet implements FromCollection, ShouldAutoSize, WithEvents, W
         return [
             AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
-                $lastRow = $this->belanja->count() + 3; // +3 karena header ada 3 baris
+                $lastRow = $this->belanja->count() + 3;
                 $totalRow = $lastRow + 1;
 
-                // 1. Tambahkan Label TOTAL
-                $sheet->mergeCells("A{$totalRow}:E{$totalRow}");
+                // --- TAMBAHAN: SEMBUNYIKAN KOLOM D DAN E ---
+                $sheet->getColumnDimension('D')->setVisible(false);
+                $sheet->getColumnDimension('E')->setVisible(false);
+                // -------------------------------------------
+
+                // 1. Merge Label TOTAL (A sampai G)
+                // Meskipun D dan E disembunyikan, merge tetap aman
+                $sheet->mergeCells("A{$totalRow}:G{$totalRow}");
                 $sheet->setCellValue("A{$totalRow}", 'TOTAL KESELURUHAN');
 
-                // 2. Gunakan Rumus SUM Excel (F sampai I)
-                $sheet->setCellValue("F{$totalRow}", "=SUM(F4:F{$lastRow})");
-                $sheet->setCellValue("G{$totalRow}", "=SUM(G4:G{$lastRow})");
-                $sheet->setCellValue("H{$totalRow}", "=SUM(H4:H{$lastRow})");
-                $sheet->setCellValue("I{$totalRow}", "=SUM(I4:I{$lastRow})");
+                // 2. Rumus SUM
+                $sheet->setCellValue("H{$totalRow}", "=SUM(H4:H{$lastRow})"); // Bruto
+                $sheet->setCellValue("I{$totalRow}", "=SUM(I4:I{$lastRow})"); // PPN
+                $sheet->setCellValue("J{$totalRow}", "=SUM(J4:J{$lastRow})"); // PPH
+                $sheet->setCellValue("K{$totalRow}", "=SUM(K4:K{$lastRow})"); // Netto
 
                 // 3. Styling Baris TOTAL
                 $styleArray = [
                     'font' => ['bold' => true],
-                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FFFF00']], // Kuning
+                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FFFF00']],
                     'borders' => [
                         'allBorders' => ['borderStyle' => Border::BORDER_THIN],
                     ],
                     'alignment' => ['horizontal' => Alignment::HORIZONTAL_RIGHT],
                 ];
 
-                $sheet->getStyle("A{$totalRow}:I{$totalRow}")->applyFromArray($styleArray);
+                $sheet->getStyle("A{$totalRow}:K{$totalRow}")->applyFromArray($styleArray);
                 $sheet->getStyle("A{$totalRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
-                // 4. Format Ribuan (Currency) untuk seluruh kolom uang
-                $sheet->getStyle("F4:I{$totalRow}")->getNumberFormat()->setFormatCode('#,##0');
+                // 4. Format Ribuan
+                $sheet->getStyle("H4:K{$totalRow}")->getNumberFormat()->setFormatCode('#,##0');
 
-                // 5. Border untuk seluruh data tabel
-                $sheet->getStyle("A3:I{$lastRow}")->applyFromArray([
+                // 5. Border Data
+                $sheet->getStyle("A3:K{$lastRow}")->applyFromArray([
                     'borders' => [
                         'allBorders' => ['borderStyle' => Border::BORDER_THIN],
                     ],

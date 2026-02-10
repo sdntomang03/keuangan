@@ -457,7 +457,9 @@ class BelanjaController extends Controller
 
         // 5. Ambil list untuk dropdown
         $listPajak = DasarPajak::all();
-        $rekanans = Rekanan::all();
+        $rekanans = Rekanan::where('sekolah_id', $sekolah->id)
+            ->orderBy('nama_rekanan', 'asc')
+            ->get();
         $kegiatan = Kegiatan::where('idbl', $belanja->idbl)->first();
 
         // KIRIM SEMUA VARIABEL KE VIEW

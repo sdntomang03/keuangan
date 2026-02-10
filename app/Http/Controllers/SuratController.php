@@ -30,15 +30,32 @@ class SuratController extends Controller
      */
     public function exportExcel(Request $request)
     {
+        // 1. Ambil Data Anggaran
         $anggaran = $request->anggaran_data ?? Auth::user()->sekolah->anggaranAktif;
 
         if (! $anggaran) {
             return back()->with('error', 'Data anggaran tidak ditemukan.');
         }
 
+        // 2. AMBIL DATA BELANJA DENGAN RELASI NESTED
+        $dataBelanja = Belanja::with([
+            'rekanan',
+            // Load RKAS, lalu dari RKAS load Kegiatan dan Korek
+            'rincis.rkas.kegiatan',
+            'rincis.rkas.korek',
+        ])
+            ->where('anggaran_id', $anggaran->id)
+            // Tambahkan where user_id jika tabel tidak punya sekolah_id
+            ->where('user_id', Auth::id())
+            ->orderBy('tanggal', 'asc')
+            ->orderBy('no_bukti', 'asc')
+            ->get();
+
+        // 3. Generate Nama File
         $fileName = 'Laporan_Rincian_Belanja_'.strtoupper($anggaran->singkatan).'_'.date('YmdHis').'.xlsx';
 
-        return Excel::download(new BelanjaExport($anggaran), $fileName);
+        // 4. Download Excel
+        return Excel::download(new BelanjaExport($dataBelanja), $fileName);
     }
 
     /**

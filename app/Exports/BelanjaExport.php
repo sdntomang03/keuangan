@@ -2,42 +2,29 @@
 
 namespace App\Exports;
 
-use App\Models\Belanja;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
 class BelanjaExport implements WithMultipleSheets
 {
-    protected $anggaran;
+    protected $dataBelanja;
 
-    public function __construct($anggaran)
+    public function __construct($dataBelanja)
     {
-        // Simpan data anggaran yang dikirim dari controller
-        $this->anggaran = $anggaran;
+        $this->dataBelanja = $dataBelanja;
     }
 
     public function sheets(): array
     {
         $sheets = [];
-        $user = auth()->user();
 
-        // 1. Tambahkan relasi pajaks.masterPajak agar sama dengan method show
-        $allBelanja = Belanja::with([
-            'rincis.rkas',
-            'rekanan',
-            'korek',
-            'pajaks.masterPajak', // Wajib ditambahkan untuk detail pajak
-        ])
-            ->where('anggaran_id', $this->anggaran->id)
-            ->where('user_id', $user->id)
-            ->orderBy('tanggal', 'asc')
-            ->get();
+        // Sheet 1: Rekap Seluruh Belanja (Per Bukti)
+        $sheets[] = new RekapBelanjaSheet($this->dataBelanja);
 
-        // Sheet 1: Rekap Seluruh Belanja
-        $sheets[] = new RekapBelanjaSheet($allBelanja, $this->anggaran);
+        // Sheet 2: REKAP NPD (Per Kegiatan & Rekening) -- BARU
+        $sheets[] = new NpdSheet($this->dataBelanja);
 
-        // Sheet Selanjutnya: Detail per Transaksi
-        foreach ($allBelanja as $belanja) {
-            // Karena relasi sudah di-load di atas, $belanja di sini sudah lengkap membawa data pajak
+        // Sheet 3 dst: Detail per Transaksi
+        foreach ($this->dataBelanja as $belanja) {
             $sheets[] = new SingleBelanjaSheet($belanja);
         }
 
