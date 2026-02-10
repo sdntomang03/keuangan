@@ -3,7 +3,7 @@
 <table style="width:100%; margin-bottom:10px; border-collapse:collapse;">
     <tbody>
         <tr>
-            <td style="width:55%; vertical-align:top;">
+            <td style="width:50%; vertical-align:top;">
                 <table style="width:100%; border-collapse:collapse;">
                     <tbody>
                         <tr>
@@ -29,7 +29,7 @@
                     </tbody>
                 </table>
             </td>
-            <td style="width:45%; vertical-align:top; text-align:right;">
+            <td style="width:50%; vertical-align:top; text-align:right;">
                 <div style="text-align: left; display: inline-block; width: 85%;">
                     <div style="margin-bottom: 20px;">
                         {{ \Carbon\Carbon::parse($surat->tanggal_surat)->translatedFormat('d F Y') }}
@@ -82,8 +82,7 @@
             <tr>
                 <th style="width: 6%; text-align: center;">No</th>
                 <th>Nama Barang/Jasa</th>
-                <th style="width: 15%; text-align: center;">Kuantitas</th>
-                <th style="width: 15%; text-align: center;">Satuan</th>
+                <th style="width: 18%; text-align: center;">Kuantitas</th>
                 <th style="width: 15%; text-align: center;">Harga Penawaran</th>
                 <th style="width: 15%; text-align: center;">Harga Negosiasi</th>
             </tr>
@@ -93,8 +92,8 @@
             <tr>
                 <td style="text-align:center;">{{ $loop->iteration }}</td>
                 <td>{{ $item->nama_barang }}</td>
-                <td style="text-align:center;">{{ $item->qty }}</td>
-                <td style="text-align:center;">{{ $item->satuan }}</td>
+                <td style="text-align:center;">1 {{ $item->satuan }}</td>
+
 
                 {{-- PERBAIKAN DI DUA BARIS BAWAH INI --}}
                 {{-- Menggunakan 'harga_satuan' (sesuai controller) sebagai Harga Penawaran --}}
@@ -111,7 +110,7 @@
             Demikian surat permohonan negosiasi harga ini kami sampaikan, atas perhatian dan kerja sama yang baik kami
             ucapkan terima kasih.
         </p>
-        <div style="margin-top:20px; float: right; width: 300px; text-align: center;">
+        <div style="margin-top:20px; float: right; width: 350px; text-align: center;">
             <p style="margin-bottom: 60px;">Kepala {{ $sekolah->nama_sekolah }}</p>
             <p><b>{{ $kepala_sekolah->nama }}</b><br>NIP. {{ $kepala_sekolah->nip }}</p>
         </div>

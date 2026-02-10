@@ -5,10 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Akb;
 use App\Models\AkbRinci;
 use App\Models\Rkas;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 
 class AkbController extends Controller
@@ -262,5 +264,114 @@ class AkbController extends Controller
             ->get();
 
         return view('akb.satuan', compact('rkas', 'anggaran'));
+    }
+
+    public function ringkas(Request $request)
+    {
+        // 1. Ambil anggaran aktif
+        $anggaran = $request->anggaran_data;
+
+        if (! $anggaran) {
+            return redirect()->route('sekolah.index')
+                ->with('error', 'Silakan tentukan Anggaran Aktif terlebih dahulu.');
+        }
+
+        // 2. Return View SAJA (Tanpa data berat)
+        // Data akan diambil oleh Alpine.js via method getData() di bawah
+        return view('akb.ringkas', compact('anggaran'));
+    }
+
+    /**
+     * 2. Method API untuk Data JSON (Dipanggil AJAX)
+     */
+    public function getData(Request $request, $anggaranId)
+    {
+        // Query Dasar
+        $query = Rkas::with([
+            'akbRincis' => function ($q) {
+                $q->orderBy('bulan', 'asc');
+            },
+            'kegiatan',
+            'korek',
+        ])->where('anggaran_id', $anggaranId);
+
+        // A. Logic Pencarian
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('namakomponen', 'like', "%{$search}%");
+            });
+        }
+
+        // B. Logic Sorting
+        $sortField = $request->input('sort_field', 'created_at');
+        $sortDirection = $request->input('sort_direction', 'desc');
+
+        // Validasi kolom agar tidak error SQL Injection
+        $allowedSorts = ['created_at', 'namakomponen', 'hargasatuan', 'idkomponen'];
+
+        if (in_array($sortField, $allowedSorts)) {
+            $query->orderBy($sortField, $sortDirection);
+        } else {
+            $query->latest();
+        }
+
+        // Ambil Data
+        $data = $query->get();
+
+        // C. Formatting Data (PENTING: Agar JSON ringan & sesuai format View)
+        $formattedData = $data->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'namakomponen' => $item->namakomponen,
+                'spek' => $item->spek,
+                'satuan' => $item->satuan,
+                'hargasatuan' => $item->hargasatuan,
+                'idkomponen' => $item->idkomponen, // Pastikan field ini ada
+
+                // Hitung total di server biar Client enteng
+                'total_volume' => $item->akbRincis->sum('volume'),
+                'total_pagu' => $item->akbRincis->sum('nominal'),
+
+                // Data Relasi (Handle null dengan '??')
+                'snp' => $item->kegiatan->snp ?? '-',
+                'kegiatan' => Str::after($item->namasub ?? '-', ' '), // Bersihkan angka di depan nama sub
+                'kode_rekening' => $item->korek->singkat ?? '-',
+                'nama_rekening' => $item->korek->uraian_singkat ?? '-',
+
+                // Rincian Lengkap (Untuk Modal)
+                'rincian' => $item->akbRincis->mapWithKeys(function ($r) {
+                    return [$r->bulan => [
+                        'volume' => $r->volume,
+                        'nominal' => $r->nominal,
+                    ]];
+                }),
+
+                // Alokasi Aktif (Untuk Badge di Tabel Depan)
+                'alokasi_aktif' => $item->akbRincis->filter(function ($rinci) {
+                    return $rinci->nominal > 0 || $rinci->volume > 0;
+                })->values()->map(function ($r) {
+                    return [
+                        'nama_bulan' => Carbon::create()->month($r->bulan)->translatedFormat('F'),
+                        'volume' => $r->volume,
+                    ];
+                }),
+            ];
+        });
+
+        return response()->json($formattedData);
+    }
+
+    public function updateIdKomponen(Request $request, $id)
+    {
+        $request->validate([
+            'idkomponen' => 'required|string|max:255', // Sesuaikan validasi
+        ]);
+
+        $item = Rkas::findOrFail($id);
+        $item->idkomponen = $request->idkomponen;
+        $item->save();
+
+        return response()->json(['status' => 'success', 'message' => 'Berhasil diupdate']);
     }
 }

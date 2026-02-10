@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\RekananExport;
 use App\Models\Rekanan;
+use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 
 class RekananController extends Controller
 {
@@ -185,5 +188,17 @@ class RekananController extends Controller
             return redirect()->route('setting.rekanan.index')
                 ->with('error', 'Terjadi kesalahan: '.$e->getMessage());
         }
+    }
+
+    public function export()
+    {
+        // 1. Buat nama file yang unik (opsional, agar ada timestamp)
+        $timestamp = Carbon::now()->format('d-m-Y_H-i');
+        $namaFile = "Data_Rekanan_{$timestamp}.xlsx";
+
+        // 2. Panggil fungsi download
+        // Parameter 1: Class Export yang kita buat tadi
+        // Parameter 2: Nama file yang akan terdownload di browser user
+        return Excel::download(new RekananExport, $namaFile);
     }
 }

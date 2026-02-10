@@ -75,42 +75,77 @@ class BelanjaController extends Controller
     public function getKomponen(Request $request)
     {
         $user = auth()->user();
-        $anggaran = $request->anggaran_data; // Dari Middleware
-
-        // Ambil data sekolah untuk mendapatkan Triwulan Aktif
+        $anggaran = $request->anggaran_data;
         $sekolah = Sekolah::find($user->sekolah_id);
 
         if (! $anggaran || ! $sekolah) {
             return response()->json([]);
         }
 
-        // Konversi triwulan sekolah ke range bulan
         $tw = (int) filter_var($sekolah->triwulan_aktif, FILTER_SANITIZE_NUMBER_INT);
         $bulanRange = match ($tw) {
-            1 => [1, 2, 3],
-            2 => [4, 5, 6],
-            3 => [7, 8, 9],
-            4 => [10, 11, 12],
+            1 => [1, 2, 3], 2 => [4, 5, 6], 3 => [7, 8, 9], 4 => [10, 11, 12],
             default => range(1, 12)
         };
 
-        return Rkas::join('akb_rincis', 'rkas.idblrinci', '=', 'akb_rincis.idblrinci')
-            ->where('rkas.anggaran_id', $anggaran->id) // Filter ID Anggaran Aktif
+        // Mulai Query Dasar
+        $query = Rkas::join('akb_rincis', 'rkas.idblrinci', '=', 'akb_rincis.idblrinci')
+            ->where('rkas.anggaran_id', $anggaran->id)
             ->where('rkas.idbl', $request->idbl)
             ->where('rkas.kodeakun', $request->koderekening)
-            ->whereIn('akb_rincis.bulan', $bulanRange)
-            ->select(
-                'rkas.id',
-                'rkas.idblrinci',
-                'rkas.namakomponen',
-                'rkas.hargasatuan',
-                'rkas.satuan',
-                'rkas.spek',
-                'rkas.keterangan',
-                DB::raw('SUM(akb_rincis.volume) as volume_bulan')
-            )
-            ->groupBy('rkas.id', 'rkas.idblrinci', 'rkas.namakomponen', 'rkas.hargasatuan', 'rkas.satuan', 'rkas.spek')
+            ->whereIn('akb_rincis.bulan', $bulanRange);
+
+        // --- LOGIKA FILTER KETERANGAN ---
+        // Jika user mengirim 'keterangan' DAN isinya BUKAN 'ALL', maka filter spesifik.
+        // Jika isinya 'ALL' atau kosong, maka filter ini dilewati (tampilkan semua).
+        if ($request->filled('keterangan') && $request->keterangan !== 'ALL') {
+            $query->where('rkas.keterangan', $request->keterangan);
+        }
+        // -------------------------------
+
+        return $query->select(
+            'rkas.id',
+            'rkas.idblrinci',
+            'rkas.namakomponen',
+            'rkas.hargasatuan',
+            'rkas.satuan',
+            'rkas.spek',
+            'rkas.keterangan',
+            DB::raw('SUM(akb_rincis.volume) as volume_bulan')
+        )
+            ->groupBy('rkas.id', 'rkas.idblrinci', 'rkas.namakomponen', 'rkas.hargasatuan', 'rkas.satuan', 'rkas.spek', 'rkas.keterangan')
             ->get();
+    }
+
+    public function getKeterangan(Request $request)
+    {
+        $anggaran = $request->anggaran_data;
+
+        // Ambil data sekolah dari user login
+        $user = auth()->user();
+        $sekolah = Sekolah::find($user->sekolah_id);
+
+        if (! $anggaran || ! $sekolah) {
+            return response()->json([]);
+        }
+
+        // Query mencari keterangan yang unik (DISTINCT)
+        $data = DB::table('rkas')
+            ->where('anggaran_id', $anggaran->id)
+            ->where('idbl', $request->idbl) // Filter Kegiatan
+            ->where('kodeakun', $request->koderekening) // Filter Rekening
+
+            // Filter agar yang kosong tidak ikut muncul
+            ->whereNotNull('keterangan')
+            ->where('keterangan', '!=', '')
+            ->where('keterangan', '!=', '-')
+
+            ->select('keterangan')
+            ->distinct() // PENTING: Supaya tidak ada keterangan kembar
+            ->orderBy('keterangan', 'asc')
+            ->get();
+
+        return response()->json($data);
     }
 
     public function store(Request $request)
@@ -219,7 +254,7 @@ class BelanjaController extends Controller
                     // Jika PPN tidak 0, maka subtotal dikali persen PPN. Jika 0, tetap subtotal.
                     $brutoDasar = ($request->ppn != 0)
                                   ? $subtotal * (1 + $multiplier)
-                                  : 0; // Atau $subtotal jika bruto dasar maksudnya adalah nilai sebelum pajak
+                                  : $subtotal; // Atau $subtotal jika bruto dasar maksudnya adalah nilai sebelum pajak
 
                     $belanja->rincis()->create([
                         'idblrinci' => $item['idblrinci'],
@@ -598,5 +633,89 @@ class BelanjaController extends Controller
         });
 
         return redirect()->route('surat.index', $id)->with('success', 'Data BAST dan Harga Penawaran berhasil disimpan.');
+    }
+
+    public function duplicate(Request $request, $id)
+    {
+        // 1. Ambil Data Asli beserta relasinya (Rincian & Pajak)
+        $original = Belanja::with(['rincis', 'pajaks'])->findOrFail($id);
+
+        // 2. Siapkan Data Pendukung untuk Cek Pagu (Sekolah & Anggaran)
+        // Asumsi: Anda punya middleware yang inject anggaran_data, atau ambil manual
+        $anggaran = $request->anggaran_data ?? Anggaran::find($original->anggaran_id);
+        $sekolah = Sekolah::find($anggaran->sekolah_id);
+        // Tentukan Triwulan/Bulan aktif untuk pengecekan Pagu
+        $twAktif = (int) filter_var($sekolah->triwulan_aktif, FILTER_SANITIZE_NUMBER_INT);
+        $mappingBulan = [1 => [1, 2, 3], 2 => [4, 5, 6], 3 => [7, 8, 9], 4 => [10, 11, 12]];
+        $bulanDicheck = $mappingBulan[$twAktif] ?? range(1, 12);
+
+        DB::beginTransaction();
+        try {
+            // --- A. VALIDASI PAGU DULU ---
+            foreach ($original->rincis as $item) {
+                // Hitung total pagu di anggaran
+                $totalPagu = DB::table('akb_rincis')
+                    ->where('idblrinci', $item->idblrinci)
+                    ->whereIn('bulan', $bulanDicheck)
+                    ->sum('nominal');
+
+                // Hitung yang sudah terpakai (termasuk belanja asli yang mau diduplikat)
+                $terpakai = DB::table('belanja_rincis')
+                    ->join('belanjas', 'belanja_rincis.belanja_id', '=', 'belanjas.id')
+                    ->where('belanja_rincis.idblrinci', $item->idblrinci)
+                    ->where('belanjas.anggaran_id', $anggaran->id)
+                    ->sum('total_bruto');
+
+                // Cek apakah muat jika ditambah duplikat ini?
+                // Note: $item->total_bruto adalah nilai belanja yang mau diduplikat
+                if (($terpakai + $item->total_bruto) > $totalPagu) {
+                    throw new \Exception("Gagal Duplikat! Pagu untuk '{$item->namakomponen}' tidak mencukupi.");
+                }
+            }
+
+            // --- B. PROSES DUPLIKASI HEADER ---
+            // replicate() menyalin model tanpa ID dan timestamp
+            $newBelanja = $original->replicate();
+
+            // Generate No Bukti Unik Sementara
+            // Contoh: BKU-001 menjadi BKU-001-COPY-17092344 (Timestamp)
+            $newBelanja->no_bukti = $original->id.'-COPY-'.time();
+
+            // Opsional: Set tanggal ke hari ini atau biarkan sama dengan asli
+            $newBelanja->tanggal = now();
+
+            $newBelanja->created_at = now();
+            $newBelanja->updated_at = now();
+            $newBelanja->save();
+
+            // --- C. PROSES DUPLIKASI RINCIAN (ITEMS) ---
+            foreach ($original->rincis as $rinci) {
+                $newRinci = $rinci->replicate();
+                $newRinci->belanja_id = $newBelanja->id; // Link ke ID baru
+                $newRinci->created_at = now();
+                $newRinci->updated_at = now();
+                $newRinci->save();
+            }
+
+            // --- D. PROSES DUPLIKASI PAJAK ---
+            foreach ($original->pajaks as $pajak) {
+                $newPajak = $pajak->replicate();
+                $newPajak->belanja_id = $newBelanja->id; // Link ke ID baru
+                $newPajak->created_at = now();
+                $newPajak->updated_at = now();
+                $newPajak->save();
+            }
+
+            DB::commit();
+
+            // Redirect ke halaman Edit dari data baru tersebut agar user bisa langsung ubah No Bukti
+            return redirect()->route('belanja.edit', $newBelanja->id)
+                ->with('success', 'Transaksi berhasil diduplikat! Silakan sesuaikan Tanggal dan Nomor Bukti.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return back()->with('error', $e->getMessage());
+        }
     }
 }

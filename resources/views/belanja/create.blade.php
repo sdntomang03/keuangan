@@ -144,29 +144,45 @@
                 </div>
 
                 <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                    <div class="p-6 bg-gray-50/80 border-b border-gray-200 flex flex-col md:flex-row gap-6">
-                        <div class="flex-1">
+                    <div class="p-6 bg-gray-50/80 border-b border-gray-200 grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                        {{-- 1. KEGIATAN --}}
+                        <div>
                             <label class="text-[11px] font-bold text-gray-500 uppercase block mb-2 tracking-widest">1.
                                 Pilih Kegiatan</label>
                             <select x-model="selectedIdbl" @change="fetchRekening()"
-                                class="w-full rounded-xl border-gray-200">
+                                class="w-full rounded-xl border-gray-200 text-sm">
                                 <option value="">-- Cari Kegiatan --</option>
                                 @foreach ($listKegiatan as $k)
                                 <option value="{{ $k->idbl }}">{{ $k->namagiat }}</option>
                                 @endforeach
                             </select>
                         </div>
-                        <div class="flex-1">
+
+                        {{-- 2. REKENING --}}
+                        <div>
                             <label class="text-[11px] font-bold text-gray-500 uppercase block mb-2 tracking-widest">2.
                                 Pilih Kode Akun</label>
-                            <select x-model="selectedRekening" @change="fetchKomponen()" :disabled="!rekenings.length"
-                                class="w-full rounded-xl border-gray-200">
+                            <select x-model="selectedRekening" @change="fetchKeterangan()" :disabled="!rekenings.length"
+                                class="w-full rounded-xl border-gray-200 text-sm">
                                 <option value="">-- Pilih Rekening --</option>
                                 <template x-for="rek in rekenings" :key="rek.koderekening">
-                                    {{-- Pastikan :selected juga dicek agar browser membantu rendering --}}
                                     <option :value="rek.koderekening"
-                                        :selected="rek.koderekening == '{{ old('kodeakun') }}'"
                                         x-text="rek.koderekening + ' - ' + rek.namarekening"></option>
+                                </template>
+                            </select>
+                        </div>
+
+                        {{-- 3. KETERANGAN (BARU) --}}
+                        <div>
+                            <label class="text-[11px] font-bold text-gray-500 uppercase block mb-2 tracking-widest">3.
+                                Pilih Keterangan</label>
+                            <select x-model="selectedKeterangan" @change="fetchKomponen()"
+                                :disabled="!keterangans.length" class="w-full rounded-xl border-gray-200 text-sm">
+                                <option value="">-- Pilih Detail --</option>
+                                <option value="ALL" class="font-bold text-blue-600">-- TAMPILKAN SEMUA --</option>
+                                <template x-for="ket in keterangans" :key="ket.keterangan">
+                                    <option :value="ket.keterangan" x-text="ket.keterangan"></option>
                                 </template>
                             </select>
                         </div>
@@ -424,20 +440,45 @@
 
             async fetchRekening() {
                 if (!this.selectedIdbl) return;
+
+                // Reset Child Dropdowns
+                this.selectedRekening = '';
+                this.selectedKeterangan = '';
+                this.rekenings = [];
+                this.keterangans = [];
+                this.items = [];
+
                 const res = await fetch(`/api/get-rekening?idbl=${this.selectedIdbl}`);
                 this.rekenings = await res.json();
-                this.selectedRekening = '';
-                this.items = [];
-                this.calculateTotal();
             },
 
-            async fetchKomponen() {
+            // 2. Ambil Keterangan (Reset bawahnya) - FUNGSI BARU
+            async fetchKeterangan() {
                 if (!this.selectedRekening) return;
-                // Jangan ambil dari DB jika ini adalah proses recovery (old input)
-                if (this.items.length > 0 && '{{ old('kodeakun') }}' === this.selectedRekening) return;
 
-                const res = await fetch(`/api/get-komponen?idbl=${this.selectedIdbl}&koderekening=${this.selectedRekening}`);
+                // Reset Child Dropdowns
+                this.selectedKeterangan = '';
+                this.keterangans = [];
+                this.items = [];
+
+                const res = await fetch(`/api/get-keterangan?idbl=${this.selectedIdbl}&koderekening=${this.selectedRekening}`);
+                this.keterangans = await res.json();
+this.selectedKeterangan = 'ALL';
+
+                // 2. Langsung panggil fetchKomponen agar tabel barang muncul otomatis
+                this.fetchKomponen();
+            },
+
+            // 3. Ambil Komponen Akhir
+            async fetchKomponen() {
+                if (!this.selectedKeterangan) return;
+
+                // Panggil API dengan parameter lengkap
+                const res = await fetch(`/api/get-komponen?idbl=${this.selectedIdbl}&koderekening=${this.selectedRekening}&keterangan=${encodeURIComponent(this.selectedKeterangan)}`);
+
                 const data = await res.json();
+
+                // Mapping Data
                 this.items = data.map(komp => ({
                     rkas_id: komp.id,
                     idblrinci: komp.idblrinci,

@@ -3,7 +3,7 @@
 <table style="width:100%; margin-bottom:10px; border-collapse:collapse;">
     <tbody>
         <tr>
-            <td style="width:55%; vertical-align:top;">
+            <td style="width:50%; vertical-align:top;">
                 <table style="width:100%; border-collapse:collapse;">
                     <tbody>
                         <tr>
@@ -29,7 +29,7 @@
                     </tbody>
                 </table>
             </td>
-            <td style="width:45%; vertical-align:top; text-align:right;">
+            <td style="width:50%; vertical-align:top; text-align:right;">
                 <div style="text-align: left; display: inline-block; width: 85%;">
                     <div style="margin-bottom: 20px;">
                         {{ \Carbon\Carbon::parse($surat->tanggal_surat)->translatedFormat('d F Y') }}
@@ -106,7 +106,7 @@
             kasih.
         </p>
 
-        <div style="margin-top:20px; float: right; width: 300px; text-align: center;">
+        <div style="margin-top:20px; float: right; width: 350px; text-align: center;">
             <p style="margin-bottom: 60px;">Kepala {{ $sekolah->nama_sekolah }}</p>
             <p><b>{{ $kepala_sekolah->nama }}</b><br>NIP. {{ $kepala_sekolah->nip }}</p>
         </div>

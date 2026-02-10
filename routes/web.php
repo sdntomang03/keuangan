@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\RkasCleanupController;
 use App\Http\Controllers\Admin\SekolahController as AdminSekolahController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\AkbController;
+use App\Http\Controllers\ArkasController;
 use App\Http\Controllers\BelanjaController;
 use App\Http\Controllers\BkuController;
 use App\Http\Controllers\Coba;
@@ -42,6 +43,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/rkas/import', [RkasController::class, 'import'])->name('rkas.import');
     Route::get('/rkas/rincian', [RkasController::class, 'rincian'])->name('rkas.rincian');
 
+    Route::patch('/rkas/{id}/update-idkomponen', [RkasController::class, 'updateIdKomponen'])->name('rkas.update.idkomponen');
+
 });
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/akb', [AkbController::class, 'index'])->name('akb.index');
@@ -51,6 +54,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/akb/rincianakb', [AkbController::class, 'indexRincian'])->name('akb.indexrincian');
     Route::get('/akb/export-excel', [AkbController::class, 'exportExcel'])->name('akb.export_excel');
     Route::get('/akb/satuan', [AkbController::class, 'satuan'])->name('akb.satuan');
+    Route::get('/akb/ringkas', [AkbController::class, 'ringkas'])->name('akb.ringkas');
+    Route::patch('/rkas/{id}/update-idkomponen', [AkbController::class, 'updateIdKomponen'])
+        ->name('rkas.update.idkomponen');
+    // 2. Route API Data (AJAX) - Perhatikan URL-nya harus cocok dengan fetch() di JS
+    Route::get('/api/rkas/{anggaranId}/data', [AkbController::class, 'getData'])->name('api.rkas.data');
 
 });
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -68,6 +76,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('api')->group(function () {
         Route::get('/get-rekening', [BelanjaController::class, 'getRekening'])->name('api.rekening');
         Route::get('/get-komponen', [BelanjaController::class, 'getKomponen'])->name('api.komponen');
+        Route::get('/get-keterangan', [BelanjaController::class, 'getKeterangan'])->name('get_keterangan');
     });
 
 });
@@ -126,6 +135,8 @@ Route::middleware(['auth'])->prefix('setting')->name('setting.')->group(function
     Route::post('/rekanan/import', [SettingController::class, 'importRekananStore'])->name('rekanan.import.store');
     Route::delete('/rekanan/destroy-all', [RekananController::class, 'destroyAll'])
         ->name('rekanan.destroy_all');
+    Route::get('/rekanan/export', [RekananController::class, 'export'])
+        ->name('rekanan.export');
     // --- KEGIATAN ---
     // 1. Menampilkan Halaman Form Upload
     Route::get('/kegiatan/import', [SettingController::class, 'importKegiatanView'])
@@ -173,6 +184,8 @@ Route::middleware(['auth'])->prefix('surat')->group(function () {
     Route::get('/regenerate-all', [SuratController::class, 'regenerateAllNumbers'])
         ->name('surat.regenerate_all');
 
+    Route::post('/belanja/{id}/duplicate', [BelanjaController::class, 'duplicate'])->name('belanja.duplicate');
+
     // Route untuk Hapus Foto (Karena tadi kita tambahkan tombol hapus)
     Route::delete('/foto/{id}', [SuratController::class, 'destroyFoto'])
         ->name('surat.delete_foto');
@@ -209,13 +222,14 @@ Route::group(['middleware' => ['auth']], function () {
         // API AJAX (Penyebab Error Anda)
         Route::get('/get-rekening', [EkskulController::class, 'getRekening'])->name('get_rekening');
         Route::get('/get-komponen', [EkskulController::class, 'getKomponen'])->name('get_komponen');
+
         Route::get('/get-by-pelatih', [EkskulController::class, 'getByPelatih'])->name('get_by_pelatih');
         // 3. Proses Simpan (Store)
         Route::post('/store', [EkskulController::class, 'store'])->name('store');
-        Route::get('/referensi/ekskul', [EkskulController::class, 'refEkskulIndex'])->name('ref.index');
-        Route::post('/referensi/ekskul', [EkskulController::class, 'refEkskulStore'])->name('ref.store');
-        Route::put('/referensi/ekskul/{id}', [EkskulController::class, 'refEkskulUpdate'])->name('ref.update');
-        Route::delete('/referensi/ekskul/{id}', [EkskulController::class, 'refEkskulDestroy'])->name('ref.destroy');
+        Route::get('/pelatih', [EkskulController::class, 'refEkskulIndex'])->name('ref.index');
+        Route::post('/pelatih', [EkskulController::class, 'refEkskulStore'])->name('ref.store');
+        Route::put('/pelatih/{id}', [EkskulController::class, 'refEkskulUpdate'])->name('ref.update');
+        Route::delete('/pelatih/{id}', [EkskulController::class, 'refEkskulDestroy'])->name('ref.destroy');
 
         // 4. Cetak Kwitansi & Lampiran
         Route::get('/cetak/{id}', [EkskulController::class, 'cetak'])->name('cetak');
@@ -230,6 +244,19 @@ Route::group(['middleware' => ['auth']], function () {
 
 });
 
+Route::middleware(['auth'])->group(function () {
+    // 1. Halaman Utama (Index)
+    Route::get('/arkas', [ArkasController::class, 'index'])->name('arkas.index');
+
+    // 2. Endpoint AJAX (Mengambil Data JSON)
+    Route::get('/arkas/data', [ArkasController::class, 'getData'])->name('arkas.data');
+
+    // 3. Halaman Import
+    Route::get('/arkas/import', [ArkasController::class, 'importPage'])->name('arkas.import.page');
+
+    // 4. Proses Import (Action)
+    Route::post('/arkas/import', [ArkasController::class, 'storeImport'])->name('arkas.import.store');
+});
 Route::get('/coba', [Coba::class, 'index'])->name('index');
 Route::get('/banding', [Coba::class, 'banding'])->name('banding');
 Route::get('/coba/rkas', [Coba::class, 'rkas'])->name('coba.rkas');

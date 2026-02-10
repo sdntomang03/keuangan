@@ -27,27 +27,42 @@
 
                 {{-- Header & Tombol Tambah --}}
                 <div class="flex justify-between items-center mb-6">
+                    {{-- BAGIAN KIRI: JUDUL --}}
                     <div>
                         <h3 class="text-lg font-bold text-gray-800 dark:text-white">Daftar Ekstrakurikuler</h3>
                         <p class="text-sm text-gray-500">Kelola nama ekskul dan pelatih default-nya.</p>
                     </div>
-                    <button @click="
-                        showModal = true;
-                        isEdit = false;
-                        formAction = '{{ route('ekskul.ref.store') }}';
-                        dataNama = '';
-                        dataPelatih = '';
-                        modalTitle = 'Tambah Ekskul Baru';
-                    "
-                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20"
-                            fill="currentColor">
-                            <path fill-rule="evenodd"
-                                d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                                clip-rule="evenodd" />
-                        </svg>
-                        Tambah Ekskul
-                    </button>
+
+                    {{-- BAGIAN KANAN: GRUP TOMBOL --}}
+                    <div class="flex items-center gap-3">
+                        {{-- Tombol Export --}}
+                        <a href="{{ route('setting.rekanan.export') }}"
+                            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center transition-colors">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            Export Excel
+                        </a>
+
+                        {{-- Tombol Tambah --}}
+                        <button @click="
+                showModal = true;
+                isEdit = false;
+                formAction = '{{ route('ekskul.ref.store') }}';
+                dataNama = '';
+                dataPelatih = '';
+                modalTitle = 'Tambah Ekskul Baru';
+            " class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20"
+                                fill="currentColor">
+                                <path fill-rule="evenodd"
+                                    d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                            Tambah Ekskul
+                        </button>
+                    </div>
                 </div>
 
                 {{-- Tabel Data --}}
@@ -60,10 +75,10 @@
                                     No</th>
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Nama Ekskul</th>
+                                    Nama Pelatih</th>
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Pelatih Default</th>
+                                    Nama Ekskul</th>
                                 <th
                                     class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Aksi</th>
@@ -74,17 +89,21 @@
                             <tr>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $ekskuls->firstItem() +
                                     $index }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-white">{{
-                                    $item->nama }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                                <td class="px-6 py-4 whitespace-nowra text-gray-600 dark:text-gray-300">
                                     @if($item->rekanan)
-                                    <span
-                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                        {{ $item->rekanan->nama_rekanan }}
-                                    </span>
+
+                                    {{ $item->rekanan->nama_rekanan }}
+
                                     @else
-                                    <span class="text-gray-400 italic">- Belum diset -</span>
+                                    <span class="text-gray-400 italic text-xs">
+                                        - Belum diset -
+                                    </span>
                                     @endif
+                                </td>
+
+                                <td
+                                    class="px-6 py-4 whitespace-nowrap font-medium text-sm text-gray-900 dark:text-white">
+                                    {{ $item->nama }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                                     <div class="flex justify-center gap-3">

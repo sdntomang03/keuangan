@@ -138,6 +138,8 @@
                             <td class="px-4 py-3">
                                 <div class="font-bold text-gray-800">{{ $item->namakomponen }}</div>
                                 <div class="text-[10px] text-gray-400 font-medium italic mt-0.5">{{ $item->spek }}</div>
+                                <div class="text-[10px] text-gray-400 font-medium italic mt-0.5">{{ $item->koefisien }}
+                                </div>
                             </td>
                             <td class="px-4 py-3 text-right font-mono text-gray-500">
                                 {{ number_format($item->hargasatuan, 0, ',', '.') }}

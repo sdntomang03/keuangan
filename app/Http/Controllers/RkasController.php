@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Rkas;
 use App\Services\RekeningService;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -145,5 +146,38 @@ class RkasController extends Controller
             ->groupBy(['idbl', 'kodeakun']);
 
         return view('rkas.anggaran', compact('dataRkas', 'tampilan', 'anggaran'));
+    }
+
+    public function updateIdKomponen(Request $request, $id)
+    {
+        $request->validate([
+            'idkomponen' => 'required|string|max:100',
+        ]);
+
+        $rkas = Rkas::findOrFail($id);
+
+        // --- PERBAIKAN: Cek apakah ada perubahan? ---
+        if ($rkas->idkomponen == $request->idkomponen) {
+            return back()->with('warning', 'Tidak ada perubahan. ID Komponen yang dimasukkan sama dengan sebelumnya.');
+        }
+        // --------------------------------------------
+
+        // 1. Ambil ID Lama (Pastikan baris ini SEBELUM pengubahan data)
+        $oldId = $rkas->idkomponen;
+
+        try {
+            // 2. Ubah dengan ID Baru
+            $rkas->idkomponen = $request->idkomponen;
+            $rkas->save();
+
+            return back()->with('success', "Berhasil mengubah ID Komponen dari $oldId menjadi {$request->idkomponen}.");
+
+        } catch (QueryException $e) {
+            if ($e->errorInfo[1] == 1062) {
+                return back()->with('error', "Gagal update! ID Komponen {$request->idkomponen} sudah digunakan.");
+            }
+
+            return back()->with('error', 'Terjadi kesalahan saat menyimpan data.');
+        }
     }
 }

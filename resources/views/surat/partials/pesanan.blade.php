@@ -10,7 +10,7 @@ $is_penggandaan = $surat->is_penggandaan ?? false;
     {{-- BAGIAN HEADER / METADATA SURAT --}}
     <tbody>
         <tr>
-            <td style="width:55%; vertical-align:top;">
+            <td style="width:50%; vertical-align:top;">
                 <table style="width:100%; border-collapse:collapse;">
                     <tbody>
                         <tr>
@@ -39,7 +39,7 @@ $is_penggandaan = $surat->is_penggandaan ?? false;
                     </tbody>
                 </table>
             </td>
-            <td style="width:45%; vertical-align:top; text-align:right;">
+            <td style="width:50%; vertical-align:top; text-align:right;">
                 <div style="text-align: left; display: inline-block; width: 85%;">
                     <div style="margin-bottom: 20px;">
                         {{ \Carbon\Carbon::parse($surat->tanggal_surat)->translatedFormat('d F Y') }}
@@ -111,24 +111,58 @@ $is_penggandaan = $surat->is_penggandaan ?? false;
             </tr>
         </thead>
         <tbody>
-            @foreach($items as $item)
+            {{-- Pastikan loop menggunakan $index untuk akses data array --}}
+            @foreach($items as $index => $item)
             <tr>
                 <td class="text-center">{{ $loop->iteration }}</td>
 
-                {{-- KONDISI 2: JIKA PARSIAL, TAMPILKAN DATANYA --}}
+                {{-- KONDISI 2: LOGIC MERGE ROW TANGGAL --}}
                 @if($is_parsial && !$is_penggandaan)
-                <td class="text-center">{{ $item->tanggal_kirim ?? '-' }}
-                </td>
-                @endif
+                @php
+                $currentDate = $item->tanggal_kirim ?? '-';
 
+                // Cek item sebelumnya (jika ada) untuk menentukan apakah perlu cetak TD baru
+                $prevDate = isset($items[$index - 1]) ? ($items[$index - 1]->tanggal_kirim ?? '-') : null;
 
-                <td>{{ $item->nama_barang }} @if($is_parsial && $is_penggandaan)
-                    <br>
-                    Keterangan: {{ $belanja->rincian }}
+                // Tampilkan CELL hanya jika:
+                // 1. Ini baris pertama ($index == 0)
+                // 2. ATAU Tanggalnya beda dengan baris sebelumnya
+                $shouldShow = ($index === 0) || ($currentDate !== $prevDate);
+                @endphp
+
+                @if($shouldShow)
+                @php
+                // Hitung Rowspan (Intip berapa baris ke depan yang tanggalnya sama)
+                $rowspan = 1;
+                // Pastikan $items bisa diakses array-nya. Jika Collection, gunakan $items[$i]
+                for ($i = $index + 1; $i < count($items); $i++) { $nextDate=$items[$i]->tanggal_kirim ?? '-';
+                    if ($nextDate === $currentDate) {
+                    $rowspan++;
+                    } else {
+                    break; // Berhenti menghitung jika ketemu tanggal beda
+                    }
+                    }
+                    @endphp
+
+                    {{-- Cetak TD dengan Rowspan dan Align Middle --}}
+                    <td class="text-center align-middle" rowspan="{{ $rowspan }}" style="vertical-align: middle;">
+                        {{ $currentDate }}
+                    </td>
                     @endif
-                </td>
-                <td class="text-center">{{ number_format($item->qty, 0, ',', '.') }}</td>
-                <td class="text-center">{{ $item->satuan }}</td>
+
+                    {{-- Jika $shouldShow == false, maka <td> tidak dicetak (karena sudah dimakan rowspan diatasnya)
+                        --}}
+                        @endif
+
+
+                    <td>{{ $item->nama_barang }}
+                        @if($is_parsial && $is_penggandaan)
+                        <br>
+                        Keterangan: {{ $belanja->rincian }}
+                        @endif
+                    </td>
+                    <td class="text-center">{{ number_format($item->qty, 0, ',', '.') }}</td>
+                    <td class="text-center">{{ $item->satuan }}</td>
             </tr>
             @endforeach
         </tbody>
@@ -144,7 +178,7 @@ $is_penggandaan = $surat->is_penggandaan ?? false;
             Demikian surat pesanan ini kami sampaikan, atas perhatian dan kerja sama yang baik, kami ucapkan terima
             kasih.
         </p>
-        <div style="margin-top:20px; float: right; width: 300px; text-align: center;">
+        <div style="margin-top:20px; float: right; width: 350px; text-align: center;">
             <p style="margin-bottom: 60px;">Kepala {{ $sekolah->nama_sekolah }}</p>
             <p><b>{{ $kepala_sekolah->nama }}</b><br>NIP. {{ $kepala_sekolah->nip }}</p>
         </div>

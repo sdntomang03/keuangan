@@ -4,17 +4,18 @@ namespace App\Exports;
 
 use Carbon\Carbon;
 use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 
-class SingleBelanjaSheet implements FromCollection, ShouldAutoSize, WithEvents, WithHeadings, WithMapping, WithTitle
+class SingleBelanjaSheet implements FromCollection, WithColumnWidths, WithEvents, WithHeadings, WithMapping, WithTitle
 {
     protected $belanja;
 
@@ -46,13 +47,13 @@ class SingleBelanjaSheet implements FromCollection, ShouldAutoSize, WithEvents, 
     public function headings(): array
     {
         return [
-            ['RINCIAN BELANJA BKU'],
-            ['Nomor Bukti:', $this->belanja->no_bukti],
-            ['Tanggal:', Carbon::parse($this->belanja->tanggal)->translatedFormat('d F Y')],
-            ['Rekanan:', $this->belanja->rekanan->nama_rekanan ?? '-'],
-            ['Korek:', $this->belanja->korek->ket ?? '-'],
+            ['URAIAN RINCIAN BELANJA (URK)'],
+            ['Nomor Bukti : '.$this->belanja->no_bukti],
+            ['Tanggal : '.Carbon::parse($this->belanja->tanggal)->translatedFormat('d F Y')],
+            ['Rekanan : '.$this->belanja->rekanan->nama_rekanan ?? '-'],
+            ['Kode Rekening : '.$this->belanja->korek->ket ?? '-'],
             [''],
-            ['NO', 'KOMPONEN', 'SPESIFIKASI', 'QTY', 'SATUAN', 'HARGA SATUAN', 'TOTAL HARGA'],
+            ['NO', 'KOMPONEN', 'SPESIFIKASI', 'QTY', 'SATUAN', 'HARGA SATUAN', 'TOTAL HARGA', 'HARGA PENAWARAN'],
         ];
     }
 
@@ -72,6 +73,20 @@ class SingleBelanjaSheet implements FromCollection, ShouldAutoSize, WithEvents, 
         ];
     }
 
+    public function columnWidths(): array
+    {
+        return [
+            'A' => 5,  // No (Kecil)
+            'B' => 45, // KOMPONEN (Lebar agar muat banyak teks)
+            'C' => 50, // SPESIFIKASI (Lebar)
+            'D' => 10, // Qty
+            'E' => 15, // Satuan
+            'F' => 18, // Harga Satuan
+            'G' => 18, // Total Harga
+            'H' => 18, // Harga Penawaran
+        ];
+    }
+
     public function registerEvents(): array
     {
         return [
@@ -85,12 +100,48 @@ class SingleBelanjaSheet implements FromCollection, ShouldAutoSize, WithEvents, 
                 $currentRow = $lastDataRow + 1;
 
                 // --- 2. STYLE JUDUL ---
-                $sheet->mergeCells('A1:G1');
+                $sheet->mergeCells('A1:H1');
                 $sheet->getRowDimension('1')->setRowHeight(35);
-                $sheet->getStyle('A1:G1')->applyFromArray([
+                $sheet->getStyle('A1:H1')->applyFromArray([
                     'font' => ['bold' => true, 'size' => 18, 'color' => ['rgb' => 'FFFFFF']],
                     'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '1F4E78']],
                     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+                ]);
+
+                // A. DEFINISI DATA
+                $rekanan = $this->belanja->rekanan;
+                $namaBank = $rekanan->nama_bank ?? '-';
+                $noRekening = $rekanan->nomor_rekening ?? $rekanan->no_rekening ?? '-';
+                $npwp = $rekanan->npwp ?? '-';
+
+                // B. SET LABEL (KOLOM E)
+                $sheet->setCellValue('E2', 'Nama Bank :');
+                $sheet->setCellValue('E3', 'No. Rekening :');
+                $sheet->setCellValue('E4', 'NPWP :');
+
+                // C. SET DATA SEBAGAI STRING (KOLOM F)
+                // Menggunakan setCellValueExplicit agar Excel membacanya sebagai Teks (cegah 0 di depan hilang/ubah jadi e+...)
+                $sheet->setCellValueExplicit('F2', $namaBank, DataType::TYPE_STRING);
+                $sheet->setCellValueExplicit('F3', $noRekening, DataType::TYPE_STRING);
+                $sheet->setCellValueExplicit('F4', $npwp, DataType::TYPE_STRING);
+
+                // D. ATUR ALIGNMENT
+                // Kolom E (Label) -> Rata Kanan
+                $sheet->getStyle('E2:E4')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+
+                // Kolom F (Data) -> Rata Kiri
+                $sheet->getStyle('F2:F4')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+
+                // E. ATUR WARNA BACKGROUND (KUNING) & BORDER
+                $sheet->getStyle('E2:F4')->applyFromArray([
+                    'fill' => [
+                        'fillType' => Fill::FILL_SOLID,
+                        'startColor' => ['rgb' => 'FFFF00'], // Kode Warna Kuning
+                    ],
+                    // Opsional: Tambah border agar rapi
+                    'borders' => [
+                        'allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN],
+                    ],
                 ]);
 
                 // --- 3. FOOTER KALKULASI ---
@@ -160,15 +211,41 @@ class SingleBelanjaSheet implements FromCollection, ShouldAutoSize, WithEvents, 
                 ]);
 
                 // Header Tabel
-                $sheet->getStyle('A7:G7')->applyFromArray([
+                $sheet->getStyle('A7:H7')->applyFromArray([
                     'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
                     'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '333333']],
                     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
                 ]);
 
-                // Border seluruh tabel & Footer
+                // Pastikan Anda sudah import class Alignment di paling atas file:
+                // use PhpOffice\PhpSpreadsheet\Style\Alignment;
+
                 $sheet->getStyle("A7:G{$transferRow}")->applyFromArray([
-                    'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]],
+                    // 1. Setting Border (Kode Lama Anda)
+                    'borders' => [
+                        'allBorders' => ['borderStyle' => Border::BORDER_THIN],
+                    ],
+
+                    // 2. Setting Vertical Align Middle (Baru)
+                    'alignment' => [
+                        'vertical' => Alignment::VERTICAL_CENTER,
+                        // Opsional: Jika ingin teks panjang otomatis turun ke bawah (Wrap Text)
+                        'wrapText' => true,
+                    ],
+                ]);
+
+                $sheet->getStyle("H7:H{$lastDataRow}")->applyFromArray([
+                    // 1. Setting Border (Kode Lama Anda)
+                    'borders' => [
+                        'allBorders' => ['borderStyle' => Border::BORDER_THIN],
+                    ],
+
+                    // 2. Setting Vertical Align Middle (Baru)
+                    'alignment' => [
+                        'vertical' => Alignment::VERTICAL_CENTER,
+                        // Opsional: Jika ingin teks panjang otomatis turun ke bawah (Wrap Text)
+                        'wrapText' => true,
+                    ],
                 ]);
 
                 // Format Rupiah & Alignment
@@ -191,7 +268,7 @@ class SingleBelanjaSheet implements FromCollection, ShouldAutoSize, WithEvents, 
                     $startSuratHeader = $currentRow;
 
                     // Header Bagian Surat
-                    $sheet->setCellValue("A{$currentRow}", 'DAFTAR SURAT & DOKUMEN PENDUKUNG');
+                    $sheet->setCellValue("A{$currentRow}", 'DAFTAR SURAT DARI SEKOLAH');
                     $sheet->mergeCells("A{$currentRow}:G{$currentRow}");
                     $sheet->getStyle("A{$currentRow}")->applyFromArray([
                         'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
