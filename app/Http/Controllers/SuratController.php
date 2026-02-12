@@ -36,7 +36,7 @@ class SuratController extends Controller
         if (! $anggaran) {
             return back()->with('error', 'Data anggaran tidak ditemukan.');
         }
-
+        $sekolah = Sekolah::find(auth()->user()->sekolah_id);
         // 2. AMBIL DATA BELANJA DENGAN RELASI NESTED
         $dataBelanja = Belanja::with([
             'rekanan',
@@ -45,8 +45,7 @@ class SuratController extends Controller
             'rincis.rkas.korek',
         ])
             ->where('anggaran_id', $anggaran->id)
-            // Tambahkan where user_id jika tabel tidak punya sekolah_id
-            ->where('user_id', Auth::id())
+            ->where('tw', $sekolah->triwulan_aktif)
             ->orderBy('tanggal', 'asc')
             ->orderBy('no_bukti', 'asc')
             ->get();

@@ -76,6 +76,7 @@ class BkuController extends Controller
                 // 4. Kembalikan status pajak menjadi belum diterima
                 foreach ($belanja->pajaks as $pajak) {
                     $pajak->update(['is_terima' => false]);
+                    $pajak->update(['is_setor' => false]);
                 }
 
                 // 5. Kembalikan status belanja ke draft agar bisa diedit kembali

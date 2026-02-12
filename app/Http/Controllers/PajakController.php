@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Bku;
 use App\Models\Pajak;
+use App\Models\Sekolah;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -57,7 +58,7 @@ class PajakController extends Controller
                     'tanggal_setor' => $request->tanggal_setor,
                     'ntpn' => $request->ntpn,
                 ]);
-
+                $sekolah = Sekolah::find(auth()->user()->sekolah_id);
                 // 4. Catat ke KREDIT BKU (Uang keluar dari kas sekolah ke negara)
                 // Urutan parameter: $tanggal, $no_bukti, $uraian, $debit, $kredit, $belanjaId, $pajakId, $anggaranId
                 Bku::catat(
@@ -68,7 +69,9 @@ class PajakController extends Controller
                     $pajak->nominal, // Kredit
                     $pajak->belanja_id,
                     $pajak->id,
-                    $anggaran->id    // PENTING: anggaran_id harus dikirim
+                    $anggaran->id,    // PENTING: anggaran_id harus dikirim
+                    null,
+                    $sekolah->triwulan_aktif
                 );
             });
 

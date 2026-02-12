@@ -54,7 +54,7 @@
         .header p {
             margin: 2px 0;
             font-size: 9pt;
-            font-weight: bold;
+
         }
 
         .no-bukti {
@@ -237,10 +237,13 @@
     </div>
 
     <div class="page">
-        <div class="header">
-            <div class="no-bukti">Nomor: {{ $spj->belanja->no_bukti }}</div>
-            <h1>KWITANSI</h1>
+        <div class="header" style="text-align: center; margin-bottom: 20px; font-family: 'Times New Roman', serif;">
+            {{-- Judul Kwitansi: Besar, Tebal, Garis Bawah --}}
+            <h1 style="font-size: 18pt; font-weight: bold; text-decoration: underline; margin: 0; padding: 0;">KWITANSI
+            </h1>
 
+            {{-- Nomor Kwitansi: Tepat di bawahnya --}}
+            <p style="font-size: 12pt; margin: 5px 0 0 0;">Nomor: {{ $spj->belanja->no_bukti }}</p>
         </div>
 
         <table class="table-content">
@@ -337,9 +340,7 @@
             </tr>
         </table>
 
-        <div style="margin-top: 30px; font-weight: bold; border-top: 1px solid #ccc; padding-top: 5px;">
-            {{ strtoupper($sekolah->nama_sekolah) }}
-        </div>
+
     </div>
 
 </body>

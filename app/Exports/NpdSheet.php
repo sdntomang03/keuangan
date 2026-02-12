@@ -125,11 +125,11 @@ class NpdSheet implements FromCollection, ShouldAutoSize, WithHeadings, WithStyl
 
         // Grouping Data Global berdasarkan Nama Rekening (Abaikan Kegiatan)
         $globalRekening = $allItems->groupBy(function ($item) {
-            $kode = $item->rkas->korek->kode_rekening ?? '???';
+
             $ket = $item->rkas->korek->ket ?? '-';
 
             // Gabung kode & ket biar unik dan urut
-            return "$kode - $ket";
+            return "$ket";
         })->sortKeys();
 
         $noRek = 1;

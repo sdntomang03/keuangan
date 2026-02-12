@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Anggaran;
 use App\Models\Sekolah;
+use App\Models\Sudin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -21,8 +22,9 @@ class SekolahController extends Controller
 
         // Ambil anggaran melalui relasi sekolah
         $anggarans = $setting->anggarans;
+        $sudins = Sudin::orderBy('nama', 'asc')->get();
 
-        return view('sekolah.index', compact('setting', 'anggarans'));
+        return view('sekolah.index', compact('setting', 'anggarans', 'sudins'));
     }
 
     public function store(Request $request)
@@ -37,6 +39,7 @@ class SekolahController extends Controller
             'nama_pengurus_barang' => 'nullable|string|max:255',
             'nip_pengurus_barang' => 'nullable|string|max:50',
             'triwulan_aktif' => 'required|integer|between:1,4',
+            'sudin' => 'required',
             'anggaran_id_aktif' => 'required|exists:anggarans,id',
 
             // Field Baru

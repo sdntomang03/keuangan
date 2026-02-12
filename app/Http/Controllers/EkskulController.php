@@ -204,15 +204,24 @@ class EkskulController extends Controller
 
                 // Logic Counter Nomor Bukti
                 $inputNo = $request->no_bukti;
+
                 if ($inputNo && is_numeric($inputNo)) {
                     $counter = (int) $inputNo;
                 } else {
+                    // Cari nomor terakhir tanpa memfilter Romawi TW-nya
+                    // Kita gunakan wildcard % di posisi Romawi agar semua TW di tahun tersebut terpindai
+                    $patternMatch = "/KW/{$kodeAnggaran}/%/{$tahun}";
+
                     $lastNumber = Belanja::where('anggaran_id', $anggaran->id)
                         ->whereYear('tanggal', $tahun)
-                        ->where('no_bukti', 'LIKE', "%/KW/{$kodeAnggaran}/{$romawiTW}/{$tahun}")
+                        ->where('no_bukti', 'LIKE', "%{$patternMatch}")
                         ->get()
-                        ->map(fn ($row) => (int) explode('/', $row->no_bukti)[0])
+                        ->map(function ($row) {
+                            // Ambil angka depan sebelum tanda '/'
+                            return (int) explode('/', $row->no_bukti)[0];
+                        })
                         ->max() ?? 0;
+
                     $counter = $lastNumber + 1;
                 }
 
@@ -270,6 +279,7 @@ class EkskulController extends Controller
                         'idbl' => $request->idbl,
                         'kodeakun' => $request->kodeakun,
                         'status' => 'draft',
+                        'tw' => $twAktif,
                     ]);
 
                     // E. Simpan Rincian Belanja
@@ -295,6 +305,7 @@ class EkskulController extends Controller
 
                     // G. SIMPAN DATA SPJ EKSKUL (Ini Bagian Barunya)
                     // ====================================================
+
                     SpjEkskul::create([
                         'belanja_id' => $belanja->id,
                         'rekanan_id' => $item['rekanan_id'],
@@ -343,6 +354,7 @@ class EkskulController extends Controller
             'spj_ekskul_id' => 'required',
             'tanggal_kegiatan' => 'required|date',
             'materi' => 'required|string',
+            'jam_kegiatan' => 'required',
             'foto_kegiatan' => 'required|image|max:5120', // Max 5MB
         ]);
 
@@ -355,8 +367,9 @@ class EkskulController extends Controller
                 return back()->with('error', 'Jumlah pertemuan sudah memenuhi kuota ('.$spj->jumlah_pertemuan.'x). Hapus data lama jika ingin mengganti.');
             }
 
+            $waktuAcak = sprintf('%02d:%02d:%02d', $request->jam_kegiatan, rand(0, 59), rand(0, 59));
             // Proses Upload Foto + Watermark (Menggunakan fungsi yang sudah ada)
-            $pathFoto = $this->processWatermark($request->file('foto_kegiatan'), $spj->belanja_id, $request->tanggal_kegiatan);
+            $pathFoto = $this->processWatermark($request->file('foto_kegiatan'), $spj->belanja_id, $request->tanggal_kegiatan, $waktuAcak);
 
             // Simpan ke Database
             SpjEkskulDetail::create([
@@ -390,7 +403,7 @@ class EkskulController extends Controller
         return back()->with('success', 'Data pertemuan dihapus.');
     }
 
-    private function processWatermark($file, $belanjaId, $tanggalPertemuan)
+    private function processWatermark($file, $belanjaId, $tanggalPertemuan, $jamInput)
     {
         // 1. Ambil Data Sekolah
         $belanja = Belanja::with('anggaran.sekolah')->findOrFail($belanjaId);
@@ -404,7 +417,7 @@ class EkskulController extends Controller
 
         // 2. Olah Waktu
         $tglFormatted = \Carbon\Carbon::parse($tanggalPertemuan)->translatedFormat('l, d F Y');
-        $waktu = sprintf('%02d:%02d:%02d', rand(12, 14), rand(0, 59), rand(0, 59));
+        $waktu = $jamInput;
 
         // 3. Inisialisasi Manager
         $manager = new \Intervention\Image\ImageManager(new \Intervention\Image\Drivers\Gd\Driver);
@@ -490,14 +503,14 @@ class EkskulController extends Controller
             ->findOrFail($id);
 
         // 2. Ambil Data Sekolah (Untuk KOP & Tanda Tangan)
-        $sekolah = \App\Models\Sekolah::find(auth()->user()->sekolah_id);
+        $sekolah = Sekolah::with('Sudin')->find(auth()->user()->sekolah_id);
         $singkatanAnggaran = strtoupper($spj->belanja->anggaran->singkatan ?? 'BOS');
 
         if ($singkatanAnggaran === 'BOS') {
             $sumberDana = 'DINAS PENDIDIKAN PROVINSI DKI JAKARTA';
         } else {
             // Asumsi selain BOS adalah BOP
-            $sumberDana = 'SUKU DINAS PENDIDIKAN WILAYAH II KOTA ADMINISTRASI JAKARTA BARAT';
+            $sumberDana = strtoupper($sekolah->Sudin->nama ?? '');
         }
         // 3. Konversi Angka ke Terbilang (Menggunakan Total Netto / Yang Diterima)
         // Fungsi $this->terbilang() ada di bawah
@@ -538,13 +551,13 @@ class EkskulController extends Controller
     public function cetakAbsensi($id)
     {
         // Ambil Data SPJ, urutkan detail pertemuannya berdasarkan tanggal
-        $spj = \App\Models\SpjEkskul::with(['rekanan', 'ekskul', 'belanja'])
+        $spj = SpjEkskul::with(['rekanan', 'ekskul', 'belanja'])
             ->with(['details' => function ($query) {
                 $query->orderBy('tanggal_kegiatan', 'asc');
             }])
             ->findOrFail($id);
 
-        $sekolah = \App\Models\Sekolah::find(auth()->user()->sekolah_id);
+        $sekolah = Sekolah::find(auth()->user()->sekolah_id);
 
         return view('ekskul.cetak_absensi', compact('spj', 'sekolah'));
     }
@@ -645,5 +658,164 @@ class EkskulController extends Controller
         $ekskul->delete();
 
         return back()->with('success', 'Ekskul dihapus.');
+    }
+
+    public function create_bulk($id)
+    {
+        // Ambil Data SPJ Ekskul
+        $spj = SpjEkskul::with(['belanja', 'rekanan', 'ekskul'])->findOrFail($id);
+
+        return view('ekskul.bulk_create', compact('spj'));
+    }
+
+    /**
+     * 6. PROSES SIMPAN BULK (BANYAK SEKALIGUS)
+     */
+    /**
+     * 6. PROSES SIMPAN BULK (Logic Waktu Disesuaikan dengan Store Detail Satuan)
+     */
+    public function store_detail_bulk(Request $request)
+    {
+        // 1. Validasi Input
+        $request->validate([
+            'foto_kegiatan' => 'required|array',
+            'foto_kegiatan.*' => 'image|max:5120',
+            'materi_json' => 'required|json',
+            'tanggals' => 'required|array',
+
+            // LOGIKA 1: Validasi Jam Global (Sama seperti jam_kegiatan di storeDetail)
+            'jam_global' => 'required|numeric|min:0|max:23',
+        ]);
+
+        try {
+            $spj = SpjEkskul::findOrFail($request->spj_ekskul_id);
+            $listMateri = json_decode($request->materi_json, true);
+
+            if (! is_array($listMateri)) {
+                return back()->with('error', 'Format materi tidak valid.');
+            }
+
+            $files = $request->file('foto_kegiatan');
+            $tanggals = $request->tanggals;
+
+            // LOGIKA 2: Ambil Jam Inputan User
+            $jamInput = $request->jam_global;
+
+            $savedCount = 0;
+            $quotaFull = false;
+
+            DB::transaction(function () use ($files, $tanggals, $jamInput, $listMateri, $spj, &$savedCount, &$quotaFull) {
+
+                foreach ($files as $index => $file) {
+                    // Cek Kuota (Sama persis dengan storeDetail)
+                    if ($spj->details()->count() >= $spj->jumlah_pertemuan) {
+                        $quotaFull = true;
+                        break;
+                    }
+
+                    if (isset($tanggals[$index])) {
+
+                        // LOGIKA 3: Konstruksi Waktu (Sama persis dengan storeDetail)
+                        // Gabung: Tanggal Array + Jam Global + Menit/Detik Acak
+                        $waktuAcak = sprintf('%02d:%02d:%02d', $jamInput, rand(0, 59), rand(0, 59));
+                        $tanggalFull = $tanggals[$index].' '.$waktuAcak;
+                        // ---------------------------------------------------------
+
+                        // Kirim tanggalFull ke Watermark
+                        $pathFoto = $this->processWatermark($file, $spj->belanja_id, $tanggalFull, $waktuAcak);
+
+                        $materiText = isset($listMateri[$index]) ? $listMateri[$index] : '-';
+
+                        // Simpan ke Database dengan tanggalFull
+                        SpjEkskulDetail::create([
+                            'spj_ekskul_id' => $spj->id,
+                            'tanggal_kegiatan' => $tanggalFull,
+                            'materi' => $materiText,
+                            'foto_kegiatan' => $pathFoto,
+                        ]);
+
+                        $savedCount++;
+                    }
+                }
+            });
+
+            // Feedback Message
+            if ($quotaFull && $savedCount > 0) {
+                return redirect()->route('ekskul.manage_details', $spj->belanja_id)
+                    ->with('warning', "Berhasil menyimpan $savedCount data. Sisanya dilewati karena kuota penuh.");
+            } elseif ($quotaFull && $savedCount == 0) {
+                return back()->with('error', 'Kuota pertemuan sudah penuh!');
+            }
+
+            return redirect()->route('ekskul.manage_details', $spj->belanja_id)
+                ->with('success', "Berhasil menyimpan $savedCount kegiatan.");
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan: '.$e->getMessage())->withInput();
+        }
+    }
+
+    /**
+     * UPDATE DETAIL PERTEMUAN (Dipanggil dari Modal Edit)
+     */
+    public function updateDetail(Request $request, $id)
+    {
+        // 1. Validasi
+        $request->validate([
+            'tanggal_kegiatan' => 'required|date',
+            'materi' => 'required|string',
+            // Jam & Foto opsional (nullable), hanya diisi jika ingin ganti foto/waktu
+            'jam_kegiatan' => 'nullable|numeric|min:0|max:23',
+            'foto_kegiatan' => 'nullable|image|max:5120',
+        ]);
+
+        try {
+            // Ambil data detail yang mau diedit
+            $detail = SpjEkskulDetail::with('spjEkskul')->findOrFail($id);
+            $spj = $detail->spjEkskul;
+
+            // 2. Update Data Teks
+            $detail->tanggal_kegiatan = $request->tanggal_kegiatan;
+            $detail->materi = $request->materi;
+
+            // 3. Cek apakah user mengupload foto baru?
+            if ($request->hasFile('foto_kegiatan')) {
+
+                // Hapus foto lama fisik jika ada
+                if ($detail->foto_kegiatan && Storage::disk('public')->exists($detail->foto_kegiatan)) {
+                    Storage::disk('public')->delete($detail->foto_kegiatan);
+                }
+
+                // Generate Waktu untuk Watermark
+                // Jika user input jam di modal, pakai itu. Jika kosong, pakai jam sekarang.
+                $jamInput = $request->jam_kegiatan ?? date('H');
+                $waktuAcak = sprintf('%02d:%02d:%02d', $jamInput, rand(0, 59), rand(0, 59));
+
+                // Pastikan format tanggal untuk watermark menggunakan tanggal baru
+                // Kita gabung tanggal baru dengan jam acak agar formatnya Y-m-d H:i:s
+                $tanggalFull = $request->tanggal_kegiatan.' '.$waktuAcak;
+
+                // Proses Watermark Baru (Menggunakan fungsi processWatermark yang sudah ada di controller ini)
+                $pathFoto = $this->processWatermark(
+                    $request->file('foto_kegiatan'),
+                    $spj->belanja_id,
+                    $tanggalFull,
+                    $waktuAcak
+                );
+
+                // Update path foto di database
+                $detail->foto_kegiatan = $pathFoto;
+            }
+
+            // Simpan perubahan ke database
+            $detail->save();
+
+            // Redirect kembali ke halaman kelola
+            return redirect()->route('ekskul.manage_details', $spj->belanja_id)
+                ->with('success', 'Data pertemuan berhasil diperbarui.');
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal update: '.$e->getMessage())->withInput();
+        }
     }
 }

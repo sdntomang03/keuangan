@@ -38,6 +38,7 @@ return new class extends Migration
             $table->string('telp')->nullable();
             $table->string('email')->nullable();
 
+            $table->integer('sudin')->nullable()->default(1);
             $table->string('latitude')->nullable()->default('000');
             $table->string('longitude')->nullable()->default('000');
             $table->string('logo')->nullable();

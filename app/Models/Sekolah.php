@@ -37,6 +37,7 @@ class Sekolah extends Model
         'latitude',
         'longitude',
         'nomor_surat',
+        'sudin',
     ];
 
     // app/Models/Sekolah.php
@@ -65,5 +66,10 @@ class Sekolah extends Model
     public function rekanans()
     {
         return $this->hasMany(Rekanan::class, 'sekolah_id');
+    }
+
+    public function Sudin()
+    {
+        return $this->belongsTo(Sudin::class, 'sudin');
     }
 }

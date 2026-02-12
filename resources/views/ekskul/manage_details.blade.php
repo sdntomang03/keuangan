@@ -4,10 +4,22 @@
             <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
                 {{ __('Kelola Jurnal Kegiatan') }}
             </h2>
-            <a href="{{ route('belanja.index') }}"
-                class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md text-sm hover:bg-gray-300">
-                &larr; Kembali
-            </a>
+
+            <div class="flex items-center gap-2">
+                <a href="{{ route('ekskul.create_bulk', $spj->id) }}"
+                    class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-md shadow-sm transition ease-in-out duration-150">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                    </svg>
+                    Mode Bulk Upload
+                </a>
+
+                <a href="{{ route('ekskul.index') }}"
+                    class="inline-flex items-center px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-bold rounded-md transition ease-in-out duration-150">
+                    &larr; Kembali
+                </a>
+            </div>
         </div>
     </x-slot>
 
@@ -42,10 +54,10 @@
                 </div>
             </div>
 
-            {{-- 2. FORM INPUT & TABEL LIST --}}
+            {{-- 2. GRID LAYOUT --}}
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-                {{-- FORM TAMBAH --}}
+                {{-- KOLOM KIRI: FORM TAMBAH --}}
                 <div class="lg:col-span-1">
                     <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm">
                         <h3 class="font-bold text-gray-700 mb-4 border-b pb-2">Tambah Pertemuan Baru</h3>
@@ -71,10 +83,23 @@
                             {{-- Materi --}}
                             <div class="mb-4">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Materi</label>
-
                                 <textarea name="materi" id="editor-materi"
-                                    class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                                    placeholder="Contoh: Latihan Dribble dan Passing...">{{ old('materi') }}</textarea>
+                                    class="w-full border-gray-300 rounded-md shadow-sm"
+                                    placeholder="Contoh: Latihan Dribble...">{{ old('materi') }}</textarea>
+                            </div>
+
+                            {{-- Jam --}}
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Jam Kegiatan (WIB)</label>
+                                <div class="relative">
+                                    <input type="number" name="jam_kegiatan" min="0" max="23" value="14"
+                                        class="w-full text-sm bg-gray-50 border border-gray-300 rounded-lg p-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                        placeholder="Contoh: 14" required>
+                                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                        <span class="text-gray-500 text-xs">Menit acak</span>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">*Masukkan angka jam saja (0-23).</p>
                             </div>
 
                             {{-- Foto --}}
@@ -95,7 +120,7 @@
                     </div>
                 </div>
 
-                {{-- TABEL LIST --}}
+                {{-- KOLOM KANAN: TABEL LIST --}}
                 <div class="lg:col-span-2">
                     <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm">
                         <h3 class="font-bold text-gray-700 mb-4 border-b pb-2">Riwayat Pertemuan</h3>
@@ -136,15 +161,24 @@
                                             </a>
                                         </td>
                                         <td class="px-4 py-3 text-right">
-                                            <form action="{{ route('ekskul.delete_detail', $detail->id) }}"
-                                                method="POST" onsubmit="return confirm('Hapus data ini?');">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit"
-                                                    class="text-red-500 hover:text-red-700 font-bold text-xs bg-red-50 px-2 py-1 rounded">
-                                                    Hapus
+                                            <div class="flex justify-end gap-2">
+                                                {{-- TOMBOL EDIT MODAL --}}
+                                                <button type="button" onclick="openModal('editModal-{{ $detail->id }}')"
+                                                    class="text-yellow-600 hover:text-yellow-800 font-bold text-xs bg-yellow-100 px-2 py-1 rounded">
+                                                    Edit
                                                 </button>
-                                            </form>
+
+                                                {{-- TOMBOL HAPUS --}}
+                                                <form action="{{ route('ekskul.delete_detail', $detail->id) }}"
+                                                    method="POST" onsubmit="return confirm('Hapus data ini?');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit"
+                                                        class="text-red-500 hover:text-red-700 font-bold text-xs bg-red-50 px-2 py-1 rounded">
+                                                        Hapus
+                                                    </button>
+                                                </form>
+                                            </div>
                                         </td>
                                     </tr>
                                     @endforeach
@@ -158,13 +192,100 @@
             </div>
         </div>
     </div>
+
+    {{-- 3. LOOPING MODAL EDIT (DILUAR STRUKTUR UTAMA AGAR RAPI) --}}
+    @foreach($spj->details as $detail)
+    <div id="editModal-{{ $detail->id }}" class="fixed inset-0 z-50 hidden overflow-y-auto"
+        aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        {{-- Overlay --}}
+        <div class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+                onclick="closeModal('editModal-{{ $detail->id }}')"></div>
+
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            {{-- Modal Content --}}
+            <div
+                class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full">
+
+                {{-- Modal Header --}}
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 flex justify-between items-center">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Edit Pertemuan</h3>
+                    <button type="button" class="text-gray-400 hover:text-gray-500"
+                        onclick="closeModal('editModal-{{ $detail->id }}')">
+                        <span class="text-2xl">&times;</span>
+                    </button>
+                </div>
+
+                <form action="{{ route('ekskul.update_detail', $detail->id) }}" method="POST"
+                    enctype="multipart/form-data">
+                    @csrf
+                    @method('PUT')
+
+                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        {{-- Tanggal --}}
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Kegiatan</label>
+                            <input type="date" name="tanggal_kegiatan"
+                                value="{{ \Carbon\Carbon::parse($detail->tanggal_kegiatan)->format('Y-m-d') }}"
+                                class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                required>
+                        </div>
+
+                        {{-- Jam --}}
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Jam Kegiatan (Input Ulang jika
+                                ganti Foto)</label>
+                            <input type="number" name="jam_kegiatan" min="0" max="23"
+                                class="w-full text-sm bg-gray-50 border border-gray-300 rounded-lg p-2"
+                                placeholder="Kosongkan jika tidak mengganti foto">
+                        </div>
+
+                        {{-- Materi (CKEditor) --}}
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Materi</label>
+                            {{-- ID Unik untuk setiap textarea --}}
+                            <textarea name="materi" id="editor-edit-{{ $detail->id }}"
+                                class="w-full">{{ $detail->materi }}</textarea>
+                        </div>
+
+                        {{-- Foto --}}
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Ganti Foto (Opsional)</label>
+                            <input type="file" name="foto_kegiatan"
+                                class="w-full text-sm bg-gray-50 border border-gray-300 rounded-lg p-2"
+                                accept="image/*">
+                            <div class="mt-2 text-xs text-gray-500 flex items-center gap-2">
+                                <span>Foto saat ini:</span>
+                                <a href="{{ asset('storage/'.$detail->foto_kegiatan) }}" target="_blank"
+                                    class="text-blue-600 hover:underline">Lihat</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Modal Footer --}}
+                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <button type="submit"
+                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">
+                            Simpan Perubahan
+                        </button>
+                        <button type="button"
+                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                            onclick="closeModal('editModal-{{ $detail->id }}')">
+                            Batal
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    @endforeach
+
     <style>
-        /* Mengatur tinggi minimal editor */
         .ck-editor__editable_inline {
             min-height: 150px;
         }
 
-        /* Memperbaiki tampilan list (ul/ol) yang sering hilang kena reset CSS Tailwind */
         .ck-content ul {
             list-style-type: disc;
             padding-left: 1.5rem;
@@ -178,14 +299,34 @@
 
     <script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
     <script>
+        // 1. Inisialisasi CKEditor untuk Form Tambah (Utama)
         document.addEventListener("DOMContentLoaded", function() {
-        ClassicEditor
-            .create(document.querySelector('#editor-materi'), {
-                toolbar: [ 'heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote', 'undo', 'redo' ]
-            })
-            .catch(error => {
-                console.error(error);
-            });
-    });
+            if(document.querySelector('#editor-materi')) {
+                ClassicEditor
+                    .create(document.querySelector('#editor-materi'), {
+                        toolbar: [ 'heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote', 'undo', 'redo' ]
+                    })
+                    .catch(error => console.error(error));
+            }
+
+            // 2. Inisialisasi CKEditor untuk Loop Modal Edit
+            // Kita loop semua textarea yang ID-nya dimulai dengan 'editor-edit-'
+            @foreach($spj->details as $detail)
+                ClassicEditor
+                    .create(document.querySelector('#editor-edit-{{ $detail->id }}'), {
+                        toolbar: [ 'heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote', 'undo', 'redo' ]
+                    })
+                    .catch(error => console.error(error));
+            @endforeach
+        });
+
+        // 3. Fungsi Buka/Tutup Modal
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.remove('hidden');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
     </script>
 </x-app-layout>

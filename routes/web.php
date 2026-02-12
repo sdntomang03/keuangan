@@ -7,6 +7,7 @@ use App\Http\Controllers\AkbController;
 use App\Http\Controllers\ArkasController;
 use App\Http\Controllers\BelanjaController;
 use App\Http\Controllers\BkuController;
+use App\Http\Controllers\CetakController;
 use App\Http\Controllers\Coba;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EkskulController;
@@ -239,6 +240,9 @@ Route::group(['middleware' => ['auth']], function () {
         Route::get('/manage-details/{belanjaId}', [EkskulController::class, 'manageDetails'])->name('manage_details');
         Route::post('/store-detail', [EkskulController::class, 'storeDetail'])->name('store_detail');
         Route::delete('/delete-detail/{id}', [EkskulController::class, 'deleteDetail'])->name('delete_detail');
+        Route::put('/detail/{id}', [EkskulController::class, 'updateDetail'])->name('update_detail');
+        Route::get('/bulk-create/{id}', [EkskulController::class, 'create_bulk'])->name('create_bulk');
+        Route::post('/bulk-store', [EkskulController::class, 'store_detail_bulk'])->name('store_detail_bulk');
 
     });
 
@@ -261,4 +265,6 @@ Route::get('/coba', [Coba::class, 'index'])->name('index');
 Route::get('/banding', [Coba::class, 'banding'])->name('banding');
 Route::get('/coba/rkas', [Coba::class, 'rkas'])->name('coba.rkas');
 Route::get('/coba/anggaran', [Coba::class, 'anggaran'])->name('coba.anggaran');
+
+Route::get('/cetak-cover', [CetakController::class, 'cetakCover'])->name('cetak.cover');
 require __DIR__.'/auth.php';

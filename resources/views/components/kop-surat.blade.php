@@ -58,17 +58,14 @@
 <div class="kop-container">
     {{-- LOGO --}}
     <div class="logo-box">
-        @if(!empty($sekolah->logo))
-        <img src="{{ asset('storage/' . $sekolah->logo) }}" alt="Logo Sekolah">
-        @else
-        {{-- Pastikan path logo default benar --}}
+
         <img src="{{ asset('storage/logo_jakarta.png') }}" alt="Logo DKI">
-        @endif
+
     </div>
 
     {{-- TEKS TENGAH --}}
     <div class="kop-text">
-        <div class="kop-pemprov">PEMERINTAH PROVINSI DKI JAKARTA</div>
+        <div class="kop-pemprov">PEMERINTAH PROVINSI DAERAH KHUSUS IBUKOTA JAKARTA</div>
         <div class="kop-dinas">DINAS PENDIDIKAN</div>
         <div class="kop-sekolah">{{ $sekolah->nama_sekolah }}</div>
         <div class="kop-alamat">

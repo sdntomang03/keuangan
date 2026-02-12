@@ -68,7 +68,7 @@ $sekolah = auth()->user()->sekolah;
         <tr>
             <td class="kop-logo-cell">
                 {{-- Pastikan path storage benar --}}
-                <img src="{{ asset('storage/' . ($sekolah->logo ?? 'logo_jakarta.png')) }}" alt="Logo Sekolah"
+                <img src="{{ asset('storage/' . ('logo_jakarta.png')) }}" alt="Logo Sekolah"
                     style="width: 90px; height: auto;">
             </td>
             <td class="kop-text-cell">

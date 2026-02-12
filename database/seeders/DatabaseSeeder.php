@@ -31,6 +31,7 @@ class DatabaseSeeder extends Seeder
             AnggaranSeeder::class,
             RolePermissionSeeder::class,
             RefEkskulSeeder::class,
+            SudinSeeder::class,
         ]);
 
     }

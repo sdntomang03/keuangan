@@ -370,7 +370,7 @@ class BelanjaController extends Controller
     public function post($id, Request $request) // Tambahkan Request untuk akses middleware
     {
         // 1. Cari data belanja beserta pajaknya dengan proteksi user_id
-        $belanja = Belanja::with('pajaks.masterPajak')
+        $belanja = Belanja::with('rekanan', 'pajaks.masterPajak')
             ->where('user_id', auth()->id())
             ->findOrFail($id);
 
@@ -380,14 +380,14 @@ class BelanjaController extends Controller
         if ($belanja->status === 'posted') {
             return back()->with('error', 'Transaksi ini sudah diposting sebelumnya.');
         }
-
         DB::transaction(function () use ($belanja, $anggaran) {
+            $sekolah = auth()->user()->sekolah;
             // 2. Catat Transaksi Belanja Utama ke BKU
             // Pastikan model Bku::catat menerima parameter anggaran_id
             Bku::catat(
-                $belanja->tanggal,
+                now()->today()->format('Y-m-d'),
                 $belanja->no_bukti,
-                'Dibayar '.$belanja->uraian,
+                'Dibayar '.$belanja->uraian.' dari '.$sekolah->nama_sekolah.' kepada '.$belanja->rekanan->nama_rekanan,
                 0,                                  // debit
                 $belanja->subtotal + $belanja->ppn, // kredit
                 $belanja->id,                       // belanja_id
@@ -400,9 +400,9 @@ class BelanjaController extends Controller
             // 3. Catat Tiap Pajak yang ada di Belanja tersebut
             foreach ($belanja->pajaks as $pajak) {
                 Bku::catat(
-                    $belanja->tanggal,
+                    now()->today()->format('Y-m-d'),
                     $belanja->no_bukti,
-                    'Diterima '.$pajak->masterPajak->nama_pajak.' '.$belanja->uraian,
+                    'Diterima '.$pajak->masterPajak->nama_pajak.' '.$belanja->uraian.' dari '.$sekolah->nama_sekolah.' kepada '.$belanja->rekanan->nama_rekanan,
                     $pajak->nominal, // debit (penerimaan pajak)
                     0,               // kredit
                     $belanja->id,    // referensi induk belanja
