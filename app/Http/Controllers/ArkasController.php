@@ -4,13 +4,75 @@ namespace App\Http\Controllers;
 
 use App\Imports\ArkasImport;
 use App\Models\Arkas;
+use App\Models\ArkasChecklist;
+use App\Models\Rkas;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ArkasController extends Controller
 {
+    public function index(Request $request)
+    {
+        $anggaran = $request->anggaran_data;
+        if (! $anggaran) {
+            return redirect()->back()->with('error', 'Pilih Anggaran dulu.');
+        }
+
+        $sekolahId = auth()->user()->sekolah_id;
+
+        $dataRkas = Rkas::with(['akbRincis', 'kegiatan', 'korek', 'arkasChecklist'])
+            ->where('anggaran_id', $anggaran->id)
+            ->orderBy('idbl', 'asc')
+            ->paginate(50);
+
+        return view('arkas.index', compact('dataRkas', 'anggaran'));
+    }
+
+    public function updateIdKomponen(Request $request, $id)
+    {
+        $request->validate([
+            'idkomponen' => 'nullable|string|max:255', // Sesuaikan validasi
+        ]);
+
+        $rkas = Rkas::findOrFail($id);
+        $rkas->idkomponen = $request->idkomponen;
+        $rkas->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'ID Komponen berhasil diperbarui.',
+            'value' => $rkas->idkomponen,
+        ]);
+    }
+
+    public function toggleStatusArkas($id)
+    {
+        // Cari data checklist berdasarkan rkas_id
+        $checklist = ArkasChecklist::where('rkas_id', $id)->first();
+
+        if ($checklist) {
+            // Jika sudah ada, update statusnya (kebalikannya)
+            $checklist->status = ! $checklist->status;
+            $checklist->save();
+            $statusAkhir = $checklist->status;
+        } else {
+            // Jika belum ada, buat baru dengan status true
+            ArkasChecklist::create([
+                'rkas_id' => $id,
+                'status' => true,
+            ]);
+            $statusAkhir = true;
+        }
+
+        return response()->json([
+            'success' => true,
+            'status' => $statusAkhir,
+            'message' => $statusAkhir ? 'Ditandai: Sudah Input ARKAS' : 'Ditandai: Belum Input',
+        ]);
+    }
+
     // 1. Tampilkan Halaman Index (Hanya Kerangka HTML)
-    public function index()
+    public function komponen()
     {
         // Ambil list untuk filter dropdown
         $listJenisBelanja = Arkas::select('jenis_belanja')
@@ -18,7 +80,7 @@ class ArkasController extends Controller
             ->orderBy('jenis_belanja')
             ->pluck('jenis_belanja');
 
-        return view('arkas.index', compact('listJenisBelanja'));
+        return view('arkas.komponen', compact('listJenisBelanja'));
     }
 
     // 2. Endpoint AJAX: Mengembalikan JSON Data

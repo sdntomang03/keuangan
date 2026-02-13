@@ -8,7 +8,6 @@ use App\Http\Controllers\ArkasController;
 use App\Http\Controllers\BelanjaController;
 use App\Http\Controllers\BkuController;
 use App\Http\Controllers\CetakController;
-use App\Http\Controllers\Coba;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EkskulController;
 use App\Http\Controllers\KegiatanController;
@@ -250,7 +249,7 @@ Route::group(['middleware' => ['auth']], function () {
 
 Route::middleware(['auth'])->group(function () {
     // 1. Halaman Utama (Index)
-    Route::get('/arkas', [ArkasController::class, 'index'])->name('arkas.index');
+    Route::get('/arkas/komponen', [ArkasController::class, 'komponen'])->name('arkas.komponen');
 
     // 2. Endpoint AJAX (Mengambil Data JSON)
     Route::get('/arkas/data', [ArkasController::class, 'getData'])->name('arkas.data');
@@ -260,11 +259,10 @@ Route::middleware(['auth'])->group(function () {
 
     // 4. Proses Import (Action)
     Route::post('/arkas/import', [ArkasController::class, 'storeImport'])->name('arkas.import.store');
+    Route::get('/arkas', [ArkasController::class, 'index'])->name('arkas.index');
+    Route::post('/arkas/toggle-status/{id}', [ArkasController::class, 'toggleStatusArkas'])->name('arkas.toggle_status');
+    Route::post('/arkas/update-idkomponen/{id}', [ArkasController::class, 'updateIdKomponen'])->name('arkas.update_idkomponen');
 });
-Route::get('/coba', [Coba::class, 'index'])->name('index');
-Route::get('/banding', [Coba::class, 'banding'])->name('banding');
-Route::get('/coba/rkas', [Coba::class, 'rkas'])->name('coba.rkas');
-Route::get('/coba/anggaran', [Coba::class, 'anggaran'])->name('coba.anggaran');
 
 Route::get('/cetak-cover', [CetakController::class, 'cetakCover'])->name('cetak.cover');
 require __DIR__.'/auth.php';

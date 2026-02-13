@@ -56,4 +56,9 @@ class Rkas extends Model
     {
         return $this->hasMany(BelanjaRinci::class, 'idblrinci', 'idblrinci');
     }
+
+    public function arkasChecklist()
+    {
+        return $this->hasOne(ArkasChecklist::class, 'rkas_id', 'id');
+    }
 }

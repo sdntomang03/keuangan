@@ -38,6 +38,8 @@
                                 </x-dropdown-link>
                                 <x-dropdown-link :href="route('akb.satuan')">{{ __('Format Excel') }}
                                 </x-dropdown-link>
+                                <x-dropdown-link :href="route('arkas.index')">{{ __('Format Arkas') }}
+                                </x-dropdown-link>
                             </x-slot>
                         </x-dropdown>
                     </div>
