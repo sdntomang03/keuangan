@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Exports\BelanjaExport;
 use App\Models\Belanja;
 use App\Models\BelanjaFoto;
 use App\Models\Rekanan;
@@ -28,34 +27,6 @@ class SuratController extends Controller
     /**
      * 1. Export Data Belanja ke Excel
      */
-    public function exportExcel(Request $request)
-    {
-        // 1. Ambil Data Anggaran
-        $anggaran = $request->anggaran_data ?? Auth::user()->sekolah->anggaranAktif;
-
-        if (! $anggaran) {
-            return back()->with('error', 'Data anggaran tidak ditemukan.');
-        }
-        $sekolah = Sekolah::find(auth()->user()->sekolah_id);
-        // 2. AMBIL DATA BELANJA DENGAN RELASI NESTED
-        $dataBelanja = Belanja::with([
-            'rekanan',
-            // Load RKAS, lalu dari RKAS load Kegiatan dan Korek
-            'rincis.rkas.kegiatan',
-            'rincis.rkas.korek',
-        ])
-            ->where('anggaran_id', $anggaran->id)
-            ->where('tw', $sekolah->triwulan_aktif)
-            ->orderBy('tanggal', 'asc')
-            ->orderBy('no_bukti', 'asc')
-            ->get();
-
-        // 3. Generate Nama File
-        $fileName = 'Laporan_Rincian_Belanja_'.strtoupper($anggaran->singkatan).'_'.date('YmdHis').'.xlsx';
-
-        // 4. Download Excel
-        return Excel::download(new BelanjaExport($dataBelanja), $fileName);
-    }
 
     /**
      * 2. Cetak Dokumen SPJ Lengkap (Word)
@@ -405,20 +376,42 @@ class SuratController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $request->validate([
-            'tanggal_surat' => 'required|date',
-        ]);
-
         $surat = Surat::findOrFail($id);
 
-        $surat->update([
+        // 1. Validasi Dinamis
+        // Jika jenis surat adalah BAPB, nomor_bast wajib diisi
+        $rules = [
+            'tanggal_surat' => 'required|date',
+        ];
+
+        if ($surat->jenis_surat === 'BAPB') {
+            $rules['nomor_bast'] = 'required|string|max:255';
+        }
+
+        $request->validate($rules);
+
+        // 2. Siapkan data untuk update
+        $dataUpdate = [
             'tanggal_surat' => $request->tanggal_surat,
-        ]);
+        ];
 
-        // Urutkan ulang jika tanggal berubah agar konsisten
-        $this->urutkanUlangNomorSurat($surat->sekolah_id, $surat->tanggal_surat->format('Y'), $surat->triwulan);
+        // Tambahkan nomor_bast ke array update hanya jika jenisnya BAPB
+        if ($surat->jenis_surat === 'BAPB') {
+            $dataUpdate['no_bast'] = $request->nomor_bast;
+        }
 
-        return back()->with('success', 'Data surat diperbarui.');
+        // 3. Eksekusi Update
+        $surat->update($dataUpdate);
+
+        // 4. Urutkan ulang nomor surat agar tetap konsisten dengan tanggal baru
+        // Pastikan kolom 'triwulan' atau 'tw' sesuai dengan nama kolom di database Anda
+        $this->urutkanUlangNomorSurat(
+            $surat->sekolah_id,
+            Carbon::parse($request->tanggal_surat)->format('Y'),
+            $surat->triwulan ?? $surat->tw
+        );
+
+        return back()->with('success', 'Data surat berhasil diperbarui.');
     }
 
     public function store(Request $request, $belanjaId)
@@ -1750,7 +1743,7 @@ class SuratController extends Controller
             'perihal' => $labelSurat.' '.$belanja->uraian,
             'sifat' => $suratDipilih->sifat ?? 'Segera',
             'lampiran' => $suratDipilih->lampiran ?? '-',
-
+            'no_bast' => $suratDipilih->no_bast ?? '-',
             'nama_pekerjaan' => $belanja->uraian,
             'hari_ini' => $tglSurat->translatedFormat('l'),
             'tanggal_terbilang' => $this->terbilangTanggal($tglSurat),
@@ -1896,5 +1889,44 @@ class SuratController extends Controller
         }
 
         return $temp;
+    }
+
+    /**
+     * Cetak Kop Surat (PDF - DomPDF)
+     */
+    public function cetakKopPdf()
+    {
+        // 1. Ambil Data Sekolah
+        $user = Auth::user();
+
+        // Fallback data sekolah
+        $sekolah = $user->sekolah ?? Sekolah::find($user->sekolah_id);
+
+        if (! $sekolah) {
+            return back()->with('error', 'Data Sekolah tidak ditemukan.');
+        }
+
+        // 2. Load View
+        // Pastikan Anda membuat file view ini (lihat langkah 2)
+        $pdf = PDF::loadView('surat.cetak_kop', [
+            'sekolah' => $sekolah,
+        ]);
+
+        // 3. Konfigurasi Kertas F4 (215mm x 330mm)
+        // Konversi mm ke point (1 mm = 2.83465 pt)
+        // Width: 215 * 2.83465 = ~609.45
+        // Height: 330 * 2.83465 = ~935.43
+        $customPaper = [0, 0, 609.4488, 935.433];
+        $pdf->setPaper($customPaper, 'portrait');
+
+        // 4. Konfigurasi Opsi (Penting agar Gambar Logo muncul)
+        $pdf->setOptions([
+            'isRemoteEnabled' => true,
+            'isHtml5ParserEnabled' => true,
+            'default_font' => 'Arial',
+        ]);
+
+        // 5. Stream PDF
+        return $pdf->stream('Kop_Surat_'.time().'.pdf');
     }
 }

@@ -21,7 +21,7 @@
         <tr>
             <td style="width:150px;">No. Faktur/Surat Jalan</td>
             <td style="width:10px;">:</td>
-            <td>{{ $belanja->no_bast}}</td>
+            <td>{{ $surat->no_bast ?? '-' }}</td>
         </tr>
         <tr>
             <td style="width:150px;">Tanggal</td>

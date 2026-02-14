@@ -34,7 +34,7 @@
                     <div style="margin-bottom: 20px;">
                         {{ \Carbon\Carbon::parse($surat->tanggal_surat)->translatedFormat('d F Y') }}
                     </div>
-                    <div style="margin-bottom: 5px;">Kepada :</div>
+                    <div style="margin-bottom: 5px;">Kepada</div>
                     <table style="width: 100%; border-collapse: collapse; margin-left: -35px;">
                         <tbody>
                             <tr>

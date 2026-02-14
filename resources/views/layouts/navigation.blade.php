@@ -70,6 +70,13 @@
                                 <x-dropdown-link :href="route('bku.index')">
                                     {{ __('BKU') }}
                                 </x-dropdown-link>
+                                <x-dropdown-link :href="route('cetak.kop')">
+                                    {{ __('Cetak Kop Surat') }}
+                                </x-dropdown-link>
+                                <x-dropdown-link :href="route('realisasi.rekanan')">
+                                    {{ __('Rekap Belanja Rekanan') }}
+
+                                </x-dropdown-link>
 
                                 <div class="border-t border-gray-100 dark:border-gray-600"></div>
 

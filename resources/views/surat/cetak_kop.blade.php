@@ -31,7 +31,7 @@
 
             /* Margin: Atas 1.5cm, Kanan 2cm, Bawah 1.5cm, Kiri 2.5cm */
             /* Margin Kiri 2.5cm disarankan untuk area jilid/lubang kertas */
-            margin: 1.5cm 1.5cm 1.5cm 2cm;
+            margin: 1.5cm 1.5cm 1.5cm 2.5cm;
         }
 
         body {
@@ -128,8 +128,7 @@
 
 <body>
 
-    {{-- AREA KONTEN --}}
-    @yield('content')
+    <x-kop :sekolah="$sekolah" />
 
 </body>
 

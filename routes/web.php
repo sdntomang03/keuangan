@@ -105,7 +105,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/realisasi/komponen', [RealisasiController::class, 'komponen'])->name('realisasi.komponen');
     Route::get('/realisasi/korek', [RealisasiController::class, 'korek'])->name('realisasi.korek');
     Route::get('/belanja/cetak/{id}', [SuratController::class, 'cetakDokumenLengkap'])->name('belanja.print');
-    Route::get('/rekap/export', [SuratController::class, 'exportExcel'])->name('belanja.export');
+    Route::get('/rekap/export', [RealisasiController::class, 'exportExcel'])->name('belanja.export');
+    Route::get('/rekap/rekanan', [RealisasiController::class, 'rekapPerRekanan'])->name('realisasi.rekanan');
+    Route::get('/rekap/rekanan/export/{id}', [RealisasiController::class, 'exportDetailRekanan'])->name('rekap.rekanan.export_detail');
 });
 Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
 
@@ -199,6 +201,7 @@ Route::middleware(['auth'])->prefix('surat')->group(function () {
     Route::get('/cetakpdf/{id}', [SuratController::class, 'cetakPdf'])->name('surat.cetakpdf');
     Route::get('/cetaksatuanpdf/{id}/{jenis}', [SuratController::class, 'cetakSatuanPdf'])->name('surat.cetakSatuanPdf');
     Route::get('/cetakparsialpdf/{id}', [SuratController::class, 'cetakParsialPdf'])->name('surat.cetakParsialPdf');
+    Route::get('/cetak/kop', [SuratController::class, 'cetakKopPdf'])->name('cetak.kop');
 });
 
 Route::group(['middleware' => ['auth']], function () {

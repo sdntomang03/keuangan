@@ -248,8 +248,10 @@
                                     <button type="button" onclick="openEditModal(
             '{{ route('surat.update', $surat->id) }}',
             '{{ $surat->tanggal_surat->format('Y-m-d') }}',
-            '{{ $surat->nomor_surat }}'
-        )" class="text-blue-600 hover:text-blue-900 ml-2" title="Edit Tanggal">
+            '{{ $surat->nomor_surat }}',
+            '{{ $surat->jenis_surat }}',
+            '{{ $surat->no_bast }}',
+        )" class="text-blue-600 hover:text-blue-900 ml-2" title="Edit Rincian Surat">
 
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
                                             viewBox="0 0 24 24" stroke="currentColor">
@@ -718,18 +720,26 @@
                             </div>
                             <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
                                 <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                                    Ubah Tanggal Surat
+                                    Edit Surat
                                 </h3>
                                 <div class="mt-2">
                                     <p class="text-sm text-gray-500 mb-4">
-                                        Silakan ubah tanggal surat. Nomor surat akan diurutkan ulang otomatis oleh
-                                        sistem jika tanggal berubah bulan/tahun.
+                                        Silakan ubah tanggal surat dan nomor BAST. Nomor surat akan diurutkan ulang
+                                        otomatis oleh sistem jika tanggal berubah bulan/tahun.
                                     </p>
 
                                     <div class="mb-4">
                                         <label for="modal_tanggal_surat"
                                             class="block text-sm font-medium text-gray-700">Tanggal Surat</label>
                                         <input type="date" name="tanggal_surat" id="modal_tanggal_surat" required
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2">
+                                    </div>
+
+                                    <div class="mb-4" id="container_nomor_bast" style="display: none;">
+                                        <label for="modal_nomor_bast"
+                                            class="block text-sm font-medium text-gray-700">Nomor BAST</label>
+                                        {{-- Atribut required dihapus dari sini karena dikontrol JS --}}
+                                        <input type="text" name="nomor_bast" id="modal_nomor_bast"
                                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2">
                                     </div>
                                 </div>
@@ -751,20 +761,33 @@
         </div>
     </div>
     <script>
-        function openEditModal(actionUrl, tanggalLama, nomorSurat) {
-        // 1. Set Action Form ke URL Update (Route: surat.update)
+        // Tambahkan parameter nomorBastLama di akhir
+    function openEditModal(actionUrl, tanggalLama, nomorSurat, jenisSurat, nomorBastLama) {
+        // 1. Set Action Form
         document.getElementById('formEditTanggal').action = actionUrl;
 
-        // 2. Isi value input tanggal dengan data lama
+        // 2. Isi value input tanggal
         document.getElementById('modal_tanggal_surat').value = tanggalLama;
 
+        // 3. Logika Visibilitas Nomor BAST
+        const containerBast = document.getElementById('container_nomor_bast');
+        const inputBast = document.getElementById('modal_nomor_bast');
+
+        if (jenisSurat === 'BAPB') {
+            containerBast.style.display = 'block';
+            inputBast.setAttribute('required', 'required');
+            inputBast.value = nomorBastLama; // ISI NOMOR BAST LAMA DI SINI
+        } else {
+            containerBast.style.display = 'none';
+            inputBast.removeAttribute('required');
+            inputBast.value = '';
+        }
 
         // 4. Tampilkan Modal
         document.getElementById('modalEditTanggal').classList.remove('hidden');
     }
 
     function closeModal() {
-        // Sembunyikan Modal
         document.getElementById('modalEditTanggal').classList.add('hidden');
     }
     </script>

@@ -15,7 +15,7 @@ $sekolah = auth()->user()->sekolah;
 <style>
     .kop-table {
         width: 100%;
-        border-bottom: 3px solid black;
+        border-bottom: 2.25px solid black;
         padding-bottom: 10px;
         margin-bottom: 5px;
         border-collapse: collapse;
@@ -30,6 +30,11 @@ $sekolah = auth()->user()->sekolah;
         padding-top: 5px;
     }
 
+    .kop-logo-cell img {
+        width: 90px;
+        height: auto;
+    }
+
     .kop-text-cell {
         text-align: center;
         padding: 0 10px;
@@ -41,7 +46,7 @@ $sekolah = auth()->user()->sekolah;
 
     .kop-text-cell h2 {
         margin: 0;
-        font-size: 12pt;
+        font-size: 13pt;
         font-weight: bold;
         text-transform: uppercase;
 
@@ -68,8 +73,7 @@ $sekolah = auth()->user()->sekolah;
         <tr>
             <td class="kop-logo-cell">
                 {{-- Pastikan path storage benar --}}
-                <img src="{{ asset('storage/' . ('logo_jakarta.png')) }}" alt="Logo Sekolah"
-                    style="width: 90px; height: auto;">
+                <img src="{{ asset('storage/' . ('jayakarta.png')) }}" alt="Logo Sekolah">
             </td>
             <td class="kop-text-cell">
                 <h2>PEMERINTAH PROVINSI DAERAH KHUSUS IBUKOTA JAKARTA</h2>
