@@ -2,6 +2,13 @@
     <div class="py-12 bg-gray-50 min-h-screen" x-data="{
         showModal: false,
         activeTab: 'surat',
+        init() {
+        if (window.location.hash === '#foto') {
+            this.activeTab = 'foto';
+        } else if (window.location.hash === '#barang') {
+            this.activeTab = 'barang';
+        }
+    },
         confirmDelete(id) {
             Swal.fire({
                 title: 'Hapus Surat?',
@@ -61,6 +68,7 @@
                     <div class="flex flex-wrap items-center gap-3">
 
                         {{-- 1. GENERATE SURAT (Primary Action) --}}
+                        @if(!$belanja->surats->where('is_parsial', true)->count() > 0)
                         <form action="{{ route('surat.generate', $belanja->id) }}" method="POST">
                             @csrf
                             <button type="submit"
@@ -72,7 +80,7 @@
                                 <span>GENERATE SURAT</span>
                             </button>
                         </form>
-
+                        @endif
                         {{-- 2. GENERATE ULANG NOMOR (Tombol Menarik / Warning) --}}
                         <a href="{{ route('surat.regenerate_all') }}"
                             onclick="return confirm('PERINGATAN: Proses ini akan mengurutkan ulang SELURUH nomor surat di database berdasarkan tanggal. Lanjutkan?')"
@@ -116,33 +124,49 @@
 
                         {{-- 5. CETAK SPJ (Dark Action) --}}
                         @if($belanja->surats->count() > 0)
+                        {{-- TOMBOL CETAK WORD (Eksisting) --}}
                         <a href="{{ route('belanja.print', $belanja->id) }}" target="_blank"
                             class="flex items-center gap-2 px-4 py-2.5 bg-gray-800 hover:bg-gray-900 text-white text-xs font-bold rounded-xl shadow-md transition-all hover:-translate-y-0.5">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                             </svg>
-                            <span>CETAK</span>
+                            <span>CETAK (WORD)</span>
+                        </a>
+
+                        {{-- TOMBOL CETAK PDF (Tambahan Baru) --}}
+                        <a href="{{ route('surat.cetakpdf', $belanja->id) }}" target="_blank"
+                            class="flex items-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl shadow-md transition-all hover:-translate-y-0.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                            <span>CETAK (PDF)</span>
                         </a>
                         @endif
-
                     </div>
                 </div>
 
                 {{-- TAB NAVIGATION --}}
+                {{-- Ganti bagian tombol tab Anda --}}
                 <div class="flex gap-8 mt-10 border-b border-gray-100">
-                    <button @click="activeTab = 'surat'"
+                    <button @click="activeTab = 'surat'; window.location.hash = 'surat'"
                         :class="activeTab === 'surat' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-400'"
-                        class="pb-4 border-b-4 font-black text-xs uppercase tracking-widest transition-all">Administrasi
-                        Surat</button>
-                    <button @click="activeTab = 'barang'"
+                        class="pb-4 border-b-4 font-black text-xs uppercase tracking-widest transition-all">
+                        Administrasi Surat
+                    </button>
+
+                    <button @click="activeTab = 'barang'; window.location.hash = 'barang'"
                         :class="activeTab === 'barang' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-400'"
-                        class="pb-4 border-b-4 font-black text-xs uppercase tracking-widest transition-all">Rincian
-                        Barang</button>
-                    <button @click="activeTab = 'foto'"
+                        class="pb-4 border-b-4 font-black text-xs uppercase tracking-widest transition-all">
+                        Rincian Barang
+                    </button>
+
+                    <button @click="activeTab = 'foto'; window.location.hash = 'foto'"
                         :class="activeTab === 'foto' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-400'"
-                        class="pb-4 border-b-4 font-black text-xs uppercase tracking-widest transition-all">Dokumentasi
-                        Fisik</button>
+                        class="pb-4 border-b-4 font-black text-xs uppercase tracking-widest transition-all">
+                        Dokumentasi Fisik
+                    </button>
                 </div>
             </div>
 
@@ -465,9 +489,32 @@
                                             @change="fileChosen">
                                     </label>
                                 </div>
+                                {{-- Input Tanggal BAST --}}
                                 <div class="mb-4">
-                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Pukul Berapa
-                                        Foto Diambil?</label>
+                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">
+                                        Tanggal BAST (Dokumen)
+                                    </label>
+                                    @php
+                                    // Cari surat BAPB
+                                    $suratBapb = $belanja->surats->where('jenis_surat', 'BAPB')->first();
+
+                                    // Tentukan default value (format Y-m-d wajib untuk input type="date")
+                                    $defaultTanggal = $suratBapb ? $suratBapb->tanggal_surat->format('Y-m-d') :
+                                    now()->format('Y-m-d');
+                                    @endphp
+
+                                    <input type="date" name="tanggal_bast_foto"
+                                        value="{{ old('tanggal_bast_foto', $defaultTanggal) }}"
+                                        class="w-full rounded-lg border-gray-300 focus:ring-indigo-500 text-sm font-bold">
+                                    <p class="text-[10px] text-gray-400 mt-1 italic">*Tanggal ini akan muncul di
+                                        watermark foto</p>
+                                </div>
+
+                                {{-- Input Waktu (Sudah ada di kode Anda) --}}
+                                <div class="mb-4">
+                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">
+                                        Pukul Berapa Foto Diambil?
+                                    </label>
                                     <input type="time" name="waktu_foto" value="{{ old('waktu_foto', '09:00') }}"
                                         class="w-full rounded-lg border-gray-300 dark:border-gray-600 focus:ring-indigo-500 text-sm font-bold">
                                 </div>

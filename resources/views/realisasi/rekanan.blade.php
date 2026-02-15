@@ -1,26 +1,28 @@
 <x-app-layout>
     <x-slot name="header">
-        {{-- Judul di Website (Akan hilang saat print) --}}
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight print:hidden">
-            {{ __('Laporan Realisasi Per Rekanan') }}
-        </h2>
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4 print:hidden">
+            {{-- Judul di Website --}}
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                {{ __('Laporan Realisasi Per Rekanan') }}
+            </h2>
+
+            {{-- Tombol Cetak --}}
+            <button onclick="window.print()"
+                class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-all active:scale-95">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z">
+                    </path>
+                </svg>
+                <span>Cetak Laporan</span>
+            </button>
+        </div>
     </x-slot>
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
 
-            {{-- TOMBOL CETAK (Hilang saat print) --}}
-            <div class="mb-4 flex justify-end print:hidden">
-                <button onclick="window.print()"
-                    class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded shadow flex items-center gap-2 transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z">
-                        </path>
-                    </svg>
-                    Cetak Laporan
-                </button>
-            </div>
+
 
             {{-- AREA YANG AKAN DICETAK (Beri ID printable-area) --}}
             <div id="printable-area" class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6 relative">
@@ -161,15 +163,15 @@
                         <p>Mengetahui,</p>
                         <p>Kepala Sekolah</p>
                         <br><br><br><br>
-                        <p class="font-bold underline">...................................</p>
-                        <p>NIP. ...........................</p>
+                        <p class="font-bold underline">{{ $sekolah->nama_kepala_sekolah }}</p>
+                        <p>NIP. {{ $sekolah->nip_kepala_sekolah }}</p>
                     </div>
                     <div>
-                        <p>{{ now()->format('d F Y') }}</p>
+                        <p>{{ \Carbon\Carbon::parse(now())->translatedFormat('d F Y') }}</p>
                         <p>Bendahara Sekolah</p>
                         <br><br><br><br>
-                        <p class="font-bold underline">...................................</p>
-                        <p>NIP. ...........................</p>
+                        <p class="font-bold underline">{{ $sekolah->nama_bendahara }}</p>
+                        <p>NIP. {{ $sekolah->nip_bendahara }}</p>
                     </div>
                 </div>
 

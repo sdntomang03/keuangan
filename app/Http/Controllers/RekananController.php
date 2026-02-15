@@ -16,15 +16,25 @@ class RekananController extends Controller
     /**
      * Tampilkan daftar rekanan milik sekolah yang sedang login.
      */
-    public function index()
+    public function index(Request $request)
     {
-        // Ambil ID Sekolah dari user yang login
-        // Pastikan tabel users Anda punya kolom sekolah_id
         $sekolahId = Auth::user()->sekolah_id;
 
-        $rekanans = Rekanan::where('sekolah_id', $sekolahId)
+        // Ambil keyword dari input 'search'
+        $search = $request->input('search');
+
+        $rekanans = \App\Models\Rekanan::where('sekolah_id', $sekolahId)
+            ->when($search, function ($query, $search) {
+                return $query->where(function ($q) use ($search) {
+                    $q->where('nama_rekanan', 'like', "%{$search}%")
+                        ->orWhere('npwp', 'like', "%{$search}%")
+                        ->orWhere('kota', 'like', "%{$search}%")
+                        ->orWhere('pic', 'like', "%{$search}%");
+                });
+            })
             ->latest()
-            ->paginate(10);
+            ->paginate(10)
+            ->withQueryString(); // Menjaga keyword pencarian tetap ada saat pindah halaman (pagination)
 
         return view('rekanan.index', compact('rekanans'));
     }

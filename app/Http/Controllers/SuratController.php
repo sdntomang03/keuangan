@@ -633,10 +633,18 @@ class SuratController extends Controller
         }
 
         // 4. Ambil Tanggal BAST
-        $suratBast = $belanja->surats->where('jenis_surat', 'BAPB')->first();
-        $tanggalBast = $suratBast && $suratBast->tanggal_surat
-            ? $suratBast->tanggal_surat->translatedFormat('l, d F Y')
-            : now()->translatedFormat('l, d F Y');
+        // 1. Cek apakah ada input tanggal manual dari form
+        if ($request->has('tanggal_bast_foto') && $request->tanggal_bast_foto != null) {
+            // Jika ada, gunakan tanggal dari input form
+            $tanggalBast = \Carbon\Carbon::parse($request->tanggal_bast_foto)->translatedFormat('l, d F Y');
+        } else {
+            // 2. Jika form kosong, gunakan logika lama (Cari dari database atau hari ini)
+            $suratBast = $belanja->surats->where('jenis_surat', 'BAPB')->first();
+
+            $tanggalBast = $suratBast && $suratBast->tanggal_surat
+                ? $suratBast->tanggal_surat->translatedFormat('l, d F Y')
+                : now()->translatedFormat('l, d F Y');
+        }
 
         // 5. Inisialisasi Image Manager
         $file = $request->file('foto');
@@ -708,7 +716,7 @@ class SuratController extends Controller
             'longitude' => $lng,
         ]);
 
-        return back()->with('success', 'Foto SPJ Berhasil diunggah dengan Peta.');
+        return redirect(url()->previous().'#foto')->with('success', 'Foto berhasil diunggah');
     }
 
     public function destroyFoto($id)
@@ -717,7 +725,7 @@ class SuratController extends Controller
         Storage::disk('public')->delete($foto->path);
         $foto->delete();
 
-        return back()->with('success', 'Foto berhasil dihapus');
+        return redirect(url()->previous().'#foto')->with('success', 'Foto berhasil dihapus');
     }
 
     public function cetakSpParsial($id)

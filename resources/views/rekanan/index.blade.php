@@ -19,68 +19,75 @@
                 <div class="p-6 text-gray-900 dark:text-gray-100">
 
                     {{-- HEADER & TOMBOL --}}
-                    <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-                        <div class="flex items-center gap-2 self-start sm:self-center">
-                            <div class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg text-blue-600 dark:text-blue-300">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
-                                    class="w-6 h-6">
-                                    <path fill-rule="evenodd"
-                                        d="M7.5 6v.75H5.513c-.96 0-1.764.724-1.865 1.679l-1.263 12A1.875 1.875 0 0 0 4.25 22.5h15.5a1.875 1.875 0 0 0 1.865-2.071l-1.263-12a1.875 1.875 0 0 0-1.865-1.679H16.5V6a4.5 4.5 0 1 0-9 0ZM12 3a3 3 0 0 0-3 3v.75h6V6a3 3 0 0 0-3-3Zm-3 8.25a3 3 0 1 0 6 0v.75a3 3 0 1 0-6 0v-.75Z"
-                                        clip-rule="evenodd" />
-                                </svg>
+                    <div class="flex flex-col gap-6 mb-6">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                            <div class="flex items-center gap-2">
+                                <div
+                                    class="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg text-blue-600 dark:text-blue-300">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+                                        class="w-6 h-6">
+                                        <path fill-rule="evenodd"
+                                            d="M7.5 6v.75H5.513c-.96 0-1.764.724-1.865 1.679l-1.263 12A1.875 1.875 0 0 0 4.25 22.5h15.5a1.875 1.875 0 0 0 1.865-2.071l-1.263-12a1.875 1.875 0 0 0-1.865-1.679H16.5V6a4.5 4.5 0 1 0-9 0ZM12 3a3 3 0 0 0-3 3v.75h6V6a3 3 0 0 0-3-3Zm-3 8.25a3 3 0 1 0 6 0v.75a3 3 0 1 0-6 0v-.75Z"
+                                            clip-rule="evenodd" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-bold text-gray-800 dark:text-gray-200">Data Rekanan</h3>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Kelola daftar supplier & rekanan
+                                    </p>
+                                </div>
                             </div>
-                            <div>
-                                <h3 class="text-lg font-bold text-gray-800 dark:text-gray-200">Data Rekanan</h3>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Kelola daftar supplier & rekanan</p>
+
+                            <div class="flex flex-wrap gap-3 w-full sm:w-auto">
+                                <a href="{{ route('setting.rekanan.import') }}"
+                                    class="inline-flex justify-center items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg shadow-sm transition w-full sm:w-auto">
+                                    {{ __('Import') }}
+                                </a>
+                                <a href="{{ route('setting.rekanan.create') }}"
+                                    class="inline-flex justify-center items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition w-full sm:w-auto">
+                                    {{ __('Tambah') }}
+                                </a>
+                                <form id="form-hapus-semua" action="{{ route('setting.rekanan.destroy_all') }}"
+                                    method="POST" class="w-full sm:w-auto">
+                                    @csrf @method('DELETE')
+                                    <button type="button" onclick="konfirmasiHapus()"
+                                        class="inline-flex justify-center items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg shadow-sm transition w-full">
+                                        {{ __('Hapus Semua') }}
+                                    </button>
+                                </form>
                             </div>
                         </div>
 
-                        <div class="flex flex-col sm:flex-row gap-3">
-
-                            {{-- TOMBOL IMPORT --}}
-                            <a href="{{ route('setting.rekanan.import') }}"
-                                class="inline-flex justify-center items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg shadow-sm transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 w-full sm:w-auto">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
-                                    class="w-5 h-5 mr-2">
-                                    <path fill-rule="evenodd"
-                                        d="M11.47 2.47a.75.75 0 0 1 1.06 0l4.5 4.5a.75.75 0 0 1-1.06 1.06l-3.22-3.22V16.5a.75.75 0 0 1-1.5 0V4.81L8.03 8.03a.75.75 0 0 1-1.06-1.06l4.5-4.5ZM3 15.75a.75.75 0 0 1 .75.75v2.25a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5V16.5a.75.75 0 0 1 1.5 0v2.25a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3V16.5a.75.75 0 0 1 .75-.75Z"
-                                        clip-rule="evenodd" />
-                                </svg>
-                                {{ __('Import') }}
-                            </a>
-
-                            {{-- TOMBOL TAMBAH --}}
-                            <a href="{{ route('setting.rekanan.create') }}"
-                                class="inline-flex justify-center items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 w-full sm:w-auto">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
-                                    class="w-5 h-5 mr-2">
-                                    <path fill-rule="evenodd"
-                                        d="M12 3.75a.75.75 0 0 1 .75.75v6.75h6.75a.75.75 0 0 1 0 1.5h-6.75v6.75a.75.75 0 0 1-1.5 0v-6.75H4.5a.75.75 0 0 1 0-1.5h6.75V4.5a.75.75 0 0 1 .75-.75Z"
-                                        clip-rule="evenodd" />
-                                </svg>
-                                {{ __('Tambah') }}
-                            </a>
-
-                            {{-- TOMBOL HAPUS SEMUA (Disesuaikan dengan Style Tailwind) --}}
-                            <form id="form-hapus-semua" action="{{ route('setting.rekanan.destroy_all') }}"
-                                method="POST" class="w-full sm:w-auto">
-                                @csrf
-                                @method('DELETE')
-
-                                {{-- Perhatikan: type="button" dan ada onclick --}}
-                                <button type="button" onclick="konfirmasiHapus()"
-                                    class="inline-flex justify-center items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg shadow-sm transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 w-full sm:w-auto">
-
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
-                                        class="w-5 h-5 mr-2">
-                                        <path fill-rule="evenodd"
-                                            d="M16.5 4.478v.227a48.816 48.816 0 0 1 3.878.512.75.75 0 1 1-.256 1.478l-.209-.035-1.005 13.07a3 3 0 0 1-2.991 2.77H8.084a3 3 0 0 1-2.991-2.77L4.087 6.66l-.209.035a.75.75 0 0 1-.256-1.478A48.567 48.567 0 0 1 7.5 4.705v-.227c0-1.564 1.213-2.9 2.816-2.951a52.662 52.662 0 0 1 3.369 0c1.603.051 2.815 1.387 2.815 2.951Zm-6.136-1.452a51.196 51.196 0 0 1 3.273 0C14.39 3.05 15 3.684 15 4.478v.113a49.488 49.488 0 0 0-6 0v-.113c0-.794.609-1.428 1.364-1.452Zm-3.536 6.19a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v9.75a.75.75 0 0 1-.75.75h-.008a.75.75 0 0 1-.75-.75v-9.75Zm5.25-.75a.75.75 0 0 1 .75.75v9.75a.75.75 0 0 1-1.5 0v-9.75a.75.75 0 0 1 .75-.75Z"
-                                            clip-rule="evenodd" />
-                                    </svg>
-                                    {{ __('Hapus Semua Data') }}
-                                </button>
+                        {{-- BAR PENCARIAN --}}
+                        <div
+                            class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl border border-gray-100 dark:border-gray-600">
+                            <form action="{{ route('setting.rekanan.index') }}" method="GET"
+                                class="flex flex-col sm:flex-row gap-3">
+                                <div class="relative flex-grow">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
+                                    </div>
+                                    <input type="text" name="search" value="{{ request('search') }}"
+                                        class="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        placeholder="Cari nama rekanan, NPWP, kota, atau PIC...">
+                                </div>
+                                <div class="flex gap-2">
+                                    <button type="submit"
+                                        class="px-4 py-2 bg-gray-800 dark:bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-gray-900 transition duration-150 shadow-sm">
+                                        Cari
+                                    </button>
+                                    @if(request('search'))
+                                    <a href="{{ route('setting.rekanan.index') }}"
+                                        class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-semibold rounded-lg hover:bg-gray-50 transition duration-150">
+                                        Reset
+                                    </a>
+                                    @endif
+                                </div>
                             </form>
-
                         </div>
                     </div>
 

@@ -634,7 +634,7 @@ class BelanjaController extends Controller
             }
         });
 
-        return redirect()->route('surat.index', $id)->with('success', 'Data BAST dan Harga Penawaran berhasil disimpan.');
+        return redirect(url()->previous().'#barang')->with('success', 'Rincian penawaran berhasil diperbarui!');
     }
 
     public function duplicate(Request $request, $id)

@@ -42,7 +42,8 @@
                                     <x-input-label for="alamat2" :value="__('Alamat Lanjutan (Opsional)')" />
                                     <textarea id="alamat2" name="alamat2"
                                         class="block mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-                                        rows="2" placeholder="Kelurahan, Kecamatan">{{ old('alamat2') }}</textarea>
+                                        rows="2"
+                                        placeholder="Kelurahan, Kecamatan">{{ old('alamat2', $rekanan->alamat2) }}</textarea>
                                 </div>
 
                                 <div class="grid grid-cols-2 gap-4">

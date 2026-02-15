@@ -74,11 +74,17 @@
                             <td>:</td>
                             <td>{{ $sekolah->nama_sekolah }}</td>
                         </tr>
-                        <tr>
+                        <tr style="vertical-align:top;">
                             <td>Alamat</td>
                             <td>:</td>
-                            <td>{{ $sekolah->alamat }} Kel.{{ $sekolah->kelurahan }}, Kec. {{ $sekolah->kecamatan }}, {{
-                                $sekolah->kota }}</td>
+                            <td>
+                                {{ implode(', ', array_filter([
+                                $sekolah->alamat,
+                                $sekolah->kelurahan ? 'Kel. ' . $sekolah->kelurahan : null,
+                                $sekolah->kecamatan ? 'Kec. ' . $sekolah->kecamatan : null,
+                                $sekolah->kota
+                                ])) }}
+                            </td>
                         </tr>
                         <tr>
                             <td colspan="3" style="padding-top:5px;">
@@ -114,10 +120,16 @@
                             <td>:</td>
                             <td>{{ $rekanan->nama_rekanan }}</td>
                         </tr>
-                        <tr>
+                        <tr style="vertical-align:top;">
                             <td>Alamat Perusahaan</td>
                             <td>:</td>
-                            <td>{{ $rekanan->alamat }}, {{ $rekanan->alamat2 }}, {{ $rekanan->kota }}</td>
+                            <td>
+                                {{ implode(', ', array_filter([
+                                $rekanan->alamat,
+                                $rekanan->alamat2,
+                                $rekanan->kota
+                                ])) }}
+                            </td>
                         </tr>
                         <tr>
                             <td>No. Telepon</td>

@@ -55,6 +55,12 @@ $is_penggandaan = $surat->is_penggandaan ?? false;
                                 <td></td>
                                 <td style="vertical-align: top;">{{ $rekanan->alamat }} </td>
                             </tr>
+                            @if($rekanan->alamat2)
+                            <tr>
+                                <td></td>
+                                <td style="vertical-align: top;">{{ $rekanan->alamat2 }}</td>
+                            </tr>
+                            @endif
                             <tr>
                                 <td></td>
                                 <td style="vertical-align: top; padding-top: 5px;">di</td>
