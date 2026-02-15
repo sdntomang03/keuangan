@@ -61,4 +61,9 @@ class Rkas extends Model
     {
         return $this->hasOne(ArkasChecklist::class, 'rkas_id', 'id');
     }
+
+    public function anggaran()
+    {
+        return $this->belongsTo(Anggaran::class, 'anggaran_id');
+    }
 }

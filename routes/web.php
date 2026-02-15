@@ -11,6 +11,7 @@ use App\Http\Controllers\CetakController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EkskulController;
 use App\Http\Controllers\KegiatanController;
+use App\Http\Controllers\NpdController;
 use App\Http\Controllers\PajakController;
 use App\Http\Controllers\PenerimaanController;
 use App\Http\Controllers\ProfileController;
@@ -202,8 +203,27 @@ Route::middleware(['auth'])->prefix('surat')->group(function () {
     Route::get('/cetaksatuanpdf/{id}/{jenis}', [SuratController::class, 'cetakSatuanPdf'])->name('surat.cetakSatuanPdf');
     Route::get('/cetakparsialpdf/{id}', [SuratController::class, 'cetakParsialPdf'])->name('surat.cetakParsialPdf');
     Route::get('/cetak/kop', [SuratController::class, 'cetakKopPdf'])->name('cetak.kop');
+    Route::get('/surat/download-semua-parsial/{belanjaId}', [SuratController::class, 'downloadSemuaParsial'])
+        ->name('surat.download_semua_parsial');
 });
 
+Route::middleware(['auth'])->group(function () {
+    // Tampilan daftar NPD
+    Route::get('/npd', [NpdController::class, 'index'])->name('npd.index');
+
+    // Tampilan form input massal
+    Route::get('/npd/create', [NpdController::class, 'create'])->name('npd.create');
+
+    // Proses simpan massal
+    Route::post('/npd/store', [NpdController::class, 'storeMassal'])->name('npd.store_massal');
+
+    // Aksi lainnya (Opsional)
+    Route::get('/npd/{id}', [NpdController::class, 'show'])->name('npd.show');
+    Route::delete('/npd/{id}', [NpdController::class, 'destroy'])->name('npd.destroy');
+
+    // API saldo
+    Route::get('/api/npd/cek-saldo', [NpdController::class, 'getSaldoAnggaran'])->name('api.npd.saldo');
+});
 Route::group(['middleware' => ['auth']], function () {
 
     Route::group(['prefix' => 'ekskul', 'as' => 'ekskul.'], function () {

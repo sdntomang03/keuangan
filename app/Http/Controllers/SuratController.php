@@ -19,6 +19,7 @@ use Intervention\Image\Drivers\Gd\Driver;
 use Intervention\Image\ImageManager;
 use Maatwebsite\Excel\Facades\Excel;
 use PhpOffice\PhpWord\TemplateProcessor;
+use ZipArchive;
 
 // use PhpOffice\PhpWord\Writer\PDF;
 
@@ -1936,5 +1937,199 @@ class SuratController extends Controller
 
         // 5. Stream PDF
         return $pdf->stream('Kop_Surat_'.time().'.pdf');
+    }
+
+    public function downloadSemuaParsial($belanjaId)
+    {
+        $belanja = Belanja::with(['surats' => function ($q) {
+            $q->where('is_parsial', true);
+        }])->findOrFail($belanjaId);
+
+        if ($belanja->surats->isEmpty()) {
+            return back()->with('error', 'Tidak ada surat parsial untuk didownload.');
+        }
+
+        $zip = new ZipArchive;
+        $fileName = 'Surat_Parsial_'.str_replace(['/', '\\'], '-', $belanja->no_bukti).'.zip';
+        $zipPath = storage_path('app/public/'.$fileName);
+
+        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
+            foreach ($belanja->surats as $surat) {
+                // Generate PDF menggunakan fungsi cetakSatuanPdf yang sudah ada, tapi ambil kontennya saja
+                // Kita gunakan logic yang sama dengan cetakParsialPdf
+                $pdf = $this->generatePdfContent($surat->id);
+
+                $namaFileDalamZip = strtoupper($surat->jenis_surat).'_'.str_replace(['/', '\\'], '-', $surat->nomor_surat).'.pdf';
+                $zip->addFromString($namaFileDalamZip, $pdf->output());
+            }
+            $zip->close();
+        }
+
+        return response()->download($zipPath)->deleteFileAfterSend(true);
+    }
+
+    /**
+     * Helper untuk generate konten PDF agar kode tidak duplikat.
+     * Digunakan oleh: downloadSemuaParsial
+     */
+    private function generatePdfContent($suratId)
+    {
+        Carbon::setLocale('id');
+
+        // 1. AMBIL DATA SURAT & RELASI
+        $suratDipilih = Surat::with([
+            'belanja.rekanan',
+            'belanja.korek',
+            'belanja.user.sekolah',
+            'rincis.rkas', // Penting untuk mengambil satuan/data barang di pivot
+        ])->findOrFail($suratId);
+
+        $belanja = $suratDipilih->belanja;
+
+        // Cek apakah kegiatan penggandaan (untuk penyesuaian label jika perlu)
+        $kegiatan = Str::lower($belanja->korek->singkat ?? '');
+        $is_penggandaan = Str::contains($kegiatan, ['penggandaan', 'fotocopy', 'cetak', 'duplikasi']);
+
+        // 2. DATA SEKOLAH (Fallback logic)
+        $sekolah = $belanja->user->sekolah ?? Auth::user()->sekolah;
+        if (! $sekolah) {
+            $sekolah = Sekolah::find($belanja->user->sekolah_id ?? Auth::user()->sekolah_id);
+        }
+
+        $rekanan = $belanja->rekanan;
+
+        // 3. PEJABAT
+        $kepalaSekolah = (object) [
+            'nama' => $sekolah->nama_kepala_sekolah ?? '-',
+            'nip' => $sekolah->nip_kepala_sekolah ?? '-',
+        ];
+        $pengurusBarang = (object) [
+            'nama' => $sekolah->nama_pengurus_barang ?? '...................',
+            'nip' => $sekolah->nip_pengurus_barang ?? '-',
+            'jabatan' => 'Pengurus Barang',
+        ];
+
+        // 4. CONFIG SURAT
+        $configSurat = [
+            'permintaan' => ['PH', 'Permintaan Harga'],
+            'negosiasi' => ['NH', 'Negosiasi Harga'],
+            'pesanan' => ['SP', 'Pesanan Barang'],
+            'berita_acara' => ['BAPB', 'Berita Acara Pemeriksaan'],
+            'pemeriksaan' => ['BAPB', 'Berita Acara Pemeriksaan'],
+        ];
+
+        $dbKode = $suratDipilih->jenis_surat;
+        $jenisView = null;
+        $labelSurat = 'Dokumen';
+
+        // Cari View & Label berdasarkan Kode DB
+        foreach ($configSurat as $key => $val) {
+            if ($val[0] === $dbKode) {
+                $jenisView = ($key == 'pemeriksaan') ? 'berita_acara' : $key;
+                $labelSurat = $val[1];
+                break;
+            }
+        }
+
+        // 5. FORMAT DATA SURAT
+        $tglSurat = $suratDipilih->tanggal_surat;
+        if ($dbKode === 'BAPB' && ! $tglSurat) {
+            $tglSurat = $belanja->tanggal_bast ? Carbon::parse($belanja->tanggal_bast) : now();
+        }
+
+        $surat = (object) [
+            'nomor_surat' => $suratDipilih->nomor_surat ?? '...',
+            'tanggal_surat' => $tglSurat->format('Y-m-d'),
+            'anggaran' => $belanja->anggaran,
+            'periode' => 'Triwulan '.($belanja->triwulan ?? 1),
+            'kode_rekening' => $belanja->korek->ket ?? '-',
+            'nama_kegiatan' => $belanja->uraian,
+            'is_penggandaan' => $is_penggandaan,
+            'perihal' => $labelSurat.' '.$belanja->uraian,
+            'sifat' => $suratDipilih->sifat ?? 'Segera',
+            'lampiran' => $suratDipilih->lampiran ?? '-',
+            'no_bast' => $suratDipilih->no_bast ?? '-',
+            'nama_pekerjaan' => $belanja->uraian,
+            'hari_ini' => $tglSurat->translatedFormat('l'),
+            'tanggal_terbilang' => $this->terbilangTanggal($tglSurat),
+        ];
+
+        // 6. FILTER ITEM BARANG (LOGIKA PARSIAL)
+        $sourceItems = collect();
+
+        // Ambil daftar BAPB lain jika ini adalah SP (untuk rekap SP Parsial)
+        $daftarBapb = Surat::where('belanja_id', $belanja->id)
+            ->where('jenis_surat', 'BAPB')
+            ->with(['rincis'])
+            ->orderBy('tanggal_surat', 'asc')
+            ->get();
+
+        if ($dbKode === 'SP' && $daftarBapb->isNotEmpty()) {
+            // Kasus SP: Gabungkan item dari semua BAPB
+            foreach ($daftarBapb as $bapb) {
+                foreach ($bapb->rincis as $rinci) {
+                    $itemClone = clone $rinci;
+                    $itemClone->volume_cetak = $rinci->pivot->volume;
+                    $itemClone->tanggal_kirim = $bapb->tanggal_surat;
+                    $sourceItems->push($itemClone);
+                }
+            }
+        } elseif ($suratDipilih->rincis->isNotEmpty()) {
+            // Kasus BAPB Parsial / SP tanpa BAPB lain: Ambil pivot surat ini
+            $sourceItems = $suratDipilih->rincis;
+        } else {
+            // Fallback (Jaga-jaga)
+            $sourceItems = $belanja->rincis;
+        }
+
+        // 7. MAPPING ITEM
+        $items = $sourceItems->map(function ($item) {
+            // Priority Volume: Pivot > Custom Property > Master
+            $qty = $item->pivot->volume ?? $item->volume_cetak ?? $item->volume;
+
+            return (object) [
+                'nama_barang' => $item->namakomponen,
+                'satuan' => $item->rkas->satuan ?? $item->satuan,
+                'qty' => $qty,
+                'tanggal_kirim' => isset($item->tanggal_kirim) ? $item->tanggal_kirim->translatedFormat('d F Y') : null,
+                'harga_satuan' => $item->harga_satuan,
+                'harga_penawaran' => $item->harga_penawaran,
+                // Field BAST
+                'qty_pesan' => $qty,
+                'qty_terima' => $qty,
+                'qty_tolak' => 0,
+                'qty_sesuai' => $qty,
+            ];
+        });
+
+        // 8. RENDER VIEW
+        $contentHtml = view('surat.print_manager', [
+            'jenis_surat' => $jenisView,
+            'surat' => $surat,
+            'sekolah' => $sekolah,
+            'rekanan' => $rekanan,
+            'items' => $items,
+            'kepala_sekolah' => $kepalaSekolah,
+            'pengurus_barang' => $pengurusBarang,
+            'belanja' => $belanja,
+        ])->render();
+
+        // 9. CONFIG DOMPDF
+        $fontDir = storage_path('fonts');
+        if (! file_exists($fontDir)) {
+            mkdir($fontDir, 0755, true);
+        }
+
+        $pdf = PDF::loadHTML($contentHtml);
+        $pdf->setOptions([
+            'font_dir' => $fontDir,
+            'font_cache' => $fontDir,
+            'default_font' => 'Arial',
+            'isRemoteEnabled' => true,
+            'isHtml5ParserEnabled' => true,
+        ]);
+
+        // KEMBALIKAN OBJEK PDF (BUKAN STREAM/DOWNLOAD)
+        return $pdf;
     }
 }

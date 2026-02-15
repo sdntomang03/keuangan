@@ -144,6 +144,8 @@
                             <span>CETAK (PDF)</span>
                         </a>
                         @endif
+
+
                     </div>
                 </div>
 
@@ -727,6 +729,17 @@
                             </div>
 
                             <div class="p-6 bg-gray-50 flex justify-end gap-3">
+                                {{-- Tombol Download Semua Parsial --}}
+                                @if($belanja->surats->where('is_parsial', true)->count() > 0)
+                                <a href="{{ route('surat.download_semua_parsial', $belanja->id) }}"
+                                    class="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md transition-all hover:-translate-y-0.5">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                    </svg>
+                                    <span>DOWNLOAD SEMUA PARSIAL (ZIP)</span>
+                                </a>
+                                @endif
                                 <button @click="showModal = false" type="button"
                                     class="px-6 py-3 text-xs font-black text-gray-400 uppercase tracking-widest hover:text-gray-600 transition-colors">Batal</button>
                                 <button type="submit"
