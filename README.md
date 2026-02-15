@@ -1,59 +1,68 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
-
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+  <a href="#" target="_blank">
+    <img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo">
+  </a>
 </p>
 
-## About Laravel
+<p align="center">
+<img src="https://img.shields.io/badge/Laravel-11.x-red?style=for-the-badge&logo=laravel" alt="Laravel Version">
+<img src="https://img.shields.io/badge/Tailwind-CSS-blue?style=for-the-badge&logo=tailwind-css" alt="Tailwind">
+<img src="https://img.shields.io/badge/Alpine.js-Enabled-cyan?style=for-the-badge&logo=alpine.js" alt="Alpine.js">
+<img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License">
+</p>
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 💰 Tentang SIKS (Sistem Informasi Keuangan Sekolah)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+**SIKS** adalah platform manajemen keuangan sekolah berbasis web yang dirancang untuk mengelola anggaran secara transparan dan akuntabel. Aplikasi ini memfasilitasi alur kerja dari perencanaan (RKAS), penarikan dana (NPD), hingga pelaporan belanja riil.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Aplikasi ini memastikan bahwa setiap rupiah yang dikeluarkan memiliki dasar perencanaan yang kuat dan terdokumentasi dengan baik dalam Buku Kas Umum (BKU).
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## 🚀 Fitur Utama
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- **Manajemen RKAS**: Penyusunan anggaran per tahun yang dibagi ke dalam 4 Triwulan.
+- **Nota Penarikan Dana (NPD)**:
+    - Input pengajuan dana massal per triwulan.
+    - Validasi sisa pagu anggaran secara otomatis.
+    - Penomoran dokumen otomatis (Format: `000/NPD/TAHUN`).
+- **Realisasi Belanja**:
+    - Pencatatan nota belanja berdasarkan NPD yang sudah cair.
+    - Perhitungan otomatis **Subtotal + PPN** untuk memotong saldo NPD.
+- **Monitoring & Reporting**:
+    - Pelacakan sisa dana di tangan bendahara secara real-time.
+    - Dashboard monitoring triwulanan.
+- **Security**: Autentikasi multi-user dengan proteksi data berbasis `sekolah_id`.
 
-## Laravel Sponsors
+---
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## 🛠️ Tech Stack
 
-### Premium Partners
+- **Framework:** Laravel 11
+- **Frontend:** Tailwind CSS & Alpine.js (Livewire ready)
+- **Database:** MySQL 8.0
+- **Icons:** Heroicons
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+---
 
-## Contributing
+## 📐 Alur Logika Keuangan
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Sistem menggunakan relasi data yang ketat untuk menjaga integritas laporan. Berikut adalah alur integrasi datanya:
 
-## Code of Conduct
+1. **Planning (RKAS)**: Menentukan pagu anggaran per kode akun kegiatan.
+2. **Request (NPD)**: Mengambil dana dari RKAS untuk dipegang oleh Bendahara.
+3. **Actual (Belanja)**: Mengurangi saldo NPD berdasarkan nota fisik.
+    - **Rumus Sisa NPD:** `$sisa = $nilaiNpd - ($subtotal + $ppn)`
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+---
 
-## Security Vulnerabilities
+## ⚙️ Instalasi Proyek
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Ikuti langkah-langkah berikut untuk menjalankan aplikasi di lingkungan lokal:
 
-## License
+### 1. Clone Repositori
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```bash
+git clone [https://github.com/username/siks-app.git](https://github.com/username/siks-app.git)
+cd siks-app
+```
