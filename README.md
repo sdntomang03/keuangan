@@ -17,21 +17,23 @@
 
 Aplikasi ini memastikan bahwa setiap rupiah yang dikeluarkan memiliki dasar perencanaan yang kuat dan terdokumentasi dengan baik dalam Buku Kas Umum (BKU).
 
+
+
 ---
 
 ## 🚀 Fitur Utama
 
 - **Manajemen RKAS**: Penyusunan anggaran per tahun yang dibagi ke dalam 4 Triwulan.
-- **Nota Penarikan Dana (NPD)**:
-    - Input pengajuan dana massal per triwulan.
-    - Validasi sisa pagu anggaran secara otomatis.
-    - Penomoran dokumen otomatis (Format: `000/NPD/TAHUN`).
+- **Nota Penarikan Dana (NPD)**: 
+  - Input pengajuan dana massal per triwulan.
+  - Validasi sisa pagu anggaran secara otomatis.
+  - Penomoran dokumen otomatis (Format: `000/NPD/TAHUN`).
 - **Realisasi Belanja**:
-    - Pencatatan nota belanja berdasarkan NPD yang sudah cair.
-    - Perhitungan otomatis **Subtotal + PPN** untuk memotong saldo NPD.
+  - Pencatatan nota belanja berdasarkan NPD yang sudah cair.
+  - Perhitungan otomatis **Subtotal + PPN** untuk memotong saldo NPD.
 - **Monitoring & Reporting**:
-    - Pelacakan sisa dana di tangan bendahara secara real-time.
-    - Dashboard monitoring triwulanan.
+  - Pelacakan sisa dana di tangan bendahara secara real-time.
+  - Dashboard monitoring triwulanan.
 - **Security**: Autentikasi multi-user dengan proteksi data berbasis `sekolah_id`.
 
 ---
@@ -49,10 +51,12 @@ Aplikasi ini memastikan bahwa setiap rupiah yang dikeluarkan memiliki dasar pere
 
 Sistem menggunakan relasi data yang ketat untuk menjaga integritas laporan. Berikut adalah alur integrasi datanya:
 
+
+
 1. **Planning (RKAS)**: Menentukan pagu anggaran per kode akun kegiatan.
 2. **Request (NPD)**: Mengambil dana dari RKAS untuk dipegang oleh Bendahara.
 3. **Actual (Belanja)**: Mengurangi saldo NPD berdasarkan nota fisik.
-    - **Rumus Sisa NPD:** `$sisa = $nilaiNpd - ($subtotal + $ppn)`
+   - **Rumus Sisa NPD:** `$sisa = $nilaiNpd - ($subtotal + $ppn)`
 
 ---
 
@@ -61,8 +65,6 @@ Sistem menggunakan relasi data yang ketat untuk menjaga integritas laporan. Beri
 Ikuti langkah-langkah berikut untuk menjalankan aplikasi di lingkungan lokal:
 
 ### 1. Clone Repositori
-
 ```bash
 git clone [https://github.com/username/siks-app.git](https://github.com/username/siks-app.git)
 cd siks-app
-```
