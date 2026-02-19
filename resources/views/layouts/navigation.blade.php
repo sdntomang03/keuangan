@@ -73,7 +73,7 @@
                                 <x-dropdown-link :href="route('npd.index')">
                                     {{ __('NPD') }}
                                 </x-dropdown-link>
-                                <x-dropdown-link :href="route('cetak.kop')">
+                                <x-dropdown-link :href="route('cetak.kop')" target="_blank">
                                     {{ __('Cetak Kop Surat') }}
                                 </x-dropdown-link>
                                 <x-dropdown-link :href="route('realisasi.rekanan')">
