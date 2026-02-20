@@ -18,6 +18,7 @@ class RealisasiController extends Controller
 {
     public function komponen(Request $request)
     {
+
         $user = auth()->user();
         $anggaran = $request->anggaran_data;
 
@@ -25,46 +26,63 @@ class RealisasiController extends Controller
             return redirect()->route('sekolah.index')->with('error', 'Pilih Anggaran Aktif.');
         }
 
-        // 1. Logic Periode Triwulan (Bulan)
-        $tw = $request->get('tw', 'tahun');
-        $bulanArray = match ($tw) {
-            '1' => [1, 2, 3],
-            '2' => [4, 5, 6],
-            '3' => [7, 8, 9],
-            '4' => [10, 11, 12],
-            default => null,
-        };
+        // 1. Logic Periode (Tahunan / Triwulan / Bulanan)
+        $periode = $request->get('periode', 'tahun');
+        $bulanArray = null;
+        $periodeText = 'Tahunan';
+
+        // Cek jika filter Triwulan
+        if (str_starts_with($periode, 'tw')) {
+            $tw = str_replace('tw', '', $periode);
+            $bulanArray = match ($tw) {
+                '1' => [1, 2, 3],
+                '2' => [4, 5, 6],
+                '3' => [7, 8, 9],
+                '4' => [10, 11, 12],
+                default => null,
+            };
+            $periodeText = 'Triwulan '.$tw;
+        }
+        // Cek jika filter Bulan
+        elseif (str_starts_with($periode, 'b')) {
+            $bulan = (int) str_replace('b', '', $periode);
+            if ($bulan >= 1 && $bulan <= 12) {
+                $bulanArray = [$bulan]; // Hanya 1 bulan di dalam array
+                $namaBulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+                $periodeText = 'Bulan '.$namaBulan[$bulan - 1];
+            } else {
+                $periode = 'tahun'; // Fallback jika error
+            }
+        }
 
         $sekolah = Sekolah::where('id', $user->sekolah_id)->first();
 
         // 2. Query RKAS
         $dataRkas = Rkas::with(['kegiatan', 'korek', 'akb'])
-            // Filter Anggaran per Bulan/TW
             ->withSum(['akbrincis as total_volume_anggaran' => function ($query) use ($bulanArray) {
                 $query->when($bulanArray, fn ($q) => $q->whereIn('bulan', $bulanArray));
-            }], 'volume') // Kolom volume di tabel akb_rincis
+            }], 'volume')
             ->withSum(['akbrincis as total_anggaran' => function ($query) use ($bulanArray) {
                 $query->when($bulanArray, fn ($q) => $q->whereIn('bulan', $bulanArray));
             }], 'nominal')
-            // Filter Realisasi (Nominal) per Bulan/TW
             ->withSum(['belanjaRincis as total_realisasi' => function ($query) use ($anggaran, $bulanArray) {
                 $query->when($bulanArray, fn ($q) => $q->whereIn('bulan', $bulanArray))
                     ->whereHas('belanja', fn ($q) => $q->where('anggaran_id', $anggaran->id));
             }], 'total_bruto')
-            // Filter Realisasi (Volume) per Bulan/TW
             ->withSum(['belanjaRincis as volume_realisasi' => function ($query) use ($anggaran, $bulanArray) {
                 $query->when($bulanArray, fn ($q) => $q->whereIn('bulan', $bulanArray))
                     ->whereHas('belanja', fn ($q) => $q->where('anggaran_id', $anggaran->id));
             }], 'volume')
             ->where('anggaran_id', $anggaran->id)
             ->get()
-            // 3. Filter: Sembunyikan yang Anggaran & Realisasinya 0 pada periode ini
             ->filter(function ($item) {
+                // Sembunyikan jika pagu dan realisasinya 0 pada periode yang dipilih
                 return $item->total_anggaran > 0 || $item->total_realisasi > 0;
             })
             ->groupBy(['idbl', 'kodeakun']);
 
-        return view('realisasi.komponen', compact('dataRkas', 'anggaran', 'sekolah', 'tw'));
+        // Kirim variabel $periode dan $periodeText ke View
+        return view('realisasi.komponen', compact('dataRkas', 'anggaran', 'sekolah', 'periode', 'periodeText'));
     }
 
     public function exportExcel(Request $request)

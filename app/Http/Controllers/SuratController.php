@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Anggaran;
 use App\Models\Belanja;
 use App\Models\BelanjaFoto;
 use App\Models\Rekanan;
 use App\Models\Sekolah;
 use App\Models\Surat;
+use App\Models\Talangan;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -344,10 +346,10 @@ class SuratController extends Controller
 
         // 2. Ambil total surat yang sudah ada di triwulan SEBELUMNYA
         // Ini penting agar nomor di TW 2 melanjutkan nomor yang sudah terpakai di TW 1
-        $suratTerpakaiLalu = Surat::where('sekolah_id', $sekolahId)
-            ->whereYear('tanggal_surat', $tahun)
-            ->where('triwulan', '<', $triwulanAktif)
-            ->count();
+        // $suratTerpakaiLalu = Surat::where('sekolah_id', $sekolahId)
+        //     ->whereYear('tanggal_surat', $tahun)
+        //     ->where('triwulan', '<', $triwulanAktif)
+        //     ->count();
 
         // 3. Ambil surat di triwulan aktif untuk diurutkan
         $surats = Surat::where('sekolah_id', $sekolahId)
@@ -359,11 +361,11 @@ class SuratController extends Controller
 
         // 4. Hitung Nomor Mulai
         // Rumus: (Nomor di Profil Sekolah) + (Surat yang sudah dibuat di triwulan lalu) + 1
-        $noUrut = $baseNumber + $suratTerpakaiLalu + 1;
+        $noUrut = $baseNumber + 1;
 
         foreach ($surats as $surat) {
             $strNoUrut = str_pad($noUrut, 3, '0', STR_PAD_LEFT);
-            $nomorBaru = "{$strNoUrut}/UD.02.02";
+            $nomorBaru = "{$strNoUrut}/".$sekolah->kode_surat;
 
             if ($surat->nomor_surat !== $nomorBaru) {
                 $surat->update(['nomor_surat' => $nomorBaru]);
@@ -2131,5 +2133,283 @@ class SuratController extends Controller
 
         // KEMBALIKAN OBJEK PDF (BUKAN STREAM/DOWNLOAD)
         return $pdf;
+    }
+
+    public function rekapKeseluruhanTriwulanPdf()
+    {
+        Carbon::setLocale('id');
+        $user = Auth::user();
+
+        // Pastikan mengambil objek Sekolah
+        $sekolah = Sekolah::find($user->sekolah_id);
+        if (! $sekolah) {
+            return back()->with('error', 'Data sekolah tidak ditemukan.');
+        }
+
+        $triwulan = $sekolah->triwulan_aktif;
+        $tahun = $sekolah->tahun_aktif ?? date('Y');
+
+        // Query langsung ke tabel surats
+        $listSurat = Surat::with(['belanja.rekanan'])
+            ->where('sekolah_id', $sekolah->id)
+            ->where('triwulan', $triwulan)
+            ->whereYear('tanggal_surat', $tahun)
+            ->orderBy('tanggal_surat', 'asc')
+            ->orderBy('nomor_surat', 'asc')
+            ->get();
+
+        // Mapping Label
+        $labelJenis = [
+            'PH' => 'Permintaan Harga',
+            'NH' => 'Negosiasi Harga',
+            'SP' => 'Surat Pesanan',
+            'BAPB' => 'Berita Acara',
+        ];
+
+        $pdf = PDF::loadView('surat.rekap_pdf', [
+            'listSurat' => $listSurat,
+            'sekolah' => $sekolah,
+            'triwulan' => $triwulan,
+            'tahun' => $tahun,
+            'labelJenis' => $labelJenis,
+        ]);
+
+        $pdf->setPaper('a4', 'landscape'); // Landscape agar kolom nomor surat yang panjang tidak terpotong
+
+        return $pdf->stream("AGENDA_SURAT_KELUAR_TW_{$triwulan}.pdf");
+    }
+
+    public function createTalangan()
+    {
+        $user = Auth::user();
+        $sekolah = Sekolah::find($user->sekolah_id);
+        if (! $sekolah) {
+            return back()->with('error', 'Data sekolah tidak ditemukan.');
+        }
+
+        $anggaranId = $sekolah->anggaran_id_aktif;
+        $triwulanAktif = $sekolah->triwulan_aktif;
+
+        // Ambil SEMUA data Belanja di TW ini, format ke Array untuk dibaca JavaScript
+        $listBelanja = Belanja::with(['korek', 'rincis'])
+            ->where('anggaran_id', $anggaranId)
+            ->where('tw', $triwulanAktif)
+            ->get()
+            ->map(function ($b) {
+                return [
+                    'id' => $b->id,
+                    'kodeakun' => $b->kodeakun,
+                    'nama_rekening' => $b->korek->ket ?? '-',
+                    'tanggal' => \Carbon\Carbon::parse($b->tanggal)->format('d/m/Y'),
+                    'uraian' => $b->uraian,
+                    'jumlah' => $b->rincis->sum('total_bruto'),
+                ];
+            });
+
+        // Ambil daftar Kode Akun unik untuk Dropdown
+        $listRekening = collect($listBelanja)->unique('kodeakun')->values();
+
+        // Ambil Riwayat Talangan (Digabungkan berdasarkan Nomor Surat agar rapi)
+        $riwayatTalangan = Talangan::with(['korek', 'surat'])
+            ->where('anggaran_id', $anggaranId)
+            ->where('triwulan', $triwulanAktif)
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->groupBy('surat_id'); // Grouping tetap berdasarkan ID surat
+
+        return view('surat.talangan_input', compact('sekolah', 'anggaranId', 'triwulanAktif', 'listBelanja', 'listRekening', 'riwayatTalangan'));
+    }
+
+    public function storeTalangan(Request $request)
+    {
+        $user = Auth::user();
+        $sekolah = Sekolah::find($user->sekolah_id);
+        if (! $sekolah) {
+            return back()->with('error', 'Data sekolah tidak ditemukan.');
+        }
+
+        $anggaranId = $sekolah->anggaran_id_aktif;
+        $request->validate([
+            'nomor_surat' => 'required|string',
+            'tanggal_surat' => 'required|date',
+            'items' => 'required|array',
+        ]);
+
+        // 1. Simpan identitas ke model Surat
+        $surat = Surat::create([
+            'nomor_surat' => $request->nomor_surat,
+            'tanggal_surat' => $request->tanggal_surat,
+            'jenis_surat' => 'talangan', // Jika ada kolom pembeda tipe
+            'sekolah_id' => auth()->user()->sekolah_id,
+            'triwulan' => $sekolah->triwulan_aktif,
+            'belanja_id' => null, // Karena ini talangan, tidak terkait langsung ke satu belanja
+        ]);
+
+        // 2. Simpan rincian ke model Talangan menggunakan ID surat tadi
+        foreach ($request->items as $belanjaId => $item) {
+            if (isset($item['selected']) && $item['selected'] == 1) {
+                $belanja = Belanja::find($belanjaId);
+
+                Talangan::create([
+                    'surat_id' => $surat->id, // Mengacu pada primary key model Surat
+                    'anggaran_id' => $belanja->anggaran_id,
+                    'triwulan' => $belanja->tw,
+                    'kodeakun' => $belanja->kodeakun,
+                    'kodepelanggan' => $item['kodepelanggan'],
+                    'bulan' => $item['bulan'],
+                    'jumlah' => $item['jumlah'],
+                ]);
+            }
+        }
+
+        return back()->with('success', 'Surat Talangan berhasil disimpan.');
+    }
+
+    public function destroyTalangan($surat_id)
+    {
+        try {
+            // 1. Cari data suratnya
+            $surat = Surat::findOrFail($surat_id);
+
+            // 2. Hapus rincian talangan yang terkait (jika tidak pakai cascade delete di DB)
+            Talangan::where('surat_id', $surat->id)->delete();
+
+            // 3. Hapus data induk suratnya
+            $surat->delete();
+
+            return back()->with('success', 'Seluruh rincian surat talangan berhasil dihapus.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal menghapus data: '.$e->getMessage());
+        }
+    }
+
+    public function cetakTalanganPdf($suratId) // Nama variabel disesuaikan agar jelas
+    {
+        \Carbon\Carbon::setLocale('id');
+
+        // 1. Cari data Surat Induk
+        $suratInduk = Surat::findOrFail($suratId);
+
+        // 2. Cari rincian talangan yang memiliki surat_id tersebut
+        // Sertakan 'korek' agar nama rekening muncul di PDF
+        $listTalangan = Talangan::with('korek')
+            ->where('surat_id', $suratId)
+            ->orderBy('id', 'asc')
+            ->get();
+
+        if ($listTalangan->isEmpty()) {
+            return back()->with('error', 'Rincian item talangan tidak ditemukan.');
+        }
+
+        // Ambil baris pertama sebagai referensi data Anggaran & Triwulan
+        $referensi = $listTalangan->first();
+
+        $sekolah = Sekolah::with('sudin')->find(Auth::user()->sekolah_id);
+        $anggaran = Anggaran::find($referensi->anggaran_id);
+        $triwulanAktif = $referensi->triwulan; // Ambil triwulan dari data talangan
+
+        $items = [];
+        foreach ($listTalangan as $t) {
+            $items[] = (object) [
+                'nama_barang' => $t->kodepelanggan ?? 'ID Kosong',
+                'bulan' => $t->bulan ?? '-',
+                'qty' => 1,
+                'harga_satuan' => $t->jumlah,
+            ];
+        }
+
+        $rentangBulan = match ((int) $triwulanAktif) {
+            1 => 'Januari - Maret',
+            2 => 'April - Juni',
+            3 => 'Juli - September',
+            4 => 'Oktober - Desember',
+            default => 'Sesuai Tagihan'
+        };
+
+        // 3. Susun data surat untuk View
+        $suratData = (object) [
+            'nomor_surat' => $suratInduk->nomor_surat ?? '-',
+            'tanggal_surat_format' => $suratInduk->tanggal_surat
+                ? \Carbon\Carbon::parse($suratInduk->tanggal_surat)->translatedFormat('d F Y')
+                : now()->translatedFormat('d F Y'),
+        ];
+
+        $romawiMap = [1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV'];
+        $romawiTriwulan = $romawiMap[(int) $triwulanAktif] ?? 'I';
+
+        $pdf = PDF::loadView('surat.pdf_talangan', [
+            'sekolah' => $sekolah,
+            'referensi' => $referensi,
+            'anggaran' => $anggaran,
+            'surat' => $suratData,
+            'rentangBulan' => $rentangBulan,
+            'items' => $items,
+            'romawiTriwulan' => $romawiTriwulan,
+        ]);
+
+        // Ukuran kertas F4
+        $customPaper = [0, 0, 609.4488, 935.433];
+        $pdf->setPaper($customPaper, 'portrait');
+
+        $pdf->setOptions([
+            'isRemoteEnabled' => true,
+            'isHtml5ParserEnabled' => true,
+            'default_font' => 'Arial',
+        ]);
+
+        $filename = 'Surat_Talangan_'.str_replace('/', '_', $suratData->nomor_surat).'.pdf';
+
+        return $pdf->stream($filename);
+    }
+
+    public function createCoverLpj()
+    {
+        $sekolah = Sekolah::find(auth()->user()->sekolah_id);
+        $triwulanAktif = $sekolah->triwulan_aktif;
+
+        // Asumsi Anda mengambil daftar rekening unik dari tabel Belanja di TW aktif
+        $listRekening = Belanja::with('korek')
+            ->where('anggaran_id', $sekolah->anggaran_id_aktif)
+            ->where('tw', $triwulanAktif)
+            ->get()
+            ->unique('kodeakun')
+            ->values();
+
+        return view('surat.cover_input', compact('sekolah', 'triwulanAktif', 'listRekening'));
+    }
+
+    public function generateCoverPdf(Request $request)
+    {
+        $request->validate([
+            'jenis_bantuan' => 'required|in:BOP,BOSP',
+            'nomor_spj' => 'required|string',
+            'rekening_terpilih' => 'required|array|min:1',
+            'logo' => 'nullable|image|max:2048',
+        ]);
+
+        $sekolah = \App\Models\Sekolah::with('sudin')->find(auth()->user()->sekolah_id);
+
+        // Konversi logo ke Base64 jika user upload
+        $logoBase64 = null;
+        if ($request->hasFile('logo')) {
+            $file = $request->file('logo');
+            $logoBase64 = 'data:'.$file->getMimeType().';base64,'.base64_encode(file_get_contents($file->getRealPath()));
+        }
+
+        $data = [
+            'sekolah' => $sekolah,
+            'triwulanAktif' => $sekolah->triwulan_aktif,
+            'tahun' => date('Y'), // Atau ambil dari setting
+            'jenisBantuan' => $request->jenis_bantuan,
+            'nomorSpj' => $request->nomor_spj,
+            'rekeningTerpilih' => $request->rekening_terpilih,
+            'logoBase64' => $logoBase64,
+        ];
+
+        $pdf = PDF::loadView('surat.pdf_cover_lpj', $data);
+        $pdf->setPaper([0, 0, 609.4488, 935.433], 'portrait');
+        $pdf->setOptions(['isRemoteEnabled' => true, 'isHtml5ParserEnabled' => true]);
+
+        return $pdf->stream('Cover_LPJ.pdf');
     }
 }

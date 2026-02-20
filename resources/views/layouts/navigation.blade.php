@@ -76,8 +76,19 @@
                                 <x-dropdown-link :href="route('cetak.kop')" target="_blank">
                                     {{ __('Cetak Kop Surat') }}
                                 </x-dropdown-link>
+                                <x-dropdown-link :href="route('surat.rekap_triwulan')" target="_blank">
+                                    {{ __('Cetak Rekap Surat') }}
+                                </x-dropdown-link>
                                 <x-dropdown-link :href="route('realisasi.rekanan')">
                                     {{ __('Rekap Belanja Rekanan') }}
+
+                                </x-dropdown-link>
+                                <x-dropdown-link :href="route('talangan.create')">
+                                    {{ __('Input Talangan') }}
+
+                                </x-dropdown-link>
+                                <x-dropdown-link :href="route('surat.cover_lpj.create')">
+                                    {{ __('Cover LPJ') }}
 
                                 </x-dropdown-link>
 

@@ -24,6 +24,8 @@ class Sekolah extends Model
         'nip_bendahara',
         'nama_pengurus_barang',
         'nip_pengurus_barang',
+        'bank_bendahara',
+        'no_rekening',
         'anggaran_id_aktif',
         'triwulan_aktif',
         'alamat',
@@ -37,6 +39,7 @@ class Sekolah extends Model
         'latitude',
         'longitude',
         'nomor_surat',
+        'kode_surat',
         'sudin',
     ];
 

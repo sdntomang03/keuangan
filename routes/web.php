@@ -203,8 +203,19 @@ Route::middleware(['auth'])->prefix('surat')->group(function () {
     Route::get('/cetaksatuanpdf/{id}/{jenis}', [SuratController::class, 'cetakSatuanPdf'])->name('surat.cetakSatuanPdf');
     Route::get('/cetakparsialpdf/{id}', [SuratController::class, 'cetakParsialPdf'])->name('surat.cetakParsialPdf');
     Route::get('/cetak/kop', [SuratController::class, 'cetakKopPdf'])->name('cetak.kop');
-    Route::get('/surat/download-semua-parsial/{belanjaId}', [SuratController::class, 'downloadSemuaParsial'])
+    Route::get('/download-semua-parsial/{belanjaId}', [SuratController::class, 'downloadSemuaParsial'])
         ->name('surat.download_semua_parsial');
+
+    Route::get('/rekap-surat', [SuratController::class, 'rekapKeseluruhanTriwulanPdf'])->name('surat.rekap_triwulan');
+    Route::get('/talangan', [SuratController::class, 'createTalangan'])->name('talangan.create');
+    Route::post('/talangan/store', [SuratController::class, 'storeTalangan'])->name('surat.talangan.store');
+
+    // 3. Route untuk mencetak PDF Talangan
+    Route::get('/talangan-pdf/{talanganId}', [SuratController::class, 'cetakTalanganPdf'])->name('surat.talangan_pdf');
+    // Route untuk menghapus satu paket surat talangan beserta isinya
+    Route::delete('/talangan/{surat_id}', [SuratController::class, 'destroyTalangan'])->name('surat.talangan.destroy');
+    Route::get('/cover-lpj', [SuratController::class, 'createCoverLpj'])->name('surat.cover_lpj.create');
+    Route::post('/cover-lpj/cetak', [SuratController::class, 'generateCoverPdf'])->name('surat.cover_lpj.generate');
 });
 
 Route::middleware(['auth'])->group(function () {

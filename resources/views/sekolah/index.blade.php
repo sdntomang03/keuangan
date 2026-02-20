@@ -176,19 +176,30 @@
                                 {{-- 2. Nomor Surat (Posisi di Samping Triwulan) --}}
                                 <div>
                                     <label
-                                        class="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">
-                                        Nomor Surat
+                                        class="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase mb-1">
+                                        Nomor & Kode Surat
                                     </label>
-                                    <div class="relative mt-1 rounded-md shadow-sm">
-                                        <input type="number" name="nomor_surat"
-                                            value="{{ $setting->nomor_surat ?? '001' }}" placeholder="001"
-                                            class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 focus:border-indigo-500 focus:ring-indigo-500 text-sm font-mono">
+
+                                    <div class="flex items-stretch shadow-sm">
+                                        <div class="relative flex-none w-20">
+                                            <input type="text" name="nomor_surat"
+                                                value="{{ $setting->nomor_surat ?? '001' }}" placeholder="001"
+                                                class="block w-full rounded-l-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 focus:border-indigo-500 focus:ring-indigo-500 text-sm font-mono text-center border-r-0">
+                                        </div>
+
                                         <div
-                                            class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                                            <span class="text-gray-400 sm:text-xs">/UD.02.02 </span>
+                                            class="flex items-center bg-gray-50 dark:bg-gray-800 border-y border-gray-300 dark:border-gray-700 px-2 text-gray-400 font-mono text-sm">
+                                            /
+                                        </div>
+
+                                        <div class="flex-grow">
+                                            <input type="text" name="kode_surat"
+                                                value="{{ $setting->kode_surat ?? 'UD.02.02' }}" placeholder="UD.02.02"
+                                                class="block w-full rounded-r-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 focus:border-indigo-500 focus:ring-indigo-500 text-sm font-mono pl-2">
                                         </div>
                                     </div>
-                                    <p class="mt-1 text-[10px] text-gray-400">Nomor awal surat triwulan aktif</p>
+
+                                    <p class="mt-1 text-[10px] text-gray-400 italic">Contoh format: 001/UD.02.02</p>
                                 </div>
 
                             </div>
@@ -248,6 +259,21 @@
                                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">NIP</label>
                                         <input type="text" name="nip_bendahara"
                                             value="{{ $setting->nip_bendahara ?? '' }}" required
+                                            class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-emerald-500 focus:border-emerald-500 text-sm">
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nomor
+                                            Rekening</label>
+                                        <input type="text" name="no_rekening" value="{{ $setting->no_rekening ?? '' }}"
+                                            required
+                                            class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-emerald-500 focus:border-emerald-500 text-sm">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nama
+                                            Bank</label>
+                                        <input type="text" name="bank_bendahara"
+                                            value="{{ $setting->bank_bendahara ?? '' }}" required
                                             class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-emerald-500 focus:border-emerald-500 text-sm">
                                     </div>
                                 </div>
