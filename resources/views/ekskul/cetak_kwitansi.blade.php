@@ -10,8 +10,8 @@
            CSS UNTUK TAMPILAN CETAK (PRINT FRIENDLY)
            ========================================= */
         body {
-            font-family: 'Times New Roman', Times, serif;
-            font-size: 11pt;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12pt;
             margin: 0;
             padding: 20px;
             background-color: #f3f4f6;
@@ -53,7 +53,7 @@
 
         .header p {
             margin: 2px 0;
-            font-size: 9pt;
+            font-size: 12pt;
 
         }
 
@@ -62,7 +62,7 @@
             top: 0;
             right: 0;
             /* Akan mengikuti padding kanan container .page */
-            font-size: 9pt;
+            font-size: 12pt;
             border: 1px solid #000;
             padding: 2px 5px;
         }
@@ -115,7 +115,7 @@
         .rincian-box {
             margin-left: 175px;
             padding: 5px;
-            font-size: 10pt;
+            font-size: 12pt;
         }
 
         .table-rincian {
@@ -156,7 +156,7 @@
         }
 
         .nip {
-            font-size: 9pt;
+            font-size: 12pt;
             margin-top: 2px;
         }
 
@@ -237,7 +237,7 @@
     </div>
 
     <div class="page">
-        <div class="header" style="text-align: center; margin-bottom: 20px; font-family: 'Times New Roman', serif;">
+        <div class="header" style="text-align: center; margin-bottom: 20px; font-family: Arial, Helvetica, sans-serif;">
             {{-- Judul Kwitansi: Besar, Tebal, Garis Bawah --}}
             <h1 style="font-size: 18pt; font-weight: bold; text-decoration: underline; margin: 0; padding: 0;">KWITANSI
             </h1>
@@ -269,7 +269,7 @@
                 <td class="titik-titik" style="line-height: 1.5;">
                     {{ strtoupper('Honorarium') }}<br>
 
-                    <span style="font-weight: normal; font-size: 10pt;">
+                    <span style="font-weight: normal; font-size: 11pt;">
                         INSTRUKTUR {{ strtoupper($spj->ekskul->nama) }} di {{ strtoupper($sekolah->nama_sekolah) }}<br>
 
                         {{-- Menampilkan Kode Rekening --}}

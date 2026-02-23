@@ -316,7 +316,7 @@ class BelanjaController extends Controller
         }
 
         // 5. Eksekusi Query dengan Pagination
-        $belanjas = $query->orderBy('tanggal', 'desc')
+        $belanjas = $query->orderBy('tanggal', 'asc')
             ->paginate(10)
             ->withQueryString(); // PENTING: Agar filter tidak hilang saat klik halaman 2
 

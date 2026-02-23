@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Anggaran;
 use App\Models\Belanja;
 use App\Models\BelanjaFoto;
+use App\Models\Korek;
 use App\Models\Rekanan;
 use App\Models\Sekolah;
 use App\Models\Surat;
@@ -2163,7 +2164,9 @@ class SuratController extends Controller
             'PH' => 'Permintaan Harga',
             'NH' => 'Negosiasi Harga',
             'SP' => 'Surat Pesanan',
-            'BAPB' => 'Berita Acara',
+            'BAPB' => 'Berita Acara Penyerahan Barang',
+            'talangan' => 'Pernyataan Dana Talangan',
+            'NPD' => 'Nota Permintaan Dana',
         ];
 
         $pdf = PDF::loadView('surat.rekap_pdf', [
@@ -2411,5 +2414,87 @@ class SuratController extends Controller
         $pdf->setOptions(['isRemoteEnabled' => true, 'isHtml5ParserEnabled' => true]);
 
         return $pdf->stream('Cover_LPJ.pdf');
+    }
+
+    public function daftarSurat(Request $request)
+    {
+        $user = Auth::user();
+        $sekolah = Sekolah::find($user->sekolah_id);
+        if (! $sekolah) {
+            return back()->with('error', 'Data sekolah tidak ditemukan.');
+        }
+
+        $anggaranId = $sekolah->anggaran_id_aktif;
+        // 1. PERBAIKAN: Gunakan 'surats' (jamak) sesuai relasi model Anda
+        $query = Belanja::with(['korek', 'surats'])->where('anggaran_id', $anggaranId);
+
+        // 2. Filter berdasarkan kode rekening
+        if ($request->filled('kode_rekening')) {
+            $query->where('kodeakun', $request->kode_rekening);
+        }
+
+        // 3. PERBAIKAN: Gunakan kolom 'tanggal' (bukan 'tanggal_belanja')
+        $listBelanja = $query->orderBy('tanggal', 'asc')
+            ->paginate(15)
+            ->withQueryString();
+
+        // 4. Ambil daftar Kode Rekening khusus untuk Dropdown Filter
+        $listKorek = Belanja::with('korek')
+            ->where('anggaran_id', $sekolah->anggaran_id_aktif)
+            ->where('tw', $sekolah->triwulan_aktif)
+            ->get()
+            ->unique('kodeakun')
+            ->values();
+
+        return view('surat.daftar_surat', compact('listBelanja', 'listKorek'));
+    }
+
+    public function daftarTalanganNpd(Request $request)
+    {
+        $user = Auth::user();
+        $sekolah = Sekolah::find($user->sekolah_id);
+
+        if (! $sekolah) {
+            return back()->with('error', 'Data sekolah tidak ditemukan.');
+        }
+
+        $anggaranId = $sekolah->anggaran_id_aktif;
+
+        // 1. FOKUS KE MODEL SURAT: Gunakan relasi untuk menarik data belanja dan korek
+        $listSurat = Surat::where('sekolah_id', $sekolah->id)
+            ->where('triwulan', $sekolah->triwulan_aktif)
+            ->whereIn('jenis_surat', ['talangan', 'NPD', 'STS'])
+            ->get();
+
+        // 5. Ubah variabel yang dikirim ke view menjadi 'listSurat'
+        return view('surat.daftar_talangan_npd', compact('listSurat'));
+    }
+
+    public function hapusSurat($id)
+    {
+        $user = Auth::user();
+
+        // Cari data surat berdasarkan ID
+        $surat = Surat::find($id);
+
+        // Jika data surat tidak ditemukan
+        if (! $surat) {
+            return back()->with('error', 'Data surat tidak ditemukan.');
+        }
+
+        // KEAMANAN: Pastikan user hanya bisa menghapus surat milik sekolahnya sendiri
+        if ($surat->sekolah_id != $user->sekolah_id) {
+            return back()->with('error', 'Anda tidak memiliki otorisasi untuk menghapus surat ini.');
+        }
+
+        try {
+            // Hapus data surat
+            $surat->delete();
+
+            return back()->with('success', 'Surat berhasil dihapus.');
+        } catch (\Exception $e) {
+            // Tangani error jika terjadi masalah pada database (misal: terkait relasi tabel)
+            return back()->with('error', 'Terjadi kesalahan saat menghapus surat: '.$e->getMessage());
+        }
     }
 }

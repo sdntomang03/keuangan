@@ -15,7 +15,7 @@
         .header {
             border-bottom: 2px solid #000;
             padding-bottom: 10px;
-            mb-4;
+
         }
 
         table {
@@ -60,12 +60,12 @@
     <table>
         <thead>
             <tr>
-                <th width="30">No</th>
-                <th width="80">Tanggal</th>
-                <th width="150">Nomor Surat</th>
-                <th width="100">Jenis Dokumen</th>
+                <th width="5%">No</th>
+                <th width="11%">Tanggal</th>
+                <th width="12%">Nomor Surat</th>
+                <th width="22%">Jenis Dokumen</th>
                 <th>Uraian Kegiatan</th>
-                <th>Tujuan / Rekanan</th>
+                <th width="20%">Tujuan / Rekanan</th>
             </tr>
         </thead>
         <tbody>
@@ -76,7 +76,12 @@
                 </td>
                 <td>{{ $surat->nomor_surat }}</td>
                 <td>{{ $labelJenis[$surat->jenis_surat] ?? $surat->jenis_surat }}</td>
-                <td>{{ $surat->belanja->uraian ?? 'Tanpa Keterangan' }}</td>
+                <td>{{ $surat->belanja->uraian ?? ($surat->jenis_surat == 'NPD' ? 'NPD Triwulan ' . $triwulan . ' Tahun
+                    '
+                    . $tahun : ($surat->jenis_surat ==
+                    'talangan' ? 'Talangan Triwulan ' . $triwulan . ' Tahun
+                    '
+                    . $tahun : 'Sisa Tanda Setoran Triwulan ' . $triwulan . ' Tahun ' . $tahun)) }}</td>
                 <td>{{ $surat->belanja->rekanan->nama_rekanan ?? '-' }}</td>
             </tr>
             @empty

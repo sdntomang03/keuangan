@@ -18,6 +18,7 @@
                     </svg>
                     Buat NPD Baru
                 </a>
+
             </div>
         </div>
     </x-slot>
@@ -62,7 +63,8 @@
                         <thead class="bg-gray-800 text-white uppercase text-[10px] font-bold tracking-widest">
                             <tr>
                                 <th class="px-6 py-5 text-left">NPD & Tanggal</th>
-                                <th class="px-6 py-5 text-left">Kegiatan / Rekening</th>
+                                <th class="px-6 py-5 text-left">Kegiatan</th>
+                                <th class="px-6 py-5 text-left">Kode Rekening</th>
                                 <th class="px-6 py-5 text-right bg-gray-700">Pagu NPD (A)</th>
                                 <th class="px-6 py-5 text-right text-indigo-300 italic">Realisasi Spj (B)</th>
                                 <th class="px-6 py-5 text-right bg-indigo-900">Sisa Dana (A-B)</th>
@@ -80,14 +82,17 @@
                                     <div class="text-[10px] text-gray-400 font-mono italic">{{
                                         $npd->tanggal->format('d/m/Y') }}</div>
                                 </td>
-                                <td class="px-6 py-4">
-                                    <div
-                                        class="font-bold text-gray-800 uppercase text-[10px] line-clamp-1 group-hover:text-indigo-700 transition">
-                                        {{ $npd->kegiatan->namagiat ?? '-' }}
-                                    </div>
-                                    <div class="text-[10px] text-gray-400 font-mono italic">
-                                        {{ $npd->korek->ket ?? '' }}
-                                    </div>
+                                <td class="px-6 py-4 text-left font-bold text-gray-900 border-l border-gray-50">
+
+                                    {{ $npd->kegiatan->namagiat ?? '-' }}
+
+
+                                </td>
+                                <td class="px-6 py-4 text-left font-bold text-gray-900 border-l border-gray-50">
+
+
+                                    {{ $npd->korek->ket ?? '' }}
+
                                 </td>
                                 <td class="px-6 py-4 text-right font-bold text-gray-900 border-l border-gray-50">
                                     {{ number_format($npd->nilai_npd, 0, ',', '.') }}
@@ -139,7 +144,7 @@
                         @if($listNpd->isNotEmpty())
                         <tfoot class="bg-gray-800 text-white font-black uppercase text-[10px]">
                             <tr>
-                                <td colspan="2" class="px-6 py-4 text-right tracking-widest">Total Halaman Ini</td>
+                                <td colspan="3" class="px-6 py-4 text-right tracking-widest">Total</td>
                                 <td class="px-6 py-4 text-right">Rp {{ number_format($listNpd->sum('nilai_npd'), 0, ',',
                                     '.') }}</td>
                                 <td class="px-6 py-4 text-right text-indigo-300">Rp {{
@@ -165,4 +170,6 @@
             </div>
         </div>
     </div>
+
+
 </x-app-layout>

@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Npd;
 use App\Models\Rkas;
+use App\Models\Sekolah;
+use App\Models\Surat;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -209,5 +211,31 @@ class NpdController extends Controller
             ->sum('nilai_npd');
 
         return view('npd.index', compact('listNpd', 'triwulanAktif', 'totalPengajuan'));
+    }
+
+    public function storeSurat(Request $request)
+    {
+        $user = Auth::user();
+        $sekolah = Sekolah::find($user->sekolah_id);
+        if (! $sekolah) {
+            return back()->with('error', 'Data sekolah tidak ditemukan.');
+        }
+
+        $request->validate([
+            'tanggal_npd' => 'required|date',
+            'jenis_surat' => 'required|in:NPD,STS',
+        ]);
+
+        // 1. Simpan identitas ke model Surat
+        $surat = Surat::create([
+            'nomor_surat' => 'DRAFT',
+            'tanggal_surat' => $request->tanggal_npd,
+            'jenis_surat' => $request->jenis_surat, // Jika ada kolom pembeda tipe
+            'sekolah_id' => auth()->user()->sekolah_id,
+            'triwulan' => $sekolah->triwulan_aktif,
+            'belanja_id' => null, // Karena ini talangan, tidak terkait langsung ke satu belanja
+        ]);
+
+        return back()->with('success', 'Surat berhasil disimpan.');
     }
 }
