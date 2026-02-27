@@ -89,20 +89,4 @@ class Belanja extends Model
     {
         return $this->hasOne(SpjEkskul::class, 'belanja_id');
     }
-
-    public function index(Request $request)
-    {
-        $anggaran = $request->anggaran_data; // Middleware
-
-        // Ambil Belanja yang memiliki relasi ke spj_ekskul
-        // Ini memfilter agar yang tampil HANYA belanja Ekskul, bukan ATK/Lainnya
-        $belanjas = Belanja::with(['rekanan', 'spjEkskul'])
-            ->where('anggaran_id', $anggaran->id)
-            ->whereHas('spjEkskul') // Hanya ambil yang punya data SPJ Ekskul
-            ->orderBy('tanggal', 'desc')
-            ->orderBy('no_bukti', 'desc')
-            ->paginate(10);
-
-        return view('ekskul.index', compact('belanjas', 'anggaran'));
-    }
 }

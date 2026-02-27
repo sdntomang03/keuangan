@@ -14,6 +14,7 @@ use App\Http\Controllers\KegiatanController;
 use App\Http\Controllers\NpdController;
 use App\Http\Controllers\PajakController;
 use App\Http\Controllers\PenerimaanController;
+use App\Http\Controllers\PersediaanController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RealisasiController;
 use App\Http\Controllers\RekananController;
@@ -71,7 +72,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Otomatis mencakup: index, create, store, show, edit, update, destroy
     Route::resource('belanja', BelanjaController::class);
-
+    Route::get('/belanja/{id}/json', [BelanjaController::class, 'getJson'])->name('belanja.json');
     Route::post('/{id}/post', [BelanjaController::class, 'post'])->name('belanja.post');
     // Rute API tambahan untuk pencarian data
     Route::prefix('api')->group(function () {
@@ -102,6 +103,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     // Route Pajak
     Route::get('/pajak/siap-setor', [PajakController::class, 'siapSetor'])->name('pajak.siap-setor');
+    Route::delete('/pajak/{id}/hapus-setor', [PajakController::class, 'hapusSetor'])->name('pajak.hapus_setor');
     Route::post('/pajak/setor/{id}', [PajakController::class, 'prosesSetor'])->name('pajak.proses-setor');
     Route::get('/realisasi/komponen', [RealisasiController::class, 'komponen'])->name('realisasi.komponen');
     Route::get('/realisasi/korek', [RealisasiController::class, 'korek'])->name('realisasi.korek');
@@ -300,6 +302,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/arkas', [ArkasController::class, 'index'])->name('arkas.index');
     Route::post('/arkas/toggle-status/{id}', [ArkasController::class, 'toggleStatusArkas'])->name('arkas.toggle_status');
     Route::post('/arkas/update-idkomponen/{id}', [ArkasController::class, 'updateIdKomponen'])->name('arkas.update_idkomponen');
+    Route::get('/persediaan', [PersediaanController::class, 'index'])->name('persediaan.index');
+
 });
 
 Route::get('/cetak-cover', [CetakController::class, 'cetakCover'])->name('cetak.cover');

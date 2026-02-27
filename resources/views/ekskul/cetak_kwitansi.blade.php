@@ -25,7 +25,7 @@
             min-height: 140mm;
 
             /* PADDING: Atas 15mm, Kanan 30mm (Dilebarkan), Bawah 15mm, Kiri 20mm */
-            padding: 15mm 35mm 15mm 20mm;
+            padding: 10mm 15mm 10mm 15mm;
 
             margin: 0 auto;
             background: white;
@@ -100,7 +100,7 @@
             font-style: italic;
             font-weight: bold;
             border: 2px solid #000;
-            text-align: center;
+            text-align: left;
             font-size: 12pt;
             margin: 5px 0;
             transform: skewX(-10deg);
@@ -201,14 +201,14 @@
             .page {
 
                 box-shadow: none;
-                margin: 0;
+                margin: 0 auto;
 
                 /* PENTING: Ubah width jadi 100% atau auto saat print agar fit di kertas */
                 width: 100%;
                 max-width: 100%;
 
                 /* Pertahankan Padding Kanan Besar */
-                padding-right: 35mm;
+                padding-right: 20mm;
                 padding-left: 15mm;
             }
 
@@ -259,7 +259,7 @@
                 <td class="sep">:</td>
                 <td>
                     <div class="terbilang-box">
-                        <span class="terbilang-text"># {{ $terbilang }} #</span>
+                        <span class="terbilang-text">{{ $terbilang }}</span>
                     </div>
                 </td>
             </tr>

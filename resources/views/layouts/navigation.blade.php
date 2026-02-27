@@ -129,6 +129,8 @@
                                     Surat Triwulan') }}</x-dropdown-link>
                                 <x-dropdown-link :href="route('realisasi.rekanan')">{{ __('Rekap Belanja Rekanan') }}
                                 </x-dropdown-link>
+                                <x-dropdown-link :href="route('persediaan.index')">{{ __('Persediaan') }}
+                                </x-dropdown-link>
                             </x-slot>
                         </x-dropdown>
                     </div>

@@ -82,4 +82,37 @@ class PajakController extends Controller
             return back()->with('error', 'Gagal memproses setoran: '.$e->getMessage());
         }
     }
+
+    public function hapusSetor($id)
+    {
+        // 1. Cari data pajak yang sudah disetor
+        $pajak = Pajak::findOrFail($id);
+
+        // Validasi: Pastikan memang sudah disetor sebelum dibatalkan
+        if (! $pajak->is_setor) {
+            return back()->with('error', 'Pajak ini belum disetorkan.');
+        }
+
+        try {
+            DB::transaction(function () use ($pajak) {
+                // 2. Hapus catatan di BKU yang terkait dengan setoran pajak ini
+                // Pastikan di model Bku ada kolom pajak_id untuk mengidentifikasi baris mana yang dihapus
+                Bku::where('pajak_id', $pajak->id)
+                    ->where('kredit', '>', 0) // Menghindari salah hapus saat pajak dipungut (debit)
+                    ->delete();
+
+                // 3. Kembalikan status di tabel pajaks
+                $pajak->update([
+                    'is_setor' => false,
+                    'tanggal_setor' => null,
+                    'ntpn' => null,
+                ]);
+            });
+
+            return back()->with('success', 'Setoran pajak berhasil dibatalkan dan catatan BKU telah dihapus.');
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal membatalkan setoran: '.$e->getMessage());
+        }
+    }
 }

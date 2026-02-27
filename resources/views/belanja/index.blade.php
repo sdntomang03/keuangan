@@ -66,6 +66,9 @@
                                 <tr>
                                     <th
                                         class="px-4 py-3 text-left text-[10px] font-bold text-gray-300 uppercase tracking-widest">
+                                        No</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-[10px] font-bold text-gray-300 uppercase tracking-widest">
                                         Info Transaksi</th>
                                     <th
                                         class="px-4 py-3 text-right text-[10px] font-bold text-gray-300 uppercase tracking-widest">
@@ -87,6 +90,8 @@
                             <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-100 dark:divide-gray-700">
                                 @forelse($belanjas as $belanja)
                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                                    <td class="px-4 py-4 text-sm font-bold text-gray-900 dark:text-gray-100">{{
+                                        $loop->iteration }}</td>
                                     <td class="px-4 py-4" x-data="{ expanded: false }">
                                         <div class="flex flex-col space-y-1">
                                             <div class="flex justify-between items-start mb-1">

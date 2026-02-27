@@ -192,7 +192,12 @@ class EkskulController extends Controller
         $romawiTW = match ($twAktif) {
             1 => 'TWI', 2 => 'TWII', 3 => 'TWIII', 4 => 'TWIV', default => 'TW'
         };
-        $kodeAnggaran = strtoupper($anggaran->singkatan ?? 'BOS');
+        $singkatan = $anggaran->singkatan ?? 'BOSP';
+
+        $kodeAnggaran = match (strtoupper($singkatan)) {
+            'BOS' => 'BOSP',
+            default => strtoupper($singkatan),
+        };
         $tahun = Carbon::parse($request->tanggal)->format('Y');
 
         // Mapping Bulan untuk Pagu Check
@@ -518,6 +523,22 @@ class EkskulController extends Controller
 
         // 4. Tampilkan View
         return view('ekskul.cetak_kwitansi', compact('spj', 'sekolah', 'terbilang', 'sumberDana'));
+    }
+
+    public function cetakSemua()
+    {
+        // 1. Ambil SEMUA data SPJ Ekskul sekolah user login
+        $spjs = SpjEkskul::with(['belanja.korek', 'belanja.anggaran', 'rekanan', 'ekskul'])
+            ->whereHas('belanja', function ($query) {
+                $query->where('sekolah_id', auth()->user()->sekolah_id);
+            })
+            ->get();
+
+        // 2. Data Sekolah
+        $sekolah = Sekolah::with('Sudin')->find(auth()->user()->sekolah_id);
+
+        // 3. Kita tidak perlu menghitung $terbilang di sini karena akan dilakukan di View per data
+        return view('ekskul.cetak_kwitansi_massal', compact('spjs', 'sekolah'));
     }
 
     /**
