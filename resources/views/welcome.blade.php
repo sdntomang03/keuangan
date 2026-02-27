@@ -27,11 +27,12 @@
     </style>
 </head>
 
-<body class="bg-slate-50 dark:bg-[#050505] text-slate-900 dark:text-slate-100 antialiased">
+<body class="bg-slate-50 dark:bg-[#050505] text-slate-900 dark:text-slate-100 antialiased overflow-x-hidden">
 
-    <nav class="fixed top-0 w-full z-50 border-b border-slate-200/60 dark:border-slate-800/60 glass-effect">
+    <nav class="fixed top-0 w-full z-50 border-b border-slate-200/60 dark:border-slate-800/60 glass-effect relative">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
+            <div class="flex justify-between items-center h-16">
+
                 <div class="flex items-center gap-3">
                     <div
                         class="w-10 h-10 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-200 flex items-center justify-center text-white">
@@ -47,14 +48,16 @@
                     </div>
                 </div>
 
-                <div class="flex items-center gap-6">
+                <div class="hidden md:flex items-center gap-6">
                     @auth
-                    <a href="{{ url('/login') }}"
-                        class="text-sm font-semibold text-indigo-600 hover:text-indigo-700 transition">Dashboard
-                        &rarr;</a>
+                    <a href="{{ url('/dashboard') }}"
+                        class="text-sm font-semibold text-indigo-600 hover:text-indigo-700 transition">
+                        Dashboard &rarr;
+                    </a>
                     @else
-                    <a href="{{ route('login') }}" class="text-sm font-medium hover:text-indigo-600 transition">Log
-                        in</a>
+                    <a href="{{ route('login') }}" class="text-sm font-medium hover:text-indigo-600 transition">
+                        Log in
+                    </a>
                     @if (Route::has('register'))
                     <a href="{{ route('register') }}"
                         class="bg-slate-900 dark:bg-slate-100 dark:text-slate-900 text-white px-5 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-slate-800 transition">
@@ -63,7 +66,38 @@
                     @endif
                     @endauth
                 </div>
+
+                <button id="mobile-menu-btn"
+                    class="md:hidden p-2 text-slate-700 dark:text-slate-300 hover:text-indigo-600 transition focus:outline-none"
+                    aria-label="Toggle menu">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+
             </div>
+        </div>
+
+        <div id="mobile-menu"
+            class="hidden absolute top-16 left-0 w-full bg-white dark:bg-[#050505] border-b border-slate-200 dark:border-slate-800 shadow-xl flex-col py-4 px-6 gap-2 z-40 md:hidden glass-effect">
+            @auth
+            <a href="{{ url('/dashboard') }}"
+                class="text-base font-semibold text-indigo-600 py-3 border-b border-slate-100 dark:border-slate-800 block">
+                Dashboard &rarr;
+            </a>
+            @else
+            <a href="{{ route('login') }}"
+                class="text-base font-medium text-slate-700 dark:text-slate-300 hover:text-indigo-600 py-3 border-b border-slate-100 dark:border-slate-800 block">
+                Log in
+            </a>
+            @if (Route::has('register'))
+            <a href="{{ route('register') }}"
+                class="mt-4 bg-slate-900 dark:bg-slate-100 dark:text-slate-900 text-white px-5 py-3 rounded-xl text-center font-bold block w-full hover:bg-slate-800 transition">
+                Daftar Instansi
+            </a>
+            @endif
+            @endauth
         </div>
     </nav>
 
@@ -112,13 +146,13 @@
                         </a>
                     </div>
 
-                    <div class="pt-8 flex items-center gap-8 border-t border-slate-200 dark:border-slate-800">
+                    <div class="pt-8 flex flex-wrap items-center gap-8 border-t border-slate-200 dark:border-slate-800">
                         <div>
                             <p class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-2">Keamanan
                                 Data</p>
                             <p class="text-sm font-bold text-slate-700 dark:text-slate-300">SSL Encrypted</p>
                         </div>
-                        <div class="w-px h-8 bg-slate-200 dark:bg-slate-800"></div>
+                        <div class="hidden sm:block w-px h-8 bg-slate-200 dark:bg-slate-800"></div>
                         <div>
                             <p class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-2">Kepatuhan
                             </p>
@@ -145,19 +179,19 @@
                                 <div class="h-2 bg-slate-200 dark:bg-slate-700 rounded-full w-full">
                                     <div class="h-2 bg-indigo-600 rounded-full w-3/4"></div>
                                 </div>
-                                <div class="flex justify-between items-end">
+                                <div class="flex flex-col sm:flex-row justify-between sm:items-end gap-2">
                                     <div>
                                         <p class="text-[10px] text-slate-400 uppercase font-bold">Total Dana BOS</p>
                                         <p class="text-xl font-black text-slate-900 dark:text-white">Rp 450.000.000</p>
                                     </div>
-                                    <div class="text-right">
+                                    <div class="sm:text-right">
                                         <p class="text-[10px] text-emerald-500 font-bold">75% Terserap</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="p-6 grid grid-cols-2 gap-4">
+                        <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div
                                 class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 hover:border-indigo-200 transition">
                                 <div
@@ -198,17 +232,39 @@
                 <span class="font-black tracking-tighter text-xl italic">E-INSTANSI</span>
                 <span class="text-[10px] font-bold bg-slate-200 px-2 py-1 rounded">2026</span>
             </div>
-            <div class="flex gap-8 text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+            <div
+                class="flex flex-wrap justify-center gap-4 sm:gap-8 text-[11px] font-bold text-slate-500 uppercase tracking-widest">
                 <a href="#" class="hover:text-indigo-600">Panduan</a>
                 <a href="#" class="hover:text-indigo-600">Kebijakan Privasi</a>
                 <a href="#" class="hover:text-indigo-600">Kontak</a>
             </div>
-            <p class="text-xs text-slate-400 font-medium">
+            <p class="text-xs text-slate-400 font-medium text-center md:text-left">
                 &copy; 2026 Sistem Manajemen Keuangan Sekolah.
             </p>
         </div>
     </footer>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const btn = document.getElementById('mobile-menu-btn');
+            const menu = document.getElementById('mobile-menu');
+
+            btn.addEventListener('click', () => {
+                // Togle kelas hidden dan flex
+                menu.classList.toggle('hidden');
+                menu.classList.toggle('flex');
+            });
+
+            // Menambahkan event listener resize agar menu mobile ter-reset
+            // ketika layar diperbesar kembali ke mode desktop
+            window.addEventListener('resize', () => {
+                if (window.innerWidth >= 768) { // 768px adalah breakpoint 'md' di Tailwind
+                    menu.classList.add('hidden');
+                    menu.classList.remove('flex');
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>
