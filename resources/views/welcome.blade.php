@@ -32,13 +32,13 @@
     <div class="overflow-x-hidden w-full flex flex-col min-h-screen">
 
         <nav
-            class="fixed top-0 w-full z-50 border-b border-slate-200/60 dark:border-slate-800/60 glass-effect relative">
+            class="fixed top-0 w-full z-50 border-b border-slate-200/60 dark:border-slate-800/60 bg-white/80 dark:bg-[#050505]/80 backdrop-blur-md relative">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between items-center h-16">
 
                     <div class="flex items-center gap-3">
                         <div
-                            class="w-10 h-10 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-200 flex items-center justify-center text-white">
+                            class="w-10 h-10 bg-indigo-600 dark:bg-indigo-500 rounded-xl shadow-lg shadow-indigo-200 dark:shadow-none flex items-center justify-center text-white">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                                     d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -46,8 +46,9 @@
                         </div>
                         <div class="flex flex-col">
                             <span
-                                class="text-sm font-extrabold tracking-tight leading-none uppercase">SI-KEUANGAN</span>
-                            <span class="text-[10px] text-slate-500 font-medium tracking-widest uppercase">Portal
+                                class="text-sm font-extrabold tracking-tight leading-none uppercase text-slate-900 dark:text-white">SI-KEUANGAN</span>
+                            <span
+                                class="text-[10px] text-slate-500 dark:text-slate-400 font-medium tracking-widest uppercase">Portal
                                 Terintegrasi</span>
                         </div>
                     </div>
@@ -55,16 +56,17 @@
                     <div class="hidden md:flex items-center gap-6">
                         @auth
                         <a href="{{ url('/dashboard') }}"
-                            class="text-sm font-semibold text-indigo-600 hover:text-indigo-700 transition">
+                            class="text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition">
                             Dashboard &rarr;
                         </a>
                         @else
-                        <a href="{{ route('login') }}" class="text-sm font-medium hover:text-indigo-600 transition">
+                        <a href="{{ route('login') }}"
+                            class="text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition">
                             Log in
                         </a>
                         @if (Route::has('register'))
                         <a href="{{ route('register') }}"
-                            class="bg-slate-900 dark:bg-slate-100 dark:text-slate-900 text-white px-5 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-slate-800 transition">
+                            class="bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 px-5 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-slate-800 dark:hover:bg-slate-200 transition">
                             Daftar Instansi
                         </a>
                         @endif
@@ -72,7 +74,7 @@
                     </div>
 
                     <button id="mobile-menu-btn"
-                        class="md:hidden p-2 text-slate-700 dark:text-slate-300 hover:text-indigo-600 transition focus:outline-none"
+                        class="md:hidden p-2 text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition focus:outline-none"
                         aria-label="Toggle menu">
                         <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -84,20 +86,20 @@
             </div>
 
             <div id="mobile-menu"
-                class="hidden absolute top-16 left-0 w-full bg-white dark:bg-[#050505] border-b border-slate-200 dark:border-slate-800 shadow-xl flex-col py-4 px-6 gap-2 z-40 md:hidden glass-effect">
+                class="hidden absolute top-16 left-0 w-full bg-white/95 dark:bg-[#050505]/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-xl flex-col py-4 px-6 gap-2 z-40 md:hidden">
                 @auth
                 <a href="{{ url('/dashboard') }}"
-                    class="text-base font-semibold text-indigo-600 py-3 border-b border-slate-100 dark:border-slate-800 block">
+                    class="text-base font-semibold text-indigo-600 dark:text-indigo-400 py-3 border-b border-slate-100 dark:border-slate-800 block">
                     Dashboard &rarr;
                 </a>
                 @else
                 <a href="{{ route('login') }}"
-                    class="text-base font-medium text-slate-700 dark:text-slate-300 hover:text-indigo-600 py-3 border-b border-slate-100 dark:border-slate-800 block">
+                    class="text-base font-medium text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 py-3 border-b border-slate-100 dark:border-slate-800 block">
                     Log in
                 </a>
                 @if (Route::has('register'))
                 <a href="{{ route('register') }}"
-                    class="mt-4 bg-slate-900 dark:bg-slate-100 dark:text-slate-900 text-white px-5 py-3 rounded-xl text-center font-bold block w-full hover:bg-slate-800 transition">
+                    class="mt-4 bg-slate-900 dark:bg-slate-100 dark:text-slate-900 text-white px-5 py-3 rounded-xl text-center font-bold block w-full hover:bg-slate-800 dark:hover:bg-slate-200 transition">
                     Daftar Instansi
                 </a>
                 @endif
