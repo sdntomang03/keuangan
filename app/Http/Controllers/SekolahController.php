@@ -38,6 +38,8 @@ class SekolahController extends Controller
             'nip_bendahara' => 'required|string|max:30',
             'nama_pengurus_barang' => 'nullable|string|max:255',
             'nip_pengurus_barang' => 'nullable|string|max:50',
+            'bank_bendahara' => 'nullable|string|max:100',
+            'no_rekening' => 'nullable|string|max:50',
             'triwulan_aktif' => 'required|integer|between:1,4',
             'sudin' => 'required',
             'anggaran_id_aktif' => 'required|exists:anggarans,id',
@@ -47,6 +49,7 @@ class SekolahController extends Controller
             'latitude' => 'nullable|string',
             'longitude' => 'nullable|string',
             'nomor_surat' => 'nullable|string',
+            'kode_surat' => 'nullable|string',
             'kelurahan' => 'nullable|string|max:100',
             'kecamatan' => 'nullable|string|max:100',
             'kota' => 'nullable|string|max:100',
@@ -89,11 +92,11 @@ class SekolahController extends Controller
         // --- LOGIKA TOGGLE IS_AKTIF PADA TABEL ANGGARAN ---
 
         // 3. Set semua anggaran sekolah ini menjadi false
-        \App\Models\Anggaran::where('sekolah_id', $sekolah->id)
+        Anggaran::where('sekolah_id', $sekolah->id)
             ->update(['is_aktif' => false]);
 
         // 4. Set anggaran yang dipilih menjadi true
-        \App\Models\Anggaran::where('id', $request->anggaran_id_aktif)
+        Anggaran::where('id', $request->anggaran_id_aktif)
             ->update(['is_aktif' => true]);
 
         return back()->with('success', 'Pengaturan berhasil disimpan. Anggaran aktif telah diperbarui!');

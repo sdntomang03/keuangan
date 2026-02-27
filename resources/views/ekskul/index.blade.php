@@ -40,6 +40,9 @@
                                 <tr>
                                     <th
                                         class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                        NO</th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                                         Tgl / No. Bukti</th>
                                     <th
                                         class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
@@ -61,7 +64,7 @@
                             <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                                 @forelse ($belanjas as $belanja)
                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-
+                                    <td>{{ $loop->iteration }}</td>
                                     {{-- Tanggal & No Bukti --}}
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="text-sm font-bold text-gray-900 dark:text-gray-100">

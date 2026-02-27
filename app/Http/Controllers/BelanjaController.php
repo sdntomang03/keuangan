@@ -316,7 +316,7 @@ class BelanjaController extends Controller
         }
 
         // 5. Eksekusi Query dengan Pagination
-        $belanjas = $query->orderBy('tanggal', 'desc')
+        $belanjas = $query->orderBy('tanggal', 'asc')
             ->paginate(10)
             ->withQueryString(); // PENTING: Agar filter tidak hilang saat klik halaman 2
 
@@ -719,5 +719,26 @@ class BelanjaController extends Controller
 
             return back()->with('error', $e->getMessage());
         }
+    }
+
+    public function getJson($id)
+    {
+        $belanja = Belanja::with(['rincis', 'rekanan', 'pajaks.masterPajak', 'korek', 'kegiatan'])->find($id);
+
+        // Ambil data sekolah berdasarkan user yang login
+        $sekolah = Sekolah::where('id', auth()->user()->sekolah_id)->first();
+
+        if (! $belanja) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Data transaksi tidak ditemukan.',
+            ], 404);
+        }
+
+        // Gabungkan data ke dalam satu array pembungkus
+        return response()->json([
+            'belanja' => $belanja,
+            'sekolah' => $sekolah,
+        ]);
     }
 }

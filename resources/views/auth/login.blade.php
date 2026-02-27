@@ -77,7 +77,7 @@
         <div class="mt-6">
             <x-primary-button
                 class="w-full justify-center py-3 bg-indigo-600 hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 rounded-xl text-sm font-bold tracking-widest transition-all duration-200 transform hover:scale-[1.01] shadow-lg shadow-indigo-100 dark:shadow-none">
-                {{ __('Masuk Ke Portal') }}
+                {{ __('Login') }}
             </x-primary-button>
         </div>
 

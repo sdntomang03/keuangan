@@ -14,6 +14,7 @@ use App\Http\Controllers\KegiatanController;
 use App\Http\Controllers\NpdController;
 use App\Http\Controllers\PajakController;
 use App\Http\Controllers\PenerimaanController;
+use App\Http\Controllers\PersediaanController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RealisasiController;
 use App\Http\Controllers\RekananController;
@@ -71,7 +72,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Otomatis mencakup: index, create, store, show, edit, update, destroy
     Route::resource('belanja', BelanjaController::class);
-
+    Route::get('/belanja/{id}/json', [BelanjaController::class, 'getJson'])->name('belanja.json');
     Route::post('/{id}/post', [BelanjaController::class, 'post'])->name('belanja.post');
     // Rute API tambahan untuk pencarian data
     Route::prefix('api')->group(function () {
@@ -102,6 +103,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     // Route Pajak
     Route::get('/pajak/siap-setor', [PajakController::class, 'siapSetor'])->name('pajak.siap-setor');
+    Route::delete('/pajak/{id}/hapus-setor', [PajakController::class, 'hapusSetor'])->name('pajak.hapus_setor');
     Route::post('/pajak/setor/{id}', [PajakController::class, 'prosesSetor'])->name('pajak.proses-setor');
     Route::get('/realisasi/komponen', [RealisasiController::class, 'komponen'])->name('realisasi.komponen');
     Route::get('/realisasi/korek', [RealisasiController::class, 'korek'])->name('realisasi.korek');
@@ -194,7 +196,6 @@ Route::middleware(['auth'])->prefix('surat')->group(function () {
         ->name('surat.delete_foto');
     // Proses Simpan
     Route::put('/{id}/update-penawaran', [BelanjaController::class, 'updatePenawaran'])->name('belanja.update_penawaran');
-    Route::get('/cetak-bundel/{id}', [SuratController::class, 'cetakBundel'])->name('surat.cetak_bundel');
     Route::get('/belanja/{id}/download-bundel', [SuratController::class, 'downloadBundel'])
         ->name('belanja.downloadBundel');
     // Cetak Satuan (ID Belanja + Jenis Surat)
@@ -203,8 +204,23 @@ Route::middleware(['auth'])->prefix('surat')->group(function () {
     Route::get('/cetaksatuanpdf/{id}/{jenis}', [SuratController::class, 'cetakSatuanPdf'])->name('surat.cetakSatuanPdf');
     Route::get('/cetakparsialpdf/{id}', [SuratController::class, 'cetakParsialPdf'])->name('surat.cetakParsialPdf');
     Route::get('/cetak/kop', [SuratController::class, 'cetakKopPdf'])->name('cetak.kop');
-    Route::get('/surat/download-semua-parsial/{belanjaId}', [SuratController::class, 'downloadSemuaParsial'])
+    Route::get('/download-semua-parsial/{belanjaId}', [SuratController::class, 'downloadSemuaParsial'])
         ->name('surat.download_semua_parsial');
+
+    Route::get('/rekap-surat', [SuratController::class, 'rekapKeseluruhanTriwulanPdf'])->name('surat.rekap_triwulan');
+    Route::get('/talangan', [SuratController::class, 'createTalangan'])->name('talangan.create');
+    Route::post('/talangan/store', [SuratController::class, 'storeTalangan'])->name('surat.talangan.store');
+
+    // 3. Route untuk mencetak PDF Talangan
+    Route::get('/talangan-pdf/{talanganId}', [SuratController::class, 'cetakTalanganPdf'])->name('surat.talangan_pdf');
+    // Route untuk menghapus satu paket surat talangan beserta isinya
+    Route::delete('/talangan/{surat_id}', [SuratController::class, 'destroyTalangan'])->name('surat.talangan.destroy');
+    Route::get('/cover-lpj', [SuratController::class, 'createCoverLpj'])->name('surat.cover_lpj.create');
+    Route::post('/cover-lpj/cetak', [SuratController::class, 'generateCoverPdf'])->name('surat.cover_lpj.generate');
+    Route::get('/daftar', [SuratController::class, 'daftarSurat'])->name('surat.daftar');
+    Route::get('/talangan-npd', [SuratController::class, 'daftarTalanganNpd'])->name('surat.daftar_talangan_npd');
+    Route::delete('/talangan-npd/{id}', [SuratController::class, 'hapusSurat'])
+        ->name('surat.hapus_talangan_npd');
 });
 
 Route::middleware(['auth'])->group(function () {
@@ -216,6 +232,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Proses simpan massal
     Route::post('/npd/store', [NpdController::class, 'storeMassal'])->name('npd.store_massal');
+    Route::post('/npd/storesurat', [NpdController::class, 'storeSurat'])->name('npd.store_surat');
 
     // Aksi lainnya (Opsional)
     Route::get('/npd/{id}', [NpdController::class, 'show'])->name('npd.show');
@@ -285,6 +302,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/arkas', [ArkasController::class, 'index'])->name('arkas.index');
     Route::post('/arkas/toggle-status/{id}', [ArkasController::class, 'toggleStatusArkas'])->name('arkas.toggle_status');
     Route::post('/arkas/update-idkomponen/{id}', [ArkasController::class, 'updateIdKomponen'])->name('arkas.update_idkomponen');
+    Route::get('/persediaan', [PersediaanController::class, 'index'])->name('persediaan.index');
+
 });
 
 Route::get('/cetak-cover', [CetakController::class, 'cetakCover'])->name('cetak.cover');

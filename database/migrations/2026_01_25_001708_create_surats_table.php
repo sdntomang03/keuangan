@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('sekolah_id')->constrained('sekolahs')->onDelete('cascade');
 
             // Relasi ke Belanja
-            $table->foreignId('belanja_id')->constrained('belanjas')->onDelete('cascade');
+            $table->foreignId('belanja_id')->constrained('belanjas')->onDelete('cascade')->nullable();
 
             // 2. Tambahkan Triwulan (1, 2, 3, atau 4)
             $table->tinyInteger('triwulan');

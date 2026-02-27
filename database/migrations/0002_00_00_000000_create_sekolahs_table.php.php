@@ -24,6 +24,8 @@ return new class extends Migration
             $table->string('nip_bendahara');
             $table->string('nama_pengurus_barang');
             $table->string('nip_pengurus_barang');
+            $table->string('bank_bendahara')->nullable();
+            $table->string('no_rekening')->nullable();
             $table->foreignId('user_id');
             // Status Aktif (Sekarang menggunakan ID Anggaran)
             $table->integer('anggaran_id_aktif')->nullable();
@@ -43,6 +45,7 @@ return new class extends Migration
             $table->string('longitude')->nullable()->default('000');
             $table->string('logo')->nullable();
             $table->string('nomor_surat')->nullable()->default('000');
+            $table->string('kode_surat')->nullable()->default('000');
             $table->timestamps();
         });
     }

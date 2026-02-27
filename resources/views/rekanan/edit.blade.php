@@ -107,6 +107,17 @@
                                         </select>
                                     </div>
                                 </div>
+                                <div>
+                                    <x-input-label for="ket" :value="__('Sebagai Pembina Ekskul')" />
+                                    <select id="ket" name="ket"
+                                        class="block mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                                        <option value="">- Pilih -</option>
+                                        <option value="1" {{ old('ket', $rekanan->ket) == '1' ? 'selected' : '' }}>Ya
+                                        </option>
+                                        <option value="0" {{ old('ket', $rekanan->ket) == '0' ? 'selected' : '' }}>Tidak
+                                        </option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
 

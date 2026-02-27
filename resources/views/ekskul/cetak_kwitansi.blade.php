@@ -10,8 +10,8 @@
            CSS UNTUK TAMPILAN CETAK (PRINT FRIENDLY)
            ========================================= */
         body {
-            font-family: 'Times New Roman', Times, serif;
-            font-size: 11pt;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12pt;
             margin: 0;
             padding: 20px;
             background-color: #f3f4f6;
@@ -25,7 +25,7 @@
             min-height: 140mm;
 
             /* PADDING: Atas 15mm, Kanan 30mm (Dilebarkan), Bawah 15mm, Kiri 20mm */
-            padding: 15mm 35mm 15mm 20mm;
+            padding: 10mm 15mm 10mm 15mm;
 
             margin: 0 auto;
             background: white;
@@ -53,7 +53,7 @@
 
         .header p {
             margin: 2px 0;
-            font-size: 9pt;
+            font-size: 12pt;
 
         }
 
@@ -62,7 +62,7 @@
             top: 0;
             right: 0;
             /* Akan mengikuti padding kanan container .page */
-            font-size: 9pt;
+            font-size: 12pt;
             border: 1px solid #000;
             padding: 2px 5px;
         }
@@ -100,7 +100,7 @@
             font-style: italic;
             font-weight: bold;
             border: 2px solid #000;
-            text-align: center;
+            text-align: left;
             font-size: 12pt;
             margin: 5px 0;
             transform: skewX(-10deg);
@@ -115,7 +115,7 @@
         .rincian-box {
             margin-left: 175px;
             padding: 5px;
-            font-size: 10pt;
+            font-size: 12pt;
         }
 
         .table-rincian {
@@ -156,7 +156,7 @@
         }
 
         .nip {
-            font-size: 9pt;
+            font-size: 12pt;
             margin-top: 2px;
         }
 
@@ -201,14 +201,14 @@
             .page {
 
                 box-shadow: none;
-                margin: 0;
+                margin: 0 auto;
 
                 /* PENTING: Ubah width jadi 100% atau auto saat print agar fit di kertas */
                 width: 100%;
                 max-width: 100%;
 
                 /* Pertahankan Padding Kanan Besar */
-                padding-right: 35mm;
+                padding-right: 20mm;
                 padding-left: 15mm;
             }
 
@@ -237,7 +237,7 @@
     </div>
 
     <div class="page">
-        <div class="header" style="text-align: center; margin-bottom: 20px; font-family: 'Times New Roman', serif;">
+        <div class="header" style="text-align: center; margin-bottom: 20px; font-family: Arial, Helvetica, sans-serif;">
             {{-- Judul Kwitansi: Besar, Tebal, Garis Bawah --}}
             <h1 style="font-size: 18pt; font-weight: bold; text-decoration: underline; margin: 0; padding: 0;">KWITANSI
             </h1>
@@ -259,7 +259,7 @@
                 <td class="sep">:</td>
                 <td>
                     <div class="terbilang-box">
-                        <span class="terbilang-text"># {{ $terbilang }} #</span>
+                        <span class="terbilang-text">{{ $terbilang }}</span>
                     </div>
                 </td>
             </tr>
@@ -269,7 +269,7 @@
                 <td class="titik-titik" style="line-height: 1.5;">
                     {{ strtoupper('Honorarium') }}<br>
 
-                    <span style="font-weight: normal; font-size: 10pt;">
+                    <span style="font-weight: normal; font-size: 11pt;">
                         INSTRUKTUR {{ strtoupper($spj->ekskul->nama) }} di {{ strtoupper($sekolah->nama_sekolah) }}<br>
 
                         {{-- Menampilkan Kode Rekening --}}
