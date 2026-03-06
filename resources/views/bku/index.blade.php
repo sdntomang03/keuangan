@@ -784,15 +784,24 @@
                                                                         </div>
                                                                     </td>
                                                                     <td class="px-4 py-4 text-center">
-                                                                        {{-- Volume transaksi saat ini --}}
-                                                                        <div class="font-mono font-bold text-gray-800 text-sm"
-                                                                            x-text="item.volume"></div>
+                                                                        <div
+                                                                            class="flex flex-col items-center justify-center">
+                                                                            {{-- Menampilkan format Angka: Vol Saat Ini
+                                                                            / Total Pagu --}}
+                                                                            <div class="font-mono font-bold text-sm">
+                                                                                <span class="text-gray-800"
+                                                                                    x-text="item.volume"></span>
+                                                                                <span
+                                                                                    class="text-gray-300 mx-1">/</span>
+                                                                                <span class="text-emerald-600"
+                                                                                    x-text="item.total_volume_akb !== undefined ? item.total_volume_akb : '-'"></span>
+                                                                            </div>
 
-                                                                        {{-- Total Volume dari AKB Rinci --}}
-                                                                        <div class="text-[9px] font-black uppercase tracking-widest text-emerald-500 mt-1"
-                                                                            x-show="item.total_volume_akb !== undefined">
-                                                                            <span class="text-gray-400">Pagu:</span>
-                                                                            <span x-text="item.total_volume_akb"></span>
+                                                                            {{-- Label Keterangan di Bawahnya --}}
+                                                                            <div class="text-[8px] font-black uppercase tracking-widest text-gray-400 mt-1"
+                                                                                x-show="item.total_volume_akb !== undefined">
+                                                                                Vol / Pagu 1 Thn
+                                                                            </div>
                                                                         </div>
                                                                     </td>
                                                                     <td class="px-4 py-4 text-right">
