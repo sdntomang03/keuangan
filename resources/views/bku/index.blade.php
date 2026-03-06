@@ -764,7 +764,7 @@
                                                             class="bg-gray-800 text-[10px] font-black uppercase text-white tracking-wider">
                                                             <tr>
                                                                 <th class="px-4 py-4 text-left">Komponen</th>
-                                                                <th class="px-4 py-4 text-center">Vol</th>
+                                                                <th class="px-4 py-4 text-center">Vol/Pagu 1 Thn</th>
                                                                 <th class="px-4 py-4 text-right">Harga Satuan</th>
                                                                 <th class="px-4 py-4 text-right">Total Bruto</th>
                                                             </tr>
@@ -797,11 +797,7 @@
                                                                                     x-text="item.total_volume_akb !== undefined ? item.total_volume_akb : '-'"></span>
                                                                             </div>
 
-                                                                            {{-- Label Keterangan di Bawahnya --}}
-                                                                            <div class="text-[8px] font-black uppercase tracking-widest text-gray-400 mt-1"
-                                                                                x-show="item.total_volume_akb !== undefined">
-                                                                                Vol / Pagu 1 Thn
-                                                                            </div>
+
                                                                         </div>
                                                                     </td>
                                                                     <td class="px-4 py-4 text-right">
