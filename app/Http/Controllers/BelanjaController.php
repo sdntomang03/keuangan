@@ -729,14 +729,13 @@ class BelanjaController extends Controller
         // Ambil data sekolah berdasarkan user yang login
         $sekolah = Sekolah::where('id', auth()->user()->sekolah_id)->first();
 
-        // if (! $belanja) {
-        //     return response()->json([
-        //         'status' => 'error',
-        //         'message' => 'Data transaksi tidak ditemukan.',
-        //     ], 404);
-        // }
+        if (! $belanja) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Data transaksi tidak ditemukan.',
+            ], 404);
+        }
 
-        // diganti dibawah agar mendapatkan total pagu dari AKB
         $belanja->rincis->map(function ($rinci) use ($belanja) {
 
             // Cari data AKB yang ID Rinciannya sama dengan barang ini
