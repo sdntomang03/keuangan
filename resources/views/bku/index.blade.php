@@ -791,8 +791,7 @@
                                                                         {{-- Total Volume dari AKB Rinci --}}
                                                                         <div class="text-[9px] font-black uppercase tracking-widest text-emerald-500 mt-1"
                                                                             x-show="item.total_volume_akb !== undefined">
-                                                                            <span class="text-gray-400">Total
-                                                                                AKB:</span>
+                                                                            <span class="text-gray-400">Pagu:</span>
                                                                             <span x-text="item.total_volume_akb"></span>
                                                                         </div>
                                                                     </td>
