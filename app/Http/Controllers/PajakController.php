@@ -37,7 +37,6 @@ class PajakController extends Controller
     {
         $request->validate([
             'tanggal_setor' => 'required|date',
-            'ntpn' => 'required|string',
         ]);
 
         // 1. Ambil data anggaran aktif dari middleware
@@ -53,18 +52,19 @@ class PajakController extends Controller
         try {
             DB::transaction(function () use ($pajak, $request, $anggaran) {
                 // 3. Update status setor pada tabel pajaks
+                $ntpn = date('YmdHis').mt_rand(100, 999);
                 $pajak->update([
                     'is_setor' => true,
                     'tanggal_setor' => $request->tanggal_setor,
-                    'ntpn' => $request->ntpn,
+                    'ntpn' => $ntpn,
                 ]);
                 $sekolah = Sekolah::find(auth()->user()->sekolah_id);
                 // 4. Catat ke KREDIT BKU (Uang keluar dari kas sekolah ke negara)
                 // Urutan parameter: $tanggal, $no_bukti, $uraian, $debit, $kredit, $belanjaId, $pajakId, $anggaranId
                 Bku::catat(
                     $request->tanggal_setor,
-                    $request->ntpn,
-                    'Setor '.$pajak->masterPajak->nama_pajak.' - Bukti: '.$request->ntpn,
+                    $ntpn,
+                    'Setor '.$pajak->masterPajak->nama_pajak.' - Bukti: '.$ntpn,
                     0,               // Debit
                     $pajak->nominal, // Kredit
                     $pajak->belanja_id,
@@ -75,7 +75,7 @@ class PajakController extends Controller
                 );
             });
 
-            return redirect()->route('bku.index')
+            return redirect()->route('pajak.siap-setor')
                 ->with('success', "Pajak {$anggaran->singkatan} berhasil disetorkan dan dicatat di BKU.");
 
         } catch (\Exception $e) {

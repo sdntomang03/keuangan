@@ -275,7 +275,7 @@ class EkskulController extends Controller
                         'rekanan_id' => $item['rekanan_id'],
                         'tanggal' => $request->tanggal,
                         'no_bukti' => $finalNoBukti,
-                        'uraian' => "Honor Ekskul $namaEkskul Kepada $namaPelatih",
+                        'uraian' => "Honor Ekskul $namaEkskul",
                         'rincian' => $request->rincian ?? 'Honorarium Pelatih Ekskul',
                         'subtotal' => $subtotal,
                         'ppn' => 0,

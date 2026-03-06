@@ -18,6 +18,27 @@
         loading: false,
         data: null,
 
+        // FUNGSI COPY TEXT (Support HTTP & HTTPS)
+        copyText(text) {
+            if (navigator.clipboard && window.isSecureContext) {
+                return navigator.clipboard.writeText(text);
+            } else {
+                // Fallback untuk HTTP biasa (seperti keuangan.test)
+                let textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                textArea.style.top = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                return new Promise((resolve, reject) => {
+                    document.execCommand('copy') ? resolve() : reject();
+                    textArea.remove();
+                });
+            }
+        },
+
         // Fungsi Fetch untuk EDIT (Modal Biru)
         async fetchEdit(id) {
             try {
@@ -385,6 +406,7 @@
                             </tbody>
                         </table>
                     </div>
+
                 </div>
             </div>
 
@@ -548,212 +570,302 @@
                                     </div>
 
                                     {{-- Data Content --}}
-                                    <div x-show="!loading && data" class="space-y-6">
+                                    <template x-if="!loading && data">
+                                        <div class="space-y-6">
 
-                                        {{-- 1. Informasi Utama & Rekanan --}}
-                                        <div class="bg-gray-50 rounded-[1.5rem] border border-gray-100 p-6">
-                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                {{-- Uraian (Full Width) --}}
-                                                <div class="md:col-span-2 space-y-1">
-                                                    <label
-                                                        class="text-[10px] font-black uppercase text-gray-400 tracking-wider">Uraian
-                                                        Transaksi</label>
-                                                    <p class="text-base font-bold text-gray-800 leading-relaxed"
-                                                        x-text="'Dibayar ' + data.belanja.uraian + ' kepada ' + (data.belanja.rekanan?.nama_rekanan || 'Pihak Ketiga')">
-                                                    </p>
-                                                </div>
+                                            {{-- 1. Informasi Utama & Rekanan --}}
+                                            <div class="bg-gray-50 rounded-[1.5rem] border border-gray-100 p-6">
+                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                                                <div class="h-px bg-gray-200 md:col-span-2"></div>
-
-                                                {{-- Info Program & Rekening --}}
-                                                <div class="space-y-4">
-                                                    <div>
+                                                    {{-- Bukti Transfer --}}
+                                                    <div class="md:col-span-2 space-y-1" x-data="{ copied: false }">
                                                         <label
-                                                            class="block text-[9px] font-black uppercase text-emerald-500 mb-1">Program
-                                                            / Kegiatan</label>
-                                                        <p class="text-xs font-bold text-gray-600 uppercase italic leading-tight"
-                                                            x-text="data.belanja.kegiatan.namagiat || '-'"></p>
-                                                    </div>
-                                                    <div>
-                                                        <label
-                                                            class="block text-[9px] font-black uppercase text-blue-500 mb-1">Kode
-                                                            Rekening</label>
-                                                        <p class="text-sm font-mono font-bold text-gray-700"
-                                                            x-text="data.belanja.korek.ket || '-'"></p>
-                                                    </div>
-                                                </div>
+                                                            class="text-[10px] font-black uppercase text-gray-400 tracking-wider">Bukti
+                                                            Transfer</label>
 
-                                                {{-- Info Rekanan & Bank --}}
-                                                <div
-                                                    class="bg-white/70 p-4 rounded-2xl border border-gray-100 space-y-3">
-                                                    <div>
-                                                        <label
-                                                            class="block text-[9px] font-black uppercase text-gray-400 mb-1">Penerima
-                                                            / Rekanan</label>
-                                                        <p class="font-black text-gray-800 uppercase text-sm"
-                                                            x-text="data.belanja.rekanan?.nama_rekanan || '-'"></p>
+                                                        {{-- Container Copy --}}
+                                                        <div class="flex items-center gap-2 group cursor-pointer w-fit"
+                                                            @click="copyText(data.belanja.no_bukti).then(() => { copied = true; setTimeout(() => copied = false, 2000) })"
+                                                            title="Klik untuk menyalin">
 
-                                                    </div>
-                                                    <div class="pt-2 border-t border-dashed border-gray-200">
-                                                        <label
-                                                            class="block text-[9px] font-black uppercase text-gray-400 mb-1">Rekening
-                                                            Bank</label>
-                                                        <div class="flex items-center gap-2">
-                                                            <span
-                                                                class="px-1.5 py-0.5 bg-emerald-100 text-emerald-700 text-[9px] font-black rounded"
-                                                                x-text="data.belanja.rekanan?.nama_bank || 'BANK'"></span>
-                                                            <p class="font-bold text-gray-800 font-mono text-sm"
-                                                                x-text="data.belanja.rekanan?.no_rekening || '-'"></p>
-                                                            <p class="text-[10px] font-mono text-gray-500"
-                                                                x-text="'NPWP: ' + (data.belanja.rekanan?.npwp || '-')">
+                                                            <p class="text-base font-bold text-gray-800 leading-relaxed group-hover:text-emerald-600 transition-colors"
+                                                                x-text="data.belanja.no_bukti">
                                                             </p>
+
+                                                            {{-- Ikon Copy / Ceklis --}}
+                                                            <div
+                                                                class="flex items-center text-gray-400 group-hover:text-emerald-500 transition-colors">
+                                                                <svg x-show="!copied" class="w-4 h-4" fill="none"
+                                                                    stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                                        stroke-width="2"
+                                                                        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z">
+                                                                    </path>
+                                                                </svg>
+                                                                <div x-show="copied" x-cloak
+                                                                    class="flex items-center gap-1 text-emerald-500">
+                                                                    <svg class="w-4 h-4" fill="none"
+                                                                        stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round"
+                                                                            stroke-linejoin="round" stroke-width="2"
+                                                                            d="M5 13l4 4L19 7"></path>
+                                                                    </svg>
+                                                                    <span
+                                                                        class="text-[10px] font-black uppercase tracking-wider">Tersalin</span>
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            </div>
-                                        </div>
 
-                                        {{-- 2. Potongan Pajak --}}
-                                        <div class="bg-red-50/50 rounded-[1.5rem] border border-red-100 p-5">
-                                            <div class="flex items-center gap-2 mb-4">
-                                                <div
-                                                    class="p-1.5 bg-red-500 text-white rounded-lg shadow-sm shadow-red-200">
-                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="3"
-                                                            d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z">
-                                                        </path>
-                                                    </svg>
-                                                </div>
-                                                <label
-                                                    class="text-[11px] font-black uppercase text-red-600 tracking-widest">Informasi
-                                                    Potongan Pajak</label>
-                                            </div>
+                                                    {{-- Uraian (Full Width) --}}
+                                                    <div class="md:col-span-2 space-y-1" x-data="{ copied: false }">
+                                                        <label
+                                                            class="text-[10px] font-black uppercase text-gray-400 tracking-wider">Uraian
+                                                            Transaksi</label>
 
-                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                                <template
-                                                    x-if="!data.belanja.pajaks || data.belanja.pajaks.length === 0">
+                                                        {{-- Container Copy --}}
+                                                        <div class="flex items-start gap-2 group cursor-pointer w-fit"
+                                                            @click="copyText('Dibayar ' + data.belanja.uraian + ' kepada ' + (data.belanja.rekanan?.nama_rekanan || 'Pihak Ketiga') + ' dari ' + data.sekolah.nama_sekolah).then(() => { copied = true; setTimeout(() => copied = false, 2000) })"
+                                                            title="Klik untuk menyalin">
+
+                                                            <p class="text-base font-bold text-gray-800 leading-relaxed group-hover:text-emerald-600 transition-colors"
+                                                                x-text="'Dibayar ' + data.belanja.uraian + ' kepada ' + (data.belanja.rekanan?.nama_rekanan || 'Pihak Ketiga') + ' dari ' + data.sekolah.nama_sekolah">
+                                                            </p>
+
+                                                            {{-- Ikon Copy / Ceklis --}}
+                                                            <div
+                                                                class="mt-1 flex-shrink-0 flex items-center text-gray-400 group-hover:text-emerald-500 transition-colors">
+                                                                <svg x-show="!copied" class="w-4 h-4" fill="none"
+                                                                    stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                                        stroke-width="2"
+                                                                        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z">
+                                                                    </path>
+                                                                </svg>
+                                                                <div x-show="copied" x-cloak
+                                                                    class="flex items-center gap-1 text-emerald-500">
+                                                                    <svg class="w-4 h-4" fill="none"
+                                                                        stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round"
+                                                                            stroke-linejoin="round" stroke-width="2"
+                                                                            d="M5 13l4 4L19 7"></path>
+                                                                    </svg>
+                                                                    <span
+                                                                        class="text-[10px] font-black uppercase tracking-wider">Tersalin</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="h-px bg-gray-200 md:col-span-2"></div>
+
+                                                    {{-- Info Program & Rekening --}}
+                                                    <div class="space-y-4">
+                                                        <div>
+                                                            <label
+                                                                class="block text-[9px] font-black uppercase text-emerald-500 mb-1">Program
+                                                                / Kegiatan</label>
+                                                            <p class="text-xs font-bold text-gray-600 uppercase italic leading-tight"
+                                                                x-text="data.belanja.kegiatan.namagiat || '-'"></p>
+                                                        </div>
+                                                        <div>
+                                                            <label
+                                                                class="block text-[9px] font-black uppercase text-blue-500 mb-1">Kode
+                                                                Rekening</label>
+                                                            <p class="text-sm font-mono font-bold text-gray-700"
+                                                                x-text="data.belanja.korek.ket || '-'"></p>
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- Info Rekanan & Bank --}}
                                                     <div
-                                                        class="col-span-full py-6 bg-white/40 rounded-2xl border border-dashed border-red-200 flex flex-col items-center">
-                                                        <p
-                                                            class="text-[10px] text-red-400 font-black uppercase tracking-widest">
-                                                            Nihil / Tidak ada potongan pajak</p>
-                                                    </div>
-                                                </template>
+                                                        class="bg-white/70 p-4 rounded-2xl border border-gray-100 space-y-3">
+                                                        <div>
+                                                            <label
+                                                                class="block text-[9px] font-black uppercase text-gray-400 mb-1">Penerima
+                                                                / Rekanan</label>
+                                                            <p class="font-black text-gray-800 uppercase text-sm"
+                                                                x-text="data.belanja.rekanan?.nama_rekanan || '-'"></p>
 
-                                                <template x-for="pjk in data.belanja.pajaks" :key="pjk.dasar_pajak_id">
-                                                    <div
-                                                        class="flex justify-between items-center bg-white p-4 rounded-2xl border border-red-50 shadow-sm transition hover:shadow-md">
-                                                        <div class="flex flex-col">
-                                                            <span class="font-black text-gray-800 text-xs uppercase"
-                                                                x-text="pjk.master_pajak?.nama_pajak || 'Pajak'"></span>
-                                                            <span class="text-[9px] text-gray-400 font-medium"
-                                                                x-text="pjk.is_terima == 0 ? 'Diterima' : 'Disetor'"></span>
                                                         </div>
-                                                        <div class="text-right">
-                                                            <span class="font-black text-red-600 font-mono text-sm"
-                                                                x-text="new Intl.NumberFormat('id-ID').format(pjk.nominal)"></span>
-                                                        </div>
-                                                    </div>
-                                                </template>
-                                            </div>
-                                        </div>
-
-                                        {{-- 3. Table Rincian --}}
-                                        <div class="overflow-hidden rounded-2xl border border-gray-100 shadow-sm">
-                                            <div class="overflow-x-auto">
-                                                <table class="w-full text-sm">
-                                                    <thead
-                                                        class="bg-gray-800 text-[10px] font-black uppercase text-white tracking-wider">
-                                                        <tr>
-                                                            <th class="px-4 py-4 text-left">Komponen</th>
-                                                            <th class="px-4 py-4 text-center">Vol</th>
-                                                            <th class="px-4 py-4 text-right">Harga Satuan</th>
-                                                            <th class="px-4 py-4 text-right">Total Bruto</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody class="divide-y divide-gray-100">
-                                                        <template x-for="item in data.belanja.rincis" :key="item.id">
-                                                            <tr class="hover:bg-emerald-50/30 transition-colors">
-                                                                <td class="px-4 py-4">
-                                                                    <div class="flex flex-col">
-                                                                        <span
-                                                                            class="font-bold text-gray-800 leading-tight"
-                                                                            x-text="item.namakomponen"></span>
-                                                                        <span
-                                                                            class="text-[10px] text-gray-400 mt-1 italic"
-                                                                            x-text="item.spek ? 'Spek: ' + item.spek : '-'"></span>
-                                                                    </div>
-                                                                </td>
-                                                                <td class="px-4 py-4 text-center font-mono font-bold text-gray-500"
-                                                                    x-text="item.volume"></td>
-                                                                <td class="px-4 py-4 text-right text-gray-600 font-medium"
-                                                                    x-text="new Intl.NumberFormat('id-ID').format(item.harga_satuan)">
-                                                                </td>
-                                                                <td class="px-4 py-4 text-right font-black text-emerald-600 font-mono"
-                                                                    x-text="new Intl.NumberFormat('id-ID').format(item.total_bruto)">
-                                                                </td>
-                                                            </tr>
-                                                        </template>
-                                                    </tbody>
-                                                    <tfoot class="bg-gray-50 border-t-2 border-gray-200">
-                                                        {{-- Baris Total Bruto --}}
-                                                        <tr>
-                                                            <td colspan="3"
-                                                                class="px-4 py-3 text-right text-[10px] font-black uppercase text-gray-500 tracking-wider">
-                                                                Total Bruto (A)
-                                                            </td>
-                                                            <td
-                                                                class="px-4 py-3 text-right font-bold text-gray-800 font-mono">
+                                                        <div class="pt-2 border-t border-dashed border-gray-200">
+                                                            <label
+                                                                class="block text-[9px] font-black uppercase text-gray-400 mb-1">Rekening
+                                                                Bank</label>
+                                                            <div class="flex items-center gap-2">
                                                                 <span
-                                                                    x-text="new Intl.NumberFormat('id-ID').format(data.belanja.rincis.reduce((acc, item) => acc + parseFloat(item.total_bruto || 0), 0))"></span>
-                                                            </td>
-                                                        </tr>
+                                                                    class="px-1.5 py-0.5 bg-emerald-100 text-emerald-700 text-[9px] font-black rounded"
+                                                                    x-text="data.belanja.rekanan?.nama_bank || 'BANK'"></span>
+                                                                <p class="font-bold text-gray-800 font-mono text-sm"
+                                                                    x-text="data.belanja.rekanan?.no_rekening || '-'">
+                                                                </p>
+                                                                <p class="text-[10px] font-mono text-gray-500"
+                                                                    x-text="'NPWP: ' + (data.belanja.rekanan?.npwp || '-')">
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
 
-                                                        {{-- Baris Total Pajak (Hanya muncul jika ada pajak) --}}
-                                                        <template
-                                                            x-if="data.belanja.pajaks && data.belanja.pajaks.length > 0">
-                                                            <tr class="bg-red-50/20">
+                                            {{-- 2. Potongan Pajak --}}
+                                            <div class="bg-red-50/50 rounded-[1.5rem] border border-red-100 p-5">
+                                                <div class="flex items-center gap-2 mb-4">
+                                                    <div
+                                                        class="p-1.5 bg-red-500 text-white rounded-lg shadow-sm shadow-red-200">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="3"
+                                                                d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z">
+                                                            </path>
+                                                        </svg>
+                                                    </div>
+                                                    <label
+                                                        class="text-[11px] font-black uppercase text-red-600 tracking-widest">Informasi
+                                                        Potongan Pajak</label>
+                                                </div>
+
+                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                    <template
+                                                        x-if="!data.belanja.pajaks || data.belanja.pajaks.length === 0">
+                                                        <div
+                                                            class="col-span-full py-6 bg-white/40 rounded-2xl border border-dashed border-red-200 flex flex-col items-center">
+                                                            <p
+                                                                class="text-[10px] text-red-400 font-black uppercase tracking-widest">
+                                                                Nihil / Tidak ada potongan pajak</p>
+                                                        </div>
+                                                    </template>
+
+                                                    <template x-for="pjk in data.belanja.pajaks"
+                                                        :key="pjk.dasar_pajak_id">
+                                                        <div
+                                                            class="flex justify-between items-center bg-white p-4 rounded-2xl border border-red-50 shadow-sm transition hover:shadow-md">
+                                                            <div class="flex flex-col">
+                                                                <span class="font-black text-gray-800 text-xs uppercase"
+                                                                    x-text="pjk.master_pajak?.nama_pajak || 'Pajak'"></span>
+                                                                <span class="text-[9px] text-gray-400 font-medium"
+                                                                    x-text="pjk.is_setor == 1 ? 'Disetor ' + pjk.master_pajak?.nama_pajak + ' ' + data.belanja.uraian + ' kepada ' + (data.belanja.rekanan?.nama_rekanan || 'Pihak Ketiga') + ' dari ' + data.sekolah.nama_sekolah : 'Diterima ' + pjk.master_pajak?.nama_pajak + ' ' + data.belanja.uraian + ' kepada ' + (data.belanja.rekanan?.nama_rekanan || 'Pihak Ketiga') + ' dari ' + data.sekolah.nama_sekolah"></span>
+                                                            </div>
+                                                            <div class="text-right">
+                                                                <span class="font-black text-red-600 font-mono text-sm"
+                                                                    x-text="new Intl.NumberFormat('id-ID').format(pjk.nominal)"></span>
+                                                            </div>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </div>
+
+                                            {{-- 3. Table Rincian --}}
+                                            <div class="overflow-hidden rounded-2xl border border-gray-100 shadow-sm">
+                                                <div class="overflow-x-auto">
+                                                    <table class="w-full text-sm">
+                                                        <thead
+                                                            class="bg-gray-800 text-[10px] font-black uppercase text-white tracking-wider">
+                                                            <tr>
+                                                                <th class="px-4 py-4 text-left">Komponen</th>
+                                                                <th class="px-4 py-4 text-center">Vol</th>
+                                                                <th class="px-4 py-4 text-right">Harga Satuan</th>
+                                                                <th class="px-4 py-4 text-right">Total Bruto</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody class="divide-y divide-gray-100">
+                                                            <template x-for="item in data.belanja.rincis"
+                                                                :key="item.id">
+                                                                <tr class="hover:bg-emerald-50/30 transition-colors">
+                                                                    <td class="px-4 py-4">
+                                                                        <div class="flex flex-col">
+                                                                            <span
+                                                                                class="font-bold text-gray-800 leading-tight"
+                                                                                x-text="item.namakomponen"></span>
+                                                                            <span
+                                                                                class="text-[10px] text-gray-400 mt-1 italic"
+                                                                                x-text="item.spek ? 'Spek: ' + item.spek : '-'"></span>
+                                                                        </div>
+                                                                    </td>
+                                                                    <td class="px-4 py-4 text-center font-mono font-bold text-gray-500"
+                                                                        x-text="item.volume"></td>
+                                                                    <td class="px-4 py-4 text-right">
+                                                                        {{-- Harga Satuan Asli --}}
+                                                                        <div class="text-gray-600 font-medium"
+                                                                            x-text="new Intl.NumberFormat('id-ID').format(item.harga_satuan)">
+                                                                        </div>
+
+                                                                        {{-- Harga Satuan + Pajak 11% --}}
+                                                                        <div
+                                                                            class="text-[10px] mt-1 flex flex-col items-end">
+                                                                            <span class="text-gray-400 italic">Inc. 11%
+                                                                                PPN:</span>
+                                                                            <span
+                                                                                class="font-bold text-emerald-600 tracking-wider"
+                                                                                x-text="Math.round(parseFloat(item.harga_satuan || 0) * 1.11)">
+                                                                            </span>
+                                                                        </div>
+                                                                    </td>
+                                                                    <td class="px-4 py-4 text-right font-black text-emerald-600 font-mono"
+                                                                        x-text="new Intl.NumberFormat('id-ID').format(item.total_bruto)">
+                                                                    </td>
+                                                                </tr>
+                                                            </template>
+                                                        </tbody>
+                                                        <tfoot class="bg-gray-50 border-t-2 border-gray-200">
+                                                            {{-- Baris Total Bruto --}}
+                                                            <tr>
                                                                 <td colspan="3"
-                                                                    class="px-4 py-2 text-right text-[10px] font-black uppercase text-red-400 tracking-wider">
-                                                                    Total Potongan Pajak (B)
+                                                                    class="px-4 py-3 text-right text-[10px] font-black uppercase text-gray-500 tracking-wider">
+                                                                    Total Bruto (A)
                                                                 </td>
                                                                 <td
-                                                                    class="px-4 py-2 text-right font-bold text-red-500 font-mono">
-                                                                    - <span
-                                                                        x-text="new Intl.NumberFormat('id-ID').format(data.belanja.pajaks.reduce((acc, pjk) => acc + parseFloat(pjk.nominal || 0), 0))"></span>
+                                                                    class="px-4 py-3 text-right font-bold text-gray-800 font-mono">
+                                                                    <span
+                                                                        x-text="new Intl.NumberFormat('id-ID').format(data.belanja.rincis.reduce((acc, item) => acc + parseFloat(item.total_bruto || 0), 0))"></span>
                                                                 </td>
                                                             </tr>
-                                                        </template>
 
-                                                        {{-- Baris Total Netto / Diterima --}}
-                                                        <tr class="bg-emerald-50/50">
-                                                            <td colspan="3"
-                                                                class="px-4 py-5 text-right text-[11px] font-black uppercase text-emerald-700 tracking-widest">
-                                                                Total Netto Diterima (A - B)
-                                                            </td>
-                                                            <td
-                                                                class="px-4 py-5 text-right font-black text-xl text-emerald-600 font-mono border-l-4 border-emerald-500">
-                                                                <span x-text="new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(
+                                                            {{-- Baris Total Pajak (Hanya muncul jika ada pajak) --}}
+                                                            <template
+                                                                x-if="data.belanja.pajaks && data.belanja.pajaks.length > 0">
+                                                                <tr class="bg-red-50/20">
+                                                                    <td colspan="3"
+                                                                        class="px-4 py-2 text-right text-[10px] font-black uppercase text-red-400 tracking-wider">
+                                                                        Total Potongan Pajak (B)
+                                                                    </td>
+                                                                    <td
+                                                                        class="px-4 py-2 text-right font-bold text-red-500 font-mono">
+                                                                        - <span
+                                                                            x-text="new Intl.NumberFormat('id-ID').format(data.belanja.pajaks.reduce((acc, pjk) => acc + parseFloat(pjk.nominal || 0), 0))"></span>
+                                                                    </td>
+                                                                </tr>
+                                                            </template>
+
+                                                            {{-- Baris Total Netto / Diterima --}}
+                                                            <tr class="bg-emerald-50/50">
+                                                                <td colspan="3"
+                                                                    class="px-4 py-5 text-right text-[11px] font-black uppercase text-emerald-700 tracking-widest">
+                                                                    Total Netto Diterima (A - B)
+                                                                </td>
+                                                                <td
+                                                                    class="px-4 py-5 text-right font-black text-xl text-emerald-600 font-mono border-l-4 border-emerald-500">
+                                                                    <span x-text="new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(
                 data.belanja.rincis.reduce((acc, item) => acc + parseFloat(item.total_bruto || 0), 0) -
                 (data.belanja.pajaks ? data.belanja.pajaks.reduce((acc, pjk) => acc + parseFloat(pjk.nominal || 0), 0) : 0)
             )"></span>
-                                                            </td>
-                                                        </tr>
-                                                    </tfoot>
-                                                </table>
+                                                                </td>
+                                                            </tr>
+                                                        </tfoot>
+                                                    </table>
+                                                </div>
+                                            </div>
+
+                                            {{-- Footer Button --}}
+                                            <div class="flex justify-end pt-4">
+                                                <button type="button" @click="open = false"
+                                                    class="px-8 py-3 bg-gray-900 text-white text-[11px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-600 shadow-xl shadow-gray-200 transition-all active:scale-95">
+                                                    Tutup Detail
+                                                </button>
                                             </div>
                                         </div>
-
-                                        {{-- Footer Button --}}
-                                        <div class="flex justify-end pt-4">
-                                            <button type="button" @click="open = false"
-                                                class="px-8 py-3 bg-gray-900 text-white text-[11px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-600 shadow-xl shadow-gray-200 transition-all active:scale-95">
-                                                Tutup Detail
-                                            </button>
-                                        </div>
-                                    </div>
+                                    </template>
                                 </div>
                             </div>
                         </div>
@@ -763,7 +875,5 @@
 
             {{-- Akhir modal --}}
         </div>
-
-
 
 </x-app-layout>

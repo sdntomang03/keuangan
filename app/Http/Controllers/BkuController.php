@@ -41,9 +41,10 @@ class BkuController extends Controller
                 ->where('tw', '<', $filterTw)
                 ->sum(DB::raw('debit - kredit'));
         }
+        $sekolah = Sekolah::where('id', auth()->user()->sekolah_id)->first();
 
         // Kirim variabel $filterTw ke View agar dropdown terpilih otomatis
-        return view('bku.index', compact('bkus', 'anggaran', 'saldoAwal', 'filterTw'));
+        return view('bku.index', compact('bkus', 'anggaran', 'saldoAwal', 'filterTw', 'sekolah'));
     }
 
     /**
