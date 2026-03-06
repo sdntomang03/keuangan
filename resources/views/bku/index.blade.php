@@ -783,8 +783,19 @@
                                                                                 x-text="item.spek ? 'Spek: ' + item.spek : '-'"></span>
                                                                         </div>
                                                                     </td>
-                                                                    <td class="px-4 py-4 text-center font-mono font-bold text-gray-500"
-                                                                        x-text="item.volume"></td>
+                                                                    <td class="px-4 py-4 text-center">
+                                                                        {{-- Volume transaksi saat ini --}}
+                                                                        <div class="font-mono font-bold text-gray-800 text-sm"
+                                                                            x-text="item.volume"></div>
+
+                                                                        {{-- Total Volume dari AKB Rinci --}}
+                                                                        <div class="text-[9px] font-black uppercase tracking-widest text-emerald-500 mt-1"
+                                                                            x-show="item.total_volume_akb !== undefined">
+                                                                            <span class="text-gray-400">Total
+                                                                                AKB:</span>
+                                                                            <span x-text="item.total_volume_akb"></span>
+                                                                        </div>
+                                                                    </td>
                                                                     <td class="px-4 py-4 text-right">
                                                                         {{-- Harga Satuan Asli --}}
                                                                         <div class="text-gray-600 font-medium"

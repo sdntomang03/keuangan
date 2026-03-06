@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Akb;
 use App\Models\Anggaran;
 use App\Models\Belanja;
 use App\Models\BelanjaRinci;
@@ -728,12 +729,26 @@ class BelanjaController extends Controller
         // Ambil data sekolah berdasarkan user yang login
         $sekolah = Sekolah::where('id', auth()->user()->sekolah_id)->first();
 
-        if (! $belanja) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Data transaksi tidak ditemukan.',
-            ], 404);
-        }
+        // if (! $belanja) {
+        //     return response()->json([
+        //         'status' => 'error',
+        //         'message' => 'Data transaksi tidak ditemukan.',
+        //     ], 404);
+        // }
+
+        // diganti dibawah agar mendapatkan total pagu dari AKB
+        $belanja->rincis->map(function ($rinci) use ($belanja) {
+
+            // Cari data AKB yang ID Rinciannya sama dengan barang ini
+            $akb = Akb::where('anggaran_id', $belanja->anggaran_id)
+                ->where('idblrinci', $rinci->idblrinci) // Asumsi di tabel belanja_rincis ada kolom idblrinci
+                ->first();
+
+            // Jika data AKB ditemukan, ambil volumenya. Jika tidak, set 0.
+            $rinci->total_volume_akb = $akb ? $akb->volume : 0;
+
+            return $rinci;
+        });
 
         // Gabungkan data ke dalam satu array pembungkus
         return response()->json([
