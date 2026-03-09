@@ -58,6 +58,11 @@ class Belanja extends Model
         return $this->belongsTo(Kegiatan::class, 'idbl', 'idbl');
     }
 
+    public function rkas()
+    {
+        return $this->belongsTo(Rkas::class, 'idbl', 'idbl');
+    }
+
     public function korek()
     {
         // Jika di tabel koreks kolom kuncinya adalah 'id'

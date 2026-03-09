@@ -724,7 +724,7 @@ class BelanjaController extends Controller
 
     public function getJson($id)
     {
-        $belanja = Belanja::with(['rincis', 'rekanan', 'pajaks.masterPajak', 'korek', 'kegiatan'])->find($id);
+        $belanja = Belanja::with(['rincis', 'rekanan', 'pajaks.masterPajak', 'korek', 'kegiatan', 'rkas'])->find($id);
 
         // Ambil data sekolah berdasarkan user yang login
         $sekolah = Sekolah::where('id', auth()->user()->sekolah_id)->first();
