@@ -738,13 +738,24 @@ class BelanjaController extends Controller
 
         $belanja->rincis->map(function ($rinci) use ($belanja) {
 
-            // Cari data AKB yang ID Rinciannya sama dengan barang ini
+            // 1. Cari data AKB yang ID Rinciannya sama dengan barang ini
             $akb = Akb::where('anggaran_id', $belanja->anggaran_id)
                 ->where('idblrinci', $rinci->idblrinci) // Asumsi di tabel belanja_rincis ada kolom idblrinci
                 ->first();
 
             // Jika data AKB ditemukan, ambil volumenya. Jika tidak, set 0.
             $rinci->total_volume_akb = $akb ? $akb->volume : 0;
+
+            // 2. Cari data RKAS untuk mendapatkan total harga / pagu dana
+            // Opsi A: Jika ingin query langsung ke model Rkas (Mirip seperti Akb di atas)
+            $rkas = Rkas::where('idblrinci', $rinci->idblrinci)->first();
+
+            // Opsi B: Jika ingin mengambil dari relasi $belanja->rkas yang sudah di-load di awal
+            // $rkas = $belanja->rkas->where('idblrinci', $rinci->idblrinci)->first();
+
+            // Masukkan ke dalam properti pagu_dana agar terbaca oleh Alpine.js (item.pagu_dana)
+            // *Catatan: Sesuaikan 'total_harga' dengan nama kolom yang benar di tabel RKAS Anda (misal: 'total', 'jumlah', 'harga_total')
+            $rinci->pagu_dana = $rkas ? $rkas->total_harga : 0;
 
             return $rinci;
         });
