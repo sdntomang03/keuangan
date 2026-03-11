@@ -755,7 +755,7 @@ class BelanjaController extends Controller
 
             // Masukkan ke dalam properti pagu_dana agar terbaca oleh Alpine.js (item.pagu_dana)
             // *Catatan: Sesuaikan 'total_harga' dengan nama kolom yang benar di tabel RKAS Anda (misal: 'total', 'jumlah', 'harga_total')
-            $rinci->pagu_dana = $rkas ? $rkas->total_harga : 0;
+            $rinci->pagu_dana = $rkas ? $rkas->totalharga : 0;
 
             return $rinci;
         });
