@@ -794,9 +794,11 @@
                                                                                 x-text="item.total_volume_akb !== undefined ? item.total_volume_akb : '-'"></span>
                                                                         </div>
 
-                                                                        <div class="text-[11px] text-gray-500 mt-1">
-                                                                            Rp <span
-                                                                                x-text="item.pagu_dana !== undefined ? item.pagu_dana : '-'"></span>
+                                                                        <div
+                                                                            class="text-[10px] text-gray-500 mt-0.5 font-medium">
+                                                                            Rp <span x-text="item.pagu_dana !== undefined ?
+            new Intl.NumberFormat('id-ID').format(Math.floor(item.pagu_dana)) : '-'">
+                                                                            </span>
                                                                         </div>
                                                                     </td>
                                                                     <td class="px-3 py-2.5 text-right">
