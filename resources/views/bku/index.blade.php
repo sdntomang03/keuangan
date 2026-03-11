@@ -793,6 +793,11 @@
                                                                             <span class="text-emerald-600"
                                                                                 x-text="item.total_volume_akb !== undefined ? item.total_volume_akb : '-'"></span>
                                                                         </div>
+
+                                                                        <div class="text-[11px] text-gray-500 mt-1">
+                                                                            Rp <span
+                                                                                x-text="item.totalharga !== undefined ? item.totalharga : '-'"></span>
+                                                                        </div>
                                                                     </td>
                                                                     <td class="px-3 py-2.5 text-right">
                                                                         <div class="text-gray-600 font-medium"
