@@ -796,7 +796,7 @@
 
                                                                         <div class="text-[11px] text-gray-500 mt-1">
                                                                             Rp <span
-                                                                                x-text="item.totalharga !== undefined ? item.totalharga : '-'"></span>
+                                                                                x-text="item.pagu_dana !== undefined ? item.pagu_dana : '-'"></span>
                                                                         </div>
                                                                     </td>
                                                                     <td class="px-3 py-2.5 text-right">
