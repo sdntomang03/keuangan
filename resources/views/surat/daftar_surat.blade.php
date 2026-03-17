@@ -27,7 +27,17 @@
                         <label class="whitespace-nowrap text-xs font-bold text-gray-500 uppercase tracking-wider">
                             Filter:
                         </label>
-                        {{-- Hapus flex-grow dan w-full pada select agar lebarnya menyesuaikan konten --}}
+
+                        {{-- 1. Dropdown Filter Triwulan Baru --}}
+                        <select name="tw" onchange="this.form.submit()"
+                            class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm text-sm w-32 sm:w-40">
+                            <option value="1" {{ $selectedTw=='1' ? 'selected' : '' }}>Triwulan 1</option>
+                            <option value="2" {{ $selectedTw=='2' ? 'selected' : '' }}>Triwulan 2</option>
+                            <option value="3" {{ $selectedTw=='3' ? 'selected' : '' }}>Triwulan 3</option>
+                            <option value="4" {{ $selectedTw=='4' ? 'selected' : '' }}>Triwulan 4</option>
+                        </select>
+
+                        {{-- 2. Dropdown Filter Kode Rekening (Bawaan) --}}
                         <select name="kode_rekening" onchange="this.form.submit()"
                             class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm text-sm w-48 sm:w-64">
                             <option value="">Semua Rekening</option>
@@ -45,9 +55,11 @@
                             Filter
                         </button>
 
-                        @if(request('kode_rekening'))
+                        {{-- Tombol Reset --}}
+                        @if(request('kode_rekening') || request('tw') != Auth::user()->sekolah->triwulan_aktif)
                         <a href="{{ route('surat.daftar') }}"
-                            class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-3 py-2 rounded-lg text-sm font-bold shadow-sm transition">
+                            class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-3 py-2 rounded-lg text-sm font-bold shadow-sm transition"
+                            title="Reset Filter">
                             X
                         </a>
                         @endif

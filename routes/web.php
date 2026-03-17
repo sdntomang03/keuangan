@@ -221,6 +221,7 @@ Route::middleware(['auth'])->prefix('surat')->group(function () {
     Route::get('/talangan-npd', [SuratController::class, 'daftarTalanganNpd'])->name('surat.daftar_talangan_npd');
     Route::delete('/talangan-npd/{id}', [SuratController::class, 'hapusSurat'])
         ->name('surat.hapus_talangan_npd');
+    Route::put('/{id}/update-tw', [SuratController::class, 'updateTw'])->name('surat.update_tw');
 });
 
 Route::middleware(['auth'])->group(function () {

@@ -46,22 +46,42 @@
                 <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8">
 
                     {{-- BAGIAN KIRI: JUDUL & IKON --}}
-                    <div class="flex items-center gap-4">
-                        <div
-                            class="p-4 bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-2xl text-white shadow-lg shadow-indigo-200">
-                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
+                    <div class="flex items-center gap-5">
+
+                        {{-- Wrapper Ikon (Relative agar badge bisa menempel) --}}
+                        <div class="relative flex-shrink-0">
+
+                            {{-- Ikon Box --}}
+                            <div
+                                class="flex items-center justify-center w-14 h-14 bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-2xl shadow-sm ring-1 ring-gray-900/5 text-white">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </div>
+
+                            {{-- Floating Badge Triwulan --}}
+                            {{-- border-white akan memberikan efek 'potongan' yang rapi antara badge dan ikon --}}
+                            <div
+                                class="absolute -top-2.5 -right-3 flex items-center justify-center bg-amber-500 text-white text-[10px] font-black tracking-widest px-2.5 py-0.5 rounded-full shadow-md border-2 border-white dark:border-gray-800">
+                                TW {{ $triwulanSurat }}
+                            </div>
+
                         </div>
-                        <div>
-                            <h2 class="text-2xl font-black text-gray-800 tracking-tight leading-none uppercase">
+
+                        {{-- Wrapper Teks --}}
+                        <div class="flex flex-col justify-center">
+                            {{-- Judul --}}
+                            <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight leading-none">
                                 Manajemen SPJ
                             </h2>
-                            <p class="text-sm text-gray-400 mt-1 font-medium italic">
+
+                            {{-- Uraian Belanja --}}
+                            <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mt-1.5">
                                 {{ $belanja->uraian }}
                             </p>
                         </div>
+
                     </div>
 
                     {{-- BAGIAN KANAN: GROUP TOMBOL AKSI --}}
@@ -81,26 +101,17 @@
                             </button>
                         </form>
                         @endif
-                        {{-- 2. GENERATE ULANG NOMOR (Tombol Menarik / Warning) --}}
-                        <a href="{{ route('surat.regenerate_all') }}"
-                            onclick="return confirm('PERINGATAN: Proses ini akan mengurutkan ulang SELURUH nomor surat di database berdasarkan tanggal. Lanjutkan?')"
-                            class="group relative flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-xs font-bold rounded-xl shadow-lg shadow-orange-200 transition-all hover:-translate-y-0.5 hover:shadow-orange-300 overflow-hidden">
 
-                            {{-- Efek Kilau --}}
-                            <div
-                                class="absolute inset-0 w-full h-full bg-white/10 group-hover:bg-white/20 transition-colors">
-                            </div>
-
-                            {{-- Icon dengan Background Transparan --}}
-                            <div
-                                class="relative bg-white/20 p-1 rounded-full group-hover:rotate-180 transition-transform duration-500">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                </svg>
-                            </div>
-                            <span class="relative tracking-wide">RESET NOMOR</span>
-                        </a>
+                        {{-- Tombol Pindah Triwulan --}}
+                        <button type="button"
+                            onclick="openTriwulanModal('{{ route('surat.update_tw', $belanja->id) }}', '{{ $belanja->tw ?? 1 }}')"
+                            class="flex items-center gap-2 px-4 py-2.5 bg-white border border-amber-500 text-amber-600 hover:bg-amber-50 text-xs font-bold rounded-xl transition-colors shadow-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                            </svg>
+                            <span>UBAH TW</span>
+                        </button>
 
                         {{-- 3. HARGA PENAWARAN (Outline Style) --}}
                         <a href="{{ route('belanja.edit_penawaran', $belanja->id) }}"
@@ -212,7 +223,7 @@
                                 </div>
                             </div>
 
-                            {{-- Kanan: Tombol Aksi --}}
+
                             {{-- Kanan: Tombol Aksi --}}
                             <div class="flex items-center gap-2">
 
@@ -820,6 +831,64 @@
             </div>
         </div>
     </div>
+
+    {{-- MODAL UBAH TRIWULAN --}}
+    <div id="modalEditTriwulan" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-tw-title"
+        role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            {{-- Background overlay --}}
+            <div class="fixed inset-0 bg-gray-900/75 backdrop-blur-sm transition-opacity" aria-hidden="true"
+                onclick="closeTriwulanModal()"></div>
+
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <div
+                class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-sm w-full">
+                <form id="formEditTriwulan" method="POST" action="">
+                    @csrf
+                    @method('PUT')
+
+                    <div class="bg-white px-6 pt-6 pb-6">
+                        <div class="flex items-center gap-4 mb-4">
+                            <div
+                                class="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-amber-100 text-amber-600">
+                                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-black text-gray-900" id="modal-tw-title">Pindah Triwulan</h3>
+                                <p class="text-xs text-gray-500 mt-1">Pindahkan dokumen surat ini ke triwulan lain.</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <label for="modal_tw" class="block text-xs font-bold text-gray-500 uppercase mb-2">Pilih
+                                Triwulan</label>
+                            <select name="tw" id="modal_tw" required
+                                class="w-full rounded-xl border-gray-300 focus:border-amber-500 focus:ring-amber-500 text-sm font-bold text-gray-700 bg-gray-50 p-3">
+                                <option value="1">Triwulan 1</option>
+                                <option value="2">Triwulan 2</option>
+                                <option value="3">Triwulan 3</option>
+                                <option value="4">Triwulan 4</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-6 py-4 flex justify-end gap-3">
+                        <button type="button" onclick="closeTriwulanModal()"
+                            class="px-4 py-2 text-xs font-bold text-gray-500 hover:text-gray-700 bg-white border border-gray-300 rounded-xl shadow-sm transition-colors">
+                            Batal
+                        </button>
+                        <button type="submit"
+                            class="px-6 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow-md transition-all">
+                            Simpan Perubahan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
     <script>
         // Tambahkan parameter nomorBastLama di akhir
     function openEditModal(actionUrl, tanggalLama, nomorSurat, jenisSurat, nomorBastLama) {
@@ -849,6 +918,27 @@
 
     function closeModal() {
         document.getElementById('modalEditTanggal').classList.add('hidden');
+    }
+
+    // Tambahkan ini di bawah fungsi closeModal() yang sudah ada
+
+    function openTriwulanModal(actionUrl, twLama) {
+        // Set Action URL form
+        document.getElementById('formEditTriwulan').action = actionUrl;
+
+        // Set nilai triwulan saat ini
+        const selectTw = document.getElementById('modal_tw');
+        if (selectTw) {
+            selectTw.value = twLama;
+        }
+
+        // Tampilkan Modal
+        document.getElementById('modalEditTriwulan').classList.remove('hidden');
+    }
+
+    function closeTriwulanModal() {
+        // Sembunyikan Modal
+        document.getElementById('modalEditTriwulan').classList.add('hidden');
     }
     </script>
 </x-app-layout>

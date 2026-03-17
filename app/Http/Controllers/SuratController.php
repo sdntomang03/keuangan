@@ -269,6 +269,8 @@ class SuratController extends Controller
             'fotos',
         ])->findOrFail($belanjaId);
 
+        $triwulanSurat = $belanja->surats->first()->triwulan ?? 1;
+
         $jenisSuratList = [
             'PH' => 'Permintaan Harga',
             'NH' => 'Negosiasi Harga',
@@ -276,7 +278,7 @@ class SuratController extends Controller
             'BAPB' => 'Berita Acara Penerimaan Barang',
         ];
 
-        return view('surat.index', compact('belanja', 'jenisSuratList'));
+        return view('surat.index', compact('belanja', 'jenisSuratList', 'triwulanSurat'));
     }
 
     /**
@@ -2420,33 +2422,40 @@ class SuratController extends Controller
     {
         $user = Auth::user();
         $sekolah = Sekolah::find($user->sekolah_id);
+
         if (! $sekolah) {
             return back()->with('error', 'Data sekolah tidak ditemukan.');
         }
 
         $anggaranId = $sekolah->anggaran_id_aktif;
-        // 1. PERBAIKAN: Gunakan 'surats' (jamak) sesuai relasi model Anda
-        $query = Belanja::with(['korek', 'surats'])->where('anggaran_id', $anggaranId);
 
-        // 2. Filter berdasarkan kode rekening
+        // 1. Tangkap request 'tw'. Jika kosong, gunakan triwulan aktif sekolah sebagai default
+        $selectedTw = $request->input('tw', $sekolah->triwulan_aktif);
+
+        // 2. Tambahkan filter 'tw' ke query utama
+        $query = Belanja::with(['korek', 'surats'])
+            ->where('anggaran_id', $anggaranId)
+            ->where('tw', $selectedTw);
+
+        // Filter berdasarkan kode rekening
         if ($request->filled('kode_rekening')) {
             $query->where('kodeakun', $request->kode_rekening);
         }
 
-        // 3. PERBAIKAN: Gunakan kolom 'tanggal' (bukan 'tanggal_belanja')
         $listBelanja = $query->orderBy('tanggal', 'asc')
             ->paginate(15)
             ->withQueryString();
 
-        // 4. Ambil daftar Kode Rekening khusus untuk Dropdown Filter
+        // 3. Pastikan daftar filter Kode Rekening juga menyesuaikan Triwulan yang dipilih
         $listKorek = Belanja::with('korek')
-            ->where('anggaran_id', $sekolah->anggaran_id_aktif)
-            ->where('tw', $sekolah->triwulan_aktif)
+            ->where('anggaran_id', $anggaranId)
+            ->where('tw', $selectedTw)
             ->get()
             ->unique('kodeakun')
             ->values();
 
-        return view('surat.daftar_surat', compact('listBelanja', 'listKorek'));
+        // 4. Passing variable $selectedTw ke view
+        return view('surat.daftar_surat', compact('listBelanja', 'listKorek', 'selectedTw'));
     }
 
     public function daftarTalanganNpd(Request $request)
@@ -2496,5 +2505,28 @@ class SuratController extends Controller
             // Tangani error jika terjadi masalah pada database (misal: terkait relasi tabel)
             return back()->with('error', 'Terjadi kesalahan saat menghapus surat: '.$e->getMessage());
         }
+    }
+
+    /**
+     * Memperbarui Triwulan pada Belanja dan semua Surat terkait secara massal
+     */
+    public function updateTw(Request $request, $belanja_id)
+    {
+        // 1. Validasi input: pastikan 'tw' wajib diisi dan berupa angka 1 sampai 4
+        $request->validate([
+            'tw' => 'required|integer|min:1|max:4',
+        ]);
+
+        // 4. MASS UPDATE: Perbarui triwulan di semua Surat yang terhubung dengan belanja_id ini
+        // Query ini sangat ringan karena langsung dieksekusi di level database
+        Surat::where('belanja_id', $belanja_id)->update([
+            'triwulan' => $request->tw,
+        ]);
+
+        // 5. Hitung jumlah surat yang terdampak untuk ditampilkan di pesan sukses
+        $jumlahSurat = Surat::where('belanja_id', $belanja_id)->count();
+
+        // 6. Kembali ke halaman sebelumnya dengan pesan sukses
+        return back()->with('success', $jumlahSurat.' dokumen surat berhasil dipindah ke Triwulan '.$request->tw);
     }
 }
