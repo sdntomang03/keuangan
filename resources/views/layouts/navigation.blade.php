@@ -101,6 +101,8 @@
                                 </x-dropdown-link>
                                 <x-dropdown-link :href="route('realisasi.korek')">{{ __('Realisasi Per Korek') }}
                                 </x-dropdown-link>
+                                <x-dropdown-link :href="route('pajak.rekap')">{{ __('Rekap Pajak') }}
+                                </x-dropdown-link>
                             </x-slot>
                         </x-dropdown>
                     </div>
