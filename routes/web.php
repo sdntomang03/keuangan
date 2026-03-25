@@ -105,6 +105,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/pajak/siap-setor', [PajakController::class, 'siapSetor'])->name('pajak.siap-setor');
     Route::delete('/pajak/{id}/hapus-setor', [PajakController::class, 'hapusSetor'])->name('pajak.hapus_setor');
     Route::post('/pajak/setor/{id}', [PajakController::class, 'prosesSetor'])->name('pajak.proses-setor');
+    Route::get('/pajak/rekap', [PajakController::class, 'rekap'])->name('pajak.rekap');
     Route::get('/realisasi/komponen', [RealisasiController::class, 'komponen'])->name('realisasi.komponen');
     Route::get('/realisasi/korek', [RealisasiController::class, 'korek'])->name('realisasi.korek');
     Route::get('/belanja/cetak/{id}', [SuratController::class, 'cetakDokumenLengkap'])->name('belanja.print');

@@ -294,6 +294,9 @@
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('realisasi.korek')">{{ __('Realisasi Per Korek') }}
             </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('pajak.rekap')">{{ __('Rekap Pajak') }}
+            </x-responsive-nav-link>
+
 
             <div
                 class="block px-4 py-2 mt-2 text-xs font-black text-indigo-500 bg-indigo-50 dark:bg-gray-800 uppercase tracking-wider">

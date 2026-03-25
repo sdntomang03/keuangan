@@ -115,4 +115,56 @@ class PajakController extends Controller
             return back()->with('error', 'Gagal membatalkan setoran: '.$e->getMessage());
         }
     }
+
+    public function rekap(Request $request)
+    {
+        // 1. Ambil data anggaran aktif dari middleware
+        $anggaran = $request->anggaran_data;
+
+        if (! $anggaran) {
+            return redirect()->route('sekolah.index')
+                ->with('error', 'Silakan pilih Anggaran Aktif terlebih dahulu.');
+        }
+
+        // 2. Ambil semua data pajak terkait anggaran ini beserta master pajaknya
+        $pajaks = Pajak::with(['masterPajak'])
+            ->whereHas('belanja', function ($query) use ($anggaran) {
+                $query->where('anggaran_id', $anggaran->id);
+            })
+            ->get();
+
+        // 3. Kelompokkan dan hitung rekapitulasi per jenis pajak
+        $rekap = [];
+
+        foreach ($pajaks as $pajak) {
+            $jenisPajak = $pajak->masterPajak->nama_pajak; // Contoh: 'PPN', 'PPh 21', dll
+
+            // Inisialisasi array jika jenis pajak belum ada di rekap
+            if (! isset($rekap[$jenisPajak])) {
+                $rekap[$jenisPajak] = [
+                    'nama_pajak' => $jenisPajak,
+                    'dipungut' => 0,
+                    'disetor' => 0,
+                    'sisa' => 0,
+                ];
+            }
+
+            // Tambahkan nominal jika sudah dipungut (diterima)
+            if ($pajak->is_terima) {
+                $rekap[$jenisPajak]['dipungut'] += $pajak->nominal;
+
+                // Jika belum disetor, maka masuk ke sisa
+                if (! $pajak->is_setor) {
+                    $rekap[$jenisPajak]['sisa'] += $pajak->nominal;
+                }
+            }
+
+            // Tambahkan nominal jika sudah disetor
+            if ($pajak->is_setor) {
+                $rekap[$jenisPajak]['disetor'] += $pajak->nominal;
+            }
+        }
+
+        return view('pajak.rekap', compact('rekap', 'anggaran'));
+    }
 }
