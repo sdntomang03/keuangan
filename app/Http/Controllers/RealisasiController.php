@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\BelanjaExport;
+use App\Exports\RealisasiKomponenExport;
 use App\Exports\RekananMultipleSheetExport;
 use App\Models\Belanja;
 use App\Models\DasarPajak;
@@ -231,5 +232,65 @@ class RealisasiController extends Controller
         $fileName = 'URK_Belanja_'.strtoupper($cleanName).'.xlsx';
 
         return Excel::download(new RekananMultipleSheetExport($dataBelanja, $rekanan), $fileName);
+    }
+
+    public function exportKomponen(Request $request)
+    {
+        $user = auth()->user();
+        $anggaran = $request->anggaran_data;
+
+        if (! $anggaran) {
+            return redirect()->route('sekolah.index')->with('error', 'Pilih Anggaran Aktif.');
+        }
+
+        // 1. Logic Periode (Copas persis dari method komponen)
+        $periode = $request->get('periode', 'tahun');
+        $bulanArray = null;
+        $periodeText = 'Tahunan';
+
+        if (str_starts_with($periode, 'tw')) {
+            $tw = str_replace('tw', '', $periode);
+            $bulanArray = match ($tw) {
+                '1' => [1, 2, 3], '2' => [4, 5, 6], '3' => [7, 8, 9], '4' => [10, 11, 12], default => null,
+            };
+            $periodeText = 'Triwulan '.$tw;
+        } elseif (str_starts_with($periode, 'b')) {
+            $bulan = (int) str_replace('b', '', $periode);
+            if ($bulan >= 1 && $bulan <= 12) {
+                $bulanArray = [$bulan];
+                $namaBulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+                $periodeText = 'Bulan '.$namaBulan[$bulan - 1];
+            }
+        }
+
+        $sekolah = Sekolah::find($user->sekolah_id);
+
+        // 2. Query RKAS (Copas persis dari method komponen)
+        $dataRkas = Rkas::with(['kegiatan', 'korek', 'akb'])
+            ->withSum(['akbrincis as total_volume_anggaran' => function ($query) use ($bulanArray) {
+                $query->when($bulanArray, fn ($q) => $q->whereIn('bulan', $bulanArray));
+            }], 'volume')
+            ->withSum(['akbrincis as total_anggaran' => function ($query) use ($bulanArray) {
+                $query->when($bulanArray, fn ($q) => $q->whereIn('bulan', $bulanArray));
+            }], 'nominal')
+            ->withSum(['belanjaRincis as total_realisasi' => function ($query) use ($anggaran, $bulanArray) {
+                $query->when($bulanArray, fn ($q) => $q->whereIn('bulan', $bulanArray))
+                    ->whereHas('belanja', fn ($q) => $q->where('anggaran_id', $anggaran->id));
+            }], 'total_bruto')
+            ->withSum(['belanjaRincis as volume_realisasi' => function ($query) use ($anggaran, $bulanArray) {
+                $query->when($bulanArray, fn ($q) => $q->whereIn('bulan', $bulanArray))
+                    ->whereHas('belanja', fn ($q) => $q->where('anggaran_id', $anggaran->id));
+            }], 'volume')
+            ->where('anggaran_id', $anggaran->id)
+            ->get()
+            ->filter(function ($item) {
+                return $item->total_anggaran > 0 || $item->total_realisasi > 0;
+            })
+            ->groupBy(['idbl', 'keterangan']);
+
+        // 3. Download Excel
+        $namaFile = 'Realisasi_Komponen_'.str_replace(' ', '_', $periodeText).'_'.date('Ymd_His').'.xlsx';
+
+        return Excel::download(new RealisasiKomponenExport($dataRkas, $anggaran, $sekolah, $periodeText), $namaFile);
     }
 }

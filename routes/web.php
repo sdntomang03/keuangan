@@ -108,6 +108,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/pajak/rekap', [PajakController::class, 'rekap'])->name('pajak.rekap');
     Route::get('/realisasi/komponen', [RealisasiController::class, 'komponen'])->name('realisasi.komponen');
     Route::get('/realisasi/korek', [RealisasiController::class, 'korek'])->name('realisasi.korek');
+    Route::get('/realisasi/komponen/export', [RealisasiController::class, 'exportKomponen'])->name('realisasi.komponen.export');
     Route::get('/belanja/cetak/{id}', [SuratController::class, 'cetakDokumenLengkap'])->name('belanja.print');
     Route::get('/rekap/export', [RealisasiController::class, 'exportExcel'])->name('belanja.export');
     Route::get('/rekap/rekanan', [RealisasiController::class, 'rekapPerRekanan'])->name('realisasi.rekanan');
