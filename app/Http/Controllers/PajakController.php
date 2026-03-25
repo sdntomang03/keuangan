@@ -126,14 +126,22 @@ class PajakController extends Controller
                 ->with('error', 'Silakan pilih Anggaran Aktif terlebih dahulu.');
         }
 
-        // 2. Ambil semua data pajak terkait anggaran ini beserta master pajaknya
+        // 2. Ambil data sekolah untuk mengetahui triwulan yang sedang aktif
+        $sekolah = Sekolah::find(auth()->user()->sekolah_id);
+        $triwulanAktif = $sekolah->triwulan_aktif;
+
+        // 3. Ambil semua data pajak terkait anggaran & triwulan aktif ini
         $pajaks = Pajak::with(['masterPajak'])
-            ->whereHas('belanja', function ($query) use ($anggaran) {
-                $query->where('anggaran_id', $anggaran->id);
+            ->whereHas('belanja', function ($query) use ($anggaran, $triwulanAktif) {
+                // Filter berdasarkan anggaran aktif
+                $query->where('anggaran_id', $anggaran->id)
+                      // Tambahan: Filter berdasarkan triwulan di tabel belanja
+                      // (Sesuaikan nama kolom 'triwulan' jika di database Anda namanya berbeda, misal: 'triwulan_id')
+                    ->where('tw', $triwulanAktif);
             })
             ->get();
 
-        // 3. Kelompokkan dan hitung rekapitulasi per jenis pajak
+        // 4. Kelompokkan dan hitung rekapitulasi per jenis pajak
         $rekap = [];
 
         foreach ($pajaks as $pajak) {
@@ -165,6 +173,7 @@ class PajakController extends Controller
             }
         }
 
-        return view('pajak.rekap', compact('rekap', 'anggaran'));
+        // Jangan lupa kirimkan juga variable $triwulanAktif ke view agar bisa ditampilkan
+        return view('pajak.rekap', compact('rekap', 'anggaran', 'triwulanAktif'));
     }
 }
