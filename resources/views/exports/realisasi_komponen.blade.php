@@ -1,13 +1,21 @@
 <table>
     <thead>
         <tr>
-            <th colspan="12">LAPORAN REALISASI {{ strtoupper($anggaran->singkatan) }}</th>
+            <th style="font-weight: bold; font-size: 14px;">LAPORAN REALISASI {{ strtoupper($anggaran->singkatan) }}
+            </th>
+            @for($i=0; $i<11; $i++) <th>
+                </th> @endfor
         </tr>
         <tr>
-            <th colspan="12">TAHUN ANGGARAN {{ $anggaran->tahun }} - {{ strtoupper($sekolah->nama_sekolah) }}</th>
+            <th style="font-weight: bold; font-size: 12px;">TAHUN ANGGARAN {{ $anggaran->tahun }} - {{
+                strtoupper($sekolah->nama_sekolah) }}</th>
+            @for($i=0; $i<11; $i++) <th>
+                </th> @endfor
         </tr>
         <tr>
-            <th colspan="12">PERIODE: {{ strtoupper($periodeText) }}</th>
+            <th style="font-weight: bold;">PERIODE: {{ strtoupper($periodeText) }}</th>
+            @for($i=0; $i<11; $i++) <th>
+                </th> @endfor
         </tr>
 
         <tr>
@@ -15,7 +23,6 @@
             <th style="border: 1px solid #000; font-weight: bold; background-color: #f3f4f6;">Spesifikasi</th>
             <th style="border: 1px solid #000; font-weight: bold; background-color: #f3f4f6;">Koefisien</th>
             <th style="border: 1px solid #000; font-weight: bold; background-color: #f3f4f6;">Kode Rekening</th>
-
             <th style="border: 1px solid #000; font-weight: bold; background-color: #f3f4f6;">Harga Satuan</th>
             <th style="border: 1px solid #000; font-weight: bold; background-color: #f3f4f6;">Vol Anggaran</th>
             <th style="border: 1px solid #000; font-weight: bold; background-color: #f3f4f6;">Vol Realisasi</th>
@@ -36,6 +43,9 @@
             <td style="border: 1px solid #000; font-weight: bold; background-color: #c7d2fe; font-size: 12px;">
                 KEGIATAN: {{ strtoupper($namaKegiatan) }}
             </td>
+            @for($i=0; $i<11; $i++) <td style="border: 1px solid #000; background-color: #c7d2fe;">
+                </td>
+                @endfor
         </tr>
 
         @foreach($perKeterangan as $keterangan => $items)
@@ -43,6 +53,9 @@
             <td style="border: 1px solid #000; font-weight: bold; background-color: #e0e7ff; font-style: italic;">
                 &nbsp;&nbsp;&nbsp; Keterangan: {{ $keterangan ?: 'Tanpa Keterangan' }}
             </td>
+            @for($i=0; $i<11; $i++) <td style="border: 1px solid #000; background-color: #e0e7ff;">
+                </td>
+                @endfor
         </tr>
 
         @foreach($items as $item)
@@ -58,9 +71,8 @@
             <td style="border: 1px solid #000; vertical-align: top;">{{ $item->namakomponen }}</td>
             <td style="border: 1px solid #000; vertical-align: top;">{{ $item->spek }}</td>
             <td style="border: 1px solid #000; vertical-align: top;">{{ $item->koefisien }}</td>
-            <td style="border: 1px solid #000; vertical-align: top; mso-number-format:'\@';">{{ $item->korek->singkat }}
-            </td>
-
+            <td style="border: 1px solid #000; vertical-align: top; mso-number-format:'\@';">{{ $item->korek->singkat ??
+                '-' }}</td>
             <td style="border: 1px solid #000; vertical-align: top;" data-format="#,##0">{{ $item->hargasatuan }}</td>
             <td style="border: 1px solid #000; vertical-align: top; text-align: center;">{{ $volAnggaran }}</td>
             <td style="border: 1px solid #000; vertical-align: top; text-align: center;">{{ $volRealisasi }}</td>
