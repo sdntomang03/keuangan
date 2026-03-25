@@ -44,7 +44,6 @@ class RealisasiKomponenExport implements FromView, ShouldAutoSize, WithStyles
             2 => ['font' => ['bold' => true, 'size' => 12]],
             4 => ['font' => ['bold' => true]],
 
-            // BAGIAN YANG DIUBAH:
             // Mengaktifkan Wrap Text untuk Kolom A (Nama Komponen) dan B (Spesifikasi)
             'A:B' => [
                 'alignment' => [

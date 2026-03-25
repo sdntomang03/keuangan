@@ -33,16 +33,14 @@
         @endphp
 
         <tr>
-            <td colspan="12"
-                style="border: 1px solid #000; font-weight: bold; background-color: #c7d2fe; font-size: 12px;">
+            <td style="border: 1px solid #000; font-weight: bold; background-color: #c7d2fe; font-size: 12px;">
                 KEGIATAN: {{ strtoupper($namaKegiatan) }}
             </td>
         </tr>
 
         @foreach($perKeterangan as $keterangan => $items)
         <tr>
-            <td colspan="12"
-                style="border: 1px solid #000; font-weight: bold; background-color: #e0e7ff; font-style: italic;">
+            <td style="border: 1px solid #000; font-weight: bold; background-color: #e0e7ff; font-style: italic;">
                 &nbsp;&nbsp;&nbsp; Keterangan: {{ $keterangan ?: 'Tanpa Keterangan' }}
             </td>
         </tr>
