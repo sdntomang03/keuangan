@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Korek extends Model
 {
-    protected $fillable = ['ket', 'kode', 'uraian_singkat', 'singkat'];
+    protected $fillable = ['ket', 'kode', 'uraian_singkat', 'singkat', 'jenis_belanja'];
 
     public function rkas()
     {

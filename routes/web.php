@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\KorekController;
 use App\Http\Controllers\Admin\RkasCleanupController;
 use App\Http\Controllers\Admin\SekolahController as AdminSekolahController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
@@ -42,6 +43,7 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/rkas', [RkasController::class, 'index'])->name('rkas.index');
     Route::get('/rkas/anggaran', [RkasController::class, 'anggaran'])->name('rkas.anggaran');
+    Route::get('/rkas/rekap', [RkasController::class, 'rekap'])->name('rkas.rekap');
     Route::post('/rkas/import', [RkasController::class, 'import'])->name('rkas.import');
     Route::get('/rkas/rincian', [RkasController::class, 'rincian'])->name('rkas.rincian');
 
@@ -108,6 +110,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/pajak/rekap', [PajakController::class, 'rekap'])->name('pajak.rekap');
     Route::get('/realisasi/komponen', [RealisasiController::class, 'komponen'])->name('realisasi.komponen');
     Route::get('/realisasi/korek', [RealisasiController::class, 'korek'])->name('realisasi.korek');
+    Route::get('/realisasi/jenis-belanja', [RealisasiController::class, 'jenisBelanja'])->name('realisasi.jenis-belanja');
     Route::get('/realisasi/komponen/export', [RealisasiController::class, 'exportKomponen'])->name('realisasi.komponen.export');
     Route::get('/belanja/cetak/{id}', [SuratController::class, 'cetakDokumenLengkap'])->name('belanja.print');
     Route::get('/rekap/export', [RealisasiController::class, 'exportExcel'])->name('belanja.export');
@@ -307,6 +310,12 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/arkas/update-idkomponen/{id}', [ArkasController::class, 'updateIdKomponen'])->name('arkas.update_idkomponen');
     Route::get('/persediaan', [PersediaanController::class, 'index'])->name('persediaan.index');
 
+});
+
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+    // Route untuk Master Kode Rekening
+    Route::resource('korek', KorekController::class)->except(['show']);
+    Route::post('korek/import-update', [KorekController::class, 'importKorekUpdate'])->name('korek.import_update');
 });
 
 Route::get('/cetak-cover', [CetakController::class, 'cetakCover'])->name('cetak.cover');

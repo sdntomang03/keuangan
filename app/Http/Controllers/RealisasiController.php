@@ -161,6 +161,94 @@ class RealisasiController extends Controller
         return view('realisasi.korek', compact('dataRkas', 'anggaran', 'tw', 'persenPpn', 'sekolah'));
     }
 
+    public function jenisBelanja(Request $request)
+    {
+        $user = auth()->user();
+        $anggaran = $request->anggaran_data;
+
+        if (! $anggaran) {
+            return redirect()->route('sekolah.index')->with('error', 'Pilih Anggaran Aktif.');
+        }
+
+        // 1. Logic Penentuan Periode
+        $periode = $request->get('periode', 'tahun');
+        $bulanArray = null;
+        $periodeText = 'Tahunan';
+
+        if (str_starts_with($periode, 'tw')) {
+            $tw = str_replace('tw', '', $periode);
+            $bulanArray = match ($tw) {
+                '1' => [1, 2, 3], '2' => [4, 5, 6], '3' => [7, 8, 9], '4' => [10, 11, 12], default => null,
+            };
+            $periodeText = 'Triwulan '.$tw;
+        } elseif (str_starts_with($periode, 'b')) {
+            $bulan = (int) str_replace('b', '', $periode);
+            if ($bulan >= 1 && $bulan <= 12) {
+                $bulanArray = [$bulan];
+                $namaBulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+                $periodeText = 'Bulan '.$namaBulan[$bulan - 1];
+            } else {
+                $periode = 'tahun';
+            }
+        }
+
+        $sekolah = \App\Models\Sekolah::where('id', $user->sekolah_id)->first();
+        $persenPpn = \App\Models\DasarPajak::where('nama_pajak', 'PPN')->value('persen') ?? 11;
+        $multiplier = 1 + ($persenPpn / 100);
+
+        // 2. Query Utama RKAS
+        $rawData = \App\Models\Rkas::with(['kegiatan', 'korek'])
+            ->withSum(['akbrincis as total_volume_anggaran' => function ($query) use ($bulanArray) {
+                $query->when($bulanArray, fn ($q) => $q->whereIn('bulan', $bulanArray));
+            }], 'volume')
+            ->withSum(['akbrincis as total_anggaran' => function ($query) use ($bulanArray) {
+                $query->when($bulanArray, fn ($q) => $q->whereIn('bulan', $bulanArray));
+            }], 'nominal')
+            ->withSum(['belanjaRincis as total_realisasi' => function ($query) use ($anggaran, $multiplier, $bulanArray) {
+                $query->when($bulanArray, fn ($q) => $q->whereIn('bulan', $bulanArray))
+                    ->whereHas('belanja', fn ($q) => $q->where('anggaran_id', $anggaran->id))
+                    ->select(\Illuminate\Support\Facades\DB::raw("SUM(
+                        CASE
+                            WHEN (SELECT ppn FROM belanjas WHERE belanjas.id = belanja_rincis.belanja_id) > 0
+                            THEN (volume * harga_satuan * $multiplier)
+                            ELSE (volume * harga_satuan)
+                        END
+                    )"));
+            }], 'total_bruto')
+            ->withSum(['belanjaRincis as volume_realisasi' => function ($query) use ($anggaran, $bulanArray) {
+                $query->when($bulanArray, fn ($q) => $q->whereIn('bulan', $bulanArray))
+                    ->whereHas('belanja', fn ($q) => $q->where('anggaran_id', $anggaran->id));
+            }], 'volume')
+            ->where('anggaran_id', $anggaran->id)
+            ->get()
+            ->filter(function ($item) {
+                // Hanya tampilkan yang ada anggarannya atau ada realisasinya
+                return $item->total_anggaran > 0 || $item->total_realisasi > 0;
+            });
+
+        // 3. Pengelompokan Data (Grouping 2 Level)
+        $dataRkas = $rawData->groupBy([
+            function ($item) {
+                // Level 1: Kelompokkan dari relasi koreks->jenis_belanja
+                $jenis = $item->korek->jenis_belanja ?? 'BELUM DIATUR';
+
+                return strtoupper($jenis);
+            },
+            'kodeakun', // Level 2: Kode Rekening
+        ]);
+
+        // 4. Hitung Grand Total untuk dilempar ke View
+        $grandTotalAnggaran = $rawData->sum('total_anggaran');
+        $grandTotalRealisasi = $rawData->sum('total_realisasi');
+        $grandTotalSisa = $grandTotalAnggaran - $grandTotalRealisasi;
+        $grandPersen = $grandTotalAnggaran > 0 ? ($grandTotalRealisasi / $grandTotalAnggaran) * 100 : 0;
+
+        return view('realisasi.jenis_belanja', compact(
+            'dataRkas', 'anggaran', 'sekolah', 'periode', 'periodeText',
+            'grandTotalAnggaran', 'grandTotalRealisasi', 'grandTotalSisa', 'grandPersen'
+        ));
+    }
+
     public function rekapPerRekanan(Request $request)
     {
         $anggaran = $request->anggaran_data;

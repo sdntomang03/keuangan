@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('kode')->unique();             // Kolom Kode (sebagai acuan)
             $table->text('uraian_singkat')->nullable();   // Kolom Uraian Singkat
             $table->string('singkat')->nullable();
+            $table->string('jenis_belanja')->nullable();
             $table->timestamps();
         });
     }

@@ -41,6 +41,8 @@
                                 </x-dropdown-link>
                                 <x-dropdown-link :href="route('akb.rincian')">{{ __('Rincian Per Komponen') }}
                                 </x-dropdown-link>
+                                <x-dropdown-link :href="route('rkas.rekap')">{{ __('Rekap RKAS') }}
+                                </x-dropdown-link>
                                 <x-dropdown-link :href="route('akb.satuan')">{{ __('Format Excel') }}</x-dropdown-link>
                                 <x-dropdown-link :href="route('arkas.index')">{{ __('Format Arkas') }}</x-dropdown-link>
                             </x-slot>
@@ -100,6 +102,9 @@
                                 <x-dropdown-link :href="route('realisasi.komponen')">{{ __('Realisasi Per Komponen') }}
                                 </x-dropdown-link>
                                 <x-dropdown-link :href="route('realisasi.korek')">{{ __('Realisasi Per Korek') }}
+                                </x-dropdown-link>
+                                <x-dropdown-link :href="route('realisasi.jenis-belanja')">{{ __('Realisasi Per Jenis
+                                    Belanja') }}
                                 </x-dropdown-link>
                                 <x-dropdown-link :href="route('pajak.rekap')">{{ __('Rekap Pajak') }}
                                 </x-dropdown-link>
@@ -177,6 +182,8 @@
                                 <x-dropdown-link :href="route('admin.sekolah.index')">{{ __('Kelola Sekolah') }}
                                 </x-dropdown-link>
                                 <x-dropdown-link :href="route('admin.users.index')">{{ __('Kelola Users') }}
+                                </x-dropdown-link>
+                                <x-dropdown-link :href="route('admin.korek.index')">{{ __('Kelola Kode Rekening') }}
                                 </x-dropdown-link>
                             </x-slot>
                         </x-dropdown>
