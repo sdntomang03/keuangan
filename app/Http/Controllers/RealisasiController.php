@@ -19,7 +19,6 @@ class RealisasiController extends Controller
 {
     public function komponen(Request $request)
     {
-
         $user = auth()->user();
         $anggaran = $request->anggaran_data;
 
@@ -27,38 +26,67 @@ class RealisasiController extends Controller
             return redirect()->route('sekolah.index')->with('error', 'Pilih Anggaran Aktif.');
         }
 
-        // 1. Logic Periode (Tahunan / Triwulan / Bulanan)
-        $periode = $request->get('periode', 'tahun');
-        $bulanArray = null;
-        $periodeText = 'Tahunan';
+        // 1. Logic Periode Multi-Filter
+        // Default ke ['tahun'] jika request kosong
+        $periodeInput = $request->get('periode', ['tahun']);
 
-        // Cek jika filter Triwulan
-        if (str_starts_with($periode, 'tw')) {
-            $tw = str_replace('tw', '', $periode);
-            $bulanArray = match ($tw) {
-                '1' => [1, 2, 3],
-                '2' => [4, 5, 6],
-                '3' => [7, 8, 9],
-                '4' => [10, 11, 12],
-                default => null,
-            };
-            $periodeText = 'Triwulan '.$tw;
+        // Jika input berupa string dari URL (misal: ?periode=tw1,tw2), pecah jadi array
+        if (! is_array($periodeInput)) {
+            $periodeInput = explode(',', $periodeInput);
         }
-        // Cek jika filter Bulan
-        elseif (str_starts_with($periode, 'b')) {
-            $bulan = (int) str_replace('b', '', $periode);
-            if ($bulan >= 1 && $bulan <= 12) {
-                $bulanArray = [$bulan]; // Hanya 1 bulan di dalam array
-                $namaBulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-                $periodeText = 'Bulan '.$namaBulan[$bulan - 1];
+
+        $bulanArray = [];
+        $periodeTextList = [];
+
+        // Jika user memilih "tahun", abaikan filter lain dan ambil Tahunan
+        if (in_array('tahun', $periodeInput)) {
+            $bulanArray = null;
+            $periodeText = 'Tahunan';
+        } else {
+            foreach ($periodeInput as $p) {
+                $p = trim(strtolower($p)); // Format jadi huruf kecil & hilangkan spasi
+
+                // Cek jika filter Triwulan (tw1, tw2, dst)
+                if (str_starts_with($p, 'tw')) {
+                    $tw = str_replace('tw', '', $p);
+                    $bulan = match ($tw) {
+                        '1' => [1, 2, 3],
+                        '2' => [4, 5, 6],
+                        '3' => [7, 8, 9],
+                        '4' => [10, 11, 12],
+                        default => [],
+                    };
+                    $bulanArray = array_merge($bulanArray, $bulan); // Gabungkan array bulan
+                    if (! empty($bulan)) {
+                        $periodeTextList[] = 'TW '.$tw;
+                    }
+                }
+                // Cek jika filter Bulan spesifik (b1, b2, dst)
+                elseif (str_starts_with($p, 'b')) {
+                    $b = (int) str_replace('b', '', $p);
+                    if ($b >= 1 && $b <= 12) {
+                        $bulanArray[] = $b;
+                        $namaBulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
+                        $periodeTextList[] = $namaBulan[$b - 1];
+                    }
+                }
+            }
+
+            // Bersihkan duplikat bulan dan urutkan
+            if (! empty($bulanArray)) {
+                $bulanArray = array_unique($bulanArray); // Hapus bulan yang sama
+                sort($bulanArray); // Urutkan 1 sampai 12
+                $periodeText = implode(', ', array_unique($periodeTextList)); // Hasil: "TW 1, TW 2"
             } else {
-                $periode = 'tahun'; // Fallback jika error
+                // Fallback jika tidak ada data valid
+                $bulanArray = null;
+                $periodeText = 'Tahunan';
             }
         }
 
         $sekolah = Sekolah::where('id', $user->sekolah_id)->first();
 
-        // 2. Query RKAS
+        // 2. Query RKAS (Sama persis seperti milik Anda)
         $dataRkas = Rkas::with(['kegiatan', 'korek', 'akb'])
             ->withSum(['akbrincis as total_volume_anggaran' => function ($query) use ($bulanArray) {
                 $query->when($bulanArray, fn ($q) => $q->whereIn('bulan', $bulanArray));
@@ -77,12 +105,13 @@ class RealisasiController extends Controller
             ->where('anggaran_id', $anggaran->id)
             ->get()
             ->filter(function ($item) {
-                // Sembunyikan jika pagu dan realisasinya 0 pada periode yang dipilih
                 return $item->total_anggaran > 0 || $item->total_realisasi > 0;
             })
             ->groupBy(['idbl', 'kodeakun']);
 
-        // Kirim variabel $periode dan $periodeText ke View
+        // Ganti $periode dengan array asli yang diinput user agar form filter di blade tidak hilang state-nya
+        $periode = is_array($periodeInput) ? $periodeInput : [$periodeInput];
+
         return view('realisasi.komponen', compact('dataRkas', 'anggaran', 'sekolah', 'periode', 'periodeText'));
     }
 
