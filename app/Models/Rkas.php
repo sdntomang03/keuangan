@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\FilterAnggaranAktif;
 use Illuminate\Database\Eloquent\Model;
 
 class Rkas extends Model
 {
+    use FilterAnggaranAktif;
+
     protected $fillable = [
         'idblrinci', 'idbl', 'idsubtitle', 'namasub', 'keterangan',
         'kodeakun', 'namaakun', 'idkomponen', 'namakomponen', 'spek',

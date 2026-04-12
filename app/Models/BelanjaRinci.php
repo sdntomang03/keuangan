@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\FilterAnggaranAktif;
 use Illuminate\Database\Eloquent\Model;
 
 class BelanjaRinci extends Model
 {
+    use FilterAnggaranAktif;
+
     protected $fillable = [
         'spek',
         'idblrinci',

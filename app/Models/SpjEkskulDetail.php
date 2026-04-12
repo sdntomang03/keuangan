@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\FilterAnggaranAktif;
 use Illuminate\Database\Eloquent\Model;
 
 class SpjEkskulDetail extends Model
 {
+    use FilterAnggaranAktif;
+
     protected $table = 'spj_ekskul_detail';
 
     protected $guarded = [];

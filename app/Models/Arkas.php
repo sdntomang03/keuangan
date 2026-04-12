@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\FilterAnggaranAktif;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Arkas extends Model
 {
+    use FilterAnggaranAktif;
     use HasFactory;
 
     // Nama tabel spesifik

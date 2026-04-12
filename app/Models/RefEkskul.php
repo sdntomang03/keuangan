@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\FilterAnggaranAktif;
 use Illuminate\Database\Eloquent\Model;
 
 class RefEkskul extends Model
 {
+    use FilterAnggaranAktif;
+
     protected $table = 'ref_ekskul';
 
     protected $guarded = [];
