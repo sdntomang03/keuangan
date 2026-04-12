@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Talangan extends Model
 {
+    use FilterAnggaranAktif;
     use HasFactory;
 
     protected $guarded = ['id'];

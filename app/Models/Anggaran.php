@@ -2,14 +2,11 @@
 
 namespace App\Models;
 
-use App\Traits\FilterAnggaranAktif;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Anggaran extends Model
 {
-    use FilterAnggaranAktif;
-
     protected $fillable = [
         'sekolah_id', // Penting!
         'nama_anggaran', // misal: BOS Reguler

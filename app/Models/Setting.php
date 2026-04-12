@@ -2,13 +2,10 @@
 
 namespace App\Models;
 
-use App\Traits\FilterAnggaranAktif;
 use Illuminate\Database\Eloquent\Model;
 
 class Setting extends Model
 {
-    use FilterAnggaranAktif;
-
     protected $fillable = [
         'user_id', 'nama_sekolah', 'nama_kepala_sekolah', 'nip_kepala_sekolah',
         'nama_bendahara', 'nip_bendahara', 'tahun_aktif', 'anggaran_aktif', 'triwulan_aktif', 'alamat',
