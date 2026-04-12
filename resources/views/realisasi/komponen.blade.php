@@ -11,8 +11,7 @@
             </div>
             <div class="mt-2 md:mt-0 flex items-center gap-3">
                 <span
-                    class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold
-                    {{ $anggaran->singkatan == 'BOS' ? 'bg-indigo-100 text-indigo-800' : 'bg-emerald-100 text-emerald-800' }}">
+                    class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold {{ $anggaran->singkatan == 'BOS' ? 'bg-indigo-100 text-indigo-800' : 'bg-emerald-100 text-emerald-800' }}">
                     Mode Aktif: {{ $anggaran->nama_anggaran }}
                 </span>
             </div>
@@ -31,19 +30,21 @@
                 @endphp
 
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-                    <p class="text-[10px] text-gray-400 uppercase font-black">Pagu {{ $periodeText }}</p>
+                    <p class="text-[10px] text-gray-400 uppercase font-black">Pagu {{ Str::limit($periodeText, 25) }}
+                    </p>
                     <p class="text-xl font-black text-gray-800">Rp {{ number_format($grandAnggaran, 0, ',', '.') }}</p>
                 </div>
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-                    <p class="text-[10px] text-gray-400 uppercase font-black">Realisasi {{ $periodeText }}</p>
+                    <p class="text-[10px] text-gray-400 uppercase font-black">Realisasi {{ Str::limit($periodeText, 25)
+                        }}</p>
                     <p class="text-xl font-black text-indigo-600">Rp {{ number_format($grandRealisasi, 0, ',', '.') }}
                     </p>
                 </div>
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-                    <p class="text-[10px] text-gray-400 uppercase font-black">Sisa Pagu {{ $periodeText }}</p>
-                    <p class="text-xl font-black {{ $sisaTotal < 0 ? 'text-red-600' : 'text-emerald-600' }}">
-                        Rp {{ number_format($sisaTotal, 0, ',', '.') }}
-                    </p>
+                    <p class="text-[10px] text-gray-400 uppercase font-black">Sisa Pagu {{ Str::limit($periodeText, 25)
+                        }}</p>
+                    <p class="text-xl font-black {{ $sisaTotal < 0 ? 'text-red-600' : 'text-emerald-600' }}">Rp {{
+                        number_format($sisaTotal, 0, ',', '.') }}</p>
                 </div>
             </div>
 
@@ -63,30 +64,81 @@
                         placeholder="Cari komponen atau spesifikasi...">
                 </div>
 
-                {{-- Dropdown Filter Periode --}}
+                {{-- Dropdown Filter Periode Multi Select (Alpine.js) --}}
                 <form method="GET" action="{{ route('realisasi.komponen') }}"
                     class="w-full md:w-auto flex items-center gap-2">
-                    <label for="periode" class="text-sm font-bold text-gray-600 whitespace-nowrap">Tampilkan:</label>
-                    <select name="periode" id="periode" onchange="this.form.submit()"
-                        class="block w-full border-gray-300 rounded-lg text-sm focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer font-medium bg-gray-50">
-                        <option value="tahun" {{ $periode=='tahun' ? 'selected' : '' }}>Tahunan (Semua)</option>
+                    <label class="text-sm font-bold text-gray-600 whitespace-nowrap">Tampilkan:</label>
 
-                        <optgroup label="Per Triwulan">
-                            <option value="tw1" {{ $periode=='tw1' ? 'selected' : '' }}>Triwulan I (Jan-Mar)</option>
-                            <option value="tw2" {{ $periode=='tw2' ? 'selected' : '' }}>Triwulan II (Apr-Jun)</option>
-                            <option value="tw3" {{ $periode=='tw3' ? 'selected' : '' }}>Triwulan III (Jul-Sep)</option>
-                            <option value="tw4" {{ $periode=='tw4' ? 'selected' : '' }}>Triwulan IV (Okt-Des)</option>
-                        </optgroup>
+                    <div x-data="{ open: false }" @click.away="open = false" class="relative w-full md:w-64 z-50">
+                        <button type="button" @click="open = !open"
+                            class="flex justify-between items-center w-full bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm text-left shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                            <span class="truncate block w-full text-gray-700 font-medium">{{ Str::limit($periodeText,
+                                25) }}</span>
+                            <svg class="w-4 h-4 ml-2 text-gray-400" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
 
-                        <optgroup label="Per Bulan">
-                            @php $namaBulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli',
-                            'Agustus', 'September', 'Oktober', 'November', 'Desember']; @endphp
-                            @foreach($namaBulan as $index => $nama)
-                            <option value="b{{ $index + 1 }}" {{ $periode=='b' .($index + 1) ? 'selected' : '' }}>{{
-                                $nama }}</option>
-                            @endforeach
-                        </optgroup>
-                    </select>
+                        <div x-show="open" x-transition.opacity style="display: none;"
+                            class="absolute mt-2 w-72 bg-white border border-gray-200 rounded-lg shadow-xl p-3 max-h-[80vh] overflow-y-auto right-0 md:left-0">
+                            <div class="space-y-3">
+                                <label
+                                    class="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded cursor-pointer border-b border-gray-100">
+                                    <input type="checkbox" name="periode[]" value="tahun"
+                                        class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4" {{
+                                        in_array('tahun', $periode) ? 'checked' : '' }}>
+                                    <span class="text-sm font-bold text-gray-800">Tahunan (Semua)</span>
+                                </label>
+
+                                <div>
+                                    <span
+                                        class="block text-[10px] font-black uppercase text-indigo-500 mb-2 mt-2 tracking-widest">Per
+                                        Triwulan</span>
+                                    @php
+                                    $triwulans = ['tw1' => 'Triwulan I (Jan-Mar)', 'tw2' => 'Triwulan II (Apr-Jun)',
+                                    'tw3' => 'Triwulan III (Jul-Sep)', 'tw4' => 'Triwulan IV (Okt-Des)'];
+                                    @endphp
+                                    @foreach($triwulans as $val => $label)
+                                    <label
+                                        class="flex items-center space-x-3 p-1.5 hover:bg-gray-50 rounded cursor-pointer ml-2">
+                                        <input type="checkbox" name="periode[]" value="{{ $val }}"
+                                            class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" {{
+                                            in_array($val, $periode) ? 'checked' : '' }}>
+                                        <span class="text-sm font-medium text-gray-700">{{ $label }}</span>
+                                    </label>
+                                    @endforeach
+                                </div>
+
+                                <div>
+                                    <span
+                                        class="block text-[10px] font-black uppercase text-emerald-500 mb-2 mt-3 pt-2 border-t border-gray-100 tracking-widest">Per
+                                        Bulan</span>
+                                    <div class="grid grid-cols-2 gap-1 ml-2">
+                                        @php $namaBulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                                        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']; @endphp
+                                        @foreach($namaBulan as $index => $nama)
+                                        @php $valBulan = 'b' . ($index + 1); @endphp
+                                        <label
+                                            class="flex items-center space-x-2 p-1 hover:bg-gray-50 rounded cursor-pointer">
+                                            <input type="checkbox" name="periode[]" value="{{ $valBulan }}"
+                                                class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" {{
+                                                in_array($valBulan, $periode) ? 'checked' : '' }}>
+                                            <span class="text-[13px] text-gray-600">{{ $nama }}</span>
+                                        </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="sticky bottom-0 bg-white border-t border-gray-100 pt-3 pb-1 mt-3 text-right">
+                                <button type="submit"
+                                    class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider w-full hover:bg-indigo-700 shadow-sm flex items-center justify-center">
+                                    Terapkan Filter
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </form>
 
                 {{-- Tombol Cetak & Excel --}}
@@ -100,13 +152,11 @@
                         </svg>
                         EXCEL
                     </a>
-
                     <button onclick="window.print()"
                         class="bg-gray-800 text-white px-6 py-2 rounded-lg text-sm font-bold flex items-center hover:bg-black transition shadow-md w-full md:w-auto justify-center">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path
-                                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
-                                stroke-width="2" />
+                            <path stroke-width="2"
+                                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                         </svg>
                         CETAK
                     </button>
@@ -120,7 +170,7 @@
                         <tr>
                             <th class="px-4 py-3 text-left font-bold">Komponen / Spesifikasi</th>
                             <th class="px-4 py-3 text-left font-bold">Harga</th>
-                            <th class="px-4 py-3 text-center font-bold">Vol. {{ $periodeText }}</th>
+                            <th class="px-4 py-3 text-center font-bold">Vol. {{ Str::limit($periodeText, 10) }}</th>
                             <th class="px-4 py-3 text-right font-bold w-32">Pagu (A)</th>
                             <th class="px-4 py-3 text-right font-bold w-32">Realisasi (B)</th>
                             <th class="px-4 py-3 text-right font-bold w-32">Sisa</th>
@@ -129,7 +179,6 @@
                     </thead>
                     <tbody>
                         @forelse($dataRkas as $idbl => $perAkun)
-                        {{-- Header Kegiatan --}}
                         <tr class="bg-indigo-50/50 print:bg-gray-100 border-b border-indigo-100">
                             <td colspan="7" class="px-4 py-2">
                                 <div class="flex items-center">
@@ -159,26 +208,21 @@
                                 <div class="text-[10px] text-gray-400 font-medium italic mt-0.5">{{ $item->koefisien }}
                                 </div>
                             </td>
-                            <td class="px-4 py-3 text-right font-mono text-gray-500">
-                                {{ number_format($item->hargasatuan, 0, ',', '.') }}
-                            </td>
+                            <td class="px-4 py-3 text-right font-mono text-gray-500">{{
+                                number_format($item->hargasatuan, 0, ',', '.') }}</td>
                             <td class="px-4 py-3 text-center">
                                 <span
-                                    class="font-mono font-bold {{ $volRealisasi > $volAnggaran ? 'text-red-600' : 'text-gray-700' }}">
-                                    {{ number_format($volRealisasi, 0) }} / {{ number_format($volAnggaran, 0) }}
-                                </span>
+                                    class="font-mono font-bold {{ $volRealisasi > $volAnggaran ? 'text-red-600' : 'text-gray-700' }}">{{
+                                    number_format($volRealisasi, 0) }} / {{ number_format($volAnggaran, 0) }}</span>
                                 <div class="text-[9px] text-gray-400 uppercase font-bold">{{ $item->satuan }}</div>
                             </td>
-                            <td class="px-4 py-3 text-right font-mono text-gray-500">
-                                {{ number_format($anggaranVal, 0, ',', '.') }}
-                            </td>
-                            <td class="px-4 py-3 text-right font-mono font-bold text-indigo-600">
-                                {{ number_format($realisasiVal, 0, ',', '.') }}
-                            </td>
+                            <td class="px-4 py-3 text-right font-mono text-gray-500">{{ number_format($anggaranVal, 0,
+                                ',', '.') }}</td>
+                            <td class="px-4 py-3 text-right font-mono font-bold text-indigo-600">{{
+                                number_format($realisasiVal, 0, ',', '.') }}</td>
                             <td
                                 class="px-4 py-3 text-right font-mono font-bold {{ $sisaVal < 0 ? 'text-red-600' : 'text-emerald-600' }}">
-                                {{ number_format($sisaVal, 0, ',', '.') }}
-                            </td>
+                                {{ number_format($sisaVal, 0, ',', '.') }}</td>
                             <td class="px-4 py-3 text-center">
                                 <div class="flex flex-col items-center">
                                     <div class="w-12 bg-gray-200 rounded-full h-1 mb-1 overflow-hidden">
@@ -186,9 +230,8 @@
                                             style="width: {{ min($persen, 100) }}%"></div>
                                     </div>
                                     <span
-                                        class="text-[9px] font-black {{ $persen > 100 ? 'text-red-600' : 'text-gray-600' }}">
-                                        {{ number_format($persen, 0) }}%
-                                    </span>
+                                        class="text-[9px] font-black {{ $persen > 100 ? 'text-red-600' : 'text-gray-600' }}">{{
+                                        number_format($persen, 0) }}%</span>
                                 </div>
                             </td>
                         </tr>
@@ -211,7 +254,6 @@
         </div>
     </div>
 
-    {{-- Script Search --}}
     <script>
         document.getElementById('komponenSearch').addEventListener('keyup', function() {
             const searchTerm = this.value.toLowerCase();

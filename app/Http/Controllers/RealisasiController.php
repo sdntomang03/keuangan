@@ -27,10 +27,8 @@ class RealisasiController extends Controller
         }
 
         // 1. Logic Periode Multi-Filter
-        // Default ke ['tahun'] jika request kosong
         $periodeInput = $request->get('periode', ['tahun']);
 
-        // Jika input berupa string dari URL (misal: ?periode=tw1,tw2), pecah jadi array
         if (! is_array($periodeInput)) {
             $periodeInput = explode(',', $periodeInput);
         }
@@ -38,15 +36,13 @@ class RealisasiController extends Controller
         $bulanArray = [];
         $periodeTextList = [];
 
-        // Jika user memilih "tahun", abaikan filter lain dan ambil Tahunan
         if (in_array('tahun', $periodeInput)) {
             $bulanArray = null;
             $periodeText = 'Tahunan';
         } else {
             foreach ($periodeInput as $p) {
-                $p = trim(strtolower($p)); // Format jadi huruf kecil & hilangkan spasi
+                $p = trim(strtolower($p));
 
-                // Cek jika filter Triwulan (tw1, tw2, dst)
                 if (str_starts_with($p, 'tw')) {
                     $tw = str_replace('tw', '', $p);
                     $bulan = match ($tw) {
@@ -56,13 +52,11 @@ class RealisasiController extends Controller
                         '4' => [10, 11, 12],
                         default => [],
                     };
-                    $bulanArray = array_merge($bulanArray, $bulan); // Gabungkan array bulan
+                    $bulanArray = array_merge($bulanArray, $bulan);
                     if (! empty($bulan)) {
                         $periodeTextList[] = 'TW '.$tw;
                     }
-                }
-                // Cek jika filter Bulan spesifik (b1, b2, dst)
-                elseif (str_starts_with($p, 'b')) {
+                } elseif (str_starts_with($p, 'b')) {
                     $b = (int) str_replace('b', '', $p);
                     if ($b >= 1 && $b <= 12) {
                         $bulanArray[] = $b;
@@ -72,28 +66,37 @@ class RealisasiController extends Controller
                 }
             }
 
-            // Bersihkan duplikat bulan dan urutkan
             if (! empty($bulanArray)) {
-                $bulanArray = array_unique($bulanArray); // Hapus bulan yang sama
-                sort($bulanArray); // Urutkan 1 sampai 12
-                $periodeText = implode(', ', array_unique($periodeTextList)); // Hasil: "TW 1, TW 2"
+                $bulanArray = array_unique($bulanArray);
+                sort($bulanArray);
+                $periodeText = implode(', ', array_unique($periodeTextList));
             } else {
-                // Fallback jika tidak ada data valid
                 $bulanArray = null;
                 $periodeText = 'Tahunan';
+                $periodeInput = ['tahun'];
             }
         }
 
         $sekolah = Sekolah::where('id', $user->sekolah_id)->first();
 
-        // 2. Query RKAS (Sama persis seperti milik Anda)
+        // =====================================================================
+        // 2. QUERY RKAS (Diperbaiki agar tidak bocor ke sekolah lain)
+        // =====================================================================
         $dataRkas = Rkas::with(['kegiatan', 'korek', 'akb'])
-            ->withSum(['akbrincis as total_volume_anggaran' => function ($query) use ($bulanArray) {
-                $query->when($bulanArray, fn ($q) => $q->whereIn('bulan', $bulanArray));
+
+            // PERBAIKAN 1: Tambahkan ->where('anggaran_id', $anggaran->id) untuk akbrincis
+            ->withSum(['akbrincis as total_volume_anggaran' => function ($query) use ($anggaran, $bulanArray) {
+                $query->where('anggaran_id', $anggaran->id) // <--- KUNCI PENCEGAH KEBOCORAN
+                    ->when($bulanArray, fn ($q) => $q->whereIn('bulan', $bulanArray));
             }], 'volume')
-            ->withSum(['akbrincis as total_anggaran' => function ($query) use ($bulanArray) {
-                $query->when($bulanArray, fn ($q) => $q->whereIn('bulan', $bulanArray));
+
+            // PERBAIKAN 2: Tambahkan ->where('anggaran_id', $anggaran->id) untuk akbrincis
+            ->withSum(['akbrincis as total_anggaran' => function ($query) use ($anggaran, $bulanArray) {
+                $query->where('anggaran_id', $anggaran->id) // <--- KUNCI PENCEGAH KEBOCORAN
+                    ->when($bulanArray, fn ($q) => $q->whereIn('bulan', $bulanArray));
             }], 'nominal')
+
+            // Bagian Belanja ini sudah benar dari awal
             ->withSum(['belanjaRincis as total_realisasi' => function ($query) use ($anggaran, $bulanArray) {
                 $query->when($bulanArray, fn ($q) => $q->whereIn('bulan', $bulanArray))
                     ->whereHas('belanja', fn ($q) => $q->where('anggaran_id', $anggaran->id));
@@ -102,6 +105,8 @@ class RealisasiController extends Controller
                 $query->when($bulanArray, fn ($q) => $q->whereIn('bulan', $bulanArray))
                     ->whereHas('belanja', fn ($q) => $q->where('anggaran_id', $anggaran->id));
             }], 'volume')
+
+            // Filter utama RKAS
             ->where('anggaran_id', $anggaran->id)
             ->get()
             ->filter(function ($item) {
@@ -109,8 +114,7 @@ class RealisasiController extends Controller
             })
             ->groupBy(['idbl', 'kodeakun']);
 
-        // Ganti $periode dengan array asli yang diinput user agar form filter di blade tidak hilang state-nya
-        $periode = is_array($periodeInput) ? $periodeInput : [$periodeInput];
+        $periode = $periodeInput;
 
         return view('realisasi.komponen', compact('dataRkas', 'anggaran', 'sekolah', 'periode', 'periodeText'));
     }
@@ -150,6 +154,10 @@ class RealisasiController extends Controller
         $anggaran = $request->anggaran_data;
         $tw = $request->get('tw', 'tahun');
 
+        if (! $anggaran) {
+            return redirect()->route('sekolah.index')->with('error', 'Pilih Anggaran Aktif.');
+        }
+
         // Definisikan range bulan untuk filter
         $bulanArray = match ($tw) {
             '1' => [1, 2, 3],
@@ -163,9 +171,14 @@ class RealisasiController extends Controller
         $multiplier = 1 + ($persenPpn / 100);
 
         $dataRkas = Rkas::with(['kegiatan', 'korek'])
-            ->withSum(['akbrincis as total_anggaran' => function ($query) use ($bulanArray) {
-                $query->when($bulanArray, fn ($q) => $q->whereIn('bulan', $bulanArray));
+
+            // --- PERBAIKAN DI SINI: Tambah filter anggaran_id ---
+            ->withSum(['akbrincis as total_anggaran' => function ($query) use ($anggaran, $bulanArray) {
+                $query->where('anggaran_id', $anggaran->id) // Kunci anti-bocor
+                    ->when($bulanArray, fn ($q) => $q->whereIn('bulan', $bulanArray));
             }], 'nominal')
+            // ----------------------------------------------------
+
             ->withSum(['belanjaRincis as total_realisasi' => function ($query) use ($anggaran, $multiplier, $bulanArray) {
                 $query->when($bulanArray, fn ($q) => $q->whereIn('bulan', $bulanArray))
                     ->whereHas('belanja', fn ($q) => $q->where('anggaran_id', $anggaran->id))
@@ -179,12 +192,12 @@ class RealisasiController extends Controller
             }], 'total_bruto')
             ->where('anggaran_id', $anggaran->id)
             ->get()
-    // --- TAMBAHKAN FILTER DI SINI ---
             ->filter(function ($item) {
                 // Hanya ambil yang ada anggaran atau ada realisasi
                 return $item->total_anggaran > 0 || $item->total_realisasi > 0;
             })
             ->groupBy(['idbl', 'kodeakun']);
+
         $sekolah = Sekolah::where('id', $user->sekolah_id)->first();
 
         return view('realisasi.korek', compact('dataRkas', 'anggaran', 'tw', 'persenPpn', 'sekolah'));
@@ -227,12 +240,19 @@ class RealisasiController extends Controller
 
         // 2. Query Utama RKAS
         $rawData = \App\Models\Rkas::with(['kegiatan', 'korek'])
-            ->withSum(['akbrincis as total_volume_anggaran' => function ($query) use ($bulanArray) {
-                $query->when($bulanArray, fn ($q) => $q->whereIn('bulan', $bulanArray));
+
+            // --- PERBAIKAN DI SINI: Tambah filter anggaran_id ---
+            ->withSum(['akbrincis as total_volume_anggaran' => function ($query) use ($anggaran, $bulanArray) {
+                $query->where('anggaran_id', $anggaran->id) // Kunci anti-bocor
+                    ->when($bulanArray, fn ($q) => $q->whereIn('bulan', $bulanArray));
             }], 'volume')
-            ->withSum(['akbrincis as total_anggaran' => function ($query) use ($bulanArray) {
-                $query->when($bulanArray, fn ($q) => $q->whereIn('bulan', $bulanArray));
+
+            ->withSum(['akbrincis as total_anggaran' => function ($query) use ($anggaran, $bulanArray) {
+                $query->where('anggaran_id', $anggaran->id) // Kunci anti-bocor
+                    ->when($bulanArray, fn ($q) => $q->whereIn('bulan', $bulanArray));
             }], 'nominal')
+            // ----------------------------------------------------
+
             ->withSum(['belanjaRincis as total_realisasi' => function ($query) use ($anggaran, $multiplier, $bulanArray) {
                 $query->when($bulanArray, fn ($q) => $q->whereIn('bulan', $bulanArray))
                     ->whereHas('belanja', fn ($q) => $q->where('anggaran_id', $anggaran->id))
@@ -360,29 +380,53 @@ class RealisasiController extends Controller
             return redirect()->route('sekolah.index')->with('error', 'Pilih Anggaran Aktif.');
         }
 
-        // 1. Logic Periode (Copas persis dari method komponen)
-        $periode = $request->get('periode', 'tahun');
-        $bulanArray = null;
-        $periodeText = 'Tahunan';
+        // 1. Logic Periode Multi-Filter (Disesuaikan dari komponen)
+        $periodeInput = $request->get('periode', ['tahun']);
+        if (! is_array($periodeInput)) {
+            $periodeInput = explode(',', $periodeInput);
+        }
 
-        if (str_starts_with($periode, 'tw')) {
-            $tw = str_replace('tw', '', $periode);
-            $bulanArray = match ($tw) {
-                '1' => [1, 2, 3], '2' => [4, 5, 6], '3' => [7, 8, 9], '4' => [10, 11, 12], default => null,
-            };
-            $periodeText = 'Triwulan '.$tw;
-        } elseif (str_starts_with($periode, 'b')) {
-            $bulan = (int) str_replace('b', '', $periode);
-            if ($bulan >= 1 && $bulan <= 12) {
-                $bulanArray = [$bulan];
-                $namaBulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-                $periodeText = 'Bulan '.$namaBulan[$bulan - 1];
+        $bulanArray = [];
+        $periodeTextList = [];
+
+        if (in_array('tahun', $periodeInput)) {
+            $bulanArray = null;
+            $periodeText = 'Tahunan';
+        } else {
+            foreach ($periodeInput as $p) {
+                $p = trim(strtolower($p));
+                if (str_starts_with($p, 'tw')) {
+                    $tw = str_replace('tw', '', $p);
+                    $bulan = match ($tw) {
+                        '1' => [1, 2, 3], '2' => [4, 5, 6], '3' => [7, 8, 9], '4' => [10, 11, 12], default => []
+                    };
+                    $bulanArray = array_merge($bulanArray, $bulan);
+                    if (! empty($bulan)) {
+                        $periodeTextList[] = 'TW '.$tw;
+                    }
+                } elseif (str_starts_with($p, 'b')) {
+                    $b = (int) str_replace('b', '', $p);
+                    if ($b >= 1 && $b <= 12) {
+                        $bulanArray[] = $b;
+                        $namaBulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+                        $periodeTextList[] = $namaBulan[$b - 1];
+                    }
+                }
+            }
+
+            if (! empty($bulanArray)) {
+                $bulanArray = array_unique($bulanArray);
+                sort($bulanArray);
+                $periodeText = implode(', ', array_unique($periodeTextList));
+            } else {
+                $bulanArray = null;
+                $periodeText = 'Tahunan';
             }
         }
 
         $sekolah = Sekolah::find($user->sekolah_id);
 
-        // 2. Query RKAS (Copas persis dari method komponen)
+        // 2. Query RKAS
         $dataRkas = Rkas::with(['kegiatan', 'korek', 'akb'])
             ->withSum(['akbrincis as total_volume_anggaran' => function ($query) use ($bulanArray) {
                 $query->when($bulanArray, fn ($q) => $q->whereIn('bulan', $bulanArray));
@@ -406,7 +450,7 @@ class RealisasiController extends Controller
             ->groupBy(['idbl', 'keterangan']);
 
         // 3. Download Excel
-        $namaFile = 'Realisasi_Komponen_'.str_replace(' ', '_', $periodeText).'_'.date('Ymd_His').'.xlsx';
+        $namaFile = 'Realisasi_Komponen_'.str_replace([' ', ','], ['_', ''], $periodeText).'_'.date('Ymd_His').'.xlsx';
 
         return Excel::download(new RealisasiKomponenExport($dataRkas, $anggaran, $sekolah, $periodeText), $namaFile);
     }

@@ -3,38 +3,50 @@
 namespace App\Imports;
 
 use App\Models\Kegiatan;
-use App\Models\Sekolah;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
-use Maatwebsite\Excel\Concerns\ToModel;
+use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
-class KegiatanImport implements ToModel, WithHeadingRow
+class KegiatanImport implements ToCollection, WithHeadingRow
 {
-    public function model(array $row)
+    public function collection(Collection $rows)
     {
-        // 1. Cari Sekolah milik User yang Login
-        $sekolah = Sekolah::where('user_id', Auth::id())->first();
+        // 1. Ambil ID Sekolah langsung dari profil User yang sedang login
+        $sekolahId = Auth::user()->sekolah_id;
 
-        // Jika sekolah tidak ditemukan (misal user belum input profil sekolah), skip atau error.
-        // Disini kita assumsikan user sudah punya sekolah.
-        $sekolahId = $sekolah ? $sekolah->id : null;
+        // PROTEKSI: Hentikan proses jika User belum terhubung dengan sekolah manapun
+        if (! $sekolahId) {
+            throw new \Exception('Akun Anda belum terhubung dengan data Instansi/Sekolah manapun. Silakan lengkapi profil terlebih dahulu.');
+        }
 
-        // 2. Gunakan updateOrCreate berdasarkan 'idbl'
-        return Kegiatan::updateOrCreate(
-            [
-                'idbl' => $row['idbl'], // Kunci pencarian (Unique)
-            ],
-            [
-                'snp' => $row['snp'],
-                'sumber_dana' => $row['sumber_dana'],
-                'kodedana' => $row['kodedana'],
-                'namadana' => $row['namadana'],
-                'kodegiat' => $row['kodegiat'],
-                'namagiat' => $row['namagiat'],
-                'kegiatan' => $row['kegiatan'], // Deskripsi panjang
-                'link' => $row['link'] ?? null,
-                'sekolah_id' => $sekolahId, // Otomatis dari sistem
-            ]
-        );
+        // 2. Looping setiap baris dari Excel
+        foreach ($rows as $row) {
+
+            // Proteksi: Lewati (skip) baris jika kolom idbl kosong / baris excel kosong
+            if (! isset($row['idbl'])) {
+                continue;
+            }
+
+            // 3. Eksekusi Update atau Create
+            Kegiatan::updateOrCreate(
+                [
+                    'idbl' => $row['idbl'], // Kunci pencarian (Unique)
+                ],
+                [
+                    'snp' => $row['snp'] ?? null,
+                    'sumber_dana' => $row['sumber_dana'] ?? null,
+                    'kodedana' => $row['kodedana'] ?? null,
+                    'namadana' => $row['namadana'] ?? null,
+                    'kodegiat' => $row['kodegiat'] ?? null,
+                    'namagiat' => $row['namagiat'] ?? null,
+                    'kegiatan' => $row['kegiatan'] ?? null,
+                    'link' => $row['link'] ?? null,
+
+                    // Gunakan ID Sekolah yang sudah pasti ada nilainya
+                    'sekolah_id' => $sekolahId,
+                ]
+            );
+        }
     }
 }

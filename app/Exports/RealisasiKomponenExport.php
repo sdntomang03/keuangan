@@ -39,20 +39,15 @@ class RealisasiKomponenExport implements FromView, ShouldAutoSize, WithStyles
     public function styles(Worksheet $sheet)
     {
         return [
-            // Baris 1-4 (Header Laporan & Tabel) di-bold
             1 => ['font' => ['bold' => true, 'size' => 14]],
             2 => ['font' => ['bold' => true, 'size' => 12]],
             4 => ['font' => ['bold' => true]],
-
-            // Mengaktifkan Wrap Text untuk Kolom A (Nama Komponen) dan B (Spesifikasi)
             'A:B' => [
                 'alignment' => [
                     'wrapText' => true,
                     'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_TOP,
                 ],
             ],
-
-            // Memastikan semua kolom dari A sampai L rata atas (Vertical Top)
             'A:L' => [
                 'alignment' => [
                     'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_TOP,

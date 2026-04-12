@@ -300,7 +300,102 @@
                     </table>
                 </div>
             </div>
+            {{-- 5. TABEL REKAP KODE REKENING PER TRIWULAN (SETAHUN PENUH) --}}
+            <div class="mt-8 bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden print:mt-8">
+                <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                    <h3 class="font-black text-purple-900 text-lg uppercase tracking-wider flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                            </path>
+                        </svg>
+                        Rekapitulasi Kode Rekening per Triwulan (1 Tahun)
+                    </h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full border-collapse text-sm">
+                        <thead class="bg-gray-800 text-white uppercase tracking-wider text-[11px]">
+                            <tr>
+                                <th rowspan="2"
+                                    class="px-5 py-3 text-center font-bold w-16 border-r border-gray-700 align-middle">
+                                    No</th>
+                                <th rowspan="2"
+                                    class="px-5 py-3 text-left font-bold border-r border-gray-700 align-middle">Uraian
+                                    Rekening</th>
+                                <th colspan="4" class="px-5 py-2 text-center font-bold border-b border-gray-700">Alokasi
+                                    per Triwulan (Rp)</th>
+                                <th rowspan="2"
+                                    class="px-5 py-3 text-right font-bold w-40 border-l border-gray-700 align-middle">
+                                    Total 1 Tahun (Rp)</th>
+                            </tr>
+                            <tr>
+                                <th class="px-3 py-2 text-right font-bold w-32 border-r border-gray-700">TW 1</th>
+                                <th class="px-3 py-2 text-right font-bold w-32 border-r border-gray-700">TW 2</th>
+                                <th class="px-3 py-2 text-right font-bold w-32 border-r border-gray-700">TW 3</th>
+                                <th class="px-3 py-2 text-right font-bold w-32 border-r border-gray-700">TW 4</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            {{-- Gunakan variabel baru dari controller, misal $rekapRekeningSemuaTw --}}
+                            @forelse($rekapRekeningSemuaTw ?? [] as $index => $item)
+                            <tr class="hover:bg-purple-50/50 transition">
+                                <td class="px-5 py-3 text-center text-gray-500 font-medium">{{ $loop->iteration }}</td>
+                                <td class="px-5 py-3 font-bold text-gray-800 text-[12px] uppercase">
+                                    {{ $item->uraian }}
+                                </td>
+                                <td class="px-3 py-3 text-right font-mono text-gray-600">
+                                    {{ number_format($item->tw1 ?? 0, 0, ',', '.') }}
+                                </td>
+                                <td class="px-3 py-3 text-right font-mono text-gray-600">
+                                    {{ number_format($item->tw2 ?? 0, 0, ',', '.') }}
+                                </td>
+                                <td class="px-3 py-3 text-right font-mono text-gray-600">
+                                    {{ number_format($item->tw3 ?? 0, 0, ',', '.') }}
+                                </td>
+                                <td class="px-3 py-3 text-right font-mono text-gray-600">
+                                    {{ number_format($item->tw4 ?? 0, 0, ',', '.') }}
+                                </td>
+                                <td class="px-5 py-3 text-right font-mono font-bold text-gray-900 bg-gray-50/50">
+                                    {{ number_format($item->total_anggaran ?? 0, 0, ',', '.') }}
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="7"
+                                    class="p-10 text-center text-gray-400 font-bold uppercase tracking-widest text-xs">
+                                    Tidak ada data untuk rekap semua triwulan.
+                                </td>
+                            </tr>
+                            @endforelse
+                        </tbody>
 
+                        @if(isset($rekapRekeningSemuaTw) && $rekapRekeningSemuaTw->isNotEmpty())
+                        <tfoot class="bg-gray-100 font-bold text-[12px]">
+                            <tr>
+                                <td colspan="2" class="px-5 py-4 text-right uppercase tracking-widest text-gray-600">
+                                    Grand Total
+                                </td>
+                                <td class="px-3 py-4 text-right font-mono text-purple-700">
+                                    {{ number_format($rekapRekeningSemuaTw->sum('tw1'), 0, ',', '.') }}
+                                </td>
+                                <td class="px-3 py-4 text-right font-mono text-purple-700">
+                                    {{ number_format($rekapRekeningSemuaTw->sum('tw2'), 0, ',', '.') }}
+                                </td>
+                                <td class="px-3 py-4 text-right font-mono text-purple-700">
+                                    {{ number_format($rekapRekeningSemuaTw->sum('tw3'), 0, ',', '.') }}
+                                </td>
+                                <td class="px-3 py-4 text-right font-mono text-purple-700">
+                                    {{ number_format($rekapRekeningSemuaTw->sum('tw4'), 0, ',', '.') }}
+                                </td>
+                                <td class="px-5 py-4 text-right font-mono text-purple-900 text-sm bg-gray-200/50">
+                                    {{ number_format($rekapRekeningSemuaTw->sum('total_anggaran'), 0, ',', '.') }}
+                                </td>
+                            </tr>
+                        </tfoot>
+                        @endif
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </x-app-layout>
