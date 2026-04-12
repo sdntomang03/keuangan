@@ -60,16 +60,43 @@ class BelanjaController extends Controller
     public function getRekening(Request $request)
     {
         $anggaran = $request->anggaran_data; // Dari Middleware
+        $user = auth()->user();
+        $sekolah = \App\Models\Sekolah::find($user->sekolah_id);
 
+        if (! $anggaran || ! $sekolah) {
+            return response()->json([]);
+        }
+
+        // 1. Tentukan range bulan berdasarkan TW aktif sekolah
+        $tw = (int) filter_var($sekolah->triwulan_aktif, FILTER_SANITIZE_NUMBER_INT);
+        $bulanRange = match ($tw) {
+            1 => [1, 2, 3],
+            2 => [4, 5, 6],
+            3 => [7, 8, 9],
+            4 => [10, 11, 12],
+            default => range(1, 12)
+        };
+
+        // 2. Query dengan Join ke akb_rincis untuk filter saldo
         return DB::table('rkas')
             ->join('koreks', 'rkas.kodeakun', '=', 'koreks.id')
-            ->where('rkas.anggaran_id', $anggaran->id) // Filter berdasarkan ID Anggaran Aktif
+
+            // --- TAMBAHAN JOIN UNTUK CEK SALDO ---
+            ->join('akb_rincis', 'rkas.idblrinci', '=', 'akb_rincis.idblrinci')
+
+            ->where('rkas.anggaran_id', $anggaran->id)
+            ->where('akb_rincis.anggaran_id', $anggaran->id) // Kunci anti-bocor
             ->where('rkas.idbl', $request->idbl)
+
+            // --- FILTER TRIWULAN DAN NOMINAL > 0 ---
+            ->whereIn('akb_rincis.bulan', $bulanRange)
+            ->where('akb_rincis.nominal', '>', 0)
+
             ->select(
                 'koreks.id as koderekening',
                 'koreks.uraian_singkat as namarekening'
             )
-            ->distinct()
+            ->distinct() // Pastikan nama rekening tidak dobel meski ada banyak barang
             ->get();
     }
 
@@ -92,17 +119,18 @@ class BelanjaController extends Controller
         // Mulai Query Dasar
         $query = Rkas::join('akb_rincis', 'rkas.idblrinci', '=', 'akb_rincis.idblrinci')
             ->where('rkas.anggaran_id', $anggaran->id)
+
+            // --- TAMBAHKAN BARIS INI: Filter juga tabel akb_rincis-nya ---
+            ->where('akb_rincis.anggaran_id', $anggaran->id)
+
             ->where('rkas.idbl', $request->idbl)
             ->where('rkas.kodeakun', $request->koderekening)
             ->whereIn('akb_rincis.bulan', $bulanRange);
 
-        // --- LOGIKA FILTER KETERANGAN ---
         // Jika user mengirim 'keterangan' DAN isinya BUKAN 'ALL', maka filter spesifik.
-        // Jika isinya 'ALL' atau kosong, maka filter ini dilewati (tampilkan semua).
         if ($request->filled('keterangan') && $request->keterangan !== 'ALL') {
             $query->where('rkas.keterangan', $request->keterangan);
         }
-        // -------------------------------
 
         return $query->select(
             'rkas.id',
@@ -121,8 +149,6 @@ class BelanjaController extends Controller
     public function getKeterangan(Request $request)
     {
         $anggaran = $request->anggaran_data;
-
-        // Ambil data sekolah dari user login
         $user = auth()->user();
         $sekolah = Sekolah::find($user->sekolah_id);
 
@@ -130,19 +156,15 @@ class BelanjaController extends Controller
             return response()->json([]);
         }
 
-        // Query mencari keterangan yang unik (DISTINCT)
         $data = DB::table('rkas')
             ->where('anggaran_id', $anggaran->id)
-            ->where('idbl', $request->idbl) // Filter Kegiatan
-            ->where('kodeakun', $request->koderekening) // Filter Rekening
-
-            // Filter agar yang kosong tidak ikut muncul
+            ->where('idbl', $request->idbl)
+            ->where('kodeakun', $request->koderekening) // Ini mencocokkan nilai ID
             ->whereNotNull('keterangan')
             ->where('keterangan', '!=', '')
             ->where('keterangan', '!=', '-')
-
             ->select('keterangan')
-            ->distinct() // PENTING: Supaya tidak ada keterangan kembar
+            ->distinct()
             ->orderBy('keterangan', 'asc')
             ->get();
 

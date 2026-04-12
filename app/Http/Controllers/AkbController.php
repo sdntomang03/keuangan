@@ -146,64 +146,81 @@ class AkbController extends Controller
             return back()->with('error', 'Pilih Anggaran Aktif di Pengaturan terlebih dahulu.');
         }
 
-        // 2. Filter AKB Master hanya untuk anggaran yang sedang aktif
-        // Penting agar tidak mengolah data tahun/sumber dana lain
-        $records = Akb::with('rkas')
-            ->where('anggaran_id', $anggaran->id)
-            ->get();
+        try {
+            // 2. Filter AKB Master hanya untuk anggaran yang sedang aktif
+            $records = Akb::with('rkas')
+                ->where('anggaran_id', $anggaran->id)
+                ->get();
 
-        if ($records->isEmpty()) {
-            return back()->with('error', 'Data AKB Master untuk anggaran ini kosong.');
-        }
+            if ($records->isEmpty()) {
+                return back()->with('warning', 'Data AKB Master untuk anggaran ini kosong. Silakan import file AKB terlebih dahulu.');
+            }
 
-        DB::transaction(function () use ($records, $anggaran) {
-            // 3. JANGAN gunakan truncate(). Gunakan delete() dengan filter anggaran_id.
-            // Truncate akan menghapus SELURUH data di tabel, termasuk milik sekolah/anggaran lain.
-            AkbRinci::where('anggaran_id', $anggaran->id)->delete();
+            DB::transaction(function () use ($records, $anggaran) {
+                // =================================================================
+                // 3. HAPUS DULU data rincian lama untuk anggaran aktif ini
+                // =================================================================
+                AkbRinci::where('anggaran_id', $anggaran->id)->delete();
 
-            foreach ($records as $record) {
-                // Validasi relasi RKAS
-                if (! $record->rkas) {
-                    continue;
-                }
-
+                // =================================================================
+                // 4. GENERATE BARU (Dengan optimasi Batch Insert)
+                // =================================================================
                 $dataToInsert = [];
-                $hargaSatuan = (float) $record->rkas->hargasatuan;
-                $pajak = (float) ($record->pajak ?? 0);
 
-                if ($hargaSatuan <= 0) {
-                    continue;
-                }
+                foreach ($records as $record) {
+                    // Validasi relasi RKAS
+                    if (! $record->rkas) {
+                        continue;
+                    }
 
-                for ($i = 1; $i <= 12; $i++) {
-                    $fieldBulan = "bulan$i";
-                    $nominalBulan = (float) $record->$fieldBulan;
+                    $hargaSatuan = (float) $record->rkas->hargasatuan;
+                    $pajak = (float) ($record->pajak ?? 0);
 
-                    if ($nominalBulan > 0) {
-                        $faktorPajak = ($pajak > 0) ? (1 + ($pajak / 100)) : 1;
-                        $volume = $nominalBulan / ($hargaSatuan * $faktorPajak);
+                    // Hindari pembagian dengan nol
+                    if ($hargaSatuan <= 0) {
+                        continue;
+                    }
 
-                        $dataToInsert[] = [
-                            'akb_id' => $record->id,
-                            'idblrinci' => $record->idblrinci,
-                            'bulan' => $i,
-                            'nominal' => $nominalBulan,
-                            'volume' => $volume,
-                            'anggaran_id' => $anggaran->id, // Set ke ID aktif
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ];
+                    for ($i = 1; $i <= 12; $i++) {
+                        $fieldBulan = "bulan$i";
+                        $nominalBulan = (float) $record->$fieldBulan;
+
+                        if ($nominalBulan > 0) {
+                            $faktorPajak = ($pajak > 0) ? (1 + ($pajak / 100)) : 1;
+                            $volume = $nominalBulan / ($hargaSatuan * $faktorPajak);
+
+                            $dataToInsert[] = [
+                                'akb_id' => $record->id,
+                                'idblrinci' => $record->idblrinci,
+                                'bulan' => $i,
+                                'nominal' => $nominalBulan,
+                                'volume' => $volume,
+                                'anggaran_id' => $anggaran->id, // Mengikat ke ID aktif
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ];
+                        }
+                    }
+
+                    // --- OPTIMASI RAM: Eksekusi Insert setiap kali array mencapai 500 baris ---
+                    if (count($dataToInsert) >= 500) {
+                        AkbRinci::insert($dataToInsert);
+                        $dataToInsert = []; // Kosongkan array kembali setelah disimpan
                     }
                 }
 
-                // Simpan per baris AKB (isi 12 bulan sekaligus)
+                // Insert sisa data terakhir yang belum mencapai 500 baris
                 if (! empty($dataToInsert)) {
                     AkbRinci::insert($dataToInsert);
                 }
-            }
-        });
+            });
 
-        return back()->with('success', "Rincian bulanan untuk anggaran {$anggaran->singkatan} berhasil di-generate!");
+            return back()->with('success', "Sukses! Rincian bulan untuk anggaran <b>{$anggaran->nama_anggaran}</b> berhasil di-generate ulang.");
+
+        } catch (\Exception $e) {
+            // Tangkap pesan error jika ada proses yang gagal (misal: kolom tabel salah)
+            return back()->with('error', 'Gagal memproses generate AKB: '.$e->getMessage());
+        }
     }
 
     // File: app/Http/Controllers/AkbController.php

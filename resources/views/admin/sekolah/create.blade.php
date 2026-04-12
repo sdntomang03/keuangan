@@ -21,10 +21,10 @@
                 <form action="{{ route('admin.sekolah.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    {{-- PERUBAHAN: Grid diubah menjadi 4 kolom untuk menampung Sudin --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                         <div>
                             <x-input-label for="nama_sekolah" :value="__('Nama Sekolah')" />
-                            {{-- Value hanya mengambil old() karena data baru --}}
                             <x-text-input name="nama_sekolah" type="text" class="mt-1 block w-full"
                                 :value="old('nama_sekolah')" required autofocus />
                             <x-input-error class="mt-2" :messages="$errors->get('nama_sekolah')" />
@@ -37,14 +37,27 @@
                             <x-input-error class="mt-2" :messages="$errors->get('npsn')" />
                         </div>
 
+                        {{-- TAMBAHAN: Input Sudin --}}
+                        <div>
+                            <x-input-label for="sudin" :value="__('Wilayah Sudin')" />
+                            <select name="sudin" id="sudin"
+                                class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                                <option value="">-- Pilih Wilayah Sudin --</option>
+                                @foreach($sudins as $item)
+                                <option value="{{ $item->id }}" {{ old('sudin', $sekolah->sudin ?? '') == $item->id ?
+                                    'selected' : '' }}>
+                                    {{ $item->nama }}
+                                </option>
+                                @endforeach
+                            </select>
+                            <x-input-error class="mt-2" :messages="$errors->get('sudin')" />
+                        </div>
+
                         <div>
                             <x-input-label for="tahun" :value="__('Tahun Anggaran')" />
-
-                            {{-- Input type number agar user hanya bisa memasukkan angka --}}
                             <x-text-input name="tahun" type="number" class="mt-1 block w-full"
                                 placeholder="Contoh: 2024" :value="old('tahun', date('Y'))" min="2000" max="2099"
                                 step="1" required />
-
                             <x-input-error class="mt-2" :messages="$errors->get('tahun')" />
                         </div>
                     </div>
@@ -128,7 +141,7 @@
                             class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-12 rounded-xl transition shadow-lg flex items-center">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 4v16m8-8H4"></path> {{-- Icon Plus --}}
+                                    d="M12 4v16m8-8H4"></path>
                             </svg>
                             Simpan Data
                         </button>

@@ -181,6 +181,8 @@
                             <x-slot name="content">
                                 <x-dropdown-link :href="route('admin.sekolah.index')">{{ __('Kelola Sekolah') }}
                                 </x-dropdown-link>
+                                <x-dropdown-link :href="route('admin.rkas.cleanup')">{{ __('Hapus Anggaran') }}
+                                </x-dropdown-link>
                                 <x-dropdown-link :href="route('admin.users.index')">{{ __('Kelola Users') }}
                                 </x-dropdown-link>
                                 <x-dropdown-link :href="route('admin.korek.index')">{{ __('Kelola Kode Rekening') }}

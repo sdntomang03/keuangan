@@ -11,17 +11,7 @@ class Kegiatan extends Model
 
     protected $primaryKey = 'id';
 
-    protected $fillable = [
-        'snp',
-        'sumber_dana',
-        'kodedana',
-        'namadana',
-        'kodegiat',
-        'namagiat',
-        'kegiatan',
-        'idbl',
-        'link',
-    ];
+    protected $guarded = [];
 
     // Jika idbl bukan angka yang auto-increment (misal: kode manual), tambahkan:
     // public $incrementing = false;
