@@ -111,29 +111,50 @@ class AkbController extends Controller
 
     public function rincian(Request $request)
     {
-        // 1. Ambil data anggaran aktif dari middleware
         $anggaran = $request->anggaran_data;
 
-        // Proteksi jika user belum memilih anggaran aktif
         if (! $anggaran) {
             return redirect()->route('sekolah.index')
                 ->with('error', 'Silakan tentukan Anggaran Aktif terlebih dahulu.');
         }
 
-        // 2. Ambil parameter tampilan (tetap dipertahankan jika user ingin ganti view)
         $tampilan = $request->get('tampilan', 'bulanan');
 
-        // 3. Query RKAS berdasarkan anggaran_id yang sedang aktif
-        // Kita tidak perlu lagi menggunakan $tahun dan $jenis karena sudah terwakili oleh $anggaran->id
-        $dataRkas = Rkas::with([
-            'akbrincis',
+        // =========================================================
+        // 1. AMBIL DATA DENGAN RELASI YANG SUDAH DIGEMBOK AMAN
+        // =========================================================
+        $dataRkas = \App\Models\Rkas::with([
             'kegiatan',
             'korek',
+            'akbrincis' => function ($q) use ($anggaran) {
+                // Kunci relasi agar murni hanya mengambil data anggaran ini
+                $q->where('anggaran_id', $anggaran->id);
+            },
         ])
             ->where('anggaran_id', $anggaran->id)
             ->get();
 
-        // 4. Kirim data ke view beserta informasi anggaran aktifnya
+        // =========================================================
+        // 2. REKAP ANGKA SECARA MANUAL LEWAT COLLECTION (PASTI AKURAT)
+        // =========================================================
+        $dataRkas = $dataRkas->map(function ($rkas) {
+            // Hitung nominal per bulan 1 sampai 12
+            for ($i = 1; $i <= 12; $i++) {
+                $rkas->{"bln_$i"} = $rkas->akbrincis->where('bulan', $i)->sum('nominal');
+            }
+
+            // Hitung nominal per Triwulan
+            $rkas->tw_1 = $rkas->bln_1 + $rkas->bln_2 + $rkas->bln_3;
+            $rkas->tw_2 = $rkas->bln_4 + $rkas->bln_5 + $rkas->bln_6;
+            $rkas->tw_3 = $rkas->bln_7 + $rkas->bln_8 + $rkas->bln_9;
+            $rkas->tw_4 = $rkas->bln_10 + $rkas->bln_11 + $rkas->bln_12;
+
+            // Hitung total keseluruhan setahun
+            $rkas->total_akb_setahun = $rkas->akbrincis->sum('nominal');
+
+            return $rkas;
+        });
+
         return view('akb.rkas', compact('dataRkas', 'tampilan', 'anggaran'));
     }
 

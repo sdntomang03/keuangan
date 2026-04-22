@@ -22,7 +22,6 @@ class DashboardController extends Controller
 
         // 1. CEK APAKAH ANGGARAN ADA
         if (! $anggaran) {
-            // Jika tidak ada anggaran aktif, kirim statistik dan data kosong agar view tidak error
             $stats = [
                 'total_bos' => 0, 'harga_bos' => 0, 'pajak_bos' => 0,
                 'total_bop' => 0, 'harga_bop' => 0, 'pajak_bop' => 0,
@@ -35,7 +34,7 @@ class DashboardController extends Controller
             return view('dashboard', compact('setting', 'stats', 'anggaran', 'dataRkas', 'tw', 'persenPpn'));
         }
 
-        // 2. JIKA ANGGARAN ADA, HITUNG STATISTIK BOS & BOP
+        // 2. HITUNG STATISTIK BOS & BOP (Filter berdasarkan sekolah dan tahun aktif)
         $tahunAktif = $anggaran->tahun;
 
         $idBos = Anggaran::where('tahun', $tahunAktif)
@@ -58,42 +57,43 @@ class DashboardController extends Controller
             'pajak_bop' => $idBop ? Rkas::where('anggaran_id', $idBop)->sum('totalpajak') : 0,
         ];
 
-        // 3. LOGIKA KOREK (REKAP REALISASI VS ANGGARAN BERDASARKAN FILTER TW)
+        // 3. LOGIKA REKAP (REALISASI VS ANGGARAN)
         $bulanArray = match ($tw) {
             '1' => [1, 2, 3],
             '2' => [4, 5, 6],
             '3' => [7, 8, 9],
             '4' => [10, 11, 12],
-            default => null, // Tahunan (ambil semua)
+            default => null,
         };
 
         $persenPpn = DasarPajak::where('nama_pajak', 'PPN')->value('persen') ?? 11;
         $multiplier = 1 + ($persenPpn / 100);
 
         $dataRkas = Rkas::with(['kegiatan', 'korek'])
-            ->withSum(['akbrincis as total_anggaran' => function ($query) use ($bulanArray) {
-                $query->when($bulanArray, fn ($q) => $q->whereIn('bulan', $bulanArray));
+            // --- TAMBAHKAN FILTER anggaran_id DI SINI (Pencegah Bocor) ---
+            ->withSum(['akbrincis as total_anggaran' => function ($query) use ($anggaran, $bulanArray) {
+                $query->where('anggaran_id', $anggaran->id) // Kunci utama
+                    ->when($bulanArray, fn ($q) => $q->whereIn('bulan', $bulanArray));
             }], 'nominal')
+            // ------------------------------------------------------------
             ->withSum(['belanjaRincis as total_realisasi' => function ($query) use ($anggaran, $multiplier, $bulanArray) {
                 $query->when($bulanArray, fn ($q) => $q->whereIn('bulan', $bulanArray))
                     ->whereHas('belanja', fn ($q) => $q->where('anggaran_id', $anggaran->id))
                     ->select(DB::raw("SUM(
-                CASE
-                    WHEN (SELECT ppn FROM belanjas WHERE belanjas.id = belanja_rincis.belanja_id) > 0
-                    THEN (volume * harga_satuan * $multiplier)
-                    ELSE (volume * harga_satuan)
-                END
-            )"));
+                    CASE
+                        WHEN (SELECT ppn FROM belanjas WHERE belanjas.id = belanja_rincis.belanja_id) > 0
+                        THEN (volume * harga_satuan * $multiplier)
+                        ELSE (volume * harga_satuan)
+                    END
+                )"));
             }], 'total_bruto')
-            ->where('anggaran_id', $anggaran->id)
+            ->where('anggaran_id', $anggaran->id) // Filter utama RKAS
             ->get()
             ->filter(function ($item) {
-                // Hanya ambil yang ada anggaran atau ada realisasi
                 return $item->total_anggaran > 0 || $item->total_realisasi > 0;
             })
             ->groupBy(['idbl']);
 
-        // 4. KEMBALIKAN KE VIEW DENGAN SEMUA DATA
         return view('dashboard', compact('setting', 'stats', 'anggaran', 'dataRkas', 'tw', 'persenPpn'));
     }
 

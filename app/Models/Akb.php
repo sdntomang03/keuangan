@@ -2,13 +2,10 @@
 
 namespace App\Models;
 
-use App\Traits\FilterAnggaranAktif;
 use Illuminate\Database\Eloquent\Model;
 
 class Akb extends Model
 {
-    use FilterAnggaranAktif;
-
     protected $fillable = [
         'idakun', 'idblrinci', 'volume', 'pajak', 'totalrincian',
         'bulan1', 'bulan2', 'bulan3', 'bulan4', 'bulan5', 'bulan6',

@@ -1,15 +1,13 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Matriks Anggaran Kas (AKB) - ') . ($dataRkas->first()->tahun ?? '') }}
+            {{ __('Matriks Anggaran Kas (AKB) - ') . ($anggaran->tahun ?? '') }}
         </h2>
     </x-slot>
 
     {{-- Filter Form --}}
     <div class="bg-white p-4 mb-6 rounded-lg shadow-sm border border-gray-200 mt-6 mx-auto max-w-7xl sm:px-6 lg:px-8">
         <form action="{{ route('akb.rincian') }}" method="GET" class="flex flex-wrap items-end gap-4">
-
-            {{-- Filter Fokus Triwulan --}}
             <div>
                 <label class="block text-sm font-medium text-gray-700">Pilih Triwulan</label>
                 <select name="filter_tw"
@@ -21,8 +19,6 @@
                     <option value="4" {{ request('filter_tw')=='4' ? 'selected' : '' }}>Triwulan 4</option>
                 </select>
             </div>
-
-            {{-- Mode Tampilan --}}
             <div>
                 <label class="block text-sm font-medium text-gray-700 font-bold text-indigo-600">Mode Tampilan</label>
                 <select name="tampilan"
@@ -33,7 +29,6 @@
                     </option>
                 </select>
             </div>
-
             <div class="flex gap-2">
                 <button type="submit"
                     class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm transition">Filter</button>
@@ -43,9 +38,7 @@
         </form>
     </div>
 
-    {{-- LOGIC PHP UNTUK MENENTUKAN KOLOM YANG TAMPIL --}}
     @php
-    // Definisi Bulan per Triwulan
     $mapTriwulan = [
     1 => [1, 2, 3],
     2 => [4, 5, 6],
@@ -53,28 +46,25 @@
     4 => [10, 11, 12],
     ];
 
-    // Ambil input filter
     $filterTw = request('filter_tw');
     $tampilan = request('tampilan', 'bulanan');
 
-    // Tentukan Kolom Bulan yang akan di-loop
-    $targetMonths = [];
-    if ($filterTw) {
-    $targetMonths = $mapTriwulan[$filterTw];
-    } else {
-    $targetMonths = range(1, 12);
-    }
+    $targetMonths = $filterTw ? $mapTriwulan[$filterTw] : range(1, 12);
+    $targetQuarters = $filterTw ? [$filterTw] : [1, 2, 3, 4];
 
-    // Tentukan Kolom Triwulan yang akan di-loop
-    $targetQuarters = [];
-    if ($filterTw) {
-    $targetQuarters = [$filterTw];
-    } else {
-    $targetQuarters = [1, 2, 3, 4];
+    // =========================================================================
+    // FILTER: Buang baris yang tidak ada uangnya di bulan/TW yang dicari
+    // =========================================================================
+    $filteredRkas = $dataRkas->filter(function ($item) use ($targetMonths) {
+    $sumTarget = 0;
+    foreach ($targetMonths as $m) {
+    $prop = "bln_$m";
+    $sumTarget += $item->$prop;
     }
+    return $sumTarget > 0; // Jika ada uang, tampilkan. Jika 0, sembunyikan.
+    });
 
-    // Mengelompokkan data RKAS berdasarkan ID Kegiatan (idbl)
-    $groupedRkas = $dataRkas->groupBy('idbl');
+    $groupedRkas = $filteredRkas->groupBy('idbl');
     @endphp
 
     <div class="py-4">
@@ -83,30 +73,20 @@
                 <table class="w-full border-collapse border border-gray-300 text-[11px]">
                     <thead class="bg-gray-100 font-bold">
                         <tr>
-                            {{-- KOLOM STATIC --}}
                             <th rowspan="2" class="border border-gray-300 px-2 py-1 align-middle text-left w-48">
-                                Kegiatan
-                            </th>
-                            <th rowspan="2" class="border border-gray-300 px-2 py-1 align-middle text-left w-40">
-                                Kode Rekening
-                            </th>
+                                Kegiatan</th>
+                            <th rowspan="2" class="border border-gray-300 px-2 py-1 align-middle text-left w-40">Kode
+                                Rekening</th>
                             <th rowspan="2" class="border border-gray-300 px-2 py-1 align-middle text-left w-56">
-                                Komponen
+                                Komponen</th>
+                            <th rowspan="2" class="border border-gray-300 px-2 py-1 align-middle text-center w-24">Spek
                             </th>
-                            <th rowspan="2" class="border border-gray-300 px-2 py-1 align-middle text-center w-24">
-                                Spek
-                            </th>
-                            <th rowspan="2" class="border border-gray-300 px-2 py-1 align-middle text-right w-24">
-                                Harga Satuan
-                            </th>
-
-                            {{-- Total RKAS Setahun Penuh --}}
+                            <th rowspan="2" class="border border-gray-300 px-2 py-1 align-middle text-right w-24">Harga
+                                Satuan</th>
                             <th rowspan="2"
-                                class="border border-gray-300 px-2 py-1 align-middle text-right w-28 bg-gray-50">
-                                Total RKAS<br><span class="text-[9px] font-normal">(Setahun)</span>
-                            </th>
+                                class="border border-gray-300 px-2 py-1 align-middle text-right w-28 bg-gray-50">Total
+                                RKAS<br><span class="text-[9px] font-normal">(Setahun)</span></th>
 
-                            {{-- DYNAMIC HEADER --}}
                             @if($tampilan == 'triwulan')
                             <th colspan="{{ count($targetQuarters) }}"
                                 class="border border-gray-300 px-2 py-1 text-center bg-blue-50">
@@ -136,29 +116,13 @@
                     </thead>
 
                     <tbody>
-                        {{-- LOOPING PER KELOMPOK KEGIATAN --}}
-                        @foreach ($groupedRkas as $idbl => $items)
+                        @forelse ($groupedRkas as $idbl => $items)
                         @php
-                        // Cek apakah di kegiatan ini ada data yang tampil untuk periode yang difilter
-                        $groupTotalTampil = $items->flatMap->akbrincis->whereIn('bulan', $targetMonths)->sum('nominal');
                         $namaKegiatan = $items->first()->kegiatan->namagiat ?? 'Kegiatan Tidak Terdefinisi';
                         @endphp
 
-                        {{-- Jika seluruh kegiatan nilainya 0 pada bulan filter, lewati kegiatan ini --}}
-                        @if($groupTotalTampil == 0)
-                        @continue
-                        @endif
-
-                        {{-- LOOPING RINCIAN DALAM 1 KEGIATAN --}}
+                        {{-- 1. LOOPING BARIS BARANG --}}
                         @foreach ($items as $rkas)
-                        @php
-                        $totalTampil = $rkas->akbrincis->whereIn('bulan', $targetMonths)->sum('nominal');
-                        @endphp
-
-                        @if($totalTampil == 0)
-                        @continue
-                        @endif
-
                         <tr class="hover:bg-gray-50 transition">
                             <td class="border border-gray-300 px-2 py-1">
                                 <div class="font-bold text-indigo-800">{{ $rkas->kegiatan->namagiat ?? 'Kegiatan Tidak
@@ -178,71 +142,71 @@
                             <td class="border border-gray-300 px-2 py-1 text-right font-medium text-gray-600">
                                 {{ number_format($rkas->hargasatuan, 0, ',', '.') }}
                             </td>
+
+                            {{-- Kolom Total Setahun --}}
                             <td
                                 class="border border-gray-300 px-2 py-1 text-right font-bold bg-yellow-50 text-indigo-700">
-                                {{ number_format($rkas->totalharga, 0, ',', '.') }}
+                                {{ number_format($rkas->total_akb_setahun, 0, ',', '.') }}
                             </td>
 
+                            {{-- Kolom Dinamis (TW / Bulan) --}}
                             @if($tampilan == 'triwulan')
                             @foreach($targetQuarters as $tw)
                             <td class="border border-gray-300 px-2 py-1 text-right font-medium">
-                                @php
-                                $monthsInTw = $mapTriwulan[$tw];
-                                $sumTw = $rkas->akbrincis->whereIn('bulan', $monthsInTw)->sum('nominal');
-                                @endphp
-                                {{ $sumTw > 0 ? number_format($sumTw, 0, ',', '.') : '-' }}
+                                @php $propTw = "tw_$tw"; $valTw = $rkas->$propTw; @endphp
+                                {{ $valTw > 0 ? number_format($valTw, 0, ',', '.') : '-' }}
                             </td>
                             @endforeach
                             @else
                             @foreach ($targetMonths as $m)
                             <td class="border border-gray-300 px-1 py-1 text-right">
-                                @php $akb = $rkas->akbrincis->firstWhere('bulan', $m); @endphp
-                                {{ $akb && $akb->nominal > 0 ? number_format($akb->nominal, 0, ',', '.') : '-' }}
+                                @php $propBln = "bln_$m"; $valBln = $rkas->$propBln; @endphp
+                                {{ $valBln > 0 ? number_format($valBln, 0, ',', '.') : '-' }}
                             </td>
                             @endforeach
                             @endif
                         </tr>
                         @endforeach
 
-                        {{-- BARIS SUB TOTAL KEGIATAN --}}
+                        {{-- 2. BARIS SUB TOTAL KEGIATAN --}}
                         <tr class="bg-indigo-50/70 border-y-2 border-indigo-200">
                             <td colspan="5"
                                 class="border border-gray-300 px-2 py-2 text-right text-[10px] font-black text-indigo-900 uppercase tracking-widest">
                                 Sub Total - {{ Str::limit($namaKegiatan, 60) }}
                             </td>
 
-                            {{-- Sub Total Kolom RKAS --}}
                             <td
                                 class="border border-gray-300 px-2 py-2 text-right font-bold text-indigo-900 bg-indigo-100/50">
-                                {{ number_format($items->sum('totalharga'), 0, ',', '.') }}
+                                {{ number_format($items->sum('total_akb_setahun'), 0, ',', '.') }}
                             </td>
 
-                            {{-- Sub Total Kolom Dinamis (TW / Bulan) --}}
                             @if($tampilan == 'triwulan')
                             @foreach($targetQuarters as $tw)
                             <td class="border border-gray-300 px-2 py-2 text-right font-bold text-indigo-900">
-                                @php
-                                $monthsInTw = $mapTriwulan[$tw];
-                                $subTotalTw = $items->flatMap->akbrincis->whereIn('bulan', $monthsInTw)->sum('nominal');
-                                @endphp
+                                @php $propTw = "tw_$tw"; $subTotalTw = $items->sum($propTw); @endphp
                                 {{ $subTotalTw > 0 ? number_format($subTotalTw, 0, ',', '.') : '-' }}
                             </td>
                             @endforeach
                             @else
                             @foreach ($targetMonths as $m)
                             <td class="border border-gray-300 px-1 py-2 text-right font-bold text-indigo-900">
-                                @php
-                                $subTotalBulan = $items->flatMap->akbrincis->where('bulan', $m)->sum('nominal');
-                                @endphp
-                                {{ $subTotalBulan > 0 ? number_format($subTotalBulan, 0, ',', '.') : '-' }}
+                                @php $propBln = "bln_$m"; $subTotalBln = $items->sum($propBln); @endphp
+                                {{ $subTotalBln > 0 ? number_format($subTotalBln, 0, ',', '.') : '-' }}
                             </td>
                             @endforeach
                             @endif
                         </tr>
-                        @endforeach
+                        @empty
+                        <tr>
+                            <td colspan="10" class="text-center py-8 text-gray-500 font-medium">
+                                Tidak ada data untuk periode terpilih.
+                            </td>
+                        </tr>
+                        @endforelse
                     </tbody>
 
-                    {{-- FOOTER GRAND TOTAL --}}
+                    {{-- 3. FOOTER GRAND TOTAL --}}
+                    @if($filteredRkas->isNotEmpty())
                     <tfoot class="bg-gray-800 text-white font-bold">
                         <tr>
                             <td colspan="5"
@@ -250,33 +214,29 @@
                                 Grand Total Keseluruhan
                             </td>
 
-                            {{-- Grand Total RKAS --}}
                             <td
                                 class="border border-gray-700 px-2 py-3 text-right bg-yellow-500/20 text-yellow-300 text-sm">
-                                {{ number_format($dataRkas->sum('totalharga'), 0, ',', '.') }}
+                                {{ number_format($filteredRkas->sum('total_akb_setahun'), 0, ',', '.') }}
                             </td>
 
                             @if($tampilan == 'triwulan')
                             @foreach($targetQuarters as $tw)
                             <td class="border border-gray-700 px-2 py-3 text-right text-gray-100">
-                                @php
-                                $monthsInTw = $mapTriwulan[$tw];
-                                $totalPerTw = $dataRkas->flatMap->akbrincis->whereIn('bulan',
-                                $monthsInTw)->sum('nominal');
-                                @endphp
-                                {{ number_format($totalPerTw, 0, ',', '.') }}
+                                @php $propTw = "tw_$tw"; $grandTotalTw = $filteredRkas->sum($propTw); @endphp
+                                {{ $grandTotalTw > 0 ? number_format($grandTotalTw, 0, ',', '.') : '-' }}
                             </td>
                             @endforeach
                             @else
                             @foreach ($targetMonths as $m)
                             <td class="border border-gray-700 px-1 py-3 text-right text-gray-100">
-                                {{ number_format($dataRkas->flatMap->akbrincis->where('bulan', $m)->sum('nominal'), 0,
-                                ',', '.') }}
+                                @php $propBln = "bln_$m"; $grandTotalBln = $filteredRkas->sum($propBln); @endphp
+                                {{ $grandTotalBln > 0 ? number_format($grandTotalBln, 0, ',', '.') : '-' }}
                             </td>
                             @endforeach
                             @endif
                         </tr>
                     </tfoot>
+                    @endif
                 </table>
             </div>
         </div>

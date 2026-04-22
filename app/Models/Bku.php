@@ -2,13 +2,10 @@
 
 namespace App\Models;
 
-use App\Traits\FilterAnggaranAktif;
 use Illuminate\Database\Eloquent\Model;
 
 class Bku extends Model
 {
-    use FilterAnggaranAktif;
-
     protected $guarded = [];
 
     // Tambahkan $anggaranId sebagai parameter ke-8

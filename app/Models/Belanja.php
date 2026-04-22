@@ -2,13 +2,10 @@
 
 namespace App\Models;
 
-use App\Traits\FilterAnggaranAktif;
 use Illuminate\Database\Eloquent\Model;
 
 class Belanja extends Model
 {
-    use FilterAnggaranAktif;
-
     const STATUS_DRAFT = 'draft';
 
     const STATUS_POSTED = 'posted';

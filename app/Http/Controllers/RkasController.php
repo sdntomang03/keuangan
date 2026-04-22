@@ -210,22 +210,42 @@ class RkasController extends Controller
 
     public function rincian(Request $request)
     {
-        // 1. Ambil data anggaran aktif dari middleware
         $anggaran = $request->anggaran_data;
 
-        // Proteksi jika user belum memilih anggaran aktif
         if (! $anggaran) {
             return redirect()->route('sekolah.index')
                 ->with('error', 'Silakan tentukan Anggaran Aktif terlebih dahulu.');
         }
 
-        // 2. Filter data RKAS berdasarkan anggaran_id yang sedang aktif
-        $data = Rkas::with(['kegiatan', 'korek'])
-            ->where('anggaran_id', $anggaran->id)
-            ->orderBy('idbl', 'asc') // Opsional: mengurutkan agar lebih rapi
-            ->paginate(25);
+        $tampilan = $request->get('tampilan', 'bulanan');
 
-        return view('rkas.rincian', compact('data', 'anggaran'));
+        // =========================================================
+        // QUERY UTAMA DENGAN PERHITUNGAN LANGSUNG DARI DATABASE
+        // =========================================================
+        $dataRkas = Rkas::with(['kegiatan', 'korek'])
+            ->where('anggaran_id', $anggaran->id)
+
+            // Hitung Total Setahun dari AKB (Agar akurat)
+            ->withSum(['akbrincis as total_akb_setahun' => function ($q) use ($anggaran) {
+                $q->where('anggaran_id', $anggaran->id);
+            }], 'nominal')
+
+            // Hitung Bulan 1-12
+            ->withSum(['akbrincis as bln_1' => fn ($q) => $q->where('anggaran_id', $anggaran->id)->where('bulan', 1)], 'nominal')
+            ->withSum(['akbrincis as bln_2' => fn ($q) => $q->where('anggaran_id', $anggaran->id)->where('bulan', 2)], 'nominal')
+            ->withSum(['akbrincis as bln_3' => fn ($q) => $q->where('anggaran_id', $anggaran->id)->where('bulan', 3)], 'nominal')
+            ->withSum(['akbrincis as bln_4' => fn ($q) => $q->where('anggaran_id', $anggaran->id)->where('bulan', 4)], 'nominal')
+            ->withSum(['akbrincis as bln_5' => fn ($q) => $q->where('anggaran_id', $anggaran->id)->where('bulan', 5)], 'nominal')
+            ->withSum(['akbrincis as bln_6' => fn ($q) => $q->where('anggaran_id', $anggaran->id)->where('bulan', 6)], 'nominal')
+            ->withSum(['akbrincis as bln_7' => fn ($q) => $q->where('anggaran_id', $anggaran->id)->where('bulan', 7)], 'nominal')
+            ->withSum(['akbrincis as bln_8' => fn ($q) => $q->where('anggaran_id', $anggaran->id)->where('bulan', 8)], 'nominal')
+            ->withSum(['akbrincis as bln_9' => fn ($q) => $q->where('anggaran_id', $anggaran->id)->where('bulan', 9)], 'nominal')
+            ->withSum(['akbrincis as bln_10' => fn ($q) => $q->where('anggaran_id', $anggaran->id)->where('bulan', 10)], 'nominal')
+            ->withSum(['akbrincis as bln_11' => fn ($q) => $q->where('anggaran_id', $anggaran->id)->where('bulan', 11)], 'nominal')
+            ->withSum(['akbrincis as bln_12' => fn ($q) => $q->where('anggaran_id', $anggaran->id)->where('bulan', 12)], 'nominal')
+            ->get();
+
+        return view('akb.rkas', compact('dataRkas', 'tampilan', 'anggaran'));
     }
 
     public function anggaran(Request $request)
@@ -242,7 +262,14 @@ class RkasController extends Controller
         $tampilan = $request->get('tampilan', 'bulanan');
 
         // 2. Query berdasarkan anggaran_id yang aktif
-        $dataRkas = Rkas::with(['akbrincis', 'kegiatan', 'korek'])
+        $dataRkas = Rkas::with([
+            // PENTING: Filter juga relasi akbrincis agar tidak mengambil data anggaran lain
+            'akbrincis' => function ($query) use ($anggaran) {
+                $query->where('anggaran_id', $anggaran->id);
+            },
+            'kegiatan',
+            'korek',
+        ])
             ->where('anggaran_id', $anggaran->id) // Kunci pada anggaran yang sedang aktif
             ->get()
             ->groupBy(['idbl', 'kodeakun']);
