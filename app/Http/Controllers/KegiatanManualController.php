@@ -594,4 +594,46 @@ class KegiatanManualController extends Controller
         // Jangan lupa tambahkan $rekapRekening ke dalam compact()
         return view('kegiatan.rekap_program_rekening', compact('rekap', 'rekapRekening', 'sumberDana', 'grandTotal', 'listSumberDana', 'sumberDanaId'));
     }
+
+    public function dashboard()
+    {
+        $schoolId = auth()->user()->sekolah_id ?? auth()->user()->school_id;
+
+        // 1. Hitung Total Anggaran Keseluruhan
+        $totalAnggaran = \Illuminate\Support\Facades\DB::table('rkas_manuals')
+            ->where('school_id', $schoolId)
+            ->sum('total_akhir');
+
+        // 2. Hitung Jumlah Kegiatan Perencanaan
+        $totalKegiatan = \App\Models\KegiatanManual::where('school_id', $schoolId)->count();
+
+        // 3. Hitung Jumlah Sumber Dana
+        $totalSumberDana = \App\Models\SumberDanaManual::where('school_id', $schoolId)
+            ->orWhereNull('school_id')
+            ->count();
+
+        // 4. Rekap Anggaran per Sumber Dana
+        $rekapPerSumberDana = \Illuminate\Support\Facades\DB::table('rkas_manuals')
+            ->join('sumber_dana_manuals', 'rkas_manuals.sumber_dana_id', '=', 'sumber_dana_manuals.id')
+            ->where('rkas_manuals.school_id', $schoolId)
+            ->select(
+                'sumber_dana_manuals.nama',
+                'sumber_dana_manuals.tahun',
+                \Illuminate\Support\Facades\DB::raw('SUM(rkas_manuals.total_akhir) as total')
+            )
+            ->groupBy('sumber_dana_manuals.nama', 'sumber_dana_manuals.tahun')
+            ->orderBy('sumber_dana_manuals.tahun', 'desc')
+            ->get();
+
+        // 5. Ambil 5 Kegiatan Terakhir yang diedit/ditambah
+        $kegiatanTerbaru = \App\Models\KegiatanManual::with(['program', 'sumberDana'])
+            ->where('school_id', $schoolId)
+            ->orderBy('updated_at', 'desc')
+            ->take(5)
+            ->get();
+
+        return view('kegiatan.dashboard', compact(
+            'totalAnggaran', 'totalKegiatan', 'totalSumberDana', 'rekapPerSumberDana', 'kegiatanTerbaru'
+        ));
+    }
 }

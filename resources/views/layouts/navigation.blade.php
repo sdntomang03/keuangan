@@ -163,8 +163,8 @@
                             </x-slot>
                         </x-dropdown>
 
-                        <a href="{{ route('kegiatan.index') }}" class="group inline-flex items-center px-4 py-2 border rounded-xl text-sm leading-4 font-bold transition-all duration-300 ease-in-out
-    {{ request()->routeIs('kegiatan.*')
+                        <a href="{{ route('perencanaan.dashboard') }}" class="group inline-flex items-center px-4 py-2 border rounded-xl text-sm leading-4 font-bold transition-all duration-300 ease-in-out
+    {{ request()->routeIs('perencanaan.dashboard')
         ? 'text-indigo-700 bg-indigo-50 border-indigo-200 shadow-sm shadow-indigo-100 dark:bg-indigo-500/10 dark:border-indigo-500/20 dark:text-indigo-400'
         : 'text-slate-600 border-transparent hover:bg-white hover:border-slate-200 hover:shadow-md hover:-translate-y-0.5 dark:text-slate-300 dark:hover:bg-slate-800'
     }}">

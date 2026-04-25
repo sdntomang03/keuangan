@@ -354,6 +354,7 @@ Route::middleware(['auth'])->group(function () {
     // Menampilkan form tambah kegiatan
     Route::get('/kegiatan/create', [KegiatanManualController::class, 'create'])->name('kegiatan.create');
     Route::get('/laporan/laporan-rkas', [KegiatanManualController::class, 'rekapAnggaran'])->name('laporan.index');
+    Route::get('/perencanaan/dashboard', [KegiatanManualController::class, 'dashboard'])->name('perencanaan.dashboard');
 
     // Memproses data dari form
     Route::post('/kegiatan/store', [KegiatanManualController::class, 'store'])->name('kegiatan.store');
