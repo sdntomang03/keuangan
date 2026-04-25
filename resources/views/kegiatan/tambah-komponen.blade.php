@@ -584,13 +584,26 @@ keranjangKomponen.forEach((k, index) => {
     hitungGrandTotal();
 }
 
-        document.getElementById('global_ppn').addEventListener('change', hitungGrandTotal);
-        function hitungGrandTotal() {
-            let grandTotal = 0;
-            keranjangKomponen.forEach((k, index) => { grandTotal += (k.harga * (parseInt(document.getElementById(`vol_${index}`).value) || 0)); });
-            if(document.getElementById('global_ppn').checked) grandTotal += (grandTotal * 0.12);
-            document.getElementById('grand_total_display').innerText = formatRupiah(grandTotal);
+        // Trigger fungsi ini setiap kali tombol centang PPN diklik
+    document.getElementById('global_ppn').addEventListener('change', hitungGrandTotal);
+
+    function hitungGrandTotal() {
+        let grandTotal = 0;
+
+        keranjangKomponen.forEach((k, index) => {
+            // PERBAIKAN: Gunakan parseFloat agar volume desimal seperti 7.8 tetap terbaca utuh
+            let volume = parseFloat(document.getElementById(`vol_${index}`).value) || 0;
+            grandTotal += (k.harga * volume);
+        });
+
+        // Jika kotak PPN dicentang, tambahkan 12% dari total yang ada
+        if(document.getElementById('global_ppn').checked) {
+            grandTotal += (grandTotal * 0.12);
         }
+
+        // Tampilkan ke layar
+        document.getElementById('grand_total_display').innerText = formatRupiah(grandTotal);
+    }
 
         window.kembaliPilih = () => { document.getElementById('tahap-2-form').classList.add('hidden'); document.getElementById('tahap-1-pilih').classList.remove('hidden'); };
 
