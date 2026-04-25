@@ -585,6 +585,7 @@ keranjangKomponen.forEach((k, index) => {
 }
 
         // Trigger fungsi ini setiap kali tombol centang PPN diklik
+    // Trigger fungsi ini setiap kali tombol centang PPN diklik
     document.getElementById('global_ppn').addEventListener('change', hitungGrandTotal);
 
     function hitungGrandTotal() {
