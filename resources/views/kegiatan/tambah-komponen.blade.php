@@ -546,19 +546,38 @@
         </div>`;
     });
 
-    keranjangKomponen.forEach((k, index) => {
+keranjangKomponen.forEach((k, index) => {
         const hitungBaris = () => {
             let texts = []; let totalVol = 1; let adaAngka = false;
+
             document.querySelectorAll(`.rincian-input-${index}`).forEach(inp => {
                 const val = inp.value.trim();
-                if (val !== '') { texts.push(val); const numbers = val.match(/\d+/); if (numbers) { totalVol *= parseInt(numbers[0], 10); adaAngka = true; } }
+                if (val !== '') {
+                    texts.push(val);
+
+                    // PERBAIKAN 1: Regex sekarang bisa membaca titik (.) dan koma (,)
+                    const numbers = val.match(/\d+([.,]\d+)?/);
+
+                    if (numbers) {
+                        // PERBAIKAN 2: Ubah koma jadi titik agar Javascript tidak bingung, lalu gunakan parseFloat
+                        let nilaiAngka = parseFloat(numbers[0].replace(',', '.'));
+                        totalVol *= nilaiAngka;
+                        adaAngka = true;
+                    }
+                }
             });
+
             document.getElementById(`ket_${index}`).value = texts.join(' x ');
-            const finalVol = adaAngka ? totalVol : (texts.length > 0 ? 1 : 0);
+
+            // PERBAIKAN 3: Jika hasilnya desimal panjang (misal 7.8 * 3), kita pastikan tidak terlalu banyak angka di belakang koma.
+            // Bisa menggunakan Number(totalVol.toFixed(2)) untuk membatasi maksimal 2 angka di belakang koma jika dibutuhkan.
+            const finalVol = adaAngka ? Number(totalVol.toFixed(2)) : (texts.length > 0 ? 1 : 0);
+
             document.getElementById(`vol_${index}`).value = finalVol;
             document.getElementById(`subtotal_${index}`).innerText = formatRupiah(k.harga * finalVol);
             hitungGrandTotal();
         };
+
         document.querySelectorAll(`.rincian-input-${index}`).forEach(inp => inp.addEventListener('input', hitungBaris));
     });
 
