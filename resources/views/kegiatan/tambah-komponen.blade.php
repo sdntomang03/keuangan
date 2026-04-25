@@ -350,7 +350,7 @@
                         class="block w-full rounded-lg border-slate-300 focus:ring-indigo-500 shadow-sm text-sm">
                         <option value="">-- Silakan Pilih Kode Rekening --</option>
                         @foreach($koreks as $korek)
-                        <option value="{{ $korek->id }}">{{ $korek->kode_rekening }} - {{ $korek->uraian_singkat ??
+                        <option value="{{ $korek->id }}">{{ $korek->kode }} - {{ $korek->uraian_singkat ??
                             $korek->uraian_rekening }}</option>
                         @endforeach
                     </select>
