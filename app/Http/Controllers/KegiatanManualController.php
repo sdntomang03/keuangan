@@ -226,7 +226,7 @@ class KegiatanManualController extends Controller
 
                 \App\Models\RkasManual::create([
                     'school_id' => $schoolId,
-                    'tahun_anggaran' => date('Y'),
+                    'tahun_anggaran' => $kegiatan->sumberDana->tahun,
                     'sumber_dana_id' => $kegiatan->sumber_dana_id,
                     'kegiatan_manual_id' => $kegiatan->id,
 
