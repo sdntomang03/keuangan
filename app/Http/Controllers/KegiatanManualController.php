@@ -114,18 +114,23 @@ class KegiatanManualController extends Controller
         $schoolId = auth()->user()->sekolah_id ?? auth()->user()->school_id;
 
         // 1. Ambil daftar kegiatan dengan Eager Loading Relasi
-        // Kita tambahkan with([...]) agar data Program, Sub Program, dan Uraian terbaca
-        $kegiatan = \App\Models\KegiatanManual::with([
+        $kegiatanRaw = \App\Models\KegiatanManual::with([
             'program',
             'subProgram',
             'sumberDana',
         ])
             ->where('school_id', $schoolId)
-            ->withSum('rkasManuals as total_anggaran', 'total_akhir') // Beri alias agar mudah dipanggil
+            ->withSum('rkasManuals as total_anggaran', 'total_akhir')
             ->orderBy('id_kegiatan', 'asc')
             ->get();
 
-        // 2. Buat Rekapitulasi Anggaran per Tahun dan Sumber Dana
+        // 2. KELOMPOKKAN DATA (GROUPING) BERDASARKAN NAMA PROGRAM
+        $kegiatanGrouped = $kegiatanRaw->groupBy(function ($item) {
+            // Jika program kosong/terhapus, masukkan ke grup 'Program Tidak Diketahui'
+            return $item->program->nama_program ?? 'Program Tidak Diketahui';
+        });
+
+        // 3. Buat Rekapitulasi Anggaran per Tahun dan Sumber Dana
         $rekapAnggaran = \Illuminate\Support\Facades\DB::table('rkas_manuals')
             ->join('sumber_dana_manuals', 'rkas_manuals.sumber_dana_id', '=', 'sumber_dana_manuals.id')
             ->where('rkas_manuals.school_id', $schoolId)
@@ -138,7 +143,8 @@ class KegiatanManualController extends Controller
             ->orderBy('rkas_manuals.tahun_anggaran', 'desc')
             ->get();
 
-        return view('kegiatan.daftar_kegiatan', compact('kegiatan', 'rekapAnggaran'));
+        // 4. Lempar variabel $kegiatanGrouped ke View (bukan $kegiatan lagi)
+        return view('kegiatan.daftar_kegiatan', compact('kegiatanGrouped', 'rekapAnggaran'));
     }
 
     public function tambahKomponen($id)

@@ -62,7 +62,7 @@
                 <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
                     <thead class="bg-slate-50 dark:bg-slate-900/50">
                         <tr>
-                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase">ID Giat</th>
+
                             <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase">Nama Kegiatan
                             </th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase">Sumber Dana</th>
@@ -72,47 +72,45 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
-                        @forelse($kegiatan as $item)
-                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors group">
-                            <td class="px-6 py-4 text-sm font-mono font-bold text-indigo-600 dark:text-indigo-400">
-                                {{ $item->id_kegiatan }}
-                            </td>
-                            <td class="px-6 py-4">
+                        @forelse($kegiatanGrouped as $namaProgram => $kegiatanList)
 
-
-                                <div class="mt-1.5 flex flex-col space-y-0.5">
-                                    <div class="flex items-center">
-                                        <svg class="w-2.5 h-2.5 mr-1 text-indigo-500" fill="currentColor"
-                                            viewBox="0 0 8 8">
-                                            <circle cx="4" cy="4" r="3" />
-                                        </svg>
-                                        <span
-                                            class="text-[10px] font-extrabold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                                            {{ $item->program->nama_program ?? '-' }}
-                                        </span>
-                                    </div>
-
-                                    <div class="flex items-center pl-3">
-                                        <svg class="w-3 h-3 mr-1 text-slate-400" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M9 5l7 7-7 7"></path>
-                                        </svg>
-                                        <span
-                                            class="text-[10px] font-medium text-slate-500 dark:text-slate-500 uppercase tracking-tight italic">
-                                            {{ $item->subProgram->nama_sub_program ?? '-' }}
-                                        </span>
-                                    </div>
+                        <tr
+                            class="bg-indigo-50/50 dark:bg-indigo-900/20 border-b-2 border-indigo-100 dark:border-indigo-800/50">
+                            <td colspan="5" class="px-6 py-3">
+                                <div class="flex items-center">
+                                    <svg class="w-4 h-4 mr-2 text-indigo-500" fill="currentColor" viewBox="0 0 8 8">
+                                        <circle cx="4" cy="4" r="3" />
+                                    </svg>
+                                    <span
+                                        class="text-xs font-black text-indigo-800 dark:text-indigo-300 uppercase tracking-widest">
+                                        {{ $namaProgram }}
+                                    </span>
                                 </div>
                             </td>
+                        </tr>
+
+                        @foreach($kegiatanList as $item)
+                        <tr
+                            class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors group bg-white dark:bg-slate-800">
+
+
+                            <td class="px-6 py-4">
+                                <span class="text-sm font-medium text-slate-700 dark:text-slate-300 italic">
+                                    {{ $item->subProgram->nama_sub_program ?? '-' }}
+                                </span>
+                            </td>
+
                             <td class="px-6 py-4 text-sm font-medium text-slate-600 dark:text-slate-400">
-                                <span class="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-xs">
+                                <span
+                                    class="bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded text-xs border border-slate-200 dark:border-slate-600">
                                     {{ $item->sumberDana->nama ?? 'Belum Diatur' }}
                                 </span>
                             </td>
+
                             <td class="px-6 py-4 text-sm font-bold text-right text-emerald-600 dark:text-emerald-400">
-                                Rp {{ number_format($item->rkasManuals->sum('total_akhir'), 0, ',', '.') }}
+                                Rp {{ number_format($item->total_anggaran, 0, ',', '.') }}
                             </td>
+
                             <td class="px-6 py-4">
                                 <div class="flex items-center justify-center gap-2">
                                     <a href="{{ route('kegiatan.tambah_komponen', $item->id) }}" title="Susun RKAS"
@@ -140,6 +138,8 @@
                                 </div>
                             </td>
                         </tr>
+                        @endforeach
+
                         @empty
                         <tr>
                             <td colspan="5" class="px-6 py-12 text-center text-slate-500">Belum ada data kegiatan.</td>
