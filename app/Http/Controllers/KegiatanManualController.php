@@ -537,4 +537,61 @@ class KegiatanManualController extends Controller
 
         return back()->with('success', 'Kegiatan beserta seluruh rincian anggarannya berhasil dihapus.');
     }
+
+    public function rekapAnggaran(\Illuminate\Http\Request $request)
+    {
+        $listSumberDana = \App\Models\SumberDanaManual::orderBy('tahun', 'desc')->orderBy('nama', 'asc')->get();
+        $sumberDanaId = $request->query('sumber_dana_id');
+
+        $rekap = [];
+        $rekapRekening = []; // <-- WADAH BARU UNTUK REKAP KODE REKENING
+        $grandTotal = 0;
+        $sumberDana = null;
+
+        if ($sumberDanaId) {
+            $sumberDana = \App\Models\SumberDanaManual::findOrFail($sumberDanaId);
+
+            $rkasData = \App\Models\RkasManual::with([
+                'kegiatanManual.program',
+                'korek',
+            ])
+                ->where('sumber_dana_id', $sumberDanaId)
+                ->get();
+
+            foreach ($rkasData as $rkas) {
+                $namaProgram = $rkas->kegiatanManual->program->nama_program ?? 'Program Tidak Diketahui';
+                $kodeRekening = $rkas->korek
+                    ? $rkas->korek->ket
+                    : 'Rekening Tidak Diketahui';
+
+                // 1. REKAP BERDASARKAN PROGRAM
+                if (! isset($rekap[$namaProgram])) {
+                    $rekap[$namaProgram] = [
+                        'total_program' => 0,
+                        'rekening' => [],
+                    ];
+                }
+                if (! isset($rekap[$namaProgram]['rekening'][$kodeRekening])) {
+                    $rekap[$namaProgram]['rekening'][$kodeRekening] = 0;
+                }
+
+                $rekap[$namaProgram]['rekening'][$kodeRekening] += $rkas->total_akhir;
+                $rekap[$namaProgram]['total_program'] += $rkas->total_akhir;
+
+                // 2. REKAP BERDASARKAN KODE REKENING MURNI
+                if (! isset($rekapRekening[$kodeRekening])) {
+                    $rekapRekening[$kodeRekening] = 0;
+                }
+                $rekapRekening[$kodeRekening] += $rkas->total_akhir;
+
+                $grandTotal += $rkas->total_akhir;
+            }
+
+            // Urutkan rekap rekening berdasarkan abjad/nomor kode
+            ksort($rekapRekening);
+        }
+
+        // Jangan lupa tambahkan $rekapRekening ke dalam compact()
+        return view('kegiatan.rekap_program_rekening', compact('rekap', 'rekapRekening', 'sumberDana', 'grandTotal', 'listSumberDana', 'sumberDanaId'));
+    }
 }

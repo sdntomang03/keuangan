@@ -142,7 +142,7 @@
                         </x-dropdown>
                     </div>
 
-                    <div class="hidden sm:flex sm:items-center">
+                    <div class="hidden sm:flex sm:items-center space-x-2">
                         <x-dropdown align="left" width="48">
                             <x-slot name="trigger">
                                 <button
@@ -162,6 +162,31 @@
                                 </x-dropdown-link>
                             </x-slot>
                         </x-dropdown>
+
+                        <a href="{{ route('kegiatan.index') }}" class="group inline-flex items-center px-4 py-2 border rounded-xl text-sm leading-4 font-bold transition-all duration-300 ease-in-out
+    {{ request()->routeIs('kegiatan.*')
+        ? 'text-indigo-700 bg-indigo-50 border-indigo-200 shadow-sm shadow-indigo-100 dark:bg-indigo-500/10 dark:border-indigo-500/20 dark:text-indigo-400'
+        : 'text-slate-600 border-transparent hover:bg-white hover:border-slate-200 hover:shadow-md hover:-translate-y-0.5 dark:text-slate-300 dark:hover:bg-slate-800'
+    }}">
+
+                            <div class="relative flex items-center justify-center">
+                                <svg class="me-2 h-5 w-5 transition-transform duration-500 group-hover:rotate-12 {{ request()->routeIs('kegiatan.*') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-500' }}"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                                </svg>
+
+                                @if(request()->routeIs('kegiatan.*'))
+                                <span class="absolute -top-1 -right-1 flex h-2 w-2">
+                                    <span
+                                        class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                                </span>
+                                @endif
+                            </div>
+
+                            <span class="tracking-wide">{{ __('Perencanaan') }}</span>
+                        </a>
                     </div>
                     @endunlessrole
                     @role('admin')
@@ -186,6 +211,10 @@
                                 <x-dropdown-link :href="route('admin.users.index')">{{ __('Kelola Users') }}
                                 </x-dropdown-link>
                                 <x-dropdown-link :href="route('admin.korek.index')">{{ __('Kelola Kode Rekening') }}
+                                </x-dropdown-link>
+                                <x-dropdown-link :href="route('setting.kegiatan.importjson')">{{ __('Import Kegiatan
+                                    JSON')
+                                    }}
                                 </x-dropdown-link>
                             </x-slot>
                         </x-dropdown>

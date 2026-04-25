@@ -166,7 +166,7 @@ Route::middleware(['auth'])->prefix('setting')->name('setting.')->group(function
     Route::resource('kegiatan', KegiatanController::class);
 });
 
-Route::middleware(['auth'])->prefix('setting')->group(function () {
+Route::middleware(['auth', 'role:admin'])->prefix('setting')->group(function () {
 
     // Rute GET untuk menampilkan halaman
     Route::get('/import-kegiatan', [SettingController::class, 'importKegiatanJson'])
@@ -353,6 +353,7 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/kegiatan/{id}/komponen-multi', [KegiatanManualController::class, 'destroyMultiKomponen'])->name('kegiatan.destroy_multi_komponen');
     // Menampilkan form tambah kegiatan
     Route::get('/kegiatan/create', [KegiatanManualController::class, 'create'])->name('kegiatan.create');
+    Route::get('/laporan/laporan-rkas', [KegiatanManualController::class, 'rekapAnggaran'])->name('laporan.index');
 
     // Memproses data dari form
     Route::post('/kegiatan/store', [KegiatanManualController::class, 'store'])->name('kegiatan.store');
@@ -360,6 +361,7 @@ Route::middleware(['auth'])->group(function () {
     // Endpoint AJAX untuk mengambil Sub Program berdasarkan Program
     Route::get('/ajax/sub-programs', [KegiatanManualController::class, 'getSubPrograms'])->name('ajax.sub_programs');
     Route::delete('/kegiatan/{id}', [App\Http\Controllers\KegiatanManualController::class, 'destroy'])->name('kegiatan.destroy');
+
 });
 
 Route::get('/cetak-cover', [CetakController::class, 'cetakCover'])->name('cetak.cover');

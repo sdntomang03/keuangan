@@ -1,4 +1,4 @@
-<x-manual-layout>
+<x-app-layout>
     <div class="max-w-4xl mx-auto">
         <nav class="flex mb-4 text-xs font-semibold uppercase tracking-widest text-slate-400">
             <a href="{{ route('setting.kegiatan.index') }}" class="hover:text-indigo-600 transition-colors">Daftar
@@ -127,4 +127,4 @@
             </div>
         </div>
     </div>
-</x-manual-layout>
+</x-app-layout>
