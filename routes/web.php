@@ -12,6 +12,7 @@ use App\Http\Controllers\CetakController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EkskulController;
 use App\Http\Controllers\KegiatanController;
+use App\Http\Controllers\KegiatanManualController;
 use App\Http\Controllers\NpdController;
 use App\Http\Controllers\PajakController;
 use App\Http\Controllers\PenerimaanController;
@@ -165,6 +166,18 @@ Route::middleware(['auth'])->prefix('setting')->name('setting.')->group(function
     Route::resource('kegiatan', KegiatanController::class);
 });
 
+Route::middleware(['auth'])->prefix('setting')->group(function () {
+
+    // Rute GET untuk menampilkan halaman
+    Route::get('/import-kegiatan', [SettingController::class, 'importKegiatanJson'])
+        ->name('setting.kegiatan.importjson');
+
+    // Rute POST untuk memproses upload JSON
+    Route::post('/import-kegiatan', [SettingController::class, 'storeImportKegiatanJson'])
+        ->name('setting.kegiatan.store_import');
+
+});
+
 Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['auth', 'role:admin']], function () {
 
     // Halaman Menu Penghapusan
@@ -316,6 +329,37 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     // Route untuk Master Kode Rekening
     Route::resource('korek', KorekController::class)->except(['show']);
     Route::post('korek/import-update', [KorekController::class, 'importKorekUpdate'])->name('korek.import_update');
+});
+Route::middleware(['auth'])->group(function () {
+    // 1. Menampilkan Halaman Form Upload
+    Route::get('/kegiatan/import', [KegiatanManualController::class, 'createImport'])
+        ->name('kegiatan.import');
+
+    // 2. Proses Eksekusi Import (POST)
+    Route::post('/kegiatan/import', [KegiatanManualController::class, 'storeImport'])
+        ->name('manual.import.kegiatan');
+    // Di dalam Route::prefix('setting')->name('setting.')->group(function () { ...
+    Route::get('/sumber-dana', [KegiatanManualController::class, 'indexSumberDana'])->name('sumber_dana.index');
+    Route::post('/sumber-dana', [KegiatanManualController::class, 'storeSumberDana'])->name('sumber_dana.store');
+    Route::get('/kegiatan', [KegiatanManualController::class, 'daftarKegiatan'])->name('kegiatan.index');
+    Route::get('/kegiatan/{id}/tambah-komponen', [KegiatanManualController::class, 'tambahKomponen'])->name('kegiatan.tambah_komponen');
+    Route::post('/kegiatan/{id}/tambah-komponen', [App\Http\Controllers\KegiatanManualController::class, 'storeKomponen'])->name('kegiatan.store_komponen');
+    Route::get('/komponen/', [KegiatanManualController::class, 'createImportKomponen'])->name('komponen.import');
+    Route::post('/komponen/import', [KegiatanManualController::class, 'storeImportKomponen'])->name('komponen.import.store');
+    Route::delete('/kegiatan/{kegiatan_id}/komponen/{rkas_id}', [App\Http\Controllers\KegiatanManualController::class, 'destroyKomponen'])->name('kegiatan.destroy_komponen');
+    Route::get('/api/komponen-by-korek', [App\Http\Controllers\KegiatanManualController::class, 'getKomponenByKorek'])->name('api.komponen_by_korek');
+    Route::post('/kegiatan/{id}/cek-komponen-duplikat', [KegiatanManualController::class, 'checkKomponenDuplicate'])->name('kegiatan.cek_komponen');
+    Route::put('/kegiatan/{id}/update-multi-komponen', [KegiatanManualController::class, 'updateMultiKomponen'])->name('kegiatan.update_multi_komponen');
+    Route::delete('/kegiatan/{id}/komponen-multi', [KegiatanManualController::class, 'destroyMultiKomponen'])->name('kegiatan.destroy_multi_komponen');
+    // Menampilkan form tambah kegiatan
+    Route::get('/kegiatan/create', [KegiatanManualController::class, 'create'])->name('kegiatan.create');
+
+    // Memproses data dari form
+    Route::post('/kegiatan/store', [KegiatanManualController::class, 'store'])->name('kegiatan.store');
+
+    // Endpoint AJAX untuk mengambil Sub Program berdasarkan Program
+    Route::get('/ajax/sub-programs', [KegiatanManualController::class, 'getSubPrograms'])->name('ajax.sub_programs');
+    Route::delete('/kegiatan/{id}', [App\Http\Controllers\KegiatanManualController::class, 'destroy'])->name('kegiatan.destroy');
 });
 
 Route::get('/cetak-cover', [CetakController::class, 'cetakCover'])->name('cetak.cover');

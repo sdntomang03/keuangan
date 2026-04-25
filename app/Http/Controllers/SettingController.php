@@ -104,4 +104,87 @@ class SettingController extends Controller
             return redirect()->back()->with('error', 'Gagal: '.$e->getMessage());
         }
     }
+
+    /**
+     * Menampilkan halaman form import JSON
+     */
+    public function importKegiatanJson()
+    {
+        // Pengecekan akses opsional (jika dibutuhkan)
+        // abort_if(auth()->user()->role != 'admin', 403, 'Hanya Admin yang bisa import.');
+
+        return view('admin.kegiatan.import');
+    }
+
+    /**
+     * Memproses file JSON dan memecahnya ke 3 tabel (Program, SubProgram, KegiatanManual)
+     */
+    public function storeImportKegiatanJson(\Illuminate\Http\Request $request)
+    {
+        // 1. Tambahkan validasi untuk sumber_dana_id yang dipilih dari form
+        $request->validate([
+            'file_json' => 'required|file|mimetypes:application/json,text/plain|max:10240',
+
+        ], [
+            'file_json.required' => 'File JSON wajib diunggah.',
+
+        ]);
+
+        $file = $request->file('file_json');
+        $data = json_decode(file_get_contents($file->getPathname()), true);
+
+        if (! is_array($data)) {
+            return back()->withErrors(['error' => 'Format isi JSON tidak valid.']);
+        }
+
+        \Illuminate\Support\Facades\DB::beginTransaction();
+        try {
+            $count = 0;
+            foreach ($data as $item) {
+                // Fleksibilitas Key: Mendukung huruf besar atau huruf kecil
+                $namaProgram = $item['Program'] ?? $item['program'] ?? null;
+                $namaSubProgram = $item['Sub Program'] ?? $item['sub_program'] ?? null;
+                $namaUraian = $item['Uraian'] ?? $item['uraian'] ?? null;
+
+                // Jika 3 data utama kosong, lewati baris ini
+                if (empty($namaProgram) || empty($namaSubProgram) || empty($namaUraian)) {
+                    continue;
+                }
+
+                // Generate ID Otomatis jika id_kegiatan tidak ada di file JSON
+                if (empty($idKegiatan)) {
+                    $idKegiatan = 'KGT-'.strtoupper(substr(md5($namaUraian), 0, 8));
+                }
+
+                // A. Cari atau Buat Program
+                $program = \App\Models\Program::firstOrCreate([
+                    'nama_program' => trim($namaProgram),
+                ]);
+
+                // B. Cari atau Buat Sub Program
+                $subProgram = \App\Models\SubProgram::firstOrCreate([
+                    'program_id' => $program->id,
+                    'nama_sub_program' => trim($namaSubProgram),
+                ]);
+
+                // C. Cari atau Buat Uraian Kegiatan (Disimpan ke tabel uraian_kegiatans)
+                $uraian = \App\Models\UraianKegiatan::firstOrCreate([
+                    'sub_program_id' => $subProgram->id,
+                    'nama_uraian' => trim($namaUraian),
+                ]);
+
+                $count++;
+            }
+
+            \Illuminate\Support\Facades\DB::commit();
+
+            return redirect()->route('setting.kegiatan.index')
+                ->with('success', "Luar biasa! Berhasil memecah dan mengimpor $count rincian kegiatan ke dalam database.");
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\DB::rollBack();
+
+            return back()->withErrors(['error' => 'Sistem gagal memproses data. Pesan Error: '.$e->getMessage()]);
+        }
+    }
 }
