@@ -504,54 +504,66 @@
         };
 
         function generateDynamicForms() {
-            document.getElementById('tahap-1-pilih').classList.add('hidden'); document.getElementById('tahap-2-form').classList.remove('hidden');
-            const container = document.getElementById('dynamic_form_container'); container.innerHTML = '';
-            keranjangKomponen.forEach((k, index) => {
-                container.innerHTML += `
-                <div class="bg-white border-2 border-indigo-100 rounded-xl p-5 shadow-sm relative pt-8">
-                    <div class="absolute -top-3 left-4 bg-indigo-100 text-indigo-700 text-xs font-bold px-3 py-1 rounded-full border border-indigo-200">Item ${index + 1}: ${k.nama}</div>
-                    <input type="hidden" name="rincian[${index}][komponen_manual_id]" value="${k.id}">
-                    <input type="hidden" name="rincian[${index}][nama_komponen]" value="${k.nama}">
-                    <input type="hidden" name="rincian[${index}][harga_satuan]" value="${k.harga}">
-                    <input type="hidden" name="rincian[${index}][keterangan]" id="ket_${index}">
+    document.getElementById('tahap-1-pilih').classList.add('hidden');
+    document.getElementById('tahap-2-form').classList.remove('hidden');
+    const container = document.getElementById('dynamic_form_container');
+    container.innerHTML = '';
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                            <div class="flex items-center space-x-2">
-                                <input type="text" id="rin1_${index}" class="rincian-input-${index} block w-full py-2 px-2 rounded-md border-slate-300 text-xs" placeholder="Ex: 2 lembar" required> <span class="text-slate-400 font-bold text-xs">x</span>
-                                <input type="text" id="rin2_${index}" class="rincian-input-${index} block w-full py-2 px-2 rounded-md border-slate-300 text-xs" placeholder="3 orang"> <span class="text-slate-400 font-bold text-xs">x</span>
-                                <input type="text" id="rin3_${index}" class="rincian-input-${index} block w-full py-2 px-2 rounded-md border-slate-300 text-xs" placeholder="...">
-                            </div>
-                            <div class="flex items-center justify-between mt-3 pt-3 border-t border-slate-200">
-                                <span class="text-xs font-bold text-slate-500">VOL:</span>
-                                <input type="number" name="rincian[${index}][volume]" id="vol_${index}" readonly class="w-20 py-1 text-right rounded bg-indigo-50 border-none font-bold text-indigo-700">
-                            </div>
-                        </div>
-                        <div class="flex flex-col justify-center space-y-3">
-                            <div class="flex justify-between text-sm"><span class="text-slate-500">Harga:</span><span class="font-mono font-bold">${formatRupiah(k.harga)}</span></div>
-                            <div class="flex justify-between items-center border-t border-slate-200 pt-2"><span class="text-xs font-bold uppercase text-slate-600">Subtotal:</span><span id="subtotal_${index}" class="text-lg font-mono font-black text-slate-700">Rp 0</span></div>
-                        </div>
+    keranjangKomponen.forEach((k, index) => {
+        // Ambil spesifikasi dari objek k. Jika kosong/null, tampilkan '-'
+        const spek = k.spesifikasi && k.spesifikasi !== 'null' ? k.spesifikasi : '-';
+
+        container.innerHTML += `
+        <div class="bg-white border-2 border-indigo-100 rounded-xl p-5 shadow-sm relative pt-8">
+            <div class="absolute -top-3 left-4 bg-indigo-100 text-indigo-700 text-xs font-bold px-3 py-1 rounded-full border border-indigo-200 truncate max-w-[90%]">Item ${index + 1}: ${k.nama}</div>
+            <input type="hidden" name="rincian[${index}][komponen_manual_id]" value="${k.id}">
+            <input type="hidden" name="rincian[${index}][nama_komponen]" value="${k.nama}">
+            <input type="hidden" name="rincian[${index}][harga_satuan]" value="${k.harga}">
+            <input type="hidden" name="rincian[${index}][keterangan]" id="ket_${index}">
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                    <div class="flex items-center space-x-2">
+                        <input type="text" id="rin1_${index}" class="rincian-input-${index} block w-full py-2 px-2 rounded-md border-slate-300 text-xs" placeholder="Ex: 2 lembar" required> <span class="text-slate-400 font-bold text-xs">x</span>
+                        <input type="text" id="rin2_${index}" class="rincian-input-${index} block w-full py-2 px-2 rounded-md border-slate-300 text-xs" placeholder="3 orang"> <span class="text-slate-400 font-bold text-xs">x</span>
+                        <input type="text" id="rin3_${index}" class="rincian-input-${index} block w-full py-2 px-2 rounded-md border-slate-300 text-xs" placeholder="...">
                     </div>
-                </div>`;
-            });
+                    <div class="flex items-center justify-between mt-3 pt-3 border-t border-slate-200">
+                        <span class="text-xs font-bold text-slate-500">VOL:</span>
+                        <input type="number" name="rincian[${index}][volume]" id="vol_${index}" readonly class="w-20 py-1 text-right rounded bg-indigo-50 border-none font-bold text-indigo-700">
+                    </div>
+                </div>
+                <div class="flex flex-col justify-center space-y-2">
 
-            keranjangKomponen.forEach((k, index) => {
-                const hitungBaris = () => {
-                    let texts = []; let totalVol = 1; let adaAngka = false;
-                    document.querySelectorAll(`.rincian-input-${index}`).forEach(inp => {
-                        const val = inp.value.trim();
-                        if (val !== '') { texts.push(val); const numbers = val.match(/\d+/); if (numbers) { totalVol *= parseInt(numbers[0], 10); adaAngka = true; } }
-                    });
-                    document.getElementById(`ket_${index}`).value = texts.join(' x ');
-                    const finalVol = adaAngka ? totalVol : (texts.length > 0 ? 1 : 0);
-                    document.getElementById(`vol_${index}`).value = finalVol;
-                    document.getElementById(`subtotal_${index}`).innerText = formatRupiah(k.harga * finalVol);
-                    hitungGrandTotal();
-                };
-                document.querySelectorAll(`.rincian-input-${index}`).forEach(inp => inp.addEventListener('input', hitungBaris));
+                    <div class="flex justify-between text-xs pb-2 border-b border-slate-100">
+                        <span class="text-slate-500">Spesifikasi:</span>
+                        <span class="font-medium text-slate-700 text-right ml-4 line-clamp-2">${spek}</span>
+                    </div>
+                    <div class="flex justify-between text-sm"><span class="text-slate-500">Harga:</span><span class="font-mono font-bold">${formatRupiah(k.harga)}</span></div>
+                    <div class="flex justify-between items-center border-t border-slate-200 pt-2"><span class="text-xs font-bold uppercase text-slate-600">Subtotal:</span><span id="subtotal_${index}" class="text-lg font-mono font-black text-slate-700">Rp 0</span></div>
+                </div>
+            </div>
+        </div>`;
+    });
+
+    keranjangKomponen.forEach((k, index) => {
+        const hitungBaris = () => {
+            let texts = []; let totalVol = 1; let adaAngka = false;
+            document.querySelectorAll(`.rincian-input-${index}`).forEach(inp => {
+                const val = inp.value.trim();
+                if (val !== '') { texts.push(val); const numbers = val.match(/\d+/); if (numbers) { totalVol *= parseInt(numbers[0], 10); adaAngka = true; } }
             });
+            document.getElementById(`ket_${index}`).value = texts.join(' x ');
+            const finalVol = adaAngka ? totalVol : (texts.length > 0 ? 1 : 0);
+            document.getElementById(`vol_${index}`).value = finalVol;
+            document.getElementById(`subtotal_${index}`).innerText = formatRupiah(k.harga * finalVol);
             hitungGrandTotal();
-        }
+        };
+        document.querySelectorAll(`.rincian-input-${index}`).forEach(inp => inp.addEventListener('input', hitungBaris));
+    });
+
+    hitungGrandTotal();
+}
 
         document.getElementById('global_ppn').addEventListener('change', hitungGrandTotal);
         function hitungGrandTotal() {
