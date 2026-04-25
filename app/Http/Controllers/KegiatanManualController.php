@@ -208,7 +208,7 @@ class KegiatanManualController extends Controller
             'rincian.*.komponen_manual_id' => 'required',
             'rincian.*.nama_komponen' => 'required',
             'rincian.*.harga_satuan' => 'required|numeric|min:0',
-            'rincian.*.volume' => 'required|integer|min:1',
+            'rincian.*.volume' => 'required|numeric|min:1',
             'rincian.*.keterangan' => 'required|string',
         ]);
 
