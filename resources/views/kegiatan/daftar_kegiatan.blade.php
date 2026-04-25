@@ -205,12 +205,14 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Komponen (Sub
-                                Program) <span class="text-rose-500">*</span></label>
-                            <select id="sub_program_select" name="sub_program_id" required disabled
-                                class="w-full rounded-lg border-slate-300 dark:border-slate-600 bg-slate-100 text-slate-500 text-sm p-2.5 cursor-not-allowed">
-                                <option value="">-- Pilih Program Terlebih Dahulu --</option>
-                            </select>
+                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+                                Komponen (Sub Program) <span class="text-rose-500">*</span>
+                            </label>
+
+                            <div id="sub_program_container"
+                                class="grid grid-cols-1 md:grid-cols-2 gap-3 p-4 border rounded-lg bg-slate-50 dark:bg-slate-800 border-slate-300 dark:border-slate-600 max-h-60 overflow-y-auto">
+                                <p class="text-sm text-slate-500 italic">-- Pilih Program Terlebih Dahulu --</p>
+                            </div>
                         </div>
 
 
@@ -232,35 +234,44 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const programSelect = document.getElementById('program_select');
-            const subProgramSelect = document.getElementById('sub_program_select');
+        const programSelect = document.getElementById('program_select');
+        const subProgramContainer = document.getElementById('sub_program_container');
 
-            programSelect.addEventListener('change', function() {
-                const programId = this.value;
+        programSelect.addEventListener('change', function() {
+            const programId = this.value;
 
-                subProgramSelect.innerHTML = '<option value="">Loading...</option>';
-                subProgramSelect.disabled = true;
+            // Memunculkan status loading
+            subProgramContainer.innerHTML = `
+                <div class="flex items-center text-sm text-slate-500">
+                    <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-indigo-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    Loading Sub Program...
+                </div>`;
 
-                if (programId) {
-                    // Pastikan route ajax.sub_programs sudah didaftarkan di web.php
-                    fetch(`/ajax/sub-programs?program_id=${programId}`)
-                        .then(response => response.json())
-                        .then(data => {
-                            subProgramSelect.innerHTML = '<option value="">-- Pilih Komponen --</option>';
-                            if(data.length > 0) {
-                                data.forEach(sub => {
-                                    subProgramSelect.innerHTML += `<option value="${sub.id}">${sub.nama_sub_program}</option>`;
-                                });
-                                subProgramSelect.disabled = false;
-                                subProgramSelect.classList.remove('bg-slate-100', 'text-slate-500', 'cursor-not-allowed');
-                            } else {
-                                subProgramSelect.innerHTML = '<option value="">(Tidak ada komponen)</option>';
-                            }
-                        });
-                } else {
-                    subProgramSelect.innerHTML = '<option value="">-- Pilih Program Terlebih Dahulu --</option>';
-                }
-            });
+            if (programId) {
+                fetch(`/ajax/sub-programs?program_id=${programId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        subProgramContainer.innerHTML = ''; // Kosongkan wadah
+
+                        if(data.length > 0) {
+                            data.forEach(sub => {
+                                // Membuat elemen Checkbox
+                                subProgramContainer.innerHTML += `
+                                    <label class="flex items-start space-x-3 mb-3 p-2 hover:bg-indigo-50/50 rounded-lg cursor-pointer transition-colors border border-transparent hover:border-indigo-100">
+                                        <input type="checkbox" name="sub_program_id[]" value="${sub.id}"
+                                            class="mt-0.5 w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 transition duration-150 ease-in-out">
+                                        <span class="text-sm font-semibold text-slate-700 select-none">${sub.nama_sub_program}</span>
+                                    </label>
+                                `;
+                            });
+                        } else {
+                            subProgramContainer.innerHTML = '<p class="text-sm text-rose-500 italic">(Tidak ada Sub Program di Program ini)</p>';
+                        }
+                    });
+            } else {
+                subProgramContainer.innerHTML = '<p class="text-sm text-slate-500 italic">-- Pilih Program Terlebih Dahulu --</p>';
+            }
         });
+    });
     </script>
 </x-manual-layout>

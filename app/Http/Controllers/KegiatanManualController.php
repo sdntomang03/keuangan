@@ -480,46 +480,60 @@ class KegiatanManualController extends Controller
      */
     public function store(\Illuminate\Http\Request $request)
     {
+        // 1. Validasi diubah: sub_program_id sekarang adalah ARRAY
         $request->validate([
             'sumber_dana_id' => 'required|exists:sumber_dana_manuals,id',
             'program_id' => 'required|exists:programs,id',
-            'sub_program_id' => 'required|exists:sub_programs,id',
+            'sub_program_id' => 'required|array|min:1', // Wajib pilih minimal 1 checkbox
+            'sub_program_id.*' => 'exists:sub_programs,id',
             'id_kegiatan' => 'nullable|string|max:50',
+        ], [
+            'sub_program_id.required' => 'Bapak harus mencentang minimal satu Sub Program.',
         ]);
 
         $schoolId = auth()->user()->sekolah_id ?? auth()->user()->school_id;
 
         \Illuminate\Support\Facades\DB::beginTransaction();
         try {
-            // 1. Logika Pembuatan ID Kegiatan Acak
-            $idKegiatan = $request->id_kegiatan;
+            $count = 0; // Penghitung jumlah kegiatan yang berhasil dibuat
+            $inputManualId = $request->id_kegiatan;
 
-            if (empty($idKegiatan)) {
-                do {
-                    // Generate acak: Contoh KGT-A1B2C3
-                    $randomCode = strtoupper(\Illuminate\Support\Str::random(6));
-                    $idKegiatan = 'KGT-'.$randomCode;
+            // 2. Looping sebanyak checkbox yang dicentang
+            foreach ($request->sub_program_id as $subId) {
+                $idKegiatan = $inputManualId;
 
-                    // Cek di database apakah ID ini sudah ada untuk sekolah ini
-                    $exists = \App\Models\KegiatanManual::where('school_id', $schoolId)
-                        ->where('id_kegiatan', $idKegiatan)
-                        ->exists();
-                } while ($exists); // Ulangi jika ID tidak sengaja sama
+                // Jika ID Kosong, Generate Otomatis
+                if (empty($idKegiatan)) {
+                    do {
+                        $randomCode = strtoupper(\Illuminate\Support\Str::random(6));
+                        $idKegiatan = 'KGT-'.$randomCode;
+                        $exists = \App\Models\KegiatanManual::where('school_id', $schoolId)
+                            ->where('id_kegiatan', $idKegiatan)
+                            ->exists();
+                    } while ($exists);
+                }
+
+                \App\Models\KegiatanManual::create([
+                    'school_id' => $schoolId,
+                    'program_id' => $request->program_id,
+                    'sub_program_id' => $subId, // Simpan ID Sub Program dari loop saat ini
+                    'sumber_dana_id' => $request->sumber_dana_id,
+                    'id_kegiatan' => $idKegiatan,
+                ]);
+
+                // Reset ID Manual agar kegiatan berikutnya tetap di-generate acak
+                // jika user tidak mengisi kolom ID secara spesifik
+                if (empty($request->id_kegiatan)) {
+                    $idKegiatan = null;
+                }
+
+                $count++;
             }
-
-            // 3. Simpan ke tabel kegiatan_manuals
-            \App\Models\KegiatanManual::create([
-                'school_id' => $schoolId,
-                'program_id' => $request->program_id,
-                'sub_program_id' => $request->sub_program_id,
-                'sumber_dana_id' => $request->sumber_dana_id,
-                'id_kegiatan' => $idKegiatan,
-            ]);
 
             \Illuminate\Support\Facades\DB::commit();
 
             return redirect()->route('kegiatan.index')
-                ->with('success', "Kegiatan baru dengan ID $idKegiatan berhasil ditambahkan.");
+                ->with('success', "Berhasil menambahkan $count kegiatan baru sekaligus.");
 
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\DB::rollBack();
