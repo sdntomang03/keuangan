@@ -196,13 +196,13 @@
                     Daftar Rincian Tersimpan
                 </h3>
                 <div class="flex items-center space-x-3">
-                    <button type="button" id="btn_edit_terpilih" onclick="prosesEditTerpilih()"
-                        class="hidden bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm transition-colors">
-                        Edit Terpilih (<span id="count_edit">0</span>)
-                    </button>
                     <button type="button" id="btn_hapus_terpilih" onclick="prosesHapusTerpilih()"
                         class="hidden bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm transition-colors">
                         Hapus Terpilih (<span id="count_hapus">0</span>)
+                    </button>
+                    <button type="button" id="btn_edit_terpilih" onclick="prosesEditTerpilih()"
+                        class="hidden bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm transition-colors">
+                        Edit Terpilih (<span id="count_edit">0</span>)
                     </button>
                     <div
                         class="text-sm font-bold text-slate-600 bg-white py-2 px-4 rounded-lg shadow-sm border border-slate-200">
@@ -216,7 +216,7 @@
                 <table class="min-w-full divide-y divide-slate-200">
                     <thead class="bg-slate-100">
                         <tr>
-                            <th class="px-5 py-4 text-center"><input type="checkbox" id="checkAllSaved"
+                            <th class="px-5 py-4 text-center w-12"><input type="checkbox" id="checkAllSaved"
                                     class="rounded border-slate-300 text-amber-500 focus:ring-amber-500"></th>
                             <th class="px-5 py-4 text-left text-[11px] font-bold text-slate-500 uppercase">Komponen &
                                 Spesifikasi</th>
@@ -231,14 +231,65 @@
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-slate-200">
-                        @forelse($rincianRkas as $index => $rkas)
+
+                        @forelse($rincianRkas->groupBy('uraian_id') as $uraianId => $uraianGroup)
+                        @php
+                        // Mengambil nama uraian dari relasi
+                        $namaUraian = $uraianGroup->first()->uraian->nama_uraian ?? 'Uraian Tidak Ditemukan';
+                        $subtotalUraian = $uraianGroup->sum('total_akhir');
+                        @endphp
+
+                        <tr class="bg-indigo-50/80 border-y border-indigo-100">
+                            <td colspan="7" class="px-5 py-3">
+                                <div class="flex justify-between items-center">
+                                    <span
+                                        class="text-xs font-black text-indigo-800 uppercase tracking-wider flex items-center">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+                                            </path>
+                                        </svg>
+                                        {{ $namaUraian }}
+                                    </span>
+                                    <span class="text-xs font-bold text-indigo-700">Rp {{ number_format($subtotalUraian,
+                                        0, ',', '.') }}</span>
+                                </div>
+                            </td>
+                        </tr>
+
+                        @foreach($uraianGroup->groupBy('rincian_kegiatan_id') as $rincianId => $rincianGroup)
+                        @php
+                        // Mengambil nama rincian dari relasi
+                        $namaRincian = $rincianGroup->first()->rincianKegiatan->nama_rincian ?? 'Rincian Tidak
+                        Ditemukan';
+                        $subtotalRincian = $rincianGroup->sum('total_akhir');
+                        @endphp
+
+                        <tr class="bg-slate-50/80">
+                            <td colspan="7" class="px-5 py-2 pl-12">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-[11px] font-bold text-slate-700 flex items-center">
+                                        <svg class="w-3 h-3 mr-2 text-slate-400" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M9 5l7 7-7 7"></path>
+                                        </svg>
+                                        {{ $namaRincian }}
+                                    </span>
+                                    <span class="text-[11px] font-bold text-slate-500">Rp {{
+                                        number_format($subtotalRincian, 0, ',', '.') }}</span>
+                                </div>
+                            </td>
+                        </tr>
+
+                        @foreach($rincianGroup as $index => $rkas)
                         <tr class="hover:bg-slate-50 transition-colors">
-                            <td class="px-5 py-4 text-center">
+                            <td class="px-5 py-4 text-center pl-6">
                                 <input type="checkbox"
                                     class="chk-saved rounded border-slate-300 text-amber-500 focus:ring-amber-500"
                                     value="{{ $rkas->id }}">
                             </td>
-                            <td class="px-5 py-4">
+                            <td class="px-5 py-4 pl-8">
                                 <div class="text-sm font-bold text-slate-800">{{ $rkas->nama_komponen }}</div>
                                 <div class="text-xs text-slate-500 mt-0.5">{{ $rkas->spesifikasi ?? '-' }}</div>
                             </td>
@@ -258,13 +309,15 @@
                                 number_format($rkas->total_akhir, 0, ',', '.') }}</td>
                             <td class="px-5 py-4 text-center text-sm font-medium">
                                 <form action="{{ route('kegiatan.destroy_komponen', [$kegiatan->id, $rkas->id]) }}"
-                                    method="POST" onsubmit="return confirm('Yakin ingin menghapus rincian ini?');">
+                                    method="POST" onsubmit="return confirm('Yakin ingin menghapus komponen ini?');">
                                     @csrf @method('DELETE')
                                     <button type="submit"
                                         class="text-rose-500 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-md font-bold text-xs">Hapus</button>
                                 </form>
                             </td>
                         </tr>
+                        @endforeach
+                        @endforeach
                         @empty
                         <tr>
                             <td colspan="7" class="px-5 py-16 text-center text-slate-500 text-sm font-medium">Belum ada

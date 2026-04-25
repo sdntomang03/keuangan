@@ -33,12 +33,14 @@ class KegiatanManualController extends Controller
         $request->validate([
             'kode' => 'required|string|max:50',
             'nama' => 'required|string|max:255',
+            'tahun' => 'required|integer',
         ]);
 
         \App\Models\SumberDanaManual::create([
             'school_id' => auth()->user()->sekolah_id,
             'kode' => strtoupper($request->kode),
             'nama' => $request->nama,
+            'tahun' => $request->tahun,
 
         ]);
 

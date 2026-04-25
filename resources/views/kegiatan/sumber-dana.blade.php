@@ -26,7 +26,12 @@
                             <input type="text" name="nama" placeholder="Contoh: BOS Reguler" required
                                 class="block w-full rounded-lg border-slate-300 dark:bg-slate-900 text-sm focus:ring-indigo-500">
                         </div>
-
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Tahun
+                                Anggaran</label>
+                            <input type="number" name="tahun" value="{{ date('Y') }}" min="2020" max="2099" required
+                                class="block w-full rounded-lg border-slate-300 dark:bg-slate-900 text-sm focus:ring-indigo-500">
+                        </div>
                         <button type="submit"
                             class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-lg transition-colors">
                             Simpan Data

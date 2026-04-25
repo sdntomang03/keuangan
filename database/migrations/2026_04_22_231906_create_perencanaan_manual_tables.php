@@ -16,6 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('school_id')->index()->nullable();
             $table->string('kode');
             $table->string('nama');
+            $table->integer('tahun');
             $table->timestamps();
         });
 

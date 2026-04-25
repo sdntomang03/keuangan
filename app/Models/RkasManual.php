@@ -48,4 +48,15 @@ class RkasManual extends Model
     {
         return $this->hasMany(AkbManual::class, 'rkas_manual_id');
     }
+
+    public function uraian()
+    {
+        return $this->belongsTo(UraianKegiatan::class, 'uraian_id');
+    }
+
+    // 2. Relasi ke Rincian Kegiatan
+    public function rincianKegiatan()
+    {
+        return $this->belongsTo(RincianKegiatan::class, 'rincian_kegiatan_id');
+    }
 }
