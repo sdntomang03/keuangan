@@ -657,9 +657,8 @@ class KegiatanManualController extends Controller
         ));
     }
 
-    public function rekonsiliasi(Request $request, $id)
+    public function rekonsiliasi(\Illuminate\Http\Request $request, $id)
     {
-        // 1. Ambil data kegiatan dan rincian yang sudah diinput di aplikasi kita
         $kegiatan = \App\Models\KegiatanManual::with(['program', 'sumberDana'])->findOrFail($id);
         $schoolId = auth()->user()->sekolah_id ?? auth()->user()->school_id;
 
@@ -669,39 +668,64 @@ class KegiatanManualController extends Controller
 
         $hasil = null;
 
-        // 2. Proses jika ada file JSON yang diunggah
         if ($request->hasFile('file_json')) {
             $jsonContent = file_get_contents($request->file('file_json')->getPathname());
             $dinas = json_decode($jsonContent, true);
 
             if (isset($dinas['data'])) {
                 $hasil = [];
+                $matchedLokalIds = []; // Wadah untuk melacak ID lokal yang sudah punya pasangan
+
+                // TAHAP 1: Cek dari JSON Dinas ke Database Lokal
                 foreach ($dinas['data'] as $item) {
-                    // Kalkulasi total harga dari Dinas (Harga + Pajak)
                     $totalDinas = (float) $item['totalharga'];
 
-                    // Cari kecocokan di database lokal berdasarkan Nama dan Harga Satuan
-                    $match = $rincianLokal->first(function ($l) use ($item) {
-                        return strtolower(trim($l->nama_komponen)) === strtolower(trim($item['namakomponen']))
+                    // Cari kecocokan. Syaratnya: Namanya sama, harganya sama, dan BELUM PERNAH dipasangkan sebelumnya.
+                    $match = $rincianLokal->first(function ($l) use ($item, $matchedLokalIds) {
+                        return ! in_array($l->id, $matchedLokalIds)
+                               && strtolower(trim($l->nama_komponen)) === strtolower(trim($item['namakomponen']))
                                && (float) $l->harga_satuan == (float) $item['hargasatuan'];
                     });
 
-                    $status = 'Belum Ada';
-                    $totalLokal = 0;
-
                     if ($match) {
+                        $matchedLokalIds[] = $match->id; // Kunci ID-nya agar tidak dipasangkan ganda
                         $totalLokal = $match->total_akhir;
                         $status = (abs($totalLokal - $totalDinas) < 1) ? 'Sesuai' : 'Selisih';
-                    }
 
-                    $hasil[] = [
-                        'nama' => $item['namakomponen'],
-                        'spek' => $item['spek'] ?? '-',
-                        'vol_dinas' => $item['koefisien'],
-                        'total_dinas' => $totalDinas,
-                        'total_lokal' => $totalLokal,
-                        'status' => $status,
-                    ];
+                        $hasil[] = [
+                            'nama' => $item['namakomponen'],
+                            'spek' => $item['spek'] ?? '-',
+                            'vol_dinas' => $item['koefisien'],
+                            'total_dinas' => $totalDinas,
+                            'total_lokal' => $totalLokal,
+                            'status' => $status,
+                        ];
+                    } else {
+                        // Kasus A: Ada di Dinas, tapi Bapak belum input di Lokal
+                        $hasil[] = [
+                            'nama' => $item['namakomponen'],
+                            'spek' => $item['spek'] ?? '-',
+                            'vol_dinas' => $item['koefisien'],
+                            'total_dinas' => $totalDinas,
+                            'total_lokal' => 0,
+                            'status' => 'Tidak Ada di Lokal',
+                        ];
+                    }
+                }
+
+                // TAHAP 2: Cek sisanya di Database Lokal yang tidak punya pasangan dari Dinas
+                foreach ($rincianLokal as $lokal) {
+                    if (! in_array($lokal->id, $matchedLokalIds)) {
+                        // Kasus B: Bapak input di Lokal, tapi di JSON Dinas tidak ada (mungkin salah nama/harga/salah kamar)
+                        $hasil[] = [
+                            'nama' => $lokal->nama_komponen,
+                            'spek' => $lokal->spesifikasi ?? '-',
+                            'vol_dinas' => '-',
+                            'total_dinas' => 0,
+                            'total_lokal' => $lokal->total_akhir,
+                            'status' => 'Tidak Ada di Dinas',
+                        ];
+                    }
                 }
             }
         }

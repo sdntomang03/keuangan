@@ -28,46 +28,80 @@
                 <span class="text-xs font-bold uppercase tracking-widest">Hasil Komparasi</span>
                 <span class="text-xs bg-slate-700 px-2 py-1 rounded">ID Giat: {{ $kegiatan->id_kegiatan }}</span>
             </div>
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto max-h-[600px]">
                 <table class="min-w-full divide-y divide-slate-200">
-                    <thead class="bg-slate-50">
+                    <thead class="bg-slate-50 sticky top-0 z-10 shadow-sm">
                         <tr>
-                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase">Komponen Dinas
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase">Uraian Komponen
                             </th>
                             <th class="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">
                                 Pagu Dinas</th>
                             <th class="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">
                                 Input Lokal</th>
-                            <th class="px-6 py-4 text-center text-xs font-bold text-slate-500 uppercase">Status</th>
+                            <th class="px-6 py-4 text-center text-xs font-bold text-slate-500 uppercase">Status
+                                Komparasi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200 bg-white">
                         @foreach($hasil as $h)
-                        <tr
-                            class="{{ $h['status'] == 'Belum Ada' ? 'bg-rose-50/50' : '' }} hover:bg-slate-50 transition-colors">
+
+                        @php
+                        $bgClass = 'hover:bg-slate-50';
+                        if($h['status'] == 'Tidak Ada di Lokal') $bgClass = 'bg-rose-50/40 hover:bg-rose-100/50';
+                        if($h['status'] == 'Tidak Ada di Dinas') $bgClass = 'bg-violet-50/40 hover:bg-violet-100/50';
+                        @endphp
+
+                        <tr class="{{ $bgClass }} transition-colors">
                             <td class="px-6 py-4">
-                                <div class="text-sm font-bold text-slate-800">{{ $h['nama'] }}</div>
+                                <div
+                                    class="text-sm font-bold {{ $h['status'] == 'Tidak Ada di Dinas' ? 'text-violet-800' : 'text-slate-800' }}">
+                                    {{ $h['nama'] }}
+                                </div>
                                 <div class="text-[10px] text-slate-500 italic mt-0.5">{{ $h['spek'] }}</div>
-                                <div class="text-[10px] font-bold text-indigo-600 mt-1 uppercase">Koefisien: {{
+                                @if($h['vol_dinas'] != '-')
+                                <div class="text-[10px] font-bold text-indigo-600 mt-1 uppercase">Vol Dinas: {{
                                     $h['vol_dinas'] }}</div>
+                                @endif
                             </td>
-                            <td class="px-6 py-4 text-right font-mono text-sm font-bold text-slate-700">
+
+                            <td class="px-6 py-4 text-right font-mono text-sm font-bold text-slate-500">
+                                @if($h['total_dinas'] > 0)
                                 Rp {{ number_format($h['total_dinas'], 0, ',', '.') }}
+                                @else
+                                <span class="text-slate-300">-</span>
+                                @endif
                             </td>
+
                             <td
                                 class="px-6 py-4 text-right font-mono text-sm font-bold {{ $h['total_lokal'] > 0 ? 'text-emerald-600' : 'text-slate-300' }}">
+                                @if($h['total_lokal'] > 0)
                                 Rp {{ number_format($h['total_lokal'], 0, ',', '.') }}
+                                @else
+                                <span class="text-slate-300">-</span>
+                                @endif
                             </td>
+
                             <td class="px-6 py-4 text-center">
                                 @if($h['status'] == 'Sesuai')
                                 <span
-                                    class="px-2.5 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase rounded-full border border-emerald-200">OK</span>
-                                @elseif($h['status'] == 'Belum Ada')
+                                    class="px-3 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase rounded-full border border-emerald-200">
+                                    Sesuai
+                                </span>
+                                @elseif($h['status'] == 'Tidak Ada di Lokal')
                                 <span
-                                    class="px-2.5 py-1 bg-rose-100 text-rose-700 text-[10px] font-black uppercase rounded-full border border-rose-200 animate-pulse">Missing</span>
+                                    class="px-3 py-1 bg-rose-100 text-rose-700 text-[10px] font-black uppercase rounded-full border border-rose-200 animate-pulse">
+                                    Belum Diinput
+                                </span>
+                                @elseif($h['status'] == 'Tidak Ada di Dinas')
+                                <span
+                                    class="px-3 py-1 bg-violet-100 text-violet-700 text-[10px] font-black uppercase rounded-full border border-violet-200">
+                                    Lebih / Extra
+                                </span>
                                 @else
                                 <span
-                                    class="px-2.5 py-1 bg-amber-100 text-amber-700 text-[10px] font-black uppercase rounded-full border border-amber-200">Selisih</span>
+                                    class="px-3 py-1 bg-amber-100 text-amber-700 text-[10px] font-black uppercase rounded-full border border-amber-200">
+                                    Selisih
+                                </span>
                                 @endif
                             </td>
                         </tr>
