@@ -7,13 +7,66 @@
         </nav>
 
         <div class="bg-indigo-600 rounded-xl p-6 text-white shadow-lg mb-8 relative overflow-hidden">
-            <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between">
-                <div>
-                    <h1 class="text-2xl font-bold uppercase tracking-tight">{{ $kegiatan->nama_kegiatan }}</h1>
-                    <p class="text-indigo-200 mt-1 font-medium text-sm">
-                        <span class="bg-indigo-800/50 px-2 py-0.5 rounded mr-2">ID: {{ $kegiatan->id_kegiatan }}</span>
-                        Sumber Dana: {{ $kegiatan->sumberDana->nama }}
-                    </p>
+            <div class="absolute -right-6 -top-10 opacity-10 pointer-events-none">
+                <svg class="w-48 h-48" fill="currentColor" viewBox="0 0 24 24">
+                    <path
+                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+                    </path>
+                </svg>
+            </div>
+
+            <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+
+                <div class="flex-1 pr-4">
+                    <h1 class="text-2xl font-bold uppercase tracking-tight leading-tight">
+                        {{ $kegiatan->nama_kegiatan ?? $kegiatan->program->nama_program ?? 'Rincian Kegiatan' }}
+                    </h1>
+
+                    <div class="flex items-start mt-1.5 mb-3">
+                        <svg class="w-4 h-4 text-indigo-300 mr-1.5 mt-0.5 flex-shrink-0" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7">
+                            </path>
+                        </svg>
+                        <span class="text-indigo-100 font-medium text-sm leading-snug">
+                            {{ $kegiatan->subProgram->nama_sub_program ?? 'Sub Program Belum Diatur' }}
+                        </span>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span
+                            class="bg-indigo-800/60 text-indigo-100 font-mono px-2.5 py-1.5 rounded-md text-xs border border-indigo-700/50 shadow-inner">
+                            ID: {{ $kegiatan->id_kegiatan }}
+                        </span>
+                        <span
+                            class="bg-indigo-800/60 text-indigo-100 px-2.5 py-1.5 rounded-md text-xs border border-indigo-700/50 shadow-inner flex items-center">
+                            <svg class="w-3.5 h-3.5 mr-1.5 opacity-70" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                                </path>
+                            </svg>
+                            {{ $kegiatan->sumberDana->nama ?? 'Belum Diatur' }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="flex flex-row items-center gap-3 mt-2 md:mt-0">
+
+                    <a href="{{ route('kegiatan.rekonsiliasi', $kegiatan->id) }}"
+                        class="inline-flex items-center px-4 py-2.5 bg-violet-500 hover:bg-violet-400 text-white rounded-lg text-sm font-bold shadow-md transition-all hover:-translate-y-0.5 border border-violet-400">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                        </svg>
+                        Rekonsiliasi
+                    </a>
+
+                    <a href="{{ route('kegiatan.index') }}"
+                        class="px-4 py-2.5 bg-indigo-700/50 hover:bg-indigo-800 border border-indigo-500 text-indigo-50 rounded-lg text-sm font-bold shadow-sm transition-colors">
+                        &larr; Kembali
+                    </a>
+
                 </div>
             </div>
         </div>
