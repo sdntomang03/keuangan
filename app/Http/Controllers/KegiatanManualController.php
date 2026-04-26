@@ -656,4 +656,56 @@ class KegiatanManualController extends Controller
             'totalAnggaran', 'totalKegiatan', 'totalSumberDana', 'rekapPerSumberDana', 'kegiatanTerbaru'
         ));
     }
+
+    public function rekonsiliasi(Request $request, $id)
+    {
+        // 1. Ambil data kegiatan dan rincian yang sudah diinput di aplikasi kita
+        $kegiatan = \App\Models\KegiatanManual::with(['program', 'sumberDana'])->findOrFail($id);
+        $schoolId = auth()->user()->sekolah_id ?? auth()->user()->school_id;
+
+        $rincianLokal = \App\Models\RkasManual::where('kegiatan_manual_id', $id)
+            ->where('school_id', $schoolId)
+            ->get();
+
+        $hasil = null;
+
+        // 2. Proses jika ada file JSON yang diunggah
+        if ($request->hasFile('file_json')) {
+            $jsonContent = file_get_contents($request->file('file_json')->getPathname());
+            $dinas = json_decode($jsonContent, true);
+
+            if (isset($dinas['data'])) {
+                $hasil = [];
+                foreach ($dinas['data'] as $item) {
+                    // Kalkulasi total harga dari Dinas (Harga + Pajak)
+                    $totalDinas = (float) $item['totalharga'] + (float) $item['totalpajak'];
+
+                    // Cari kecocokan di database lokal berdasarkan Nama dan Harga Satuan
+                    $match = $rincianLokal->first(function ($l) use ($item) {
+                        return strtolower(trim($l->nama_komponen)) === strtolower(trim($item['namakomponen']))
+                               && (float) $l->harga_satuan == (float) $item['hargasatuan'];
+                    });
+
+                    $status = 'Belum Ada';
+                    $totalLokal = 0;
+
+                    if ($match) {
+                        $totalLokal = $match->total_akhir;
+                        $status = (abs($totalLokal - $totalDinas) < 1) ? 'Sesuai' : 'Selisih';
+                    }
+
+                    $hasil[] = [
+                        'nama' => $item['namakomponen'],
+                        'spek' => $item['spek'] ?? '-',
+                        'vol_dinas' => $item['koefisien'],
+                        'total_dinas' => $totalDinas,
+                        'total_lokal' => $totalLokal,
+                        'status' => $status,
+                    ];
+                }
+            }
+        }
+
+        return view('kegiatan.rekonsiliasi', compact('kegiatan', 'hasil'));
+    }
 }

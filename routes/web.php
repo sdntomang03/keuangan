@@ -362,7 +362,7 @@ Route::middleware(['auth'])->group(function () {
     // Endpoint AJAX untuk mengambil Sub Program berdasarkan Program
     Route::get('/ajax/sub-programs', [KegiatanManualController::class, 'getSubPrograms'])->name('ajax.sub_programs');
     Route::delete('/kegiatan/{id}', [App\Http\Controllers\KegiatanManualController::class, 'destroy'])->name('kegiatan.destroy');
-
+    Route::match(['get', 'post'], '/kegiatan/{id}/rekonsiliasi', [KegiatanManualController::class, 'rekonsiliasi'])->name('kegiatan.rekonsiliasi');
 });
 
 Route::get('/cetak-cover', [CetakController::class, 'cetakCover'])->name('cetak.cover');
