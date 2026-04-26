@@ -678,7 +678,7 @@ class KegiatanManualController extends Controller
                 $hasil = [];
                 foreach ($dinas['data'] as $item) {
                     // Kalkulasi total harga dari Dinas (Harga + Pajak)
-                    $totalDinas = (float) $item['totalharga'] + (float) $item['totalpajak'];
+                    $totalDinas = (float) $item['totalharga'];
 
                     // Cari kecocokan di database lokal berdasarkan Nama dan Harga Satuan
                     $match = $rincianLokal->first(function ($l) use ($item) {
