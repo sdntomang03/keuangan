@@ -557,107 +557,96 @@
         };
 
         function generateDynamicForms() {
-    document.getElementById('tahap-1-pilih').classList.add('hidden');
-    document.getElementById('tahap-2-form').classList.remove('hidden');
-    const container = document.getElementById('dynamic_form_container');
-    container.innerHTML = '';
+            document.getElementById('tahap-1-pilih').classList.add('hidden');
+            document.getElementById('tahap-2-form').classList.remove('hidden');
+            const container = document.getElementById('dynamic_form_container');
+            container.innerHTML = '';
 
-    keranjangKomponen.forEach((k, index) => {
-        // Ambil spesifikasi dari objek k. Jika kosong/null, tampilkan '-'
-        const spek = k.spesifikasi && k.spesifikasi !== 'null' ? k.spesifikasi : '-';
+            keranjangKomponen.forEach((k, index) => {
+                const spek = k.spesifikasi && k.spesifikasi !== 'null' ? k.spesifikasi : '-';
+                const satuan = k.satuan && k.satuan !== 'null' ? k.satuan : '-';
 
-        container.innerHTML += `
-        <div class="bg-white border-2 border-indigo-100 rounded-xl p-5 shadow-sm relative pt-8">
-            <div class="absolute -top-3 left-4 bg-indigo-100 text-indigo-700 text-xs font-bold px-3 py-1 rounded-full border border-indigo-200 truncate max-w-[90%]">Item ${index + 1}: ${k.nama}</div>
-            <input type="hidden" name="rincian[${index}][komponen_manual_id]" value="${k.id}">
-            <input type="hidden" name="rincian[${index}][nama_komponen]" value="${k.nama}">
-            <input type="hidden" name="rincian[${index}][harga_satuan]" value="${k.harga}">
-            <input type="hidden" name="rincian[${index}][keterangan]" id="ket_${index}">
+                container.innerHTML += `
+                <div class="bg-white border-2 border-indigo-100 rounded-xl p-5 shadow-sm relative pt-8">
+                    <div class="absolute -top-3 left-4 bg-indigo-100 text-indigo-700 text-xs font-bold px-3 py-1 rounded-full border border-indigo-200 truncate max-w-[90%]">Item ${index + 1}: ${k.nama}</div>
+                    <input type="hidden" name="rincian[${index}][komponen_manual_id]" value="${k.id}">
+                    <input type="hidden" name="rincian[${index}][nama_komponen]" value="${k.nama}">
+                    <input type="hidden" name="rincian[${index}][harga_satuan]" value="${k.harga}">
+                    <input type="hidden" name="rincian[${index}][keterangan]" id="ket_${index}">
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                    <div class="flex items-center space-x-2">
-                        <input type="text" id="rin1_${index}" class="rincian-input-${index} block w-full py-2 px-2 rounded-md border-slate-300 text-xs" placeholder="Ex: 2 lembar" required> <span class="text-slate-400 font-bold text-xs">x</span>
-                        <input type="text" id="rin2_${index}" class="rincian-input-${index} block w-full py-2 px-2 rounded-md border-slate-300 text-xs" placeholder="3 orang"> <span class="text-slate-400 font-bold text-xs">x</span>
-                        <input type="text" id="rin3_${index}" class="rincian-input-${index} block w-full py-2 px-2 rounded-md border-slate-300 text-xs" placeholder="...">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                            <div class="flex items-center space-x-2">
+                                <input type="text" id="rin1_${index}" class="rincian-input-${index} block w-full py-2 px-2 rounded-md border-slate-300 text-xs" placeholder="Ex: 2 lembar" required> <span class="text-slate-400 font-bold text-xs">x</span>
+                                <input type="text" id="rin2_${index}" class="rincian-input-${index} block w-full py-2 px-2 rounded-md border-slate-300 text-xs" placeholder="3 orang"> <span class="text-slate-400 font-bold text-xs">x</span>
+                                <input type="text" id="rin3_${index}" class="rincian-input-${index} block w-full py-2 px-2 rounded-md border-slate-300 text-xs" placeholder="...">
+                            </div>
+                            <div class="flex items-center justify-between mt-3 pt-3 border-t border-slate-200">
+                                <span class="text-xs font-bold text-slate-500">VOL:</span>
+                                <input type="number" name="rincian[${index}][volume]" id="vol_${index}" readonly class="w-20 py-1 text-right rounded bg-indigo-50 border-none font-bold text-indigo-700">
+                            </div>
+                        </div>
+                        <div class="flex flex-col justify-center space-y-2">
+
+                            <div class="flex justify-between text-xs pb-2 border-b border-slate-100">
+                                <span class="text-slate-500">Spesifikasi:</span>
+                                <span class="font-medium text-slate-700 text-right ml-4 line-clamp-2">${spek}</span>
+                            </div>
+                            <div class="flex justify-between text-xs pb-2 border-b border-slate-100">
+                                <span class="text-slate-500">Satuan:</span>
+                                <span class="font-bold text-slate-700 text-right ml-4 uppercase tracking-wider">${satuan}</span>
+                            </div>
+                            <div class="flex justify-between text-sm"><span class="text-slate-500">Harga:</span><span class="font-mono font-bold">${formatRupiah(k.harga)}</span></div>
+                            <div class="flex justify-between items-center border-t border-slate-200 pt-2"><span class="text-xs font-bold uppercase text-slate-600">Subtotal:</span><span id="subtotal_${index}" class="text-lg font-mono font-black text-slate-700">Rp 0</span></div>
+                        </div>
                     </div>
-                    <div class="flex items-center justify-between mt-3 pt-3 border-t border-slate-200">
-                        <span class="text-xs font-bold text-slate-500">VOL:</span>
-                        <input type="number" name="rincian[${index}][volume]" id="vol_${index}" readonly class="w-20 py-1 text-right rounded bg-indigo-50 border-none font-bold text-indigo-700">
-                    </div>
-                </div>
-                <div class="flex flex-col justify-center space-y-2">
-
-                    <div class="flex justify-between text-xs pb-2 border-b border-slate-100">
-                        <span class="text-slate-500">Spesifikasi:</span>
-                        <span class="font-medium text-slate-700 text-right ml-4 line-clamp-2">${spek}</span>
-                    </div>
-                    <div class="flex justify-between text-sm"><span class="text-slate-500">Harga:</span><span class="font-mono font-bold">${formatRupiah(k.harga)}</span></div>
-                    <div class="flex justify-between items-center border-t border-slate-200 pt-2"><span class="text-xs font-bold uppercase text-slate-600">Subtotal:</span><span id="subtotal_${index}" class="text-lg font-mono font-black text-slate-700">Rp 0</span></div>
-                </div>
-            </div>
-        </div>`;
-    });
-
-keranjangKomponen.forEach((k, index) => {
-        const hitungBaris = () => {
-            let texts = []; let totalVol = 1; let adaAngka = false;
-
-            document.querySelectorAll(`.rincian-input-${index}`).forEach(inp => {
-                const val = inp.value.trim();
-                if (val !== '') {
-                    texts.push(val);
-
-                    // PERBAIKAN 1: Regex sekarang bisa membaca titik (.) dan koma (,)
-                    const numbers = val.match(/\d+([.,]\d+)?/);
-
-                    if (numbers) {
-                        // PERBAIKAN 2: Ubah koma jadi titik agar Javascript tidak bingung, lalu gunakan parseFloat
-                        let nilaiAngka = parseFloat(numbers[0].replace(',', '.'));
-                        totalVol *= nilaiAngka;
-                        adaAngka = true;
-                    }
-                }
+                </div>`;
             });
 
-            document.getElementById(`ket_${index}`).value = texts.join(' x ');
+            keranjangKomponen.forEach((k, index) => {
+                const hitungBaris = () => {
+                    let texts = []; let totalVol = 1; let adaAngka = false;
 
-            // PERBAIKAN 3: Jika hasilnya desimal panjang (misal 7.8 * 3), kita pastikan tidak terlalu banyak angka di belakang koma.
-            // Bisa menggunakan Number(totalVol.toFixed(2)) untuk membatasi maksimal 2 angka di belakang koma jika dibutuhkan.
-            const finalVol = adaAngka ? Number(totalVol.toFixed(2)) : (texts.length > 0 ? 1 : 0);
+                    document.querySelectorAll(`.rincian-input-${index}`).forEach(inp => {
+                        const val = inp.value.trim();
+                        if (val !== '') {
+                            texts.push(val);
+                            const numbers = val.match(/\d+([.,]\d+)?/);
+                            if (numbers) {
+                                let nilaiAngka = parseFloat(numbers[0].replace(',', '.'));
+                                totalVol *= nilaiAngka;
+                                adaAngka = true;
+                            }
+                        }
+                    });
 
-            document.getElementById(`vol_${index}`).value = finalVol;
-            document.getElementById(`subtotal_${index}`).innerText = formatRupiah(k.harga * finalVol);
+                    document.getElementById(`ket_${index}`).value = texts.join(' x ');
+                    const finalVol = adaAngka ? Number(totalVol.toFixed(2)) : (texts.length > 0 ? 1 : 0);
+
+                    document.getElementById(`vol_${index}`).value = finalVol;
+                    document.getElementById(`subtotal_${index}`).innerText = formatRupiah(k.harga * finalVol);
+                    hitungGrandTotal();
+                };
+
+                document.querySelectorAll(`.rincian-input-${index}`).forEach(inp => inp.addEventListener('input', hitungBaris));
+            });
+
             hitungGrandTotal();
-        };
-
-        document.querySelectorAll(`.rincian-input-${index}`).forEach(inp => inp.addEventListener('input', hitungBaris));
-    });
-
-    hitungGrandTotal();
-}
-
-        // Trigger fungsi ini setiap kali tombol centang PPN diklik
-    // Trigger fungsi ini setiap kali tombol centang PPN diklik
-    document.getElementById('global_ppn').addEventListener('change', hitungGrandTotal);
-
-    function hitungGrandTotal() {
-        let grandTotal = 0;
-
-        keranjangKomponen.forEach((k, index) => {
-            // PERBAIKAN: Gunakan parseFloat agar volume desimal seperti 7.8 tetap terbaca utuh
-            let volume = parseFloat(document.getElementById(`vol_${index}`).value) || 0;
-            grandTotal += (k.harga * volume);
-        });
-
-        // Jika kotak PPN dicentang, tambahkan 12% dari total yang ada
-        if(document.getElementById('global_ppn').checked) {
-            grandTotal += (grandTotal * 0.12);
         }
 
-        // Tampilkan ke layar
-        document.getElementById('grand_total_display').innerText = formatRupiah(grandTotal);
-    }
+        document.getElementById('global_ppn').addEventListener('change', hitungGrandTotal);
+
+        function hitungGrandTotal() {
+            let grandTotal = 0;
+            keranjangKomponen.forEach((k, index) => {
+                let volume = parseFloat(document.getElementById(`vol_${index}`).value) || 0;
+                grandTotal += (k.harga * volume);
+            });
+            if(document.getElementById('global_ppn').checked) {
+                grandTotal += (grandTotal * 0.12);
+            }
+            document.getElementById('grand_total_display').innerText = formatRupiah(grandTotal);
+        }
 
         window.kembaliPilih = () => { document.getElementById('tahap-2-form').classList.add('hidden'); document.getElementById('tahap-1-pilih').classList.remove('hidden'); };
 
@@ -669,19 +658,14 @@ keranjangKomponen.forEach((k, index) => {
         const chkSaved = document.querySelectorAll('.chk-saved');
         const btnEditTerpilih = document.getElementById('btn_edit_terpilih');
         const countEdit = document.getElementById('count_edit');
-
-        // === TAMBAHAN UNTUK TOMBOL HAPUS ===
         const btnHapusTerpilih = document.getElementById('btn_hapus_terpilih');
         const countHapus = document.getElementById('count_hapus');
-        // ===================================
 
-        // Toggle checkbox master
         checkAllSaved.addEventListener('change', function() {
             chkSaved.forEach(cb => cb.checked = this.checked);
             updateTombolEdit();
         });
 
-        // Toggle tiap baris tabel tersimpan
         chkSaved.forEach(cb => {
             cb.addEventListener('change', updateTombolEdit);
         });
@@ -689,18 +673,17 @@ keranjangKomponen.forEach((k, index) => {
         function updateTombolEdit() {
             const checkedCount = document.querySelectorAll('.chk-saved:checked').length;
             countEdit.innerText = checkedCount;
-            countHapus.innerText = checkedCount; // Update angka di tombol hapus
+            countHapus.innerText = checkedCount;
 
             if(checkedCount > 0) {
                 btnEditTerpilih.classList.remove('hidden');
-                btnHapusTerpilih.classList.remove('hidden'); // Munculkan tombol hapus
+                btnHapusTerpilih.classList.remove('hidden');
             } else {
                 btnEditTerpilih.classList.add('hidden');
-                btnHapusTerpilih.classList.add('hidden'); // Sembunyikan tombol hapus
+                btnHapusTerpilih.classList.add('hidden');
             }
         }
 
-        // Proses Hapus Banyak Data
         window.prosesHapusTerpilih = () => {
             const checkedBoxes = document.querySelectorAll('.chk-saved:checked');
             if (checkedBoxes.length === 0) return;
@@ -710,76 +693,44 @@ keranjangKomponen.forEach((k, index) => {
                 text: `Bapak yakin ingin menghapus ${checkedBoxes.length} rincian ini sekaligus? Data yang dihapus tidak bisa dikembalikan.`,
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#ef4444', // Warna merah (rose)
-                cancelButtonColor: '#94a3b8',  // Warna abu-abu (slate)
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#94a3b8',
                 confirmButtonText: 'Ya, Hapus Semua!',
                 cancelButtonText: 'Batal'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Kumpulkan semua ID yang dicentang
                     let ids = [];
                     checkedBoxes.forEach(cb => ids.push(cb.value));
-
-                    // Masukkan array ID tersebut ke dalam input hidden berbentuk teks JSON
                     document.getElementById('hapus_ids_input').value = JSON.stringify(ids);
-
-                    // Eksekusi form
                     document.getElementById('form-hapus-multi').submit();
                 }
             });
         };
 
-        // Proses Hapus Banyak Data
-        window.prosesHapusTerpilih = () => {
-            const checkedBoxes = document.querySelectorAll('.chk-saved:checked');
-            if (checkedBoxes.length === 0) return;
-
-            Swal.fire({
-                title: 'Hapus Rincian?',
-                text: `Bapak yakin ingin menghapus ${checkedBoxes.length} rincian ini sekaligus? Data yang dihapus tidak bisa dikembalikan.`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#ef4444', // Warna merah (rose)
-                cancelButtonColor: '#94a3b8',  // Warna abu-abu (slate)
-                confirmButtonText: 'Ya, Hapus Semua!',
-                cancelButtonText: 'Batal'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Kumpulkan semua ID yang dicentang
-                    let ids = [];
-                    checkedBoxes.forEach(cb => ids.push(cb.value));
-
-                    // Masukkan array ID tersebut ke dalam input hidden berbentuk teks JSON
-                    document.getElementById('hapus_ids_input').value = JSON.stringify(ids);
-
-                    // Eksekusi form
-                    document.getElementById('form-hapus-multi').submit();
-                }
-            });
-        };
-
-        // Proses membuka halaman Edit
         window.prosesEditTerpilih = () => {
             const checkedBoxes = document.querySelectorAll('.chk-saved:checked');
             const editContainer = document.getElementById('dynamic_edit_container');
             editContainer.innerHTML = '';
 
-            let isPpnChecked = false; // Deteksi apakah ada PPN di database awal
+            let isPpnChecked = false;
 
             checkedBoxes.forEach((cb, index) => {
                 const rkasId = parseInt(cb.value);
-                // Cari data RKAS asli dari object PHP yang di json-kan
                 const rkasData = dataRkasTersimpan.find(r => r.id === rkasId);
 
                 if(rkasData) {
                     if(parseFloat(rkasData.ppn) > 0) isPpnChecked = true;
 
-                    // Memecah teks keterangan ke 3 kotak text (berdasarkan "x" atau "X")
                     let ketParts = rkasData.keterangan ? rkasData.keterangan.split(/ x | X /) : [];
                     let txt1 = ketParts[0] || '';
                     let txt2 = ketParts[1] || '';
                     let txt3 = ketParts[2] || '';
 
+                    // Ambil Spesifikasi dan Satuan
+                    const spek = rkasData.spesifikasi && rkasData.spesifikasi !== 'null' ? rkasData.spesifikasi : '-';
+                    const satuan = rkasData.satuan && rkasData.satuan !== 'null' ? rkasData.satuan : '-';
+
+                    // HTML Form Edit disamakan persis dengan Form Tambah
                     let html = `
                     <div class="bg-white border-2 border-amber-100 rounded-xl p-5 shadow-sm relative pt-8">
                         <div class="absolute -top-3 left-4 bg-amber-100 text-amber-700 text-xs font-bold px-3 py-1 rounded-full border border-amber-200">
@@ -802,7 +753,15 @@ keranjangKomponen.forEach((k, index) => {
                                 </div>
                             </div>
 
-                            <div class="flex flex-col justify-center space-y-3">
+                            <div class="flex flex-col justify-center space-y-2">
+                                <div class="flex justify-between text-xs pb-2 border-b border-slate-100">
+                                    <span class="text-slate-500">Spesifikasi:</span>
+                                    <span class="font-medium text-slate-700 text-right ml-4 line-clamp-2">${spek}</span>
+                                </div>
+                                <div class="flex justify-between text-xs pb-2 border-b border-slate-100">
+                                    <span class="text-slate-500">Satuan:</span>
+                                    <span class="font-bold text-slate-700 text-right ml-4 uppercase tracking-wider">${satuan}</span>
+                                </div>
                                 <div class="flex justify-between text-sm"><span class="text-slate-500">Harga:</span><span class="font-mono font-bold">${formatRupiah(rkasData.harga_satuan)}</span></div>
                                 <div class="flex justify-between items-center border-t border-slate-200 pt-2"><span class="text-xs font-bold uppercase text-slate-600">Subtotal:</span><span id="edit_subtotal_${index}" class="text-lg font-mono font-black text-slate-700">Rp 0</span></div>
                             </div>
@@ -812,10 +771,8 @@ keranjangKomponen.forEach((k, index) => {
                 }
             });
 
-            // Set PPN Checkbox
             document.getElementById('edit_global_ppn').checked = isPpnChecked;
 
-            // Pasang event listener ke form Edit
             checkedBoxes.forEach((cb, index) => {
                 const rkasId = parseInt(cb.value);
                 const rkasData = dataRkasTersimpan.find(r => r.id === rkasId);
@@ -824,19 +781,30 @@ keranjangKomponen.forEach((k, index) => {
                     let texts = []; let totalVol = 1; let adaAngka = false;
                     document.querySelectorAll(`.edit-input-${index}`).forEach(inp => {
                         const val = inp.value.trim();
-                        if (val !== '') { texts.push(val); const numbers = val.match(/\d+/); if (numbers) { totalVol *= parseInt(numbers[0], 10); adaAngka = true; } }
+                        if (val !== '') {
+                            texts.push(val);
+                            // PERBAIKAN DESIMAL DI FORM EDIT
+                            const numbers = val.match(/\d+([.,]\d+)?/);
+                            if (numbers) {
+                                let nilaiAngka = parseFloat(numbers[0].replace(',', '.'));
+                                totalVol *= nilaiAngka;
+                                adaAngka = true;
+                            }
+                        }
                     });
                     document.getElementById(`edit_ket_${index}`).value = texts.join(' x ');
-                    const finalVol = adaAngka ? totalVol : (texts.length > 0 ? 1 : 0);
+
+                    // Batasi maksimal 2 desimal jika dibutuhkan
+                    const finalVol = adaAngka ? Number(totalVol.toFixed(2)) : (texts.length > 0 ? 1 : 0);
+
                     document.getElementById(`edit_vol_${index}`).value = finalVol;
                     document.getElementById(`edit_subtotal_${index}`).innerText = formatRupiah(rkasData.harga_satuan * finalVol);
                     hitungGrandTotalEdit();
                 };
                 document.querySelectorAll(`.edit-input-${index}`).forEach(inp => inp.addEventListener('input', hitungBarisEdit));
-                hitungBarisEdit(); // trigger awal
+                hitungBarisEdit();
             });
 
-            // Sembunyikan Area Tambah, Tampilkan Edit
             document.getElementById('section-tambah').classList.add('hidden');
             document.getElementById('section-tabel').classList.add('hidden');
             document.getElementById('section-edit').classList.remove('hidden');
@@ -848,7 +816,8 @@ keranjangKomponen.forEach((k, index) => {
             document.querySelectorAll('.chk-saved:checked').forEach((cb, index) => {
                 const rkasId = parseInt(cb.value);
                 const rkasData = dataRkasTersimpan.find(r => r.id === rkasId);
-                const vol = parseInt(document.getElementById(`edit_vol_${index}`).value) || 0;
+                // PERBAIKAN DESIMAL DI GRAND TOTAL EDIT
+                const vol = parseFloat(document.getElementById(`edit_vol_${index}`).value) || 0;
                 grandTotal += (rkasData.harga_satuan * vol);
             });
             if(document.getElementById('edit_global_ppn').checked) grandTotal += (grandTotal * 0.12);

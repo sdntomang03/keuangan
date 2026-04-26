@@ -732,4 +732,81 @@ class KegiatanManualController extends Controller
 
         return view('kegiatan.rekonsiliasi', compact('kegiatan', 'hasil'));
     }
+
+    public function cekJson(\Illuminate\Http\Request $request)
+    {
+        $groupedData = null;
+        $metaData = null;
+        $errorMsg = null;
+        $totalKeseluruhan = 0;
+
+        if ($request->isMethod('post') && $request->hasFile('file_json')) {
+            try {
+                $files = $request->file('file_json');
+                if (! is_array($files)) {
+                    $files = [$files];
+                }
+
+                $allJsonData = [];
+                $kumpulanSekolah = [];
+                $kumpulanKategori = [];
+
+                foreach ($files as $file) {
+                    $content = file_get_contents($file->getPathname());
+                    $decoded = json_decode($content, true);
+
+                    if (json_last_error() !== JSON_ERROR_NONE || ! isset($decoded['data'])) {
+                        continue;
+                    }
+
+                    // --- LOGIKA PENTING: Beri Label Kode Sekolah pada setiap item ---
+                    $kodeSekolahAsal = $decoded['meta_kode_sekolah'] ?? 'N/A';
+
+                    $dataDenganLabel = array_map(function ($item) use ($kodeSekolahAsal) {
+                        $item['kode_sekolah_asal'] = $kodeSekolahAsal; // Sisipkan kode sekolah ke item
+
+                        return $item;
+                    }, $decoded['data']);
+
+                    $allJsonData = array_merge($allJsonData, $dataDenganLabel);
+                    // ----------------------------------------------------------------
+
+                    if (isset($decoded['meta_kode_sekolah'])) {
+                        $kumpulanSekolah[] = $decoded['meta_kode_sekolah'];
+                    }
+                    if (isset($decoded['meta_kategori'])) {
+                        $kumpulanKategori[] = $decoded['meta_kategori'];
+                    }
+                }
+
+                $metaData = [
+                    'kode_sekolah' => ! empty($kumpulanSekolah) ? implode(', ', array_unique($kumpulanSekolah)) : '-',
+                    'kategori' => ! empty($kumpulanKategori) ? implode(' & ', array_unique($kumpulanKategori)) : '-',
+                ];
+
+                $groupedData = [];
+                foreach ($allJsonData as $item) {
+                    $kegiatan = strip_tags($item['namasub'] ?? $item['giatsubteks'] ?? 'Kegiatan Tidak Diketahui');
+                    $kegiatan = trim(preg_replace('/\s+/', ' ', $kegiatan));
+                    $keterangan = trim($item['keterangan'] ?? 'Tanpa Keterangan');
+                    $totalAkhir = (float) ($item['totalharga'] ?? 0) + (float) ($item['totalpajak'] ?? 0);
+                    $totalKeseluruhan += $totalAkhir;
+
+                    if (! isset($groupedData[$kegiatan])) {
+                        $groupedData[$kegiatan] = [];
+                    }
+                    if (! isset($groupedData[$kegiatan][$keterangan])) {
+                        $groupedData[$kegiatan][$keterangan] = ['total_anggaran_keterangan' => 0, 'items' => []];
+                    }
+
+                    $groupedData[$kegiatan][$keterangan]['total_anggaran_keterangan'] += $totalAkhir;
+                    $groupedData[$kegiatan][$keterangan]['items'][] = $item;
+                }
+            } catch (\Exception $e) {
+                $errorMsg = $e->getMessage();
+            }
+        }
+
+        return view('kegiatan.cek_json', compact('groupedData', 'metaData', 'totalKeseluruhan', 'errorMsg'));
+    }
 }
