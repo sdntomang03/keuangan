@@ -16,7 +16,6 @@
                     </svg>
                     Tambah
                 </button>
-
             </div>
         </div>
 
@@ -62,8 +61,7 @@
                 <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
                     <thead class="bg-slate-50 dark:bg-slate-900/50">
                         <tr>
-
-                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase">Nama Kegiatan
+                            <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase">Hierarki Kegiatan
                             </th>
                             <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase">Sumber Dana</th>
                             <th class="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase">Total Anggaran
@@ -71,12 +69,31 @@
                             <th class="px-6 py-4 text-center text-xs font-bold text-slate-500 uppercase">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
-                        @forelse($kegiatanGrouped as $namaProgram => $kegiatanList)
+                    <tbody class="divide-y divide-slate-200 dark:divide-slate-700 bg-white dark:bg-slate-800">
 
+                        @forelse($kegiatanGrouped as $namaSumberDana => $grupProgram)
                         <tr
-                            class="bg-indigo-50/50 dark:bg-indigo-900/20 border-b-2 border-indigo-100 dark:border-indigo-800/50">
-                            <td colspan="5" class="px-6 py-3">
+                            class="bg-emerald-50 dark:bg-emerald-900/20 border-b-2 border-emerald-200 dark:border-emerald-800/50">
+                            <td colspan="4" class="px-6 py-3">
+                                <div class="flex items-center">
+                                    <svg class="w-5 h-5 mr-2 text-emerald-600 dark:text-emerald-400" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                                        </path>
+                                    </svg>
+                                    <span
+                                        class="text-sm font-black text-emerald-800 dark:text-emerald-300 uppercase tracking-widest">
+                                        {{ $namaSumberDana }}
+                                    </span>
+                                </div>
+                            </td>
+                        </tr>
+
+                        @foreach($grupProgram as $namaProgram => $kegiatanList)
+                        <tr
+                            class="bg-indigo-50/50 dark:bg-indigo-900/20 border-b border-indigo-100 dark:border-indigo-800/50">
+                            <td colspan="4" class="px-6 py-2 pl-12">
                                 <div class="flex items-center">
                                     <svg class="w-4 h-4 mr-2 text-indigo-500" fill="currentColor" viewBox="0 0 8 8">
                                         <circle cx="4" cy="4" r="3" />
@@ -90,24 +107,26 @@
                         </tr>
 
                         @foreach($kegiatanList as $item)
-                        <tr
-                            class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors group bg-white dark:bg-slate-800">
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors group">
 
-
-                            <td class="px-6 py-4">
-                                <span class="text-sm font-medium text-slate-700 dark:text-slate-300 italic">
+                            <td class="px-6 py-4 pl-20">
+                                <span class="text-sm font-bold text-slate-700 dark:text-slate-300">
                                     {{ $item->subProgram->nama_sub_program ?? '-' }}
                                 </span>
+                                <div class="text-[10px] text-slate-400 mt-1 uppercase font-mono">
+                                    ID: {{ $item->id_kegiatan ?? '-' }}
+                                </div>
                             </td>
 
                             <td class="px-6 py-4 text-sm font-medium text-slate-600 dark:text-slate-400">
                                 <span
-                                    class="bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded text-xs border border-slate-200 dark:border-slate-600">
+                                    class="bg-slate-100 dark:bg-slate-700 px-2.5 py-1 rounded-md text-xs font-bold border border-slate-200 dark:border-slate-600 shadow-sm">
                                     {{ $item->sumberDana->nama ?? 'Belum Diatur' }}
                                 </span>
                             </td>
 
-                            <td class="px-6 py-4 text-sm font-bold text-right text-emerald-600 dark:text-emerald-400">
+                            <td
+                                class="px-6 py-4 text-sm font-bold text-right text-emerald-600 dark:text-emerald-400 font-mono">
                                 Rp {{ number_format($item->total_anggaran, 0, ',', '.') }}
                             </td>
 
@@ -139,10 +158,10 @@
                             </td>
                         </tr>
                         @endforeach
-
+                        @endforeach
                         @empty
                         <tr>
-                            <td colspan="5" class="px-6 py-12 text-center text-slate-500">Belum ada data kegiatan.</td>
+                            <td colspan="4" class="px-6 py-12 text-center text-slate-500">Belum ada data kegiatan.</td>
                         </tr>
                         @endforelse
                     </tbody>
@@ -156,7 +175,6 @@
         <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
             <div class="fixed inset-0 bg-slate-900/75 transition-opacity" aria-hidden="true"
                 onclick="document.getElementById('modalTambahKegiatan').classList.add('hidden')"></div>
-
             <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
             <div
@@ -214,8 +232,6 @@
                                 <p class="text-sm text-slate-500 italic">-- Pilih Program Terlebih Dahulu --</p>
                             </div>
                         </div>
-
-
                     </div>
 
                     <div
@@ -234,44 +250,42 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-        const programSelect = document.getElementById('program_select');
-        const subProgramContainer = document.getElementById('sub_program_container');
+            const programSelect = document.getElementById('program_select');
+            const subProgramContainer = document.getElementById('sub_program_container');
 
-        programSelect.addEventListener('change', function() {
-            const programId = this.value;
+            programSelect.addEventListener('change', function() {
+                const programId = this.value;
 
-            // Memunculkan status loading
-            subProgramContainer.innerHTML = `
-                <div class="flex items-center text-sm text-slate-500">
-                    <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-indigo-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                    Loading Sub Program...
-                </div>`;
+                subProgramContainer.innerHTML = `
+                    <div class="flex items-center text-sm text-slate-500">
+                        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-indigo-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        Loading Sub Program...
+                    </div>`;
 
-            if (programId) {
-                fetch(`/ajax/sub-programs?program_id=${programId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        subProgramContainer.innerHTML = ''; // Kosongkan wadah
+                if (programId) {
+                    fetch(`/ajax/sub-programs?program_id=${programId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            subProgramContainer.innerHTML = '';
 
-                        if(data.length > 0) {
-                            data.forEach(sub => {
-                                // Membuat elemen Checkbox
-                                subProgramContainer.innerHTML += `
-                                    <label class="flex items-start space-x-3 mb-3 p-2 hover:bg-indigo-50/50 rounded-lg cursor-pointer transition-colors border border-transparent hover:border-indigo-100">
-                                        <input type="checkbox" name="sub_program_id[]" value="${sub.id}"
-                                            class="mt-0.5 w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 transition duration-150 ease-in-out">
-                                        <span class="text-sm font-semibold text-slate-700 select-none">${sub.nama_sub_program}</span>
-                                    </label>
-                                `;
-                            });
-                        } else {
-                            subProgramContainer.innerHTML = '<p class="text-sm text-rose-500 italic">(Tidak ada Sub Program di Program ini)</p>';
-                        }
-                    });
-            } else {
-                subProgramContainer.innerHTML = '<p class="text-sm text-slate-500 italic">-- Pilih Program Terlebih Dahulu --</p>';
-            }
+                            if(data.length > 0) {
+                                data.forEach(sub => {
+                                    subProgramContainer.innerHTML += `
+                                        <label class="flex items-start space-x-3 mb-3 p-2 hover:bg-indigo-50/50 rounded-lg cursor-pointer transition-colors border border-transparent hover:border-indigo-100">
+                                            <input type="checkbox" name="sub_program_id[]" value="${sub.id}"
+                                                class="mt-0.5 w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 transition duration-150 ease-in-out">
+                                            <span class="text-sm font-semibold text-slate-700 select-none">${sub.nama_sub_program}</span>
+                                        </label>
+                                    `;
+                                });
+                            } else {
+                                subProgramContainer.innerHTML = '<p class="text-sm text-rose-500 italic">(Tidak ada Sub Program di Program ini)</p>';
+                            }
+                        });
+                } else {
+                    subProgramContainer.innerHTML = '<p class="text-sm text-slate-500 italic">-- Pilih Program Terlebih Dahulu --</p>';
+                }
+            });
         });
-    });
     </script>
 </x-manual-layout>

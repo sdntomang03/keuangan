@@ -125,10 +125,20 @@ class KegiatanManualController extends Controller
             ->get();
 
         // 2. KELOMPOKKAN DATA (GROUPING) BERDASARKAN NAMA PROGRAM
-        $kegiatanGrouped = $kegiatanRaw->groupBy(function ($item) {
-            // Jika program kosong/terhapus, masukkan ke grup 'Program Tidak Diketahui'
-            return $item->program->nama_program ?? 'Program Tidak Diketahui';
-        });
+
+        $kegiatanGrouped = \App\Models\KegiatanManual::with(['sumberDana', 'program', 'subProgram'])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->groupBy([
+                // Level 1: Sumber Dana
+                function ($item) {
+                    return $item->sumberDana->nama ?? 'Tanpa Sumber Dana';
+                },
+                // Level 2: Program
+                function ($item) {
+                    return $item->program->nama_program ?? 'Tanpa Program';
+                },
+            ]);
 
         // 3. Buat Rekapitulasi Anggaran per Tahun dan Sumber Dana
         $rekapAnggaran = \Illuminate\Support\Facades\DB::table('rkas_manuals')
