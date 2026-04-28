@@ -9,19 +9,16 @@
     <style>
         @media print {
             body {
-                /* Memaksa browser mencetak warna background tabel */
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
                 background-color: white !important;
             }
 
             @page {
-                /* Set ukuran kertas otomatis Landscape agar tabel bulanan muat */
                 size: landscape;
                 margin: 10mm;
             }
 
-            /* Menyembunyikan elemen navigasi dari layout utama */
             header,
             nav,
             aside {
@@ -32,7 +29,6 @@
                 max-width: 100% !important;
             }
 
-            /* Reset padding untuk print */
             .py-4 {
                 padding-top: 0 !important;
                 padding-bottom: 0 !important;
@@ -67,13 +63,9 @@
             </div>
             <div class="flex gap-2">
                 <button type="submit"
-                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm transition">
-                    Filter
-                </button>
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm transition">Filter</button>
                 <a href="{{ route('akb.rincian') }}"
-                    class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm transition">
-                    Reset
-                </a>
+                    class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm transition">Reset</a>
 
                 {{-- TOMBOL CETAK --}}
                 <button type="button" onclick="window.print()"
@@ -90,20 +82,14 @@
     </div>
 
     @php
-    $mapTriwulan = [
-    1 => [1, 2, 3],
-    2 => [4, 5, 6],
-    3 => [7, 8, 9],
-    4 => [10, 11, 12],
-    ];
-
+    $mapTriwulan = [1 => [1, 2, 3], 2 => [4, 5, 6], 3 => [7, 8, 9], 4 => [10, 11, 12]];
     $filterTw = request('filter_tw');
     $tampilan = request('tampilan', 'bulanan');
 
     $targetMonths = $filterTw ? $mapTriwulan[$filterTw] : range(1, 12);
     $targetQuarters = $filterTw ? [$filterTw] : [1, 2, 3, 4];
 
-    // FILTER: Buang baris yang tidak ada uangnya di bulan/TW yang dicari
+    // FILTER: Buang baris yang tidak ada uangnya
     $filteredRkas = $dataRkas->filter(function ($item) use ($targetMonths) {
     $sumTarget = 0;
     foreach ($targetMonths as $m) {
@@ -113,7 +99,12 @@
     return $sumTarget > 0;
     });
 
+    // Pengelompokan Tingkat 1: Berdasarkan Kegiatan
     $groupedRkas = $filteredRkas->groupBy('idbl');
+
+    // Total Kolom untuk perhitungan colspan dinamis
+    // 4 Kolom Statis (Komponen, Satuan, Harga, Total) + Jumlah Kolom Dinamis (TW/Bulan)
+    $totalKolom = 4 + ($tampilan == 'triwulan' ? count($targetQuarters) : count($targetMonths));
     @endphp
 
     <div class="py-4">
@@ -121,7 +112,7 @@
             <div
                 class="bg-white shadow-sm sm:rounded-lg p-4 overflow-x-auto print:shadow-none print:p-0 print:overflow-visible">
 
-                {{-- KOP LAPORAN (Hanya muncul saat di print) --}}
+                {{-- KOP LAPORAN --}}
                 <div class="hidden print:block text-center mb-6 border-b pb-4">
                     <h2 class="text-xl font-bold uppercase tracking-wider">
                         Matriks Anggaran Kas (AKB) - {{ $anggaran->tahun ?? date('Y') }}
@@ -139,20 +130,19 @@
                 <table class="w-full border-collapse border border-gray-300 text-[11px] print:text-[10px]">
                     <thead class="bg-gray-100 font-bold print:bg-gray-200">
                         <tr>
-                            <th rowspan="2" class="border border-gray-300 px-2 py-1 align-middle text-left w-48">
-                                Kegiatan</th>
-                            <th rowspan="2" class="border border-gray-300 px-2 py-1 align-middle text-left w-40">Kode
-                                Rekening</th>
-                            <th rowspan="2" class="border border-gray-300 px-2 py-1 align-middle text-left w-56">
-                                Komponen</th>
-                            <th rowspan="2" class="border border-gray-300 px-2 py-1 align-middle text-center w-24">Spek
+                            <th rowspan="2" class="border border-gray-300 px-3 py-2 align-middle text-left w-64">
+                                Komponen & Spesifikasi
                             </th>
-                            <th rowspan="2" class="border border-gray-300 px-2 py-1 align-middle text-right w-24">Harga
-                                Satuan</th>
+                            <th rowspan="2" class="border border-gray-300 px-2 py-2 align-middle text-center w-16">
+                                Satuan
+                            </th>
+                            <th rowspan="2" class="border border-gray-300 px-2 py-2 align-middle text-right w-24">
+                                Harga Satuan
+                            </th>
                             <th rowspan="2"
-                                class="border border-gray-300 px-2 py-1 align-middle text-right w-28 bg-gray-50 print:bg-gray-100">
-                                Total
-                                RKAS<br><span class="text-[9px] font-normal">(Setahun)</span></th>
+                                class="border border-gray-300 px-2 py-2 align-middle text-right w-28 bg-gray-50 print:bg-gray-100">
+                                Total RKAS<br><span class="text-[9px] font-normal">(Setahun)</span>
+                            </th>
 
                             @if($tampilan == 'triwulan')
                             <th colspan="{{ count($targetQuarters) }}"
@@ -183,51 +173,71 @@
                     </thead>
 
                     <tbody>
-                        @forelse ($groupedRkas as $idbl => $items)
+                        @forelse ($groupedRkas as $idbl => $itemsByKegiatan)
                         @php
-                        $namaKegiatan = $items->first()->kegiatan->namagiat ?? 'Kegiatan Tidak Terdefinisi';
+                        $namaKegiatan = $itemsByKegiatan->first()->kegiatan->namagiat ?? 'Kegiatan Tidak Terdefinisi';
+
+                        // Pengelompokan Tingkat 2: Berdasarkan Kode Rekening di dalam Kegiatan tersebut
+                        $groupedByKorek = $itemsByKegiatan->groupBy(function($item) {
+                        return $item->korek->kode ?? '-';
+                        });
                         @endphp
 
-                        {{-- 1. LOOPING BARIS BARANG --}}
-                        @foreach ($items as $rkas)
+                        {{-- 1. HEADER BARIS KEGIATAN --}}
+                        <tr class="bg-indigo-100 print:bg-gray-300">
+                            <td colspan="{{ $totalKolom }}" class="border border-gray-300 px-3 py-2">
+                                <span
+                                    class="font-black text-indigo-900 print:text-black uppercase text-[11px] tracking-wide">
+                                    KEGIATAN: {{ $namaKegiatan }}
+                                </span>
+                            </td>
+                        </tr>
+
+                        @foreach ($groupedByKorek as $kodeKorek => $itemsByKorek)
+                        @php
+                        $namaKorek = $itemsByKorek->first()->korek->ket ?? 'Rekening Tidak Terdefinisi';
+                        @endphp
+
+                        {{-- 2. HEADER BARIS KODE REKENING --}}
+                        <tr class="bg-indigo-50/70 print:bg-gray-100">
+                            <td colspan="{{ $totalKolom }}" class="border border-gray-300 px-3 py-1.5 pl-6">
+                                <span class="font-bold text-indigo-800 print:text-gray-800 text-[10px] uppercase">
+                                    REKENING: {{ $kodeKorek }} - {{ $namaKorek }}
+                                </span>
+                            </td>
+                        </tr>
+
+                        {{-- 3. BARIS RINCIAN KOMPONEN --}}
+                        @foreach ($itemsByKorek as $rkas)
                         <tr class="hover:bg-gray-50 transition print:break-inside-avoid">
-                            <td class="border border-gray-300 px-2 py-1">
-                                <div class="font-bold text-indigo-800 print:text-black">{{ $rkas->kegiatan->namagiat ??
-                                    'Kegiatan Tidak Terdefinisi' }}</div>
-                                <div class="text-[9px] text-gray-500 font-mono">{{ $rkas->idbl ?? '-' }}</div>
-                            </td>
-                            <td class="border border-gray-300 px-2 py-1">
-                                <div class="font-bold text-gray-800 font-mono">{{ $rkas->korek->kode ?? '-' }}</div>
-                                <div class="text-[9px] text-gray-500 uppercase">{{ $rkas->korek->ket ?? 'Rekening Tidak
-                                    Terdefinisi' }}</div>
-                            </td>
-                            <td class="border border-gray-300 px-2 py-1">
+                            <td class="border border-gray-300 px-3 py-1.5 pl-10">
                                 <div class="font-bold text-gray-800">{{ $rkas->namakomponen }}</div>
-                                <div class="text-[9px] text-gray-400 italic">Merek/Tipe: {{ $rkas->spek ?? '-' }}</div>
+                                <div class="text-[9px] text-gray-500 italic mt-0.5">Spesifikasi: {{ $rkas->spek ?? '-'
+                                    }}</div>
                             </td>
-                            <td class="border border-gray-300 px-2 py-1 text-center">{{ $rkas->satuan ?? '-' }}</td>
+                            <td class="border border-gray-300 px-2 py-1.5 text-center text-gray-600">
+                                {{ $rkas->satuan ?? '-' }}
+                            </td>
                             <td
-                                class="border border-gray-300 px-2 py-1 text-right font-medium text-gray-600 print:text-black">
+                                class="border border-gray-300 px-2 py-1.5 text-right font-medium text-gray-600 print:text-black">
                                 {{ number_format($rkas->hargasatuan, 0, ',', '.') }}
                             </td>
-
-                            {{-- Kolom Total Setahun --}}
                             <td
-                                class="border border-gray-300 px-2 py-1 text-right font-bold bg-yellow-50 text-indigo-700 print:bg-yellow-100 print:text-black">
+                                class="border border-gray-300 px-2 py-1.5 text-right font-bold bg-yellow-50 text-indigo-700 print:bg-yellow-100 print:text-black">
                                 {{ number_format($rkas->total_akb_setahun, 0, ',', '.') }}
                             </td>
 
                             {{-- Kolom Dinamis (TW / Bulan) --}}
                             @if($tampilan == 'triwulan')
                             @foreach($targetQuarters as $tw)
-                            <td class="border border-gray-300 px-2 py-1 text-right font-medium">
+                            <td class="border border-gray-300 px-2 py-1.5 text-right font-medium">
                                 @php $propTw = "tw_$tw"; $valTw = $rkas->$propTw; @endphp
                                 {{ $valTw > 0 ? number_format($valTw, 0, ',', '.') : '-' }}
                             </td>
                             @endforeach
                             @else
                             @foreach ($targetMonths as $m)
-                            <td class="border border-gray-300 px-1 py-1 text-right">
+                            <td class="border border-gray-300 px-1 py-1.5 text-right">
                                 @php $propBln = "bln_$m"; $valBln = $rkas->$propBln; @endphp
                                 {{ $valBln > 0 ? number_format($valBln, 0, ',', '.') : '-' }}
                             </td>
@@ -235,32 +245,32 @@
                             @endif
                         </tr>
                         @endforeach
+                        @endforeach
 
-                        {{-- 2. BARIS SUB TOTAL KEGIATAN --}}
-                        <tr class="bg-indigo-50/70 border-y-2 border-indigo-200 print:bg-indigo-100 print:border-black">
-                            <td colspan="5"
-                                class="border border-gray-300 px-2 py-2 text-right text-[10px] font-black text-indigo-900 uppercase tracking-widest print:text-black">
-                                Sub Total - {{ Str::limit($namaKegiatan, 60) }}
+                        {{-- 4. BARIS SUB TOTAL KEGIATAN --}}
+                        <tr class="bg-blue-50 border-y-2 border-blue-200 print:bg-blue-100 print:border-black">
+                            <td colspan="3"
+                                class="border border-gray-300 px-3 py-2 text-right text-[10px] font-black text-blue-900 print:text-black uppercase tracking-widest">
+                                Sub Total Kegiatan
                             </td>
-
                             <td
-                                class="border border-gray-300 px-2 py-2 text-right font-bold text-indigo-900 bg-indigo-100/50 print:text-black print:bg-indigo-200">
-                                {{ number_format($items->sum('total_akb_setahun'), 0, ',', '.') }}
+                                class="border border-gray-300 px-2 py-2 text-right font-bold text-blue-900 bg-blue-100/50 print:text-black print:bg-blue-200">
+                                {{ number_format($itemsByKegiatan->sum('total_akb_setahun'), 0, ',', '.') }}
                             </td>
 
                             @if($tampilan == 'triwulan')
                             @foreach($targetQuarters as $tw)
                             <td
-                                class="border border-gray-300 px-2 py-2 text-right font-bold text-indigo-900 print:text-black">
-                                @php $propTw = "tw_$tw"; $subTotalTw = $items->sum($propTw); @endphp
+                                class="border border-gray-300 px-2 py-2 text-right font-bold text-blue-900 print:text-black">
+                                @php $propTw = "tw_$tw"; $subTotalTw = $itemsByKegiatan->sum($propTw); @endphp
                                 {{ $subTotalTw > 0 ? number_format($subTotalTw, 0, ',', '.') : '-' }}
                             </td>
                             @endforeach
                             @else
                             @foreach ($targetMonths as $m)
                             <td
-                                class="border border-gray-300 px-1 py-2 text-right font-bold text-indigo-900 print:text-black">
-                                @php $propBln = "bln_$m"; $subTotalBln = $items->sum($propBln); @endphp
+                                class="border border-gray-300 px-1 py-2 text-right font-bold text-blue-900 print:text-black">
+                                @php $propBln = "bln_$m"; $subTotalBln = $itemsByKegiatan->sum($propBln); @endphp
                                 {{ $subTotalBln > 0 ? number_format($subTotalBln, 0, ',', '.') : '-' }}
                             </td>
                             @endforeach
@@ -268,22 +278,21 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="10" class="text-center py-8 text-gray-500 font-medium">
+                            <td colspan="{{ $totalKolom }}" class="text-center py-8 text-gray-500 font-medium">
                                 Tidak ada data untuk periode terpilih.
                             </td>
                         </tr>
                         @endforelse
                     </tbody>
 
-                    {{-- 3. FOOTER GRAND TOTAL --}}
+                    {{-- 5. FOOTER GRAND TOTAL --}}
                     @if($filteredRkas->isNotEmpty())
                     <tfoot class="bg-gray-800 text-white font-bold print:bg-gray-800 print:text-white">
                         <tr>
-                            <td colspan="5"
-                                class="border border-gray-700 px-2 py-3 text-center uppercase tracking-widest text-gray-200 print:text-white">
+                            <td colspan="3"
+                                class="border border-gray-700 px-3 py-3 text-right uppercase tracking-widest text-gray-200 print:text-white">
                                 Grand Total Keseluruhan
                             </td>
-
                             <td
                                 class="border border-gray-700 px-2 py-3 text-right bg-yellow-500/20 text-yellow-300 text-sm print:text-yellow-300">
                                 {{ number_format($filteredRkas->sum('total_akb_setahun'), 0, ',', '.') }}
