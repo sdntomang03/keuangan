@@ -7,8 +7,12 @@
                         d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z">
                     </path>
                 </svg>
-                Data Belanja
+                Data Belanja {{ $anggaran->nama_anggaran ?? '' }}
             </h2>
+
+            <span class="bg-indigo-100 text-indigo-800 text-xs font-bold px-3 py-1 rounded-full">
+                Tahun: {{ $anggaran->tahun ?? 'Tidak Diketahui' }}
+            </span>
         </div>
     </x-slot>
 
@@ -18,7 +22,6 @@
             {{-- KOTAK FILTER --}}
             <div
                 class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6 overflow-x-auto">
-                {{-- Ubah items-end jadi items-center, dan gap-4 jadi gap-3 agar lebih rapat --}}
                 <form action="{{ route('surat.daftar') }}" method="GET"
                     class="flex flex-row items-center justify-between min-w-max gap-4">
 
@@ -28,7 +31,7 @@
                             Filter:
                         </label>
 
-                        {{-- 1. Dropdown Filter Triwulan Baru --}}
+                        {{-- Dropdown Filter Triwulan --}}
                         <select name="tw" onchange="this.form.submit()"
                             class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm text-sm w-32 sm:w-40">
                             <option value="1" {{ $selectedTw=='1' ? 'selected' : '' }}>Triwulan 1</option>
@@ -37,7 +40,7 @@
                             <option value="4" {{ $selectedTw=='4' ? 'selected' : '' }}>Triwulan 4</option>
                         </select>
 
-                        {{-- 2. Dropdown Filter Kode Rekening (Bawaan) --}}
+                        {{-- Dropdown Filter Kode Rekening --}}
                         <select name="kode_rekening" onchange="this.form.submit()"
                             class="rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm text-sm w-48 sm:w-64">
                             <option value="">Semua Rekening</option>
@@ -49,7 +52,7 @@
                             @endforeach
                         </select>
 
-                        {{-- Tombol Terapkan nempel langsung dengan Filter --}}
+                        {{-- Tombol Terapkan --}}
                         <button type="submit"
                             class="bg-gray-800 hover:bg-gray-900 text-white px-3 py-2 rounded-lg text-sm font-bold shadow-sm transition">
                             Filter
@@ -132,8 +135,7 @@
                                 <td class="px-6 py-4">
                                     <div class="font-bold text-gray-900 dark:text-gray-100">{{ $belanja->uraian }}</div>
                                     <div class="text-[10px] text-gray-400">Rekanan: {{ $belanja->rekanan->nama_rekanan
-                                        ?? '-' }}
-                                    </div>
+                                        ?? '-' }}</div>
                                 </td>
                                 <td class="px-6 py-4">
                                     <span
@@ -146,16 +148,12 @@
                                 </td>
                                 <td class="px-6 py-4 text-center">
                                     @php
-                                    // Ambil data dan ubah ke huruf besar semua agar aman
                                     $singkatanKorek = strtoupper($belanja->korek->singkat ?? '');
-
-                                    // Buat variabel boolean untuk kondisi-kondisi khusus
                                     $isNarasumber = ($singkatanKorek === 'NARASUMBER');
                                     $isTanpaSurat = in_array($singkatanKorek, ['INTERNET', 'TELEPON', 'LISTRIK']);
                                     @endphp
 
                                     @if($isTanpaSurat)
-                                    {{-- KONDISI KHUSUS: Internet, Telepon, Listrik (Tombol Mati / Abu-abu) --}}
                                     <span
                                         class="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-200 text-gray-500 border border-gray-300 rounded-md text-xs font-bold cursor-not-allowed shadow-sm">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -165,9 +163,7 @@
                                         </svg>
                                         Tanpa Surat
                                     </span>
-
                                     @elseif($isNarasumber)
-                                    {{-- Tombol Khusus Ekskul/Narasumber (Biru) --}}
                                     <a href="{{ route('ekskul.manage_details', $belanja->id) }}"
                                         class="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white border border-transparent rounded-md text-xs font-bold transition-all shadow-sm">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -177,9 +173,7 @@
                                         </svg>
                                         Kelola Ekskul
                                     </a>
-
                                     @elseif($belanja->surats->count() > 0)
-                                    {{-- Tombol Surat Sudah Ada (Hijau) --}}
                                     <a href="{{ route('surat.index', $belanja->id) }}"
                                         class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white border border-transparent rounded-md text-xs font-bold transition-all shadow-sm">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -189,9 +183,7 @@
                                         </svg>
                                         Kelola Surat ({{ $belanja->surats->count() }})
                                     </a>
-
                                     @else
-                                    {{-- Tombol Belum Ada Surat (Oranye) --}}
                                     <a href="{{ route('surat.index', $belanja->id) }}"
                                         class="inline-flex items-center gap-1 px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white border border-transparent rounded-md text-xs font-bold transition-all shadow-sm">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -205,7 +197,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="5" class="px-6 py-16 text-center bg-white dark:bg-gray-800">
+                                <td colspan="6" class="px-6 py-16 text-center bg-white dark:bg-gray-800">
                                     <svg class="mx-auto h-12 w-12 text-gray-300 mb-3" fill="none" viewBox="0 0 24 24"
                                         stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
