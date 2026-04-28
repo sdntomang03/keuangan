@@ -152,10 +152,10 @@
                 {{-- KOP LAPORAN (Khusus Print) --}}
                 <div class="hidden print:block text-center mb-4 border-b pb-3 kop-laporan">
                     <h2 class="text-xl font-bold uppercase tracking-wider">
-                        Matriks Anggaran Kas (AKB) - {{ $anggaran->tahun ?? date('Y') }}
+                        Anggaran Kas - {{ $anggaran->tahun ?? date('Y') }}
                     </h2>
                     <p class="text-sm text-gray-700 font-bold mt-1">
-                        Unit Sekolah: {{ auth()->user()->sekolah->nama_sekolah ?? auth()->user()->name ?? 'Nama Sekolah
+                        {{ auth()->user()->sekolah->nama_sekolah ?? auth()->user()->name ?? 'Nama Sekolah
                         Tidak Tersedia' }}
                     </p>
                     <p class="text-xs text-gray-500 mt-1">
