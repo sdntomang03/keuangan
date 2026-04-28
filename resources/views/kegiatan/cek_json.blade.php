@@ -126,6 +126,7 @@
                                     </svg>
                                     <span class="text-[11px] font-bold uppercase text-slate-500 mr-2">Keterangan:</span>
                                     <span class="text-xs font-black text-slate-900 italic">{{ $keterangan }}</span>
+                                    UNIT: {{ $item['kode_sekolah_asal'] }}
                                 </div>
                             </td>
                             <td class="px-6 py-3 text-right">
@@ -139,13 +140,7 @@
                         @foreach($dataKeterangan['items'] as $item)
                         <tr class="hover:bg-slate-50 transition-colors">
                             <td class="px-6 py-4 pl-20">
-                                <div class="flex items-center gap-2 mb-1">
-                                    <span
-                                        class="flex-shrink-0 bg-slate-100 text-slate-600 text-[9px] font-black px-1.5 py-0.5 rounded border border-slate-200">
-                                        UNIT: {{ $item['kode_sekolah_asal'] }}
-                                    </span>
-                                    <div class="text-sm font-bold text-slate-800">{{ $item['namakomponen'] }}</div>
-                                </div>
+                                {{ $item['namakomponen'] }}
                             </td>
 
                             <td class="px-6 py-4 text-xs text-slate-500 italic max-w-xs break-words">
