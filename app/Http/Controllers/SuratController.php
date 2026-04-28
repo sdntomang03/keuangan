@@ -2392,7 +2392,7 @@ class SuratController extends Controller
             'logo' => 'nullable|image|max:2048',
         ]);
 
-        $sekolah = \App\Models\Sekolah::with('sudin')->find(auth()->user()->sekolah_id);
+        $sekolah = Sekolah::with('sudin')->find(auth()->user()->sekolah_id);
 
         // Konversi logo ke Base64 jika user upload
         $logoBase64 = null;
@@ -2424,16 +2424,25 @@ class SuratController extends Controller
         $anggaran = $request->anggaran_data;
 
         if (! $anggaran) {
-            // Jika tidak ada anggaran aktif, kembalikan ke halaman depan/pengaturan
             return redirect()->route('sekolah.index')
                 ->with('error', 'Silakan pilih Anggaran Aktif terlebih dahulu.');
         }
 
-        // 2. Tangkap request 'tw'.
-        // Jika kosong, gunakan triwulan aktif dari anggaran sebagai default
-        $selectedTw = $request->input('tw', $anggaran->triwulan_aktif);
+        // 2. Ambil data sekolah untuk fallback triwulan_aktif
+        $sekolah = \App\Models\Sekolah::find(auth()->user()->sekolah_id);
 
-        // 3. Query Utama Belanja
+        if (! $sekolah) {
+            return back()->with('error', 'Data sekolah tidak ditemukan.');
+        }
+
+        // 3. Logika Fallback Triwulan (Anggaran -> Sekolah)
+        // Jika triwulan_aktif di anggaran kosong/null, gunakan milik sekolah
+        $defaultTw = ! empty($anggaran->triwulan_aktif) ? $anggaran->triwulan_aktif : $sekolah->triwulan_aktif;
+
+        // Tangkap request 'tw', jika tidak ada, gunakan $defaultTw
+        $selectedTw = $request->input('tw', $defaultTw);
+
+        // 4. Query Utama Belanja
         $query = \App\Models\Belanja::with(['korek', 'surats', 'rekanan'])
             ->where('anggaran_id', $anggaran->id)
             ->where('tw', $selectedTw);
@@ -2447,7 +2456,7 @@ class SuratController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        // 4. Ambil daftar Kode Rekening untuk dropdown filter (Sesuai Anggaran & TW)
+        // 5. Ambil daftar Kode Rekening untuk dropdown filter
         $listKorek = \App\Models\Belanja::with('korek')
             ->where('anggaran_id', $anggaran->id)
             ->where('tw', $selectedTw)
@@ -2455,7 +2464,7 @@ class SuratController extends Controller
             ->unique('kodeakun')
             ->values();
 
-        // 5. Passing data ke view
+        // 6. Passing data ke view
         return view('surat.daftar_surat', compact('listBelanja', 'listKorek', 'selectedTw', 'anggaran'));
     }
 
