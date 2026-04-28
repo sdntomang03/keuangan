@@ -2367,20 +2367,36 @@ class SuratController extends Controller
         return $pdf->stream($filename);
     }
 
-    public function createCoverLpj()
+    public function createCoverLpj(Request $request)
     {
-        $sekolah = Sekolah::find(auth()->user()->sekolah_id);
-        $triwulanAktif = $sekolah->triwulan_aktif;
+        // 1. Ambil data anggaran aktif dari middleware
+        $anggaran = $request->anggaran_data;
 
-        // Asumsi Anda mengambil daftar rekening unik dari tabel Belanja di TW aktif
-        $listRekening = Belanja::with('korek')
-            ->where('anggaran_id', $sekolah->anggaran_id_aktif)
+        if (! $anggaran) {
+            return redirect()->route('sekolah.index')
+                ->with('error', 'Silakan pilih Anggaran Aktif terlebih dahulu.');
+        }
+
+        // 2. Ambil data sekolah
+        $sekolah = \App\Models\Sekolah::find(auth()->user()->sekolah_id);
+
+        if (! $sekolah) {
+            return back()->with('error', 'Data sekolah tidak ditemukan.');
+        }
+
+        // 3. Logika Fallback Triwulan (Anggaran -> Sekolah)
+        $triwulanAktif = ! empty($anggaran->triwulan_aktif) ? $anggaran->triwulan_aktif : $sekolah->triwulan_aktif;
+
+        // 4. Mengambil daftar rekening unik dari tabel Belanja di TW aktif & Anggaran aktif
+        $listRekening = \App\Models\Belanja::with('korek')
+            ->where('anggaran_id', $anggaran->id)
             ->where('tw', $triwulanAktif)
             ->get()
             ->unique('kodeakun')
             ->values();
 
-        return view('surat.cover_input', compact('sekolah', 'triwulanAktif', 'listRekening'));
+        // 5. Passing $anggaran juga ke view jika dibutuhkan untuk judul/kop
+        return view('surat.cover_input', compact('sekolah', 'triwulanAktif', 'listRekening', 'anggaran'));
     }
 
     public function generateCoverPdf(Request $request)
