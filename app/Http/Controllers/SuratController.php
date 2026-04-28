@@ -2421,7 +2421,7 @@ class SuratController extends Controller
     public function daftarSurat(Request $request)
     {
         $user = Auth::user();
-        $sekolah = Sekolah::find($user->sekolah_id);
+        $sekolah = \App\Models\Sekolah::find($user->sekolah_id);
 
         if (! $sekolah) {
             return back()->with('error', 'Data sekolah tidak ditemukan.');
@@ -2429,11 +2429,14 @@ class SuratController extends Controller
 
         $anggaranId = $sekolah->anggaran_id_aktif;
 
+        // AMBIL DATA ANGGARAN UNTUK DI-PASSING KE VIEW (Penting agar tulisan/judul di view berubah)
+        $anggaran = \App\Models\Anggaran::find($anggaranId);
+
         // 1. Tangkap request 'tw'. Jika kosong, gunakan triwulan aktif sekolah sebagai default
         $selectedTw = $request->input('tw', $sekolah->triwulan_aktif);
 
-        // 2. Tambahkan filter 'tw' ke query utama
-        $query = Belanja::with(['korek', 'surats'])
+        // 2. Tambahkan filter 'tw' dan 'anggaran_id' ke query utama
+        $query = \App\Models\Belanja::with(['korek', 'surats'])
             ->where('anggaran_id', $anggaranId)
             ->where('tw', $selectedTw);
 
@@ -2446,16 +2449,16 @@ class SuratController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        // 3. Pastikan daftar filter Kode Rekening juga menyesuaikan Triwulan yang dipilih
-        $listKorek = Belanja::with('korek')
+        // 3. Pastikan daftar filter Kode Rekening juga menyesuaikan Triwulan & Anggaran Aktif
+        $listKorek = \App\Models\Belanja::with('korek')
             ->where('anggaran_id', $anggaranId)
             ->where('tw', $selectedTw)
             ->get()
             ->unique('kodeakun')
             ->values();
 
-        // 4. Passing variable $selectedTw ke view
-        return view('surat.daftar_surat', compact('listBelanja', 'listKorek', 'selectedTw'));
+        // 4. Masukkan $anggaran ke dalam compact()
+        return view('surat.daftar_surat', compact('listBelanja', 'listKorek', 'selectedTw', 'anggaran'));
     }
 
     public function daftarTalanganNpd(Request $request)
