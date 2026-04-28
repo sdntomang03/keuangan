@@ -95,7 +95,7 @@
                             </th>
                             <th
                                 class="px-6 py-4 text-right text-[10px] font-black text-slate-400 uppercase tracking-wider">
-                                Total + Pajak
+                                Total
                             </th>
                         </tr>
                     </thead>
@@ -174,7 +174,7 @@
                             </td>
 
                             <td class="px-6 py-4 text-right text-sm font-mono font-black text-slate-900">
-                                Rp {{ number_format((float)$item['totalharga'] + (float)$item['totalpajak'], 0, ',',
+                                Rp {{ number_format((float)$item['totalharga'], 0, ',',
                                 '.') }}
                             </td>
                         </tr>
