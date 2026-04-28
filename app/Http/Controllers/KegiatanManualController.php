@@ -795,7 +795,7 @@ class KegiatanManualController extends Controller
                     $kegiatan = strip_tags($item['namasub'] ?? $item['giatsubteks'] ?? 'Kegiatan Tidak Diketahui');
                     $kegiatan = trim(preg_replace('/\s+/', ' ', $kegiatan));
                     $keterangan = trim($item['keterangan'] ?? 'Tanpa Keterangan');
-                    $totalAkhir = (float) ($item['totalharga'] ?? 0) + (float) ($item['totalpajak'] ?? 0);
+                    $totalAkhir = (float) $item['totalharga'];
                     $totalKeseluruhan += $totalAkhir;
 
                     if (! isset($groupedData[$kegiatan])) {
