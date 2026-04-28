@@ -201,7 +201,7 @@
                                     <div class="w-2 h-4 bg-indigo-600 mr-3 rounded-sm print:bg-gray-800"></div>
                                     <span
                                         class="font-black text-indigo-900 print:text-black text-[11px] uppercase tracking-wide">
-                                        KEGIATAN: {{ $namaKegiatan }}
+                                        {{ $namaKegiatan }}
                                     </span>
                                 </div>
                             </td>
@@ -226,7 +226,7 @@
                                     </svg>
                                     <span
                                         class="font-bold text-slate-700 print:text-black text-[10px] uppercase tracking-wide">
-                                        REKENING: {{ $kodeAkunText }} - {{ $namaAkun }}
+                                        {{ $kodeAkunText }} - {{ $namaAkun }}
                                     </span>
                                 </div>
                             </td>
