@@ -126,7 +126,7 @@
                                     </svg>
                                     <span class="text-[11px] font-bold uppercase text-slate-500 mr-2">Keterangan:</span>
                                     <span class="text-xs font-black text-slate-900 italic">{{ $keterangan }}</span>
-                                    UNIT: {{ $item['kode_sekolah_asal'] }}
+
                                 </div>
                             </td>
                             <td class="px-6 py-3 text-right">
