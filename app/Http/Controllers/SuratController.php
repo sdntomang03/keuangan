@@ -2420,24 +2420,25 @@ class SuratController extends Controller
 
     public function daftarSurat(Request $request)
     {
-        $user = Auth::user();
-        $sekolah = Sekolah::find($user->sekolah_id);
+        // 1. Ambil data anggaran aktif dari middleware
+        $anggaran = $request->anggaran_data;
 
-        if (! $sekolah) {
-            return back()->with('error', 'Data sekolah tidak ditemukan.');
+        if (! $anggaran) {
+            // Jika tidak ada anggaran aktif, kembalikan ke halaman depan/pengaturan
+            return redirect()->route('sekolah.index')
+                ->with('error', 'Silakan pilih Anggaran Aktif terlebih dahulu.');
         }
 
-        $anggaranId = $sekolah->anggaran_id_aktif;
+        // 2. Tangkap request 'tw'.
+        // Jika kosong, gunakan triwulan aktif dari anggaran sebagai default
+        $selectedTw = $request->input('tw', $anggaran->triwulan_aktif);
 
-        // 1. Tangkap request 'tw'. Jika kosong, gunakan triwulan aktif sekolah sebagai default
-        $selectedTw = $request->input('tw', $sekolah->triwulan_aktif);
-
-        // 2. Tambahkan filter 'tw' ke query utama
-        $query = Belanja::with(['korek', 'surats'])
-            ->where('anggaran_id', $anggaranId)
+        // 3. Query Utama Belanja
+        $query = \App\Models\Belanja::with(['korek', 'surats', 'rekanan'])
+            ->where('anggaran_id', $anggaran->id)
             ->where('tw', $selectedTw);
 
-        // Filter berdasarkan kode rekening
+        // Filter berdasarkan kode rekening jika ada
         if ($request->filled('kode_rekening')) {
             $query->where('kodeakun', $request->kode_rekening);
         }
@@ -2446,16 +2447,16 @@ class SuratController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        // 3. Pastikan daftar filter Kode Rekening juga menyesuaikan Triwulan yang dipilih
-        $listKorek = Belanja::with('korek')
-            ->where('anggaran_id', $anggaranId)
+        // 4. Ambil daftar Kode Rekening untuk dropdown filter (Sesuai Anggaran & TW)
+        $listKorek = \App\Models\Belanja::with('korek')
+            ->where('anggaran_id', $anggaran->id)
             ->where('tw', $selectedTw)
             ->get()
             ->unique('kodeakun')
             ->values();
 
-        // 4. Passing variable $selectedTw ke view
-        return view('surat.daftar_surat', compact('listBelanja', 'listKorek', 'selectedTw'));
+        // 5. Passing data ke view
+        return view('surat.daftar_surat', compact('listBelanja', 'listKorek', 'selectedTw', 'anggaran'));
     }
 
     public function daftarTalanganNpd(Request $request)
