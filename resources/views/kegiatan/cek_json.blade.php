@@ -121,15 +121,26 @@
                         @foreach($grupKeterangan as $keterangan => $dataKeterangan)
                         <tr class="bg-white border-b border-slate-100 sticky top-[52px] z-30 shadow-sm">
                             <td colspan="5" class="px-6 py-3 pl-14">
-                                <div class="flex items-center">
-                                    <svg class="w-3.5 h-3.5 mr-2 text-slate-400" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
-                                        </path>
-                                    </svg>
-                                    <span class="text-[11px] font-bold uppercase text-slate-500 mr-2">Keterangan:</span>
-                                    <span class="text-xs font-black text-slate-900 italic">{{ $keterangan }}</span>
+                                <div class="flex flex-col">
+                                    <div class="flex items-center">
+                                        <svg class="w-3.5 h-3.5 mr-2 text-slate-400" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
+                                            </path>
+                                        </svg>
+                                        <span
+                                            class="text-[11px] font-bold uppercase text-slate-500 mr-2">Keterangan:</span>
+                                        <span class="text-xs font-black text-slate-900 italic">{{ $keterangan }}</span>
+                                    </div>
+
+                                    <div class="mt-1.5 ml-5">
+                                        <span
+                                            class="inline-block bg-slate-100 text-slate-600 text-[9px] font-black px-1.5 py-0.5 rounded border border-slate-200">
+                                            UNIT: {{ collect($dataKeterangan['items'])->first()['kode_sekolah_asal'] ??
+                                            '-' }}
+                                        </span>
+                                    </div>
                                 </div>
                             </td>
                             <td class="px-6 py-3 text-right">
@@ -144,12 +155,6 @@
                         <tr class="hover:bg-slate-50 transition-colors">
                             <td class="px-6 py-4 pl-20">
                                 <div class="text-sm font-bold text-slate-800">{{ $item['namakomponen'] }}</div>
-                                <div class="mt-1.5">
-                                    <span
-                                        class="inline-block bg-slate-100 text-slate-600 text-[9px] font-black px-1.5 py-0.5 rounded border border-slate-200">
-                                        UNIT: {{ $item['kode_sekolah_asal'] }}
-                                    </span>
-                                </div>
                             </td>
 
                             <td class="px-6 py-4 text-xs text-slate-500 italic max-w-xs break-words">
@@ -167,6 +172,7 @@
                             <td class="px-6 py-4 text-right text-xs font-mono font-bold text-slate-500">
                                 Rp {{ number_format($item['hargasatuan'], 0, ',', '.') }}
                             </td>
+
                             <td class="px-6 py-4 text-right text-sm font-mono font-black text-slate-900">
                                 Rp {{ number_format((float)$item['totalharga'] + (float)$item['totalpajak'], 0, ',',
                                 '.') }}
