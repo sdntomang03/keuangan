@@ -74,23 +74,31 @@
                     <thead class="bg-slate-50 sticky top-0 shadow-sm z-40">
                         <tr>
                             <th
-                                class="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-wider">
-                                Detail Komponen</th>
+                                class="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-wider w-1/3">
+                                Detail Komponen
+                            </th>
+                            <th
+                                class="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-wider w-1/4">
+                                Spesifikasi
+                            </th>
                             <th
                                 class="px-6 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-wider">
-                                Koefisien</th>
+                                Koefisien
+                            </th>
                             <th
                                 class="px-6 py-4 text-right text-[10px] font-black text-slate-400 uppercase tracking-wider">
-                                Harga Satuan</th>
+                                Harga Satuan
+                            </th>
                             <th
                                 class="px-6 py-4 text-right text-[10px] font-black text-slate-400 uppercase tracking-wider">
-                                Total + Pajak</th>
+                                Total + Pajak
+                            </th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200 bg-white">
                         @foreach($groupedData as $namaKegiatan => $grupKeterangan)
                         <tr class="bg-indigo-50/50">
-                            <td colspan="4" class="px-6 py-4 border-b-2 border-indigo-100">
+                            <td colspan="5" class="px-6 py-4 border-b-2 border-indigo-100">
                                 <div class="flex items-center">
                                     <div
                                         class="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center mr-3 shadow-sm">
@@ -108,7 +116,7 @@
 
                         @foreach($grupKeterangan as $keterangan => $dataKeterangan)
                         <tr class="bg-white border-b border-slate-100 sticky top-[52px] z-30 shadow-sm">
-                            <td colspan="3" class="px-6 py-3 pl-14">
+                            <td colspan="4" class="px-6 py-3 pl-14">
                                 <div class="flex items-center">
                                     <svg class="w-3.5 h-3.5 mr-2 text-slate-400" fill="none" stroke="currentColor"
                                         viewBox="0 0 24 24">
@@ -138,9 +146,12 @@
                                     </span>
                                     <div class="text-sm font-bold text-slate-800">{{ $item['namakomponen'] }}</div>
                                 </div>
-                                <div class="text-[10px] text-slate-400 italic line-clamp-1 pl-[45px]">{{ $item['spek']
-                                    ?? '-' }}</div>
                             </td>
+
+                            <td class="px-6 py-4 text-xs text-slate-500 italic max-w-xs break-words">
+                                {{ $item['spek'] ?? '-' }}
+                            </td>
+
                             <td class="px-6 py-4 text-xs font-black text-slate-400 italic">{{ $item['koefisien'] }}</td>
                             <td class="px-6 py-4 text-right text-xs font-mono font-bold text-slate-500">
                                 Rp {{ number_format($item['hargasatuan'], 0, ',', '.') }}
@@ -156,13 +167,12 @@
                     </tbody>
                 </table>
             </div>
-        </div>
-        @endif
+            @endif
 
-        <div class="mt-8 pt-8 border-t border-slate-200 text-center">
-            <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">
-                &copy; 2026 SI-KEUANGAN &bull; Portal Terintegrasi SDN Tomang 03 Pagi
-            </p>
+            <div class="mt-8 pt-8 border-t border-slate-200 text-center">
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">
+                    &copy; 2026 SI-KEUANGAN &bull; Portal Terintegrasi SDN Tomang 03 Pagi
+                </p>
+            </div>
         </div>
-    </div>
 </x-manual-layout>
