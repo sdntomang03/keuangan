@@ -5,33 +5,75 @@
         </h2>
     </x-slot>
 
-    {{-- Tambahan CSS khusus Print --}}
+    {{-- ========================================== --}}
+    {{-- CSS KHUSUS PRINT (MENCEGAH TERPOTONG) --}}
+    {{-- ========================================== --}}
     <style>
         @media print {
+            @page {
+                size: landscape;
+                margin: 5mm;
+                /* 1. Margin kertas dibuat sangat tipis */
+            }
+
             body {
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
                 background-color: white !important;
+                zoom: 90%;
+                /* 2. Mengecilkan skala keseluruhan halaman (Khusus Chrome/Edge) */
             }
 
-            @page {
-                size: landscape;
-                margin: 10mm;
-            }
-
+            /* Menyembunyikan elemen yang tidak perlu dicetak */
             header,
             nav,
-            aside {
+            aside,
+            .print\:hidden {
                 display: none !important;
             }
 
+            /* Memaksa kontainer menggunakan 100% lebar kertas */
             .max-w-7xl {
                 max-width: 100% !important;
+                width: 100% !important;
+                margin: 0 !important;
             }
 
             .py-4 {
-                padding-top: 0 !important;
-                padding-bottom: 0 !important;
+                padding: 0 !important;
+            }
+
+            /* 3. OPTIMASI TABEL AGAR MUAT 12 BULAN */
+            table {
+                width: 100% !important;
+                table-layout: auto !important;
+                /* Biarkan browser yang mengatur otomatis lebar kolom */
+            }
+
+            th,
+            td {
+                padding: 4px 2px !important;
+                /* Padding sel sangat dikurangi */
+                font-size: 9px !important;
+                /* Font dikecilkan secara paksa ke 9px */
+                line-height: 1.2 !important;
+                word-wrap: break-word !important;
+            }
+
+            /* Menyesuaikan ukuran kop surat saat print */
+            .kop-laporan h2 {
+                font-size: 14px !important;
+                margin-bottom: 2px !important;
+            }
+
+            .kop-laporan p {
+                font-size: 10px !important;
+                margin-bottom: 0 !important;
+            }
+
+            /* Mencegah baris (row) terbelah dua di antara halaman ke-1 dan ke-2 */
+            tr {
+                page-break-inside: avoid !important;
             }
         }
     </style>
@@ -89,7 +131,6 @@
     $targetMonths = $filterTw ? $mapTriwulan[$filterTw] : range(1, 12);
     $targetQuarters = $filterTw ? [$filterTw] : [1, 2, 3, 4];
 
-    // FILTER: Buang baris yang tidak ada uangnya
     $filteredRkas = $dataRkas->filter(function ($item) use ($targetMonths) {
     $sumTarget = 0;
     foreach ($targetMonths as $m) {
@@ -99,11 +140,7 @@
     return $sumTarget > 0;
     });
 
-    // Pengelompokan Tingkat 1: Berdasarkan Kegiatan
     $groupedRkas = $filteredRkas->groupBy('idbl');
-
-    // Total Kolom untuk perhitungan colspan dinamis
-    // 4 Kolom Statis (Komponen, Satuan, Harga, Total) + Jumlah Kolom Dinamis (TW/Bulan)
     $totalKolom = 4 + ($tampilan == 'triwulan' ? count($targetQuarters) : count($targetMonths));
     @endphp
 
@@ -112,8 +149,8 @@
             <div
                 class="bg-white shadow-sm sm:rounded-lg p-4 overflow-x-auto print:shadow-none print:p-0 print:overflow-visible">
 
-                {{-- KOP LAPORAN --}}
-                <div class="hidden print:block text-center mb-6 border-b pb-4">
+                {{-- KOP LAPORAN (Khusus Print) --}}
+                <div class="hidden print:block text-center mb-4 border-b pb-3 kop-laporan">
                     <h2 class="text-xl font-bold uppercase tracking-wider">
                         Matriks Anggaran Kas (AKB) - {{ $anggaran->tahun ?? date('Y') }}
                     </h2>
@@ -127,7 +164,7 @@
                     </p>
                 </div>
 
-                <table class="w-full border-collapse border border-gray-300 text-[11px] print:text-[10px]">
+                <table class="w-full border-collapse border border-gray-300 text-[11px]">
                     <thead class="bg-gray-100 font-bold print:bg-gray-200">
                         <tr>
                             <th rowspan="2" class="border border-gray-300 px-3 py-2 align-middle text-left w-64">
@@ -152,8 +189,7 @@
                             @else
                             <th colspan="{{ count($targetMonths) }}"
                                 class="border border-gray-300 px-2 py-1 text-center bg-blue-50 print:bg-blue-100">
-                                {{ $filterTw ? 'Rincian Bulan (TW ' . $filterTw . ')' : 'Rincian Per Bulan (Jan - Des)'
-                                }}
+                                {{ $filterTw ? 'Rincian Bulan (TW ' . $filterTw . ')' : 'Rincian Per Bulan' }}
                             </th>
                             @endif
                         </tr>
@@ -176,8 +212,6 @@
                         @forelse ($groupedRkas as $idbl => $itemsByKegiatan)
                         @php
                         $namaKegiatan = $itemsByKegiatan->first()->kegiatan->namagiat ?? 'Kegiatan Tidak Terdefinisi';
-
-                        // Pengelompokan Tingkat 2: Berdasarkan Kode Rekening di dalam Kegiatan tersebut
                         $groupedByKorek = $itemsByKegiatan->groupBy(function($item) {
                         return $item->korek->kode ?? '-';
                         });
@@ -209,7 +243,7 @@
 
                         {{-- 3. BARIS RINCIAN KOMPONEN --}}
                         @foreach ($itemsByKorek as $rkas)
-                        <tr class="hover:bg-gray-50 transition print:break-inside-avoid">
+                        <tr class="hover:bg-gray-50 transition">
                             <td class="border border-gray-300 px-3 py-1.5 pl-10">
                                 <div class="font-bold text-gray-800">{{ $rkas->namakomponen }}</div>
                                 <div class="text-[9px] text-gray-500 italic mt-0.5">Spesifikasi: {{ $rkas->spek ?? '-'
