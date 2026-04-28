@@ -65,6 +65,16 @@
                 </svg>
                 Laporan
             </a>
+
+            <a href="{{ route('kegiatan.cek_json') }}"
+                class="group flex items-center px-2 py-2 text-sm font-medium rounded-md {{ request()->routeIs('kegiatan.cek_json') ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-700/50 dark:hover:text-white' }}">
+                <svg class="mr-3 h-5 w-5 {{ request()->routeIs('kegiatan.cek_json') ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 group-hover:text-slate-500 dark:group-hover:text-slate-300' }}"
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                </svg>
+                Cek JSON
+            </a>
         </nav>
     </div>
 
