@@ -317,7 +317,9 @@
             <x-responsive-nav-link :href="route('rkas.anggaran')">{{ __('Rincian Per Korek') }}</x-responsive-nav-link>
             <x-responsive-nav-link :href="route('akb.rincian')">{{ __('Rincian Per Komponen') }}</x-responsive-nav-link>
             <x-responsive-nav-link :href="route('arkas.index')">{{ __('Format Arkas') }}</x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('rkas.cetak_laporan')">{{ __('Cetak RKAS') }}</x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('rkas.cetak_laporan')" target="_blank" rel="noopener noreferrer">
+                {{ __('Cetak RKAS') }}
+            </x-responsive-nav-link>
 
             <div
                 class="block px-4 py-2 mt-2 text-xs font-black text-indigo-500 bg-indigo-50 dark:bg-gray-800 uppercase tracking-wider">
