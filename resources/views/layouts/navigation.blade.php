@@ -216,6 +216,8 @@
                                     JSON')
                                     }}
                                 </x-dropdown-link>
+                                <x-dropdown-link :href="route('admin.anggaran.index')">{{ __('Generate Anggaran') }}
+                                </x-dropdown-link>
                             </x-slot>
                         </x-dropdown>
                     </div>

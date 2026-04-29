@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AnggaranController;
 use App\Http\Controllers\Admin\KorekController;
 use App\Http\Controllers\Admin\RkasCleanupController;
 use App\Http\Controllers\Admin\SekolahController as AdminSekolahController;
@@ -47,7 +48,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/rkas/rekap', [RkasController::class, 'rekap'])->name('rkas.rekap');
     Route::post('/rkas/import', [RkasController::class, 'import'])->name('rkas.import');
     Route::get('/rkas/rincian', [RkasController::class, 'rincian'])->name('rkas.rincian');
-
+    Route::get('/rkas/cetak-laporan', [RkasController::class, 'cetakLaporan'])->name('rkas.cetak_laporan');
     Route::patch('/rkas/{id}/update-idkomponen', [RkasController::class, 'updateIdKomponen'])->name('rkas.update.idkomponen');
 
 });
@@ -364,6 +365,13 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/kegiatan/{id}', [App\Http\Controllers\KegiatanManualController::class, 'destroy'])->name('kegiatan.destroy');
     Route::match(['get', 'post'], '/kegiatan/{id}/rekonsiliasi', [KegiatanManualController::class, 'rekonsiliasi'])->name('kegiatan.rekonsiliasi');
     Route::match(['get', 'post'], '/kegiatan/cek-json', [KegiatanManualController::class, 'cekJson'])->name('kegiatan.cek_json');
+});
+
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    // Halaman Utama Generate Anggaran
+    Route::get('/anggaran', [AnggaranController::class, 'index'])->name('anggaran.index');
+    // Proses Generate
+    Route::post('/anggaran/generate', [AnggaranController::class, 'generate'])->name('anggaran.generate');
 });
 
 Route::get('/cetak-cover', [CetakController::class, 'cetakCover'])->name('cetak.cover');

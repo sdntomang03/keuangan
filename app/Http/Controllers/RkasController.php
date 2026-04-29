@@ -421,4 +421,60 @@ class RkasController extends Controller
             'periodeText'
         ));
     }
+
+    /**
+     * Menampilkan Laporan RKAS siap cetak
+     * Hierarki: Kegiatan -> Keterangan -> Rekening -> Komponen
+     */
+    public function cetakLaporan(Request $request)
+    {
+        $anggaran = $request->anggaran_data;
+
+        if (! $anggaran) {
+            return redirect()->route('sekolah.index')
+                ->with('error', 'Silakan tentukan Anggaran Aktif terlebih dahulu.');
+        }
+
+        // 1. Tarik semua data RKAS untuk anggaran aktif beserta relasinya
+        $dataRkas = Rkas::with(['kegiatan', 'korek'])
+            ->where('anggaran_id', $anggaran->id)
+            ->orderBy('idbl')
+            ->orderBy('keterangan')
+            ->orderBy('kodeakun')
+            ->get();
+
+        // 2. Grouping Data Bertingkat (4 Level)
+        $laporan = $dataRkas->groupBy('idbl')->map(function ($itemsByKegiatan) {
+            return (object) [
+                'kode_kegiatan' => $itemsByKegiatan->first()->idbl,
+                'nama_kegiatan' => $itemsByKegiatan->first()->kegiatan->namagiat ?? 'Kegiatan Tidak Terdefinisi',
+                'total_kegiatan' => $itemsByKegiatan->sum('totalharga'),
+
+                // Grouping Level 2: Berdasarkan Keterangan di tabel RKAS
+                'keterangan_list' => $itemsByKegiatan->groupBy('keterangan')->map(function ($itemsByKeterangan, $namaKeterangan) {
+                    return (object) [
+                        // Jika field keterangan kosong, beri label default
+                        'nama_keterangan' => $namaKeterangan ?: 'Tanpa Keterangan',
+                        'total_keterangan' => $itemsByKeterangan->sum('totalharga'),
+
+                        // Grouping Level 3: Berdasarkan Kode Rekening
+                        'rekening' => $itemsByKeterangan->groupBy('kodeakun')->map(function ($itemsByRekening) {
+                            return (object) [
+                                'kode_rekening' => $itemsByRekening->first()->kodeakun,
+                                'nama_rekening' => $itemsByRekening->first()->korek->ket ?? 'Rekening Tidak Terdefinisi',
+                                'total_rekening' => $itemsByRekening->sum('totalharga'),
+
+                                // Level 4: Komponen
+                                'komponen' => $itemsByRekening,
+                            ];
+                        })->values(),
+                    ];
+                })->values(),
+            ];
+        })->values();
+
+        $grandTotal = $dataRkas->sum('totalharga');
+
+        return view('rkas.cetak_laporan', compact('anggaran', 'laporan', 'grandTotal'));
+    }
 }
