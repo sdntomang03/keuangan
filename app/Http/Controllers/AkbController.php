@@ -412,4 +412,145 @@ class AkbController extends Controller
 
         return response()->json(['status' => 'success', 'message' => 'Berhasil diupdate']);
     }
+
+    /**
+     * Menampilkan halaman awal komparasi dan modal upload
+     */
+    /**
+     * Menampilkan halaman awal komparasi dan modal upload
+     */
+    public function indexPerbandingan(Request $request)
+    {
+        $anggaran = $request->anggaran_data;
+        if (! $anggaran) {
+            return back()->with('error', 'Silakan pilih Anggaran Aktif terlebih dahulu.');
+        }
+
+        // Kirim koleksi kosong karena user belum mengupload file
+        $koleksiPerbandingan = collect([]);
+
+        // Pastikan nama file view sesuai
+        return view('akb.perbandingan', compact('koleksiPerbandingan', 'anggaran'));
+    }
+
+    public function perbandingan(Request $request)
+    {
+        $anggaran = $request->anggaran_data;
+        if (! $anggaran) {
+            return back()->with('error', 'Silakan pilih Anggaran Aktif terlebih dahulu.');
+        }
+
+        $request->validate([
+            'json_files' => 'required|array',
+            'json_files.*' => 'required|mimes:json,txt',
+            'jenis_json' => 'required|in:baru,lama', // Validasi pilihan dari modal
+        ]);
+
+        $jenisJson = $request->jenis_json;
+        $mapAnggaran = ['bos' => 10, 'bop' => 20];
+        $singkatan = strtolower($anggaran->singkatan);
+        $jenisAnggaran = $mapAnggaran[$singkatan] ?? 30;
+
+        // 1. Ambil Data DB Lokal
+        $dataDb = \App\Models\Akb::where('anggaran_id', $anggaran->id)->get()->keyBy('idblrinci');
+
+        // 2. Ambil dan Gabungkan Data JSON
+        $dataJsonMerged = [];
+        foreach ($request->file('json_files') as $file) {
+            $content = json_decode(file_get_contents($file->getRealPath()), true);
+            foreach ($content['data'] ?? [] as $item) {
+                $idblrinciUnik = $jenisAnggaran.$item['idblrinci'];
+                $dataJsonMerged[$idblrinciUnik] = $item;
+            }
+        }
+
+        // 3. Kumpulkan semua ID yang unik dari DB maupun JSON (Untuk dicek silang)
+        $semuaIdUnik = collect($dataDb->keys())->merge(array_keys($dataJsonMerged))->unique();
+
+        $hasilPerbandingan = [];
+
+        foreach ($semuaIdUnik as $id) {
+            $itemDb = $dataDb->get($id);
+            $itemJson = $dataJsonMerged[$id] ?? null;
+
+            // --- Tentukan Mana yang Lama dan Mana yang Baru ---
+            if ($jenisJson == 'baru') {
+                $sumberLama = 'Lokal';
+                $sumberBaru = 'JSON';
+                $totalLama = $itemDb ? (float) $itemDb->totalakb : 0;
+                $totalBaru = $itemJson ? (float) ($itemJson['totalakb'] ?? 0) : 0;
+                $namaKomponen = $itemJson['namakomponen'] ?? ($itemDb->rkas->namakomponen ?? "ID: $id");
+                $koefisien = $itemJson['koefisien'] ?? ($itemDb->rkas->koefisien ?? '-');
+            } else {
+                // Jika user memilih JSON sebagai AKB Lama
+                $sumberLama = 'JSON';
+                $sumberBaru = 'Lokal';
+                $totalLama = $itemJson ? (float) ($itemJson['totalakb'] ?? 0) : 0;
+                $totalBaru = $itemDb ? (float) $itemDb->totalakb : 0;
+                $namaKomponen = $itemDb->rkas->namakomponen ?? ($itemJson['namakomponen'] ?? "ID: $id");
+                $koefisien = $itemDb->rkas->koefisien ?? ($itemJson['koefisien'] ?? '-');
+            }
+
+            // --- Cek Pergeseran Bulanan ---
+            $bulanLama = [];
+            $bulanBaru = [];
+            $selisihBulan = [];
+            $adaPergeseranBulan = false;
+
+            for ($i = 1; $i <= 12; $i++) {
+                if ($jenisJson == 'baru') {
+                    $bLama = $itemDb ? (float) $itemDb->{"bulan$i"} : 0;
+                    $bBaru = $itemJson ? (float) ($itemJson["bulan$i"] ?? 0) : 0;
+                } else {
+                    $bLama = $itemJson ? (float) ($itemJson["bulan$i"] ?? 0) : 0;
+                    $bBaru = $itemDb ? (float) $itemDb->{"bulan$i"} : 0;
+                }
+
+                $bulanLama[$i] = $bLama;
+                $bulanBaru[$i] = $bBaru;
+                $sBulan = $bBaru - $bLama;
+                $selisihBulan[$i] = $sBulan;
+
+                if ($sBulan != 0) {
+                    $adaPergeseranBulan = true;
+                }
+            }
+
+            $selisihTotal = $totalBaru - $totalLama;
+
+            // --- ATURAN PENENTUAN STATUS (Sesuai Permintaan) ---
+            if ($totalLama == 0 && $totalBaru > 0) {
+                $status = 'Baru';
+            } elseif ($totalBaru == 0 && $totalLama > 0) {
+                $status = 'Dihapus';
+            } elseif ($selisihTotal != 0) {
+                $status = 'Berubah Pagu';
+            } elseif ($adaPergeseranBulan) {
+                $status = 'Geser Jadwal';
+            } else {
+                $status = 'Tetap';
+            }
+
+            $hasilPerbandingan[] = [
+                'idblrinci' => $id,
+                'namakomponen' => $namaKomponen,
+                'koefisien' => $koefisien,
+                'status' => $status,
+                'harga_lama' => $totalLama,
+                'harga_baru' => $totalBaru,
+                'selisih' => $selisihTotal,
+                'bulan_lama' => $bulanLama,
+                'bulan_baru' => $bulanBaru,
+                'selisih_bulan' => $selisihBulan,
+            ];
+        }
+
+        $koleksiPerbandingan = collect($hasilPerbandingan);
+
+        // Kirim label tabel agar View bisa menyesuaikan
+        $labelLama = $jenisJson == 'baru' ? 'Data Lokal (Lama)' : 'JSON Dinas (Lama)';
+        $labelBaru = $jenisJson == 'baru' ? 'JSON Dinas (Baru)' : 'Data Lokal (Baru)';
+
+        return view('akb.perbandingan', compact('koleksiPerbandingan', 'anggaran', 'labelLama', 'labelBaru'));
+    }
 }

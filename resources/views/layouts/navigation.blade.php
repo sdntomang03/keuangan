@@ -44,11 +44,18 @@
                                 <x-dropdown-link :href="route('rkas.rekap')">{{ __('Rekap RKAS') }}
                                 </x-dropdown-link>
                                 <x-dropdown-link :href="route('akb.satuan')">{{ __('Format Excel') }}</x-dropdown-link>
-                                <x-dropdown-link :href="route('arkas.index')">{{ __('Format Arkas') }}</x-dropdown-link>
-                                <x-responsive-nav-link :href="route('rkas.cetak_laporan')" target="_blank"
+                                <x-dropdown-link :href="route('arkas.index')" target="_blank" rel="noopener noreferrer">
+                                    {{ __('Format Arkas') }}
+                                </x-dropdown-link>
+
+                                <x-dropdown-link :href="route('rkas.cetak_laporan')" target="_blank"
                                     rel="noopener noreferrer">
                                     {{ __('Cetak RKAS') }}
-                                </x-responsive-nav-link>
+                                </x-dropdown-link>
+                                <x-dropdown-link :href="route('akb.perbandingan.index')" target="_blank"
+                                    rel="noopener noreferrer">
+                                    {{ __('Perbandingan AKB') }}
+                                </x-dropdown-link>
                             </x-slot>
                         </x-dropdown>
                     </div>

@@ -61,6 +61,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/akb/export-excel', [AkbController::class, 'exportExcel'])->name('akb.export_excel');
     Route::get('/akb/satuan', [AkbController::class, 'satuan'])->name('akb.satuan');
     Route::get('/akb/ringkas', [AkbController::class, 'ringkas'])->name('akb.ringkas');
+    // Route untuk menampilkan halaman awal (beserta Modal)
+    Route::get('/akb/perbandingan', [AkbController::class, 'indexPerbandingan'])->name('akb.perbandingan.index');
+
+    // Route untuk memproses upload JSON dari Modal
+    Route::post('/akb/perbandingan/proses', [AkbController::class, 'perbandingan'])->name('akb.perbandingan.proses');
+
     Route::patch('/rkas/{id}/update-idkomponen', [AkbController::class, 'updateIdKomponen'])
         ->name('rkas.update.idkomponen');
     // 2. Route API Data (AJAX) - Perhatikan URL-nya harus cocok dengan fetch() di JS
@@ -375,4 +381,6 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 });
 
 Route::get('/cetak-cover', [CetakController::class, 'cetakCover'])->name('cetak.cover');
+// Jika Anda mengirim file dari halaman index/rincian
+
 require __DIR__.'/auth.php';
