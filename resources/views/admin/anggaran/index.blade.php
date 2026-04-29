@@ -206,7 +206,8 @@
                                 <p class="text-sm text-slate-500 mt-1 leading-relaxed">Anggaran baru dibuat berstatus
                                     <code
                                         class="bg-slate-100 px-1.5 py-0.5 rounded text-xs text-rose-600 font-mono">is_aktif = false</code>.
-                                    Admin sekolah masing-masing harus mengaktifkannya di menu pengaturan anggaran.</p>
+                                    Admin sekolah masing-masing harus mengaktifkannya di menu pengaturan anggaran.
+                                </p>
                             </div>
                         </div>
                     </div>

@@ -173,7 +173,7 @@
             {{-- LEVEL 1: KEGIATAN --}}
             <tr class="row-kegiatan">
                 <td class="text-center">{{ $no++ }}</td>
-                <td colspan="4">{{ $keg->namagiat}}</td>
+                <td colspan="4">{{ $keg->nama_kegiatan }}</td>
                 <td class="text-right font-bold">{{ number_format($keg->total_kegiatan, 0, ',', '.') }}</td>
             </tr>
 
