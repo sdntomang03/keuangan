@@ -443,7 +443,7 @@ class AkbController extends Controller
         $request->validate([
             'json_files' => 'required|array',
             'json_files.*' => 'required|mimes:json,txt',
-            'jenis_json' => 'required|in:baru,lama', // Validasi pilihan dari modal
+            'jenis_json' => 'required|in:baru,lama',
         ]);
 
         $jenisJson = $request->jenis_json;
@@ -451,10 +451,10 @@ class AkbController extends Controller
         $singkatan = strtolower($anggaran->singkatan);
         $jenisAnggaran = $mapAnggaran[$singkatan] ?? 30;
 
-        // 1. Ambil Data DB Lokal
+        // 1. Tarik Data Lokal
         $dataDb = \App\Models\Akb::where('anggaran_id', $anggaran->id)->get()->keyBy('idblrinci');
 
-        // 2. Ambil dan Gabungkan Data JSON
+        // 2. Gabungkan Data dari Multiple JSON
         $dataJsonMerged = [];
         foreach ($request->file('json_files') as $file) {
             $content = json_decode(file_get_contents($file->getRealPath()), true);
@@ -464,7 +464,7 @@ class AkbController extends Controller
             }
         }
 
-        // 3. Kumpulkan semua ID yang unik dari DB maupun JSON (Untuk dicek silang)
+        // 3. Kumpulkan SEMUA ID dari kedua sumber (DB & JSON) agar tidak ada yang terlewat
         $semuaIdUnik = collect($dataDb->keys())->merge(array_keys($dataJsonMerged))->unique();
 
         $hasilPerbandingan = [];
@@ -473,34 +473,22 @@ class AkbController extends Controller
             $itemDb = $dataDb->get($id);
             $itemJson = $dataJsonMerged[$id] ?? null;
 
-            // --- AMBIL NAMA & KOEFISIEN DENGAN AMAN (Null-safe) ---
-            // Jika itemDb kosong (dihapus), fungsi ?-> akan mencegah error dan mengembalikan null
-            $namaDb = $itemDb?->rkas?->namakomponen;
-            $koefDb = $itemDb?->rkas?->koefisien;
-
-            $namaJson = $itemJson['namakomponen'] ?? null;
-            $koefJson = $itemJson['koefisien'] ?? null;
-
-            // --- Tentukan Mana yang Lama dan Mana yang Baru ---
+            // --- TENTUKAN BASELINE (Lama vs Baru) ---
             if ($jenisJson == 'baru') {
+                // JSON adalah target baru
                 $totalLama = $itemDb ? (float) $itemDb->totalakb : 0;
                 $totalBaru = $itemJson ? (float) ($itemJson['totalakb'] ?? 0) : 0;
-
-                // Prioritaskan nama dari JSON (terbaru). Jika tidak ada, ambil dari DB
-                $namaKomponen = $namaJson ?? $namaDb ?? "Komponen Tidak Diketahui (ID: $id)";
-                $koefisien = $koefJson ?? $koefDb ?? '-';
+                $namaKomponen = $itemJson['namakomponen'] ?? ($itemDb->rkas->namakomponen ?? "ID: $id");
+                $koefisien = $itemJson['koefisien'] ?? ($itemDb->rkas->koefisien ?? '-');
             } else {
-                // Jika JSON adalah AKB Lama
+                // JSON adalah data lama (sebelum dihapus/diubah)
                 $totalLama = $itemJson ? (float) ($itemJson['totalakb'] ?? 0) : 0;
                 $totalBaru = $itemDb ? (float) $itemDb->totalakb : 0;
-
-                // Prioritaskan nama dari DB (terbaru).
-                // Jika di DB sudah terhapus, ambil riwayat namanya dari JSON lama!
-                $namaKomponen = $namaDb ?? $namaJson ?? "Komponen Tidak Diketahui (ID: $id)";
-                $koefisien = $koefDb ?? $koefJson ?? '-';
+                $namaKomponen = $itemDb->rkas->namakomponen ?? ($itemJson['namakomponen'] ?? "ID: $id");
+                $koefisien = $itemDb->rkas->koefisien ?? ($itemJson['koefisien'] ?? '-');
             }
 
-            // --- Cek Pergeseran Bulanan ---
+            // --- HITUNG RINCIAN 12 BULAN ---
             $bulanLama = [];
             $bulanBaru = [];
             $selisihBulan = [];
@@ -527,11 +515,13 @@ class AkbController extends Controller
 
             $selisihTotal = $totalBaru - $totalLama;
 
-            // --- ATURAN PENENTUAN STATUS ---
-            if ($totalLama == 0 && $totalBaru > 0) {
-                $status = 'Baru';
-            } elseif ($totalBaru == 0 && $totalLama > 0) {
+            // --- LOGIKA PENENTUAN STATUS ---
+            if ($totalLama > 0 && $totalBaru == 0) {
+                // Ada di data lama, tapi hilang di data baru -> DIHAPUS
                 $status = 'Dihapus';
+            } elseif ($totalLama == 0 && $totalBaru > 0) {
+                // Tidak ada di data lama, tapi muncul di data baru -> BARU
+                $status = 'Baru';
             } elseif ($selisihTotal != 0) {
                 $status = 'Berubah Pagu';
             } elseif ($adaPergeseranBulan) {
@@ -555,10 +545,8 @@ class AkbController extends Controller
         }
 
         $koleksiPerbandingan = collect($hasilPerbandingan);
-
-        // Kirim label tabel agar View bisa menyesuaikan
-        $labelLama = $jenisJson == 'baru' ? 'Data Lokal (Lama)' : 'JSON Dinas (Lama)';
-        $labelBaru = $jenisJson == 'baru' ? 'JSON Dinas (Baru)' : 'Data Lokal (Baru)';
+        $labelLama = $jenisJson == 'baru' ? 'Data Lokal' : 'JSON Dinas (Lama)';
+        $labelBaru = $jenisJson == 'baru' ? 'JSON Dinas (Baru)' : 'Data Lokal';
 
         return view('akb.perbandingan', compact('koleksiPerbandingan', 'anggaran', 'labelLama', 'labelBaru'));
     }
