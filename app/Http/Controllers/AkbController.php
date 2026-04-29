@@ -473,22 +473,31 @@ class AkbController extends Controller
             $itemDb = $dataDb->get($id);
             $itemJson = $dataJsonMerged[$id] ?? null;
 
+            // --- AMBIL NAMA & KOEFISIEN DENGAN AMAN (Null-safe) ---
+            // Jika itemDb kosong (dihapus), fungsi ?-> akan mencegah error dan mengembalikan null
+            $namaDb = $itemDb?->rkas?->namakomponen;
+            $koefDb = $itemDb?->rkas?->koefisien;
+
+            $namaJson = $itemJson['namakomponen'] ?? null;
+            $koefJson = $itemJson['koefisien'] ?? null;
+
             // --- Tentukan Mana yang Lama dan Mana yang Baru ---
             if ($jenisJson == 'baru') {
-                $sumberLama = 'Lokal';
-                $sumberBaru = 'JSON';
                 $totalLama = $itemDb ? (float) $itemDb->totalakb : 0;
                 $totalBaru = $itemJson ? (float) ($itemJson['totalakb'] ?? 0) : 0;
-                $namaKomponen = $itemJson['namakomponen'] ?? ($itemDb->rkas->namakomponen ?? "ID: $id");
-                $koefisien = $itemJson['koefisien'] ?? ($itemDb->rkas->koefisien ?? '-');
+
+                // Prioritaskan nama dari JSON (terbaru). Jika tidak ada, ambil dari DB
+                $namaKomponen = $namaJson ?? $namaDb ?? "Komponen Tidak Diketahui (ID: $id)";
+                $koefisien = $koefJson ?? $koefDb ?? '-';
             } else {
-                // Jika user memilih JSON sebagai AKB Lama
-                $sumberLama = 'JSON';
-                $sumberBaru = 'Lokal';
+                // Jika JSON adalah AKB Lama
                 $totalLama = $itemJson ? (float) ($itemJson['totalakb'] ?? 0) : 0;
                 $totalBaru = $itemDb ? (float) $itemDb->totalakb : 0;
-                $namaKomponen = $itemDb->rkas->namakomponen ?? ($itemJson['namakomponen'] ?? "ID: $id");
-                $koefisien = $itemDb->rkas->koefisien ?? ($itemJson['koefisien'] ?? '-');
+
+                // Prioritaskan nama dari DB (terbaru).
+                // Jika di DB sudah terhapus, ambil riwayat namanya dari JSON lama!
+                $namaKomponen = $namaDb ?? $namaJson ?? "Komponen Tidak Diketahui (ID: $id)";
+                $koefisien = $koefDb ?? $koefJson ?? '-';
             }
 
             // --- Cek Pergeseran Bulanan ---
@@ -518,7 +527,7 @@ class AkbController extends Controller
 
             $selisihTotal = $totalBaru - $totalLama;
 
-            // --- ATURAN PENENTUAN STATUS (Sesuai Permintaan) ---
+            // --- ATURAN PENENTUAN STATUS ---
             if ($totalLama == 0 && $totalBaru > 0) {
                 $status = 'Baru';
             } elseif ($totalBaru == 0 && $totalLama > 0) {
