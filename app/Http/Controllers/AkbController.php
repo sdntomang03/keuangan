@@ -585,8 +585,8 @@ class AkbController extends Controller
         }
 
         $koleksiPerbandingan = collect($hasilPerbandingan);
-        $labelLama = $jenisJson == 'baru' ? 'Database' : 'JSON';
-        $labelBaru = $jenisJson == 'baru' ? 'JSON' : 'Database';
+        $labelLama = $jenisJson == 'baru' ? 'Database' : 'JSON Lama';
+        $labelBaru = $jenisJson == 'baru' ? 'JSON Baru' : 'Database';
 
         return view('akb.perbandingan', compact('koleksiPerbandingan', 'anggaran', 'labelLama', 'labelBaru'));
     }
