@@ -168,7 +168,7 @@
                             </td>
                             <td class="py-4 px-2 text-xs font-mono text-slate-500">{{ $item['idblrinci'] }}</td>
 
-                            {{-- Kolom Nama Komponen & Spek --}}
+                            {{-- Kolom Komponen & Spesifikasi (DIUPDATE) --}}
                             <td class="py-4 px-4">
                                 <div class="text-sm font-bold text-slate-800 line-clamp-2"
                                     title="{{ $item['namakomponen'] }}">
@@ -180,10 +180,15 @@
                                     <span class="font-semibold text-slate-600">Spek:</span> {{ $item['spek'] }}
                                 </div>
                                 @endif
-                                <div class="mt-1.5">
+                                <div class="mt-2 flex flex-wrap gap-1">
                                     <span
-                                        class="text-[10px] text-slate-600 font-bold bg-slate-100 border border-slate-200 px-2 py-0.5 rounded">
+                                        class="text-[10px] text-slate-600 font-bold bg-white border border-slate-200 px-2 py-0.5 rounded shadow-sm">
                                         Vol: {{ $item['koefisien'] }}
+                                    </span>
+                                    <span
+                                        class="text-[10px] text-slate-600 font-bold bg-white border border-slate-200 px-2 py-0.5 rounded shadow-sm">
+                                        @ {{ $item['hargasatuan'] > 0 ? 'Rp ' . number_format($item['hargasatuan'], 0,
+                                        ',', '.') : '-' }}
                                     </span>
                                 </div>
                             </td>
@@ -326,7 +331,6 @@
                             enctype="multipart/form-data">
                             @csrf
 
-                            {{-- PILIHAN JENIS JSON --}}
                             <div class="mb-5 bg-slate-50 p-4 rounded-xl border border-slate-200">
                                 <p class="text-sm font-bold text-slate-700 mb-3">Tentukan sumber data JSON yang Anda
                                     upload:</p>
@@ -358,7 +362,6 @@
                                 </div>
                             </div>
 
-                            {{-- AREA UPLOAD --}}
                             <div class="mb-6">
                                 <label for="dropzone-file"
                                     class="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-300 border-dashed rounded-xl cursor-pointer bg-white hover:bg-slate-50 transition">

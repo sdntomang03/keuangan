@@ -469,7 +469,7 @@ class AkbController extends Controller
             }
         }
 
-        // 3. Union ID (Gabungan ID DB dan JSON agar tidak ada yang lolos)
+        // 3. Union ID (Gabungan ID DB dan JSON)
         $semuaIdUnik = collect($dataDb->keys())->merge(array_keys($dataJsonMerged))->unique();
 
         $hasilPerbandingan = [];
@@ -489,14 +489,16 @@ class AkbController extends Controller
             $valDbTotal = $itemDb ? (float) $itemDb->totalakb : 0;
             $valDbRincian = $itemDb ? (float) $itemDb->totalrincian : 0;
 
-            // --- TANGKAP IDENTITAS (Null-safe) ---
+            // --- TANGKAP IDENTITAS (Termasuk Harga Satuan) ---
             $namaDb = $itemDb?->rkas?->namakomponen;
             $koefDb = $itemDb?->rkas?->koefisien;
             $spekDb = $itemDb?->rkas?->spek;
+            $hargaSatuanDb = $itemDb?->rkas?->hargasatuan;
 
             $namaJson = $itemJson['namakomponen'] ?? null;
             $koefJson = $itemJson['koefisien'] ?? null;
             $spekJson = $itemJson['spek'] ?? null;
+            $hargaSatuanJson = $itemJson['hargasatuan'] ?? null;
 
             // --- TENTUKAN POSISI LAMA VS BARU ---
             if ($jenisJson == 'baru') {
@@ -504,17 +506,21 @@ class AkbController extends Controller
                 $totalBaru = $valJsonTotal;
                 $rincianLama = $valDbRincian;
                 $rincianBaru = $valJsonRincian;
+
                 $namaKomponen = $namaJson ?? $namaDb ?? "ID: $id";
                 $koefisien = $koefJson ?? $koefDb ?? '-';
                 $spek = $spekJson ?? $spekDb ?? '-';
+                $hargaSatuan = $hargaSatuanJson ?? $hargaSatuanDb ?? 0;
             } else {
                 $totalLama = $valJsonTotal;
                 $totalBaru = $valDbTotal;
                 $rincianLama = $valJsonRincian;
                 $rincianBaru = $valDbRincian;
+
                 $namaKomponen = $namaDb ?? $namaJson ?? "ID: $id";
                 $koefisien = $koefDb ?? $koefJson ?? '-';
                 $spek = $spekDb ?? $spekJson ?? '-';
+                $hargaSatuan = $hargaSatuanDb ?? $hargaSatuanJson ?? 0;
             }
 
             // --- HITUNG PERGESERAN BULANAN ---
@@ -545,7 +551,7 @@ class AkbController extends Controller
             $selisihTotal = $totalBaru - $totalLama;
             $selisihRincian = $rincianBaru - $rincianLama;
 
-            // --- ATURAN PENENTUAN STATUS FINAL ---
+            // --- ATURAN PENENTUAN STATUS ---
             if ($totalLama > 0 && $totalBaru == 0) {
                 $status = 'Dihapus';
             } elseif ($totalLama == 0 && $totalBaru > 0) {
@@ -557,10 +563,9 @@ class AkbController extends Controller
             } elseif ($adaPergeseranBulan) {
                 $status = 'Geser Jadwal';
             } elseif ($totalLama == 0 && $totalBaru == 0) {
-                // Tangkap komponen yang dua-duanya 0 tapi tetap harus direview (Contoh: Peci Hitam)
                 $status = 'Dihapus';
             } else {
-                $status = 'Tetap'; // <- Satu-satunya yang akan disembunyikan
+                $status = 'Tetap';
             }
 
             $hasilPerbandingan[] = [
@@ -568,6 +573,7 @@ class AkbController extends Controller
                 'namakomponen' => $namaKomponen,
                 'koefisien' => $koefisien,
                 'spek' => $spek,
+                'hargasatuan' => (float) $hargaSatuan, // <-- Dikirim ke View
                 'status' => $status,
                 'harga_lama' => $totalLama,
                 'harga_baru' => $totalBaru,
