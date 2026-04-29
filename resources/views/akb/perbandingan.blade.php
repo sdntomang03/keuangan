@@ -7,10 +7,10 @@
                 <div>
                     <h2 class="text-2xl font-bold text-slate-900 dark:text-white flex items-center">
                         <span class="w-1.5 h-7 bg-indigo-600 rounded-full mr-3"></span>
-                        Preview Perubahan AKB
+                        Preview Analisis ARKAS
                     </h2>
                     <p class="text-slate-500 font-medium mt-1 ml-4.5">
-                        Alat bantu tinjau untuk memilih komponen yang perlu diubah di ARKAS. <span
+                        Alat bantu tinjau untuk mengecek komponen yang perlu diubah atau dihapus. <span
                             class="text-indigo-500 font-bold">(Hanya Mode Baca)</span>
                     </p>
                 </div>
@@ -55,7 +55,7 @@
             </div>
             <h3 class="text-xl font-bold text-slate-800 mb-2">Monitor Perubahan Data ARKAS</h3>
             <p class="text-slate-500 max-w-md mx-auto mb-8">Upload file JSON untuk mendeteksi komponen mana saja yang
-                perlu Anda sinkronisasikan/ubah di aplikasi ARKAS.</p>
+                berubah pagu, rincian spek, atau perlu dihapus.</p>
             <button @click="isModalOpen = true"
                 class="px-6 py-3 bg-indigo-50 text-indigo-700 border border-indigo-200 font-bold rounded-xl hover:bg-indigo-100 transition shadow-sm">
                 Mulai Upload Data
@@ -64,7 +64,8 @@
         @else
         @php
         $countBaru = $koleksiPerbandingan->where('status', 'Baru')->count();
-        $countBerubah = $koleksiPerbandingan->whereIn('status', ['Berubah Pagu', 'Geser Jadwal'])->count();
+        $countBerubah = $koleksiPerbandingan->whereIn('status', ['Berubah Pagu', 'Berubah Rincian', 'Geser
+        Jadwal'])->count();
         $countDihapus = $koleksiPerbandingan->where('status', 'Dihapus')->count();
         $totalSelisih = $koleksiPerbandingan->sum('selisih');
         @endphp
@@ -133,10 +134,9 @@
                             <th class="py-4 px-2 text-xs font-bold text-slate-500 uppercase border-b w-24">ID Rincian
                             </th>
                             <th class="py-4 px-4 text-xs font-bold text-slate-500 uppercase border-b">Komponen &
-                                Koefisien</th>
+                                Spesifikasi</th>
                             <th class="py-4 px-4 text-xs font-bold text-slate-500 uppercase border-b text-center w-32">
                                 Status</th>
-                            {{-- LABEL HEADER DINAMIS DARI CONTROLLER --}}
                             <th class="py-4 px-4 text-xs font-bold text-amber-600 uppercase border-b text-right w-36">{{
                                 $labelLama ?? 'Data Lama' }}</th>
                             <th class="py-4 px-4 text-xs font-bold text-emerald-600 uppercase border-b text-right w-36">
@@ -154,6 +154,7 @@
                                     @if($item['status'] == 'Baru') bg-emerald-50/40
                                     @elseif($item['status'] == 'Dihapus') bg-rose-50/40
                                     @elseif($item['status'] == 'Berubah Pagu') bg-amber-50/40
+                                    @elseif($item['status'] == 'Berubah Rincian') bg-fuchsia-50/40
                                     @elseif($item['status'] == 'Geser Jadwal') bg-sky-50/40
                                     @endif
                                 ">
@@ -166,16 +167,33 @@
                                 </svg>
                             </td>
                             <td class="py-4 px-2 text-xs font-mono text-slate-500">{{ $item['idblrinci'] }}</td>
+
+                            {{-- Kolom Nama Komponen & Spek --}}
                             <td class="py-4 px-4">
-                                <div class="text-sm font-bold text-slate-800 line-clamp-2">{{ $item['namakomponen'] }}
+                                <div class="text-sm font-bold text-slate-800 line-clamp-2"
+                                    title="{{ $item['namakomponen'] }}">
+                                    {{ $item['namakomponen'] }}
                                 </div>
-                                <div class="text-xs text-slate-500 mt-1">Vol: {{ $item['koefisien'] }}</div>
+                                @if($item['spek'] && $item['spek'] != '-')
+                                <div class="text-[11px] text-slate-500 mt-1 leading-tight line-clamp-2"
+                                    title="{{ $item['spek'] }}">
+                                    <span class="font-semibold text-slate-600">Spek:</span> {{ $item['spek'] }}
+                                </div>
+                                @endif
+                                <div class="mt-1.5">
+                                    <span
+                                        class="text-[10px] text-slate-600 font-bold bg-slate-100 border border-slate-200 px-2 py-0.5 rounded">
+                                        Vol: {{ $item['koefisien'] }}
+                                    </span>
+                                </div>
                             </td>
+
                             <td class="py-4 px-4 text-center">
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase border
                                             @if($item['status'] == 'Baru') bg-emerald-100 border-emerald-200 text-emerald-700
                                             @elseif($item['status'] == 'Dihapus') bg-rose-100 border-rose-200 text-rose-700
                                             @elseif($item['status'] == 'Berubah Pagu') bg-amber-100 border-amber-200 text-amber-700
+                                            @elseif($item['status'] == 'Berubah Rincian') bg-fuchsia-100 border-fuchsia-200 text-fuchsia-700
                                             @elseif($item['status'] == 'Geser Jadwal') bg-sky-100 border-sky-200 text-sky-700
                                             @endif
                                         ">{{ $item['status'] }}</span>
@@ -203,6 +221,7 @@
                                             @if($item['status'] == 'Baru') border-emerald-400
                                             @elseif($item['status'] == 'Dihapus') border-rose-400
                                             @elseif($item['status'] == 'Berubah Pagu') border-amber-400
+                                            @elseif($item['status'] == 'Berubah Rincian') border-fuchsia-400
                                             @elseif($item['status'] == 'Geser Jadwal') border-sky-400
                                             @endif
                                         ">
