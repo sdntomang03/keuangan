@@ -435,11 +435,13 @@ class AkbController extends Controller
 
     public function perbandingan(Request $request)
     {
+        // 1. Validasi Anggaran Aktif
         $anggaran = $request->anggaran_data;
         if (! $anggaran) {
             return back()->with('error', 'Silakan pilih Anggaran Aktif terlebih dahulu.');
         }
 
+        // 2. Validasi Request Form
         $request->validate([
             'json_files' => 'required|array',
             'json_files.*' => 'required|mimes:json,txt',
@@ -451,15 +453,15 @@ class AkbController extends Controller
         $singkatan = strtolower($anggaran->singkatan);
         $jenisAnggaran = $mapAnggaran[$singkatan] ?? 30;
 
-        // 1. Ambil Data Lokal (Sudah ber-prefix)
+        // 3. Ambil Data Lokal (Sudah memiliki prefix)
         $dataDb = \App\Models\Akb::where('anggaran_id', $anggaran->id)->get()->keyBy('idblrinci');
 
-        // 2. Gabungkan Data JSON & Berikan Prefix yang Sama dengan Database
+        // 4. Gabungkan Data dari Semua File JSON & Berikan Prefix yang Sama
         $dataJsonMerged = [];
         foreach ($request->file('json_files') as $file) {
             $content = json_decode(file_get_contents($file->getRealPath()), true);
             foreach ($content['data'] ?? [] as $item) {
-                // Gunakan trim untuk menghindari spasi tersembunyi
+                // Hilangkan spasi yang mungkin tersembunyi
                 $idRaw = trim((string) ($item['idblrinci'] ?? ''));
                 if (! $idRaw) {
                     continue;
@@ -470,7 +472,7 @@ class AkbController extends Controller
             }
         }
 
-        // 3. Gabungkan ID dari JSON dan DB (Union)
+        // 5. Gabungkan ID dari JSON dan DB (Union ID) agar tidak ada data yang terlewat
         $semuaIdUnik = collect($dataDb->keys())->merge(array_keys($dataJsonMerged))->unique();
 
         $hasilPerbandingan = [];
@@ -479,35 +481,36 @@ class AkbController extends Controller
             $itemDb = $dataDb->get($id);
             $itemJson = $dataJsonMerged[$id] ?? null;
 
-            // --- DETEKSI NILAI UANG (Support totalharga & totalakb) ---
+            // --- DETEKSI NILAI UANG DENGAN BENAR (Support 'totalharga' & 'totalakb') ---
             $valJsonTotal = 0;
             if ($itemJson) {
-                // Mencari di totalakb dulu, jika tidak ada cari di totalharga
+                // Cari key totalakb, jika tidak ada fallback ke totalharga
                 $valJsonTotal = (float) ($itemJson['totalakb'] ?? $itemJson['totalharga'] ?? 0);
             }
             $valDbTotal = $itemDb ? (float) $itemDb->totalakb : 0;
 
-            // --- FALLBACK IDENTITAS ---
+            // --- FALLBACK IDENTITAS KOMPONEN (Null-safe) ---
             $namaDb = $itemDb?->rkas?->namakomponen;
             $koefDb = $itemDb?->rkas?->koefisien;
             $namaJson = $itemJson['namakomponen'] ?? null;
             $koefJson = $itemJson['koefisien'] ?? null;
 
-            // --- TENTUKAN LAMA VS BARU ---
+            // --- TENTUKAN POSISI LAMA VS BARU BERDASARKAN PILIHAN USER ---
             if ($jenisJson == 'baru') {
+                // User menganggap JSON adalah Target Baru
                 $totalLama = $valDbTotal;
                 $totalBaru = $valJsonTotal;
                 $namaKomponen = $namaJson ?? $namaDb ?? "ID: $id";
                 $koefisien = $koefJson ?? $koefDb ?? '-';
             } else {
-                // JSON ADALAH DATA LAMA (Kasus Peci Anda)
+                // User menganggap JSON adalah Data Lama (Baseline)
                 $totalLama = $valJsonTotal;
                 $totalBaru = $valDbTotal;
                 $namaKomponen = $namaDb ?? $namaJson ?? "ID: $id";
                 $koefisien = $koefDb ?? $koefJson ?? '-';
             }
 
-            // --- HITUNG BULANAN ---
+            // --- HITUNG PERGESERAN BULANAN (1 s.d 12) ---
             $bulanLama = [];
             $bulanBaru = [];
             $selisihBulan = [];
@@ -521,10 +524,12 @@ class AkbController extends Controller
                     $bLama = $itemJson ? (float) ($itemJson["bulan$i"] ?? 0) : 0;
                     $bBaru = $itemDb ? (float) $itemDb->{"bulan$i"} : 0;
                 }
+
                 $bulanLama[$i] = $bLama;
                 $bulanBaru[$i] = $bBaru;
                 $sBulan = $bBaru - $bLama;
                 $selisihBulan[$i] = $sBulan;
+
                 if ($sBulan != 0) {
                     $adaPergeseranBulan = true;
                 }
@@ -532,19 +537,25 @@ class AkbController extends Controller
 
             $selisihTotal = $totalBaru - $totalLama;
 
-            // --- PENENTUAN STATUS ---
+            // --- ATURAN PENENTUAN STATUS YANG KETAT ---
             if ($totalLama > 0 && $totalBaru == 0) {
-                $status = 'Dihapus'; // Peci akan masuk ke sini
+                // Ada di data lama, tapi di data baru jadi 0 (Pasti Dihapus)
+                $status = 'Dihapus';
             } elseif ($totalLama == 0 && $totalBaru > 0) {
+                // Di data lama 0, tapi di data baru muncul nilainya (Pasti Baru)
                 $status = 'Baru';
             } elseif ($selisihTotal != 0) {
+                // POKOKNYA jika nominalnya beda (sekecil apa pun), tangkap di sini!
                 $status = 'Berubah Pagu';
             } elseif ($adaPergeseranBulan) {
+                // Harga total sama, tapi bulannya digeser
                 $status = 'Geser Jadwal';
             } else {
+                // Harga total sama persis dan bulanan sama persis
                 $status = 'Tetap';
             }
 
+            // Masukkan ke array koleksi
             $hasilPerbandingan[] = [
                 'idblrinci' => $id,
                 'namakomponen' => $namaKomponen,
@@ -559,6 +570,7 @@ class AkbController extends Controller
             ];
         }
 
+        // 6. Siapkan Data untuk View
         $koleksiPerbandingan = collect($hasilPerbandingan);
         $labelLama = $jenisJson == 'baru' ? 'Data Lokal' : 'JSON Dinas (Lama)';
         $labelBaru = $jenisJson == 'baru' ? 'JSON Dinas (Baru)' : 'Data Lokal';
