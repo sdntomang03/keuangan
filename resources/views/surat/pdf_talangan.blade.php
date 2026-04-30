@@ -187,7 +187,7 @@
         Apabila dana {{ strtoupper($anggaran->singkatan ?? 'BOP') }} Alokasi Dasar Tahun {{
         $anggaran->tahun ?? date('Y') }} Triwulan {{ $romawiTriwulan ?? 'I' }} telah disalurkan oleh
         <b>{{ $sekolah->Sudin?->nama ?? 'Suku Dinas Pendidikan Wilayah Kota Administrasi Setempat' }}</b>, maka kami
-        akan transfer ke Nama yang telah menangguhkan/menalangi biaya penggunaan <b>{{ $referensi->korek->ket ??
+        akan transfer ke nama yang telah menangguhkan/menalangi biaya penggunaan <b>{{ $referensi->korek->ket ??
             '......................' }}</b>.
     </p>
     <p style="text-align: justify;">
