@@ -14,7 +14,7 @@
         <div class="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-700 shrink-0">
             <a href="{{ route('dashboard') }}" class="flex items-center">
                 <x-application-logo class="block h-9 w-auto fill-current text-indigo-600" />
-                <span class="ml-3 font-black text-2xl text-gray-800 dark:text-white tracking-tight">SIAKAD</span>
+                <span class="ml-3 font-black text-2xl text-gray-800 dark:text-white tracking-tight">KEUANGAN</span>
             </a>
             <!-- Tombol Close (Hanya untuk HP) -->
             <button @click="sidebarOpen = false" class="lg:hidden text-gray-400 hover:text-gray-600 p-1">
