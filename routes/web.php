@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\SekolahController as AdminSekolahController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\AkbController;
 use App\Http\Controllers\ArkasController;
+use App\Http\Controllers\BarangController;
 use App\Http\Controllers\BelanjaController;
 use App\Http\Controllers\BkuController;
 use App\Http\Controllers\CetakController;
@@ -379,6 +380,14 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // Proses Generate
     Route::post('/anggaran/generate', [AnggaranController::class, 'generate'])->name('anggaran.generate');
 });
+
+Route::get('/barang', [BarangController::class, 'index'])->name('barang.index');
+
+// Endpoint memproses form upload file .json
+Route::post('/barang/import', [BarangController::class, 'import'])->name('barang.import');
+
+// Endpoint API pencarian (digunakan oleh fetch() di Alpine.js)
+Route::get('/api/barang/search', [BarangController::class, 'search'])->name('api.barang.search');
 
 Route::get('/cetak-cover', [CetakController::class, 'cetakCover'])->name('cetak.cover');
 // Jika Anda mengirim file dari halaman index/rincian
