@@ -1,17 +1,18 @@
 <x-app-layout>
-    <div x-data="{ isModalOpen: false }" class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    <div x-data="{ isModalOpen: false }"
+        class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 bg-white print:py-0 print:px-0">
 
         {{-- Header & Breadcrumbs --}}
-        <div class="mb-8 pb-6 border-b border-slate-200 dark:border-slate-700">
+        <div class="mb-8 pb-6 border-b border-slate-200 dark:border-slate-700 print:mb-4 print:pb-2">
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
                     <h2 class="text-2xl font-bold text-slate-900 dark:text-white flex items-center">
-                        <span class="w-1.5 h-7 bg-indigo-600 rounded-full mr-3"></span>
+                        <span class="w-1.5 h-7 bg-indigo-600 rounded-full mr-3 print:hidden"></span>
                         Preview Analisis ARKAS
                     </h2>
-                    <p class="text-slate-500 font-medium mt-1 ml-4.5">
-                        Alat bantu tinjau untuk mengecek komponen yang perlu diubah atau dihapus. <span
-                            class="text-indigo-500 font-bold">(Hanya Mode Baca)</span>
+                    <p class="text-slate-500 font-medium mt-1 md:ml-4.5 print:ml-0">
+                        Alat bantu tinjau untuk mengecek komponen yang perlu diubah atau dihapus.
+                        <span class="text-indigo-500 font-bold print:hidden">(Hanya Mode Baca)</span>
                     </p>
                 </div>
                 <div class="flex flex-wrap items-center gap-3">
@@ -19,8 +20,23 @@
                         class="inline-flex items-center px-4 py-2 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-bold border border-indigo-100">
                         Anggaran: {{ $anggaran->nama_anggaran ?? 'Tahun Berjalan' }}
                     </span>
+
+                    {{-- TOMBOL CETAK (Tampil di layar, hilang saat dicetak) --}}
+                    @if($koleksiPerbandingan->isNotEmpty())
+                    <button onclick="window.print()"
+                        class="print:hidden px-4 py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold rounded-xl shadow-sm transition flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z">
+                            </path>
+                        </svg>
+                        Cetak
+                    </button>
+                    @endif
+
+                    {{-- TOMBOL UPLOAD (Hilang saat dicetak) --}}
                     <button @click="isModalOpen = true"
-                        class="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 text-white font-bold rounded-xl shadow-md transition flex items-center">
+                        class="print:hidden px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 text-white font-bold rounded-xl shadow-md transition flex items-center">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -35,7 +51,8 @@
         </div>
 
         @if ($errors->any() || session('error'))
-        <div class="mb-6 p-4 bg-rose-50 border border-rose-200 rounded-xl text-sm font-medium text-rose-800 shadow-sm">
+        <div
+            class="mb-6 p-4 bg-rose-50 border border-rose-200 rounded-xl text-sm font-medium text-rose-800 shadow-sm print:hidden">
             <ul class="list-disc ml-5 space-y-1">
                 @if(session('error')) <li>{{ session('error') }}</li> @endif
                 @foreach ($errors->all() as $error) <li>{{ $error }}</li> @endforeach
@@ -44,7 +61,7 @@
         @endif
 
         @if($koleksiPerbandingan->isEmpty())
-        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-12 text-center">
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 p-12 text-center print:hidden">
             <div
                 class="w-24 h-24 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center mx-auto mb-6">
                 <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -71,52 +88,59 @@
         @endphp
 
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div class="bg-white p-5 rounded-2xl border border-emerald-100 shadow-sm flex items-center">
+            <div
+                class="bg-white p-5 rounded-2xl border border-emerald-100 shadow-sm flex items-center print:border-slate-300">
                 <div
-                    class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mr-4 shrink-0">
+                    class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mr-4 shrink-0 print:border print:border-emerald-200">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                    </svg></div>
+                    </svg>
+                </div>
                 <div>
                     <p class="text-[10px] font-bold text-slate-400 uppercase">Data Baru</p>
                     <h4 class="text-2xl font-black text-emerald-600">{{ $countBaru }}</h4>
                 </div>
             </div>
-            <div class="bg-white p-5 rounded-2xl border border-amber-100 shadow-sm flex items-center">
+            <div
+                class="bg-white p-5 rounded-2xl border border-amber-100 shadow-sm flex items-center print:border-slate-300">
                 <div
-                    class="w-12 h-12 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mr-4 shrink-0">
+                    class="w-12 h-12 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mr-4 shrink-0 print:border print:border-amber-200">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
                         </path>
-                    </svg></div>
+                    </svg>
+                </div>
                 <div>
                     <p class="text-[10px] font-bold text-slate-400 uppercase">Berubah/Geser</p>
                     <h4 class="text-2xl font-black text-amber-500">{{ $countBerubah }}</h4>
                 </div>
             </div>
-            <div class="bg-white p-5 rounded-2xl border border-rose-100 shadow-sm flex items-center">
+            <div
+                class="bg-white p-5 rounded-2xl border border-rose-100 shadow-sm flex items-center print:border-slate-300">
                 <div
-                    class="w-12 h-12 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mr-4 shrink-0">
+                    class="w-12 h-12 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mr-4 shrink-0 print:border print:border-rose-200">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
                         </path>
-                    </svg></div>
+                    </svg>
+                </div>
                 <div>
                     <p class="text-[10px] font-bold text-slate-400 uppercase">Perlu Dihapus</p>
                     <h4 class="text-2xl font-black text-rose-500">{{ $countDihapus }}</h4>
                 </div>
             </div>
             <div
-                class="bg-white p-5 rounded-2xl border {{ $totalSelisih >= 0 ? 'border-indigo-100' : 'border-rose-100' }} shadow-sm flex items-center">
+                class="bg-white p-5 rounded-2xl border {{ $totalSelisih >= 0 ? 'border-indigo-100' : 'border-rose-100' }} shadow-sm flex items-center print:border-slate-300">
                 <div
-                    class="w-12 h-12 {{ $totalSelisih >= 0 ? 'bg-indigo-50 text-indigo-600' : 'bg-rose-50 text-rose-600' }} rounded-full flex items-center justify-center mr-4 shrink-0">
+                    class="w-12 h-12 {{ $totalSelisih >= 0 ? 'bg-indigo-50 text-indigo-600' : 'bg-rose-50 text-rose-600' }} rounded-full flex items-center justify-center mr-4 shrink-0 print:border">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M9 14l6-6m-6 6h6m-6-6v6m-3 8h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
                         </path>
-                    </svg></div>
+                    </svg>
+                </div>
                 <div>
                     <p class="text-[10px] font-bold text-slate-400 uppercase">Selisih Pagu Target</p>
                     <h4 class="text-lg font-black {{ $totalSelisih >= 0 ? 'text-indigo-600' : 'text-rose-600' }}">{{
@@ -125,12 +149,14 @@
             </div>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <div class="max-h-[600px] overflow-y-auto custom-scrollbar relative">
-                <table class="w-full text-left border-collapse">
-                    <thead class="bg-slate-50 sticky top-0 z-10 shadow-sm">
+        <div
+            class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden print:border-none print:shadow-none print:overflow-visible">
+            {{-- Hapus maxHeight (scroll) saat print --}}
+            <div class="max-h-[600px] overflow-y-auto custom-scrollbar print-table-wrapper relative">
+                <table class="w-full text-left border-collapse print:text-[10px]">
+                    <thead class="bg-slate-50 sticky top-0 z-10 shadow-sm print:static print:shadow-none">
                         <tr>
-                            <th class="py-4 px-4 border-b w-12"></th>
+                            <th class="py-4 px-4 border-b w-12 print:hidden"></th>
                             <th class="py-4 px-2 text-xs font-bold text-slate-500 uppercase border-b w-24">ID Rincian
                             </th>
                             <th class="py-4 px-4 text-xs font-bold text-slate-500 uppercase border-b">Komponen &
@@ -149,7 +175,10 @@
                     @foreach ($koleksiPerbandingan as $item)
                     @if($item['status'] == 'Tetap') @continue @endif
 
-                    <tbody x-data="{ expanded: false }" class="divide-y divide-slate-100 border-b border-slate-100">
+                    {{-- Tambahkan class print:break-inside-avoid agar 1 set data tidak terpotong ke halaman berikutnya
+                    --}}
+                    <tbody x-data="{ expanded: false }"
+                        class="divide-y divide-slate-100 border-b border-slate-100 print:break-inside-avoid">
                         <tr @click="expanded = !expanded" class="cursor-pointer transition-colors hover:bg-slate-50
                                     @if($item['status'] == 'Baru') bg-emerald-50/40
                                     @elseif($item['status'] == 'Dihapus') bg-rose-50/40
@@ -158,7 +187,8 @@
                                     @elseif($item['status'] == 'Geser Jadwal') bg-sky-50/40
                                     @endif
                                 ">
-                            <td class="py-4 px-4 text-center text-slate-400">
+                            {{-- Sembunyikan ikon panah dropdown saat di print --}}
+                            <td class="py-4 px-4 text-center text-slate-400 print:hidden">
                                 <svg class="w-5 h-5 mx-auto transform transition-transform duration-200"
                                     :class="{'rotate-180': expanded}" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
@@ -168,14 +198,13 @@
                             </td>
                             <td class="py-4 px-2 text-xs font-mono text-slate-500">{{ $item['idblrinci'] }}</td>
 
-                            {{-- Kolom Komponen & Spesifikasi (DIUPDATE) --}}
                             <td class="py-4 px-4">
-                                <div class="text-sm font-bold text-slate-800 line-clamp-2"
+                                <div class="text-sm font-bold text-slate-800 line-clamp-2 print:line-clamp-none"
                                     title="{{ $item['namakomponen'] }}">
                                     {{ $item['namakomponen'] }}
                                 </div>
                                 @if($item['spek'] && $item['spek'] != '-')
-                                <div class="text-[11px] text-slate-500 mt-1 leading-tight line-clamp-2"
+                                <div class="text-[11px] text-slate-500 mt-1 leading-tight line-clamp-2 print:line-clamp-none"
                                     title="{{ $item['spek'] }}">
                                     <span class="font-semibold text-slate-600">Spek:</span> {{ $item['spek'] }}
                                 </div>
@@ -194,7 +223,7 @@
                             </td>
 
                             <td class="py-4 px-4 text-center">
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase border
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase border print:border-slate-400 print:bg-white print:text-slate-800
                                             @if($item['status'] == 'Baru') bg-emerald-100 border-emerald-200 text-emerald-700
                                             @elseif($item['status'] == 'Dihapus') bg-rose-100 border-rose-200 text-rose-700
                                             @elseif($item['status'] == 'Berubah Pagu') bg-amber-100 border-amber-200 text-amber-700
@@ -220,9 +249,10 @@
                             </td>
                         </tr>
 
-                        <tr x-show="expanded" style="display: none;" x-transition>
-                            <td colspan="7" class="p-0 bg-slate-50/80">
-                                <div class="p-5 border-l-4
+                        {{-- Tambahkan class 'detail-row-print' agar bisa di-override oleh CSS saat print --}}
+                        <tr x-show="expanded" style="display: none;" x-transition class="detail-row-print">
+                            <td colspan="7" class="p-0 bg-slate-50/80 print:bg-white">
+                                <div class="p-5 border-l-4 print:border-l-0 print:border-t print:p-2
                                             @if($item['status'] == 'Baru') border-emerald-400
                                             @elseif($item['status'] == 'Dihapus') border-rose-400
                                             @elseif($item['status'] == 'Berubah Pagu') border-amber-400
@@ -230,42 +260,56 @@
                                             @elseif($item['status'] == 'Geser Jadwal') border-sky-400
                                             @endif
                                         ">
-                                    <h5 class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-3">
+                                    <h5
+                                        class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-3 print:mb-1">
                                         Rincian Pergeseran Bulanan</h5>
-                                    <div class="overflow-x-auto rounded-xl border border-slate-200">
+                                    <div
+                                        class="overflow-x-auto rounded-xl border border-slate-200 print:overflow-hidden print:border-slate-400">
                                         <table class="w-full text-[11px] text-right bg-white">
                                             <thead>
                                                 <tr
-                                                    class="bg-slate-100 text-slate-600 border-b border-slate-200 uppercase">
-                                                    <th class="p-2.5 text-left font-bold border-r w-32">Sumber Data</th>
+                                                    class="bg-slate-100 text-slate-600 border-b border-slate-200 uppercase print:bg-slate-200">
+                                                    <th
+                                                        class="p-2.5 text-left font-bold border-r w-32 print:border-slate-400">
+                                                        Sumber Data</th>
                                                     @foreach(['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des']
                                                     as $bulan)
-                                                    <th class="p-2.5 border-r min-w-[70px]">{{ $bulan }}</th>
+                                                    <th class="p-2.5 border-r min-w-[70px] print:border-slate-400">{{
+                                                        $bulan }}</th>
                                                     @endforeach
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <tr class="border-b border-slate-100 text-slate-500">
+                                                <tr
+                                                    class="border-b border-slate-100 text-slate-500 print:border-slate-400">
                                                     <td
-                                                        class="p-2.5 text-left font-bold bg-slate-50 border-r text-amber-600">
-                                                        {{ $labelLama ?? 'Lama' }}</td>
-                                                    @for($i=1; $i<=12; $i++) <td class="p-2.5 border-r">{{
-                                                        $item['bulan_lama'][$i] > 0 ?
+                                                        class="p-2.5 text-left font-bold bg-slate-50 border-r text-amber-600 print:text-slate-800 print:border-slate-400">
+                                                        {{ $labelLama ?? 'Lama' }}
+                                                    </td>
+                                                    @for($i=1; $i<=12; $i++) <td
+                                                        class="p-2.5 border-r print:border-slate-400">
+                                                        {{ $item['bulan_lama'][$i] > 0 ?
                                                         number_format($item['bulan_lama'][$i], 0, ',', '.') : '-' }}
                             </td>
                             @endfor
                         </tr>
-                        <tr class="border-b border-slate-100 font-medium text-slate-800">
-                            <td class="p-2.5 text-left font-bold bg-slate-50 border-r text-emerald-600">{{ $labelBaru ??
-                                'Baru' }}</td>
-                            @for($i=1; $i<=12; $i++) <td class="p-2.5 border-r">{{ $item['bulan_baru'][$i] > 0 ?
-                                number_format($item['bulan_baru'][$i], 0, ',', '.') : '-' }}</td>
+                        <tr class="border-b border-slate-100 font-medium text-slate-800 print:border-slate-400">
+                            <td
+                                class="p-2.5 text-left font-bold bg-slate-50 border-r text-emerald-600 print:text-slate-800 print:border-slate-400">
+                                {{ $labelBaru ?? 'Baru' }}
+                            </td>
+                            @for($i=1; $i<=12; $i++) <td class="p-2.5 border-r print:border-slate-400">
+                                {{ $item['bulan_baru'][$i] > 0 ? number_format($item['bulan_baru'][$i], 0, ',', '.') :
+                                '-' }}
+                                </td>
                                 @endfor
                         </tr>
-                        <tr class="bg-slate-50/50 font-bold">
-                            <td class="p-2.5 text-left bg-slate-100 border-r text-slate-600">Selisih (+/-)</td>
+                        <tr class="bg-slate-50/50 font-bold print:bg-white">
+                            <td
+                                class="p-2.5 text-left bg-slate-100 border-r text-slate-600 print:bg-slate-100 print:border-slate-400">
+                                Selisih (+/-)</td>
                             @for($i=1; $i<=12; $i++) @php $sBulan=$item['selisih_bulan'][$i]; @endphp <td
-                                class="p-2.5 border-r {{ $sBulan > 0 ? 'text-emerald-600' : ($sBulan < 0 ? 'text-rose-600' : 'text-slate-300') }}">
+                                class="p-2.5 border-r print:border-slate-400 {{ $sBulan > 0 ? 'text-emerald-600 print:text-black' : ($sBulan < 0 ? 'text-rose-600 print:text-black' : 'text-slate-300 print:text-slate-500') }}">
                                 {{ $sBulan > 0 ? '+' : '' }}{{ $sBulan != 0 ? number_format($sBulan, 0, ',', '.') : '-'
                                 }}
                                 </td>
@@ -282,7 +326,9 @@
         </table>
     </div>
 
-    <div class="bg-slate-50 border-t border-slate-200 p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+    {{-- Hilangkan Action bar bawah saat di print --}}
+    <div
+        class="bg-slate-50 border-t border-slate-200 p-5 flex flex-col sm:flex-row items-center justify-between gap-4 print:hidden">
         <p class="text-xs text-slate-500">
             * Data dengan status <span class="font-bold text-slate-700 bg-slate-200 px-1 rounded">Tetap</span>
             disembunyikan. Data tidak disimpan ke database lokal.
@@ -296,7 +342,7 @@
     @endif
 
     {{-- MODAL UPLOAD --}}
-    <div x-show="isModalOpen" style="display: none" class="relative z-50" aria-modal="true">
+    <div x-show="isModalOpen" style="display: none" class="relative z-50 print:hidden" aria-modal="true">
         <div x-show="isModalOpen" x-transition.opacity class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
 
         <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
@@ -330,11 +376,9 @@
                         <form action="{{ route('akb.perbandingan.proses') }}" method="POST"
                             enctype="multipart/form-data">
                             @csrf
-
                             <div class="mb-5 bg-slate-50 p-4 rounded-xl border border-slate-200">
                                 <p class="text-sm font-bold text-slate-700 mb-3">Tentukan sumber data JSON yang Anda
                                     upload:</p>
-
                                 <div class="space-y-3">
                                     <label class="flex items-start cursor-pointer group">
                                         <div class="flex items-center h-5">
@@ -409,6 +453,64 @@
         .custom-scrollbar::-webkit-scrollbar-thumb {
             background-color: #cbd5e1;
             border-radius: 10px;
+        }
+
+        /* PERINTAH CSS KHUSUS UNTUK PRINT */
+        @media print {
+
+            /* 1. Paksa body dan semua div pembungkus untuk terbuka full (tidak ada scroll) */
+            html,
+            body,
+            main,
+            section,
+            div {
+                background-color: white !important;
+                color: black !important;
+                height: auto !important;
+                min-height: 0 !important;
+                max-height: none !important;
+                overflow: visible !important;
+                position: static !important;
+                /* Mencegah elemen absolute/relative memotong konten */
+            }
+
+            /* 2. Sembunyikan elemen layout yang mungkin mengganggu (jika ada sidebar/navbar bawaan x-app-layout) */
+            nav,
+            header,
+            aside,
+            footer {
+                display: none !important;
+            }
+
+            /* 3. Aturan khusus untuk tabel agar halamannya tersusun rapi */
+            table {
+                width: 100% !important;
+                page-break-inside: auto !important;
+                border-collapse: collapse !important;
+            }
+
+            /* Mencegah satu baris terpotong di tengah-tengah antar kertas */
+            tr,
+            tbody {
+                page-break-inside: avoid !important;
+                page-break-after: auto !important;
+            }
+
+            /* Mengulang header tabel di setiap halaman baru */
+            thead {
+                display: table-header-group !important;
+            }
+
+            /* 4. Memaksa Rincian Bulan (AlpineJS) terbuka */
+            tr.detail-row-print {
+                display: table-row !important;
+            }
+
+            /* 5. Hilangkan shadow dan border melengkung agar lebih rapi di kertas */
+            * {
+                box-shadow: none !important;
+                border-radius: 0 !important;
+            }
         }
     </style>
 </x-app-layout>
