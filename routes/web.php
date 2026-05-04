@@ -389,6 +389,8 @@ Route::post('/barang/import', [BarangController::class, 'import'])->name('barang
 // Endpoint API pencarian (digunakan oleh fetch() di Alpine.js)
 Route::get('/api/barang/search', [BarangController::class, 'search'])->name('api.barang.search');
 
+Route::delete('/barang/truncate', [BarangController::class, 'truncate'])->name('barang.truncate');
+
 Route::get('/cetak-cover', [CetakController::class, 'cetakCover'])->name('cetak.cover');
 // Jika Anda mengirim file dari halaman index/rincian
 

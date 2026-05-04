@@ -38,6 +38,16 @@
                 </svg>
                 Dashboard
             </a>
+            <a href="{{ route('barang.index') }}"
+                class="flex items-center px-3 py-2.5 text-sm font-bold rounded-lg transition-colors {{ request()->routeIs('barang.index') ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700' }}">
+                <svg class="w-5 h-5 mr-3 {{ request()->routeIs('barang.index') ? 'text-indigo-600' : 'text-gray-400' }}"
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4">
+                    </path>
+                </svg>
+                Cari Barang
+            </a>
 
             @unlessrole('admin')
 

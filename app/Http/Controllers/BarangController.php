@@ -137,4 +137,21 @@ class BarangController extends Controller
 
         return response()->json($barangs);
     }
+
+    /**
+     * Mengosongkan seluruh data di tabel barangs
+     */
+    public function truncate()
+    {
+        try {
+            // Perintah truncate() akan menghapus semua data dan mereset ID (Auto Increment) kembali ke 1
+            Barang::truncate();
+
+            return back()->with('success', 'Semua data komponen barang berhasil dikosongkan!');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error Kosongkan Barang: '.$e->getMessage());
+
+            return back()->with('error', 'Terjadi kesalahan sistem saat mencoba mengosongkan data.');
+        }
+    }
 }
