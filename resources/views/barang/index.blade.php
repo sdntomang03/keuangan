@@ -317,6 +317,12 @@
                     this.rekeningOpen = false;
                     this.cariData();
                 },
+                gantiHalaman(page) {
+                    // Validasi agar tidak bisa ke halaman minus atau melebihi batas halaman
+                    if (page >= 1 && page <= this.pagination.last_page) {
+                        this.cariData(page);
+                    }
+                },
 
                 async cariData(page = 1) {
                     if (this.nama_barang.trim() === '' &&
