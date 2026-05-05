@@ -133,6 +133,7 @@ class BarangController extends Controller
             $query->where('kategori', $kategori);
         }
 
+        $query->orderBy('harga_barang', 'asc');
         $barangs = $query->limit(50)->get();
 
         return response()->json($barangs);
