@@ -236,7 +236,38 @@
                 </div>
                 <p class="text-xs text-slate-500 mt-3 text-right">Menampilkan maksimal 50 data teratas.</p>
             </div>
+            <div class="flex items-center justify-between mt-4 border-t border-slate-100 pt-4">
+                <p class="text-xs text-slate-500">
+                    Menampilkan total <span class="font-bold text-slate-700"
+                        x-text="new Intl.NumberFormat('id-ID').format(pagination.total || 0)"></span> data.
+                </p>
 
+                <!-- Tombol Navigasi Paginasi -->
+                <div x-show="pagination.last_page > 1" class="flex items-center gap-2">
+
+                    <!-- Tombol Sebelumnya -->
+                    <button @click="gantiHalaman(pagination.current_page - 1)" :disabled="pagination.current_page === 1"
+                        class="px-3 py-1.5 text-xs font-bold rounded-lg transition-colors"
+                        :class="pagination.current_page === 1 ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50'">
+                        &laquo; Prev
+                    </button>
+
+                    <!-- Info Nomor Halaman -->
+                    <span class="px-3 py-1 text-xs font-bold text-slate-600">
+                        Hal <span x-text="pagination.current_page"></span> dari <span
+                            x-text="pagination.last_page"></span>
+                    </span>
+
+                    <!-- Tombol Selanjutnya -->
+                    <button @click="gantiHalaman(pagination.current_page + 1)"
+                        :disabled="pagination.current_page === pagination.last_page"
+                        class="px-3 py-1.5 text-xs font-bold rounded-lg transition-colors"
+                        :class="pagination.current_page === pagination.last_page ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100'">
+                        Next &raquo;
+                    </button>
+
+                </div>
+            </div>
             <!-- State Awal / Kosong -->
             <div x-show="!isLoading && hasil.length === 0"
                 class="text-center py-16 bg-slate-50 rounded-xl border border-slate-200 border-dashed">
@@ -299,7 +330,7 @@
 
                 hasil: [],
                 isLoading: false,
-
+                pagination: {},
                 get filteredRekening() {
                     if (this.rekeningSearch === '') return this.rekeningOptions;
                     const searchLower = this.rekeningSearch.toLowerCase();
@@ -316,12 +347,13 @@
                     this.cariData();
                 },
 
-                async cariData() {
+                async cariData(page = 1) {
                     if (this.nama_barang.trim() === '' &&
                         this.kode_rekening.trim() === '' &&
                         this.selectedKodeBelanja.length === 0 &&
                         this.kategori === '') {
                         this.hasil = [];
+                        this.pagination = {};
                         return;
                     }
 
@@ -331,7 +363,8 @@
                         const params = new URLSearchParams({
                             nama_barang: this.nama_barang,
                             kode_rekening: this.kode_rekening,
-                            kategori: this.kategori
+                            kategori: this.kategori,
+                            page: page
                         });
 
                         if (this.selectedKodeBelanja.length > 0) {
@@ -341,6 +374,11 @@
                         const response = await fetch(`{{ route('api.barang.search') }}?${params.toString()}`);
                         const data = await response.json();
                         this.hasil = data;
+                        this.pagination = {
+                            current_page: data.current_page,
+                            last_page: data.last_page,
+                            total: data.total
+                        };
                     } catch (error) {
                         console.error("Terjadi kesalahan saat mencari data:", error);
                     } finally {
