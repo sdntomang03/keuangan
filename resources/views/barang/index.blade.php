@@ -10,46 +10,17 @@
             <p class="text-slate-500 font-medium mt-1 ml-4.5">
                 Upload data barang menggunakan file JSON/Excel dan cari komponen dengan spesifik.
             </p>
-            <form action="{{ route('barang.truncate') }}" method="POST"
-                onsubmit="return confirm('⚠️ PERINGATAN!\n\nApakah Anda yakin ingin MENGHAPUS SEMUA DATA barang?\n\nTindakan ini permanen dan tidak dapat dibatalkan!');">
-                @csrf
-                @method('DELETE')
-                <button type="submit"
-                    class="px-5 py-2.5 bg-white text-rose-600 border-2 border-rose-200 hover:bg-rose-50 hover:border-rose-300 font-bold rounded-xl shadow-sm transition flex items-center shrink-0">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                        </path>
-                    </svg>
-                    Kosongkan Semua Data
-                </button>
-            </form>
+            <x-btn-confirm action="{{ route('barang.truncate') }}" method="DELETE" title="Hapus Semua Data?"
+                text="PERINGATAN: Seluruh data komponen barang akan dihapus permanen!"
+                class="px-5 py-2.5 bg-white text-rose-600 border-2 border-rose-200 hover:bg-rose-50 hover:border-rose-300 rounded-xl font-bold flex items-center shrink-0">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                    </path>
+                </svg>
+                Kosongkan Semua Data
+            </x-btn-confirm>
         </div>
-
-        @if (session('success'))
-        <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start shadow-sm">
-            <svg class="w-5 h-5 text-emerald-600 mr-3 mt-0.5 shrink-0" fill="none" stroke="currentColor"
-                viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-            <div class="text-sm font-medium text-emerald-800">{{ session('success') }}</div>
-        </div>
-        @endif
-
-        @if ($errors->any() || session('error'))
-        <div class="p-4 bg-rose-50 border border-rose-200 rounded-xl shadow-sm flex items-start">
-            <svg class="w-5 h-5 text-rose-600 mr-3 mt-0.5 shrink-0" fill="none" stroke="currentColor"
-                viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-            <ul class="list-disc ml-4 space-y-1 text-sm font-medium text-rose-800">
-                @if(session('error')) <li>{{ session('error') }}</li> @endif
-                @foreach ($errors->all() as $error) <li>{{ $error }}</li> @endforeach
-            </ul>
-        </div>
-        @endif
 
         {{-- FORM IMPORT (JSON / EXCEL) --}}
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
@@ -373,7 +344,7 @@
 
                         const response = await fetch(`{{ route('api.barang.search') }}?${params.toString()}`);
                         const data = await response.json();
-                        this.hasil = data;
+                        this.hasil = data.data;
                         this.pagination = {
                             current_page: data.current_page,
                             last_page: data.last_page,

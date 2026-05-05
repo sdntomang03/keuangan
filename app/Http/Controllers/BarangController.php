@@ -134,7 +134,7 @@ class BarangController extends Controller
         }
 
         $query->orderBy('harga_barang', 'asc');
-        $barangs = $query->limit(50)->get();
+        $barangs = $query->paginate(50);
 
         return response()->json($barangs);
     }
