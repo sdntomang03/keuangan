@@ -371,7 +371,7 @@
     if (item && item.harga_satuan) {
         let harga = parseFloat(item.harga_satuan);
 
-         if (harga < 100000) {
+         if (harga < 1000000) {
                             item.harga_satuan = Math.floor(harga / 1000) * 1000;
                         } else {
                             item.harga_satuan = Math.floor(harga / 5000) * 5000;
@@ -388,7 +388,7 @@
             if (item.harga_satuan) {
                 let harga = parseFloat(item.harga_satuan);
 
-             if (harga < 100000) {
+             if (harga < 1000000) {
                             item.harga_satuan = Math.floor(harga / 1000) * 1000;
                         } else {
                             item.harga_satuan = Math.floor(harga / 5000) * 5000;

@@ -525,16 +525,11 @@ this.selectedKeterangan = 'ALL';
                             if (item.harga_satuan) {
                                 let harga = parseFloat(item.harga_satuan);
 
-                                if (harga < 100000) {
-                                    // Di bawah 100.000 -> Bulatkan ke 1.000 bawah
-                                    item.harga_satuan = Math.floor(harga / 1000) * 1000;
-                                } else if (harga >= 100000 && harga <= 5000000) {
-                                    // Sampai 5.000.000 -> Bulatkan ke 10.000 bawah
-                                    item.harga_satuan = Math.floor(harga / 10000) * 10000;
-                                } else if (harga > 5000000) {
-                                    // Di atas 5.000.000 -> Bulatkan ke 100.000 bawah
-                                    item.harga_satuan = Math.floor(harga / 50000) * 50000;
-                                }
+                           if (harga < 1000000) {
+                            item.harga_satuan = Math.floor(harga / 1000) * 1000;
+                        } else {
+                            item.harga_satuan = Math.floor(harga / 5000) * 5000;
+                        }
                             }
                         });
                         this.calculateTotal();
@@ -544,7 +539,7 @@ this.selectedKeterangan = 'ALL';
                     if (item.harga_satuan) {
                         let harga = parseFloat(item.harga_satuan);
 
-                        if (harga < 100000) {
+                        if (harga < 1000000) {
                             item.harga_satuan = Math.floor(harga / 1000) * 1000;
                         } else {
                             item.harga_satuan = Math.floor(harga / 5000) * 5000;
