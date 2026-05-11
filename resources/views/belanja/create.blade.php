@@ -546,10 +546,8 @@ this.selectedKeterangan = 'ALL';
 
                         if (harga < 100000) {
                             item.harga_satuan = Math.floor(harga / 1000) * 1000;
-                        } else if (harga <= 5000000) {
-                            item.harga_satuan = Math.floor(harga / 10000) * 10000;
                         } else {
-                            item.harga_satuan = Math.floor(harga / 50000) * 50000;
+                            item.harga_satuan = Math.floor(harga / 5000) * 5000;
                         }
 
                         this.calculateTotal();
