@@ -371,13 +371,19 @@
     if (item && item.harga_satuan) {
         let harga = parseFloat(item.harga_satuan);
 
-           if (harga < 100000) {
-                            item.harga_satuan = Math.floor(harga / 1000) * 1000;
-                        } else if (harga < 1000) {
-                            item.harga_satuan = Math.floor(harga / 100) * 100;
-                        } else {
-                            item.harga_satuan = Math.floor(harga / 50000) * 50000;
-                        }
+        if (harga < 1000) {
+    // Jika harga di bawah 1.000 (contoh: 280)
+    // 280 / 100 = 2.8 -> floor(2.8) = 2 -> 2 * 100 = 200
+    item.harga_satuan = Math.floor(harga / 100) * 100;
+
+} else if (harga < 100000) {
+    // Jika harga antara 1.000 sampai 99.999
+    item.harga_satuan = Math.floor(harga / 1000) * 1000;
+
+} else {
+    // Jika harga 100.000 ke atas
+    item.harga_satuan = Math.floor(harga / 50000) * 50000;
+}
 
         // Trigger perubahan agar UI Alpine.js terupdate
         this.items[index].harga_satuan = item.harga_satuan;
@@ -390,13 +396,19 @@
             if (item.harga_satuan) {
                 let harga = parseFloat(item.harga_satuan);
 
-             if (harga < 100000) {
-                            item.harga_satuan = Math.floor(harga / 1000) * 1000;
-                        } else if (harga < 1000) {
-                            item.harga_satuan = Math.floor(harga / 100) * 100;
-                        } else {
-                            item.harga_satuan = Math.floor(harga / 50000) * 50000;
-                        }
+        if (harga < 1000) {
+    // Jika harga di bawah 1.000 (contoh: 280)
+    // 280 / 100 = 2.8 -> floor(2.8) = 2 -> 2 * 100 = 200
+    item.harga_satuan = Math.floor(harga / 100) * 100;
+
+} else if (harga < 100000) {
+    // Jika harga antara 1.000 sampai 99.999
+    item.harga_satuan = Math.floor(harga / 1000) * 1000;
+
+} else {
+    // Jika harga 100.000 ke atas
+    item.harga_satuan = Math.floor(harga / 50000) * 50000;
+}
             }
         });
         this.calculateTotal(); // Refresh total harga, pajak, dan transfer
