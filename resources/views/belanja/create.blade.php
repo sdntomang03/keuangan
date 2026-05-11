@@ -520,7 +520,7 @@ this.selectedKeterangan = 'ALL';
                 return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val || 0);
             },
             roundAllPricesDown() {
-                    if (confirm('Bulatkan semua harga satuan sesuai ketentuan (Ribuan/Puluh Ribu/Ratus Ribu)?')) {
+                    if (confirm('Bulatkan semua harga satuan sesuai ketentuan?')) {
                         this.items.forEach(item => {
                             if (item.harga_satuan) {
                                 let harga = parseFloat(item.harga_satuan);
