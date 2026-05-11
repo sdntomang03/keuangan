@@ -371,10 +371,12 @@
     if (item && item.harga_satuan) {
         let harga = parseFloat(item.harga_satuan);
 
-         if (harga < 1000000) {
+           if (harga < 100000) {
                             item.harga_satuan = Math.floor(harga / 1000) * 1000;
+                        } else if (harga < 1000) {
+                            item.harga_satuan = Math.floor(harga / 100) * 100;
                         } else {
-                            item.harga_satuan = Math.floor(harga / 5000) * 5000;
+                            item.harga_satuan = Math.floor(harga / 50000) * 50000;
                         }
 
         // Trigger perubahan agar UI Alpine.js terupdate
@@ -388,10 +390,12 @@
             if (item.harga_satuan) {
                 let harga = parseFloat(item.harga_satuan);
 
-             if (harga < 1000000) {
+             if (harga < 100000) {
                             item.harga_satuan = Math.floor(harga / 1000) * 1000;
+                        } else if (harga < 1000) {
+                            item.harga_satuan = Math.floor(harga / 100) * 100;
                         } else {
-                            item.harga_satuan = Math.floor(harga / 5000) * 5000;
+                            item.harga_satuan = Math.floor(harga / 50000) * 50000;
                         }
             }
         });

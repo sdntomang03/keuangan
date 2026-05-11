@@ -520,15 +520,17 @@ this.selectedKeterangan = 'ALL';
                 return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val || 0);
             },
             roundAllPricesDown() {
-                    if (confirm('Bulatkan semua harga satuan sesuai ketentuan?')) {
+                    if (confirm('Bulatkan semua harga satuan sesuai ketentuan (Ribuan/Puluh Ribu/Ratus Ribu)?')) {
                         this.items.forEach(item => {
                             if (item.harga_satuan) {
                                 let harga = parseFloat(item.harga_satuan);
 
-                           if (harga < 1000000) {
+                                       if (harga < 100000) {
                             item.harga_satuan = Math.floor(harga / 1000) * 1000;
+                        } else if (harga < 1000) {
+                            item.harga_satuan = Math.floor(harga / 100) * 100;
                         } else {
-                            item.harga_satuan = Math.floor(harga / 5000) * 5000;
+                            item.harga_satuan = Math.floor(harga / 50000) * 50000;
                         }
                             }
                         });
@@ -539,10 +541,12 @@ this.selectedKeterangan = 'ALL';
                     if (item.harga_satuan) {
                         let harga = parseFloat(item.harga_satuan);
 
-                        if (harga < 1000000) {
+                        if (harga < 100000) {
                             item.harga_satuan = Math.floor(harga / 1000) * 1000;
+                        } else if (harga < 1000) {
+                            item.harga_satuan = Math.floor(harga / 100) * 100;
                         } else {
-                            item.harga_satuan = Math.floor(harga / 5000) * 5000;
+                            item.harga_satuan = Math.floor(harga / 50000) * 50000;
                         }
 
                         this.calculateTotal();
