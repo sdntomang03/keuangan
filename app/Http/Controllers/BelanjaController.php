@@ -234,8 +234,6 @@ class BelanjaController extends Controller
 
                     $sisaPaguTersedia = $totalPaguAnggaran - $sudahDibelanjakan;
 
-                    dd($totalPaguAnggaran, $sudahDibelanjakan, $sisaPaguTersedia, $totalBrutoInput);
-
                     if ($totalPaguAnggaran <= 0) {
                         throw new \Exception('Komponen ['.$item['namakomponen']."] tidak memiliki anggaran di Triwulan $twAktif.");
                     }
@@ -558,6 +556,7 @@ class BelanjaController extends Controller
                         ->where('belanja_rincis.idblrinci', $item['idblrinci'])
                         ->where('belanjas.anggaran_id', $anggaran->id)
                         ->where('belanjas.id', '!=', $belanja->id) // PENTING: Abaikan diri sendiri
+                        ->whereIn('bulan', $bulanDicheck)
                         ->sum('total_bruto');
 
                     $sisaPaguTersedia = $totalPaguAnggaran - $sudahDibelanjakan;
