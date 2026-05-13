@@ -233,6 +233,8 @@ class BelanjaController extends Controller
 
                     $sisaPaguTersedia = $totalPaguAnggaran - $sudahDibelanjakan;
 
+                    dd($totalPaguAnggaran, $sudahDibelanjakan, $sisaPaguTersedia, $totalBrutoInput);
+
                     if ($totalPaguAnggaran <= 0) {
                         throw new \Exception('Komponen ['.$item['namakomponen']."] tidak memiliki anggaran di Triwulan $twAktif.");
                     }
