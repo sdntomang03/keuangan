@@ -231,6 +231,15 @@ class BelanjaController extends Controller
                         ->where('belanjas.anggaran_id', $anggaran->id)
                         ->sum('total_bruto');
 
+                    $query = DB::table('belanja_rincis')
+                        ->join('belanjas', 'belanja_rincis.belanja_id', '=', 'belanjas.id')
+                        ->where('belanja_rincis.idblrinci', $item['idblrinci'])
+                        ->where('belanjas.anggaran_id', $anggaran->id);
+
+                    dd([
+                        'sql' => $query->toSql(),
+                        'bindings' => $query->getBindings(),
+                    ]);
                     $sisaPaguTersedia = $totalPaguAnggaran - $sudahDibelanjakan;
 
                     dd($totalPaguAnggaran, $sudahDibelanjakan, $sisaPaguTersedia, $totalBrutoInput);
