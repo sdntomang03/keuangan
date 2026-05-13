@@ -229,16 +229,11 @@ class BelanjaController extends Controller
                         ->join('belanjas', 'belanja_rincis.belanja_id', '=', 'belanjas.id')
                         ->where('belanja_rincis.idblrinci', $item['idblrinci'])
                         ->where('belanjas.anggaran_id', $anggaran->id)
+                        ->whereIn('bulan', $bulanDicheck)
                         ->sum('total_bruto');
 
                     $sisaPaguTersedia = $totalPaguAnggaran - $sudahDibelanjakan;
-                    $dataDebug = DB::table('belanja_rincis')
-                        ->join('belanjas', 'belanja_rincis.belanja_id', '=', 'belanjas.id')
-                        ->where('belanja_rincis.idblrinci', $item['idblrinci'])
-                        ->where('belanjas.anggaran_id', $anggaran->id)
-                        ->get(); // Ganti sum jadi get
 
-                    dd($dataDebug); // Hentikan proses dan tampilkan isi data
                     dd($totalPaguAnggaran, $sudahDibelanjakan, $sisaPaguTersedia, $totalBrutoInput);
 
                     if ($totalPaguAnggaran <= 0) {
