@@ -691,6 +691,7 @@ class BelanjaController extends Controller
                     ->join('belanjas', 'belanja_rincis.belanja_id', '=', 'belanjas.id')
                     ->where('belanja_rincis.idblrinci', $item->idblrinci)
                     ->where('belanjas.anggaran_id', $anggaran->id)
+                    ->whereIn('bulan', $bulanDicheck)
                     ->sum('total_bruto');
 
                 // Cek apakah muat jika ditambah duplikat ini?
