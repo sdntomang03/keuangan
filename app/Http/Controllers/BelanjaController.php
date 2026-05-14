@@ -329,14 +329,24 @@ class BelanjaController extends Controller
         // 2. Ambil data sekolah aktif
         $sekolah = Sekolah::find($user->sekolah_id);
 
+        // --- TAMBAHAN LOGIKA TW AKTIF ---
+        // Ambil angka TW yang sedang aktif di pengaturan sekolah
+        $twAktif = (int) filter_var($sekolah->triwulan_aktif, FILTER_SANITIZE_NUMBER_INT);
+
+        // Cek inputan dari user.
+        // Jika di URL ada ?tw=... maka gunakan itu.
+        // Jika tidak ada (baru pertama buka halaman), gunakan $twAktif sebagai default.
+        $selectedTw = $request->input('tw', $twAktif);
+
         // 3. Query Dasar
         $query = Belanja::with(['rekanan', 'kegiatan', 'korek'])
             ->where('anggaran_id', $anggaran->id);
 
-        // 4. FILTER TW (LOGIKA BARU)
-        // Jika di URL ada ?tw=1, maka filter ditambahkan. Jika tidak, tampilkan semua.
-        if ($request->filled('tw')) {
-            $query->where('tw', $request->tw);
+        // 4. FILTER TW (LOGIKA BARU DIPERBARUI)
+        // Jika user ingin melihat "Semua TW", misal dengan mengirim ?tw=semua,
+        // kita bisa melewatinya. Jika berupa angka, kita filter.
+        if ($selectedTw && $selectedTw !== 'semua') {
+            $query->where('tw', $selectedTw);
         }
 
         // 5. Eksekusi Query dengan Pagination
@@ -344,7 +354,8 @@ class BelanjaController extends Controller
             ->paginate(10)
             ->withQueryString(); // PENTING: Agar filter tidak hilang saat klik halaman 2
 
-        return view('belanja.index', compact('belanjas', 'anggaran', 'sekolah'));
+        // Kirim $selectedTw dan $twAktif ke View agar bisa digunakan di Dropdown/Tab menu
+        return view('belanja.index', compact('belanjas', 'anggaran', 'sekolah', 'twAktif', 'selectedTw'));
     }
 
     public function destroy($id)

@@ -19,11 +19,15 @@
                     <select name="tw"
                         class="w-full sm:w-48 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-xl shadow-sm text-sm font-medium text-gray-700 py-2.5"
                         onchange="this.form.submit()">
-                        <option value="">-- Semua Triwulan --</option>
-                        <option value="1" {{ request('tw')=='1' ? 'selected' : '' }}>Triwulan 1</option>
-                        <option value="2" {{ request('tw')=='2' ? 'selected' : '' }}>Triwulan 2</option>
-                        <option value="3" {{ request('tw')=='3' ? 'selected' : '' }}>Triwulan 3</option>
-                        <option value="4" {{ request('tw')=='4' ? 'selected' : '' }}>Triwulan 4</option>
+
+                        {{-- Value diset 'semua' agar Controller tahu untuk melepas filter --}}
+                        <option value="semua" {{ $selectedTw=='semua' ? 'selected' : '' }}>-- Semua Triwulan --</option>
+
+                        {{-- Gunakan variabel $selectedTw dari Controller --}}
+                        <option value="1" {{ $selectedTw==1 ? 'selected' : '' }}>Triwulan 1</option>
+                        <option value="2" {{ $selectedTw==2 ? 'selected' : '' }}>Triwulan 2</option>
+                        <option value="3" {{ $selectedTw==3 ? 'selected' : '' }}>Triwulan 3</option>
+                        <option value="4" {{ $selectedTw==4 ? 'selected' : '' }}>Triwulan 4</option>
                     </select>
                 </form>
 
