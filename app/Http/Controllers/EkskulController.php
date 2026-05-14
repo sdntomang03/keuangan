@@ -17,8 +17,6 @@ use Illuminate\Support\Facades\Storage; // Pastikan model ini ada
 
 class EkskulController extends Controller
 {
-    // ... method index, edit, update, dll biarkan ...
-
     /**
      * 1. FORM INPUT EKSKUL (Logic RKAS)
      */
@@ -239,7 +237,7 @@ class EkskulController extends Controller
 
                     // ... (Validasi Pagu logic sama seperti sebelumnya) ...
                     $totalPagu = DB::table('akb_rincis')->where('idblrinci', $item['idblrinci'])->whereIn('bulan', $bulanDicheck)->sum('nominal');
-                    $terpakai = DB::table('belanja_rincis')->join('belanjas', 'belanja_rincis.belanja_id', '=', 'belanjas.id')->where('belanja_rincis.idblrinci', $item['idblrinci'])->where('belanjas.anggaran_id', $anggaran->id)->sum('total_bruto');
+                    $terpakai = DB::table('belanja_rincis')->join('belanjas', 'belanja_rincis.belanja_id', '=', 'belanjas.id')->where('belanja_rincis.idblrinci', $item['idblrinci'])->where('belanjas.anggaran_id', $anggaran->id)->whereIn('bulan', $bulanDicheck)->sum('total_bruto');
 
                     if (($totalPagu - $terpakai) < $subtotal) {
                         throw new \Exception('Pagu tidak cukup untuk: '.$item['namakomponen']);
