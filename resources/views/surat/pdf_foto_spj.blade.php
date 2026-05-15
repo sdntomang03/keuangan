@@ -92,12 +92,24 @@
 <body>
     @php
     // 1. Deteksi apakah ini pekerjaan perbaikan atau bukan
-    // Anda bisa menyesuaikan logika ini, misal cek kata 'perbaikan' di uraian
     $isPerbaikan = str_contains(strtolower($belanja->uraian), 'perbaikan') ||
     str_contains(strtolower($belanja->uraian), 'pemeliharaan');
 
-    // 2. Ambil semua foto
-    $allFotos = $belanja->fotos;
+    // 2. MENGURUTKAN FOTO (Sebelum -> Proses -> Setelah)
+    // Kita beri nilai bobot: sebelum=1, proses=2, setelah=3, umum=4
+    $bobotStatus = [
+    'sebelum' => 1,
+    'proses' => 2,
+    'setelah' => 3,
+    'umum' => 4
+    ];
+
+    $allFotos = $belanja->fotos->sortBy(function($foto) use ($bobotStatus) {
+    $status = strtolower($foto->status ?? 'umum');
+    // Jika status ada di array $bobotStatus, gunakan angkanya. Jika tidak, taruh di paling akhir (5)
+    return $bobotStatus[$status] ?? 5;
+    })->values(); // values() digunakan untuk me-reset index array (0, 1, 2, dst) setelah diurutkan
+
     $totalFotos = $allFotos->count();
 
     // 3. Pisahkan Foto Pertama (Halaman 1) dan Sisanya (Halaman 2 dst)
@@ -105,12 +117,10 @@
     $fotoSisaChunks = $allFotos->slice(1)->chunk(2);
 
     // 4. Helper untuk Label Foto
-    // Mengasumsikan ada kolom 'status' di tabel foto (sebelum/proses/setelah)
-    // Jika tidak ada, fungsi ini akan mengembalikan label default
     function getLabelFoto($foto, $isPerbaikan, $index) {
     if (!$isPerbaikan) return "FOTO PEKERJAAN/BARANG (Ke-" . ($index + 1) . ")";
 
-    $status = strtolower($foto->status ?? ''); // misal: sebelum, proses, setelah
+    $status = strtolower($foto->status ?? '');
     if ($status == 'sebelum') return "FOTO SEBELUM PERBAIKAN";
     if ($status == 'proses') return "FOTO PROSES PERBAIKAN";
     if ($status == 'setelah') return "FOTO SETELAH PERBAIKAN";
