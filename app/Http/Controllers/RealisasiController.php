@@ -374,10 +374,11 @@ class RealisasiController extends Controller
 
     public function exportSemuaRekanan(Request $request)
     {
+        // 1. Ambil Data Anggaran & Sekolah
         $anggaran = $request->anggaran_data ?? Auth::user()->sekolah->anggaranAktif;
-        $sekolah = Auth::user()->sekolah;
+        $sekolah = Auth::user()->sekolah ?? Sekolah::find(auth()->user()->sekolah_id);
 
-        // Ambil semua rekanan yang punya belanja di anggaran & TW ini
+        // 2. Ambil Semua Rekanan beserta data Belanja-nya
         $daftarRekanan = Rekanan::whereHas('belanjas', function ($q) use ($anggaran, $sekolah) {
             $q->where('anggaran_id', $anggaran->id)
                 ->where('tw', $sekolah->triwulan_aktif);
@@ -385,16 +386,22 @@ class RealisasiController extends Controller
             ->with(['belanjas' => function ($q) use ($anggaran, $sekolah) {
                 $q->where('anggaran_id', $anggaran->id)
                     ->where('tw', $sekolah->triwulan_aktif)
-                    ->with(['rincis', 'pajaks.masterPajak'])
-                    ->orderBy('tanggal', 'asc');
+                    ->with([
+                        'rincis.rkas.kegiatan',
+                        'rincis.rkas.korek',
+                        'pajaks.masterPajak',
+                    ])
+                    ->orderBy('tanggal', 'asc')
+                    ->orderBy('no_bukti', 'asc');
             }])
             ->get();
 
         if ($daftarRekanan->isEmpty()) {
-            return back()->with('error', 'Tidak ada data transaksi.');
+            return back()->with('error', 'Tidak ada data transaksi untuk diunduh.');
         }
 
-        $fileName = 'REKAP_URK_SELURUH_REKANAN_TW_'.$sekolah->triwulan_aktif.'.xlsx';
+        // 3. Download Excel (Panggil Class Export Khusus Semua Rekanan)
+        $fileName = 'SELURUH_URK_REKANAN_TW_'.$sekolah->triwulan_aktif.'.xlsx';
 
         return Excel::download(new SemuaRekananExport($daftarRekanan), $fileName);
     }

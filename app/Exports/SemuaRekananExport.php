@@ -17,8 +17,8 @@ class SemuaRekananExport implements WithMultipleSheets
     {
         $sheets = [];
 
+        // Setiap 1 Rekanan akan dibuatkan 1 Sheet
         foreach ($this->daftarRekanan as $rekanan) {
-            // Setiap rekanan dibuatkan satu sheet yang berisi semua transaksinya
             $sheets[] = new RekananSheet($rekanan);
         }
 

@@ -18,7 +18,8 @@ class RekananSheet implements FromView, ShouldAutoSize, WithTitle
 
     public function view(): View
     {
-        return view('exports.excel_rekanan_semua_transaksi', [
+        // Mengirim data 1 rekanan dan kumpulan belanjanya ke View
+        return view('exports.excel_rekanan_transaksi', [
             'rekanan' => $this->rekanan,
             'belanjas' => $this->rekanan->belanjas,
         ]);
@@ -26,7 +27,9 @@ class RekananSheet implements FromView, ShouldAutoSize, WithTitle
 
     public function title(): string
     {
-        // Nama tab adalah nama rekanan (maksimal 31 karakter untuk Excel)
-        return substr(preg_replace('/[^A-Za-z0-9 ]/', '', $this->rekanan->nama_rekanan), 0, 31);
+        // Syarat mutlak Excel: Nama tab max 31 karakter dan tanpa simbol ilegal
+        $cleanName = preg_replace('/[^A-Za-z0-9 ]/', '', $this->rekanan->nama_rekanan);
+
+        return substr($cleanName, 0, 31);
     }
 }
