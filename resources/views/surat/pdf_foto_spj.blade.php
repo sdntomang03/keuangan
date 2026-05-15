@@ -91,12 +91,22 @@
 
 <body>
 
-    @foreach($belanja->fotos as $index => $foto)
+    @php
+    // Mengelompokkan foto berdasarkan atribut 'tanggal'.
+    // Jika nama kolom di database Anda berbeda (misal: created_at), sesuaikan di bawah ini.
+    $groupedFotos = $belanja->fotos->groupBy(function($item) {
+    // Memastikan waktu (jam/menit) diabaikan, hanya mengelompokkan berdasarkan format Y-m-d
+    return date('Y-m-d', strtotime($item->tanggal ?? $item->created_at));
+    });
+    @endphp
+
+    {{-- LOOPING PERTAMA: Berdasarkan Kelompok Tanggal (1 Halaman per Tanggal) --}}
+    @foreach($groupedFotos as $tanggal => $fotosGroup)
 
     {{-- WRAPPER PER HALAMAN --}}
     <div class="halaman">
 
-        {{-- 1. KOP SURAT (SESUAI TEMPLATE) --}}
+        {{-- 1. KOP SURAT --}}
         <x-kop :sekolah="$sekolah" />
 
         {{-- 2. JUDUL --}}
@@ -130,15 +140,15 @@
                 <td>{{ $triwulan }}</td>
             </tr>
             <tr>
-                <td>Tahun Anggaran</td>
+                <td>Tanggal Dok.</td>
                 <td>:</td>
-                <td>{{ $tahun }}</td>
+                <td>{{ \Carbon\Carbon::parse($tanggal)->translatedFormat('d F Y') }}</td>
             </tr>
         </table>
 
         <br>
 
-        {{-- 4. FOTO (DIBUAT KOTAK SESUAI TEMPLATE) --}}
+        {{-- 4. FOTO (Satu Tabel, Berisi Banyak Foto Berdasarkan Tanggal yang Sama) --}}
         <table style="width: 100%; border-collapse: collapse; border: 1px solid #000;">
             <tr>
                 <td
@@ -147,9 +157,10 @@
                 </td>
             </tr>
 
+            {{-- LOOPING KEDUA: Menampilkan semua foto dalam kelompok tanggal ini --}}
+            @foreach($fotosGroup as $foto)
             <tr>
-                <td style="text-align: center; padding: 10px; vertical-align: middle;">
-                    {{-- Logic Penentuan Path Gambar --}}
+                <td style="text-align: center; padding: 10px; border-bottom: 1px solid #000; vertical-align: middle;">
                     @php
                     // Pastikan path sesuai dengan konfigurasi filesystem Anda
                     $fullPath = storage_path('app/public/' . $foto->path);
@@ -160,11 +171,16 @@
                     }
                     @endphp
 
-                    {{-- Render Gambar --}}
-                    <img src="{{ $fullPath }}" style="max-width: 100%; height: auto; max-height: 300px;">
+                    {{-- Render Gambar. Max-height sedikit dikurangi agar jika ada 2-3 foto di tanggal yang sama, TTD
+                    tidak terdorong ke halaman baru --}}
+                    <img src="{{ $fullPath }}"
+                        style="max-width: 100%; height: auto; max-height: 250px; margin-bottom: 5px;">
                 </td>
             </tr>
+            @endforeach
         </table>
+
+        {{-- 5. TANDA TANGAN --}}
         <div class="ttd-container">
             <table style="width: 100%;">
                 <tr>
@@ -179,11 +195,9 @@
             </table>
         </div>
 
-
-
     </div>
 
-    {{-- PAGE BREAK (Kecuali foto terakhir) --}}
+    {{-- PAGE BREAK (Kecuali kelompok foto terakhir) --}}
     @if(!$loop->last)
     <div class="page-break"></div>
     @endif
