@@ -96,7 +96,6 @@
     str_contains(strtolower($belanja->uraian), 'pemeliharaan');
 
     // 2. MENGURUTKAN FOTO (Sebelum -> Proses -> Setelah)
-    // Kita beri nilai bobot: sebelum=1, proses=2, setelah=3, umum=4
     $bobotStatus = [
     'sebelum' => 1,
     'proses' => 2,
@@ -106,9 +105,8 @@
 
     $allFotos = $belanja->fotos->sortBy(function($foto) use ($bobotStatus) {
     $status = strtolower($foto->status ?? 'umum');
-    // Jika status ada di array $bobotStatus, gunakan angkanya. Jika tidak, taruh di paling akhir (5)
     return $bobotStatus[$status] ?? 5;
-    })->values(); // values() digunakan untuk me-reset index array (0, 1, 2, dst) setelah diurutkan
+    })->values();
 
     $totalFotos = $allFotos->count();
 
@@ -116,16 +114,34 @@
     $fotoPertama = $allFotos->first();
     $fotoSisaChunks = $allFotos->slice(1)->chunk(2);
 
-    // 4. Helper untuk Label Foto
+    // 4. Helper untuk Label Foto (DENGAN LOGIKA LANJUTAN)
     function getLabelFoto($foto, $isPerbaikan, $index) {
-    if (!$isPerbaikan) return "FOTO PEKERJAAN/BARANG (Ke-" . ($index + 1) . ")";
+    // Gunakan static variable untuk "mengingat" status foto sebelumnya
+    static $statusSebelumnya = '';
+    static $urutanSama = 1;
 
-    $status = strtolower($foto->status ?? '');
-    if ($status == 'sebelum') return "FOTO SEBELUM PERBAIKAN";
-    if ($status == 'proses') return "FOTO PROSES PERBAIKAN";
-    if ($status == 'setelah') return "FOTO SETELAH PERBAIKAN";
+    if (!$isPerbaikan) {
+    return "FOTO PEKERJAAN/BARANG (Ke-" . ($index + 1) . ")";
+    }
 
-    return "DOKUMENTASI PERBAIKAN (Ke-" . ($index + 1) . ")";
+    $statusSaatIni = strtolower($foto->status ?? 'umum');
+
+    // Cek: Jika status foto ini SAMA persis dengan foto sebelumnya
+    if ($statusSaatIni === $statusSebelumnya) {
+    $urutanSama++;
+    $teksLanjutan = " (Lanjutan " . $urutanSama . ")";
+    } else {
+    // Jika status BERBEDA (baru berganti tahap)
+    $statusSebelumnya = $statusSaatIni;
+    $urutanSama = 1; // Reset hitungan ke 1
+    $teksLanjutan = "";
+    }
+
+    if ($statusSaatIni == 'sebelum') return "FOTO SEBELUM PERBAIKAN" . $teksLanjutan;
+    if ($statusSaatIni == 'proses') return "FOTO PROSES PERBAIKAN" . $teksLanjutan;
+    if ($statusSaatIni == 'setelah') return "FOTO SETELAH PERBAIKAN" . $teksLanjutan;
+
+    return "DOKUMENTASI PERBAIKAN" . $teksLanjutan;
     }
     @endphp
 
