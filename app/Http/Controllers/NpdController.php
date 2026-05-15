@@ -50,15 +50,16 @@ class NpdController extends Controller
 
         // 2. Agregasi data per Kode Akun
         $listAnggaran = $rawRkas->groupBy(fn ($item) => $item->idbl.'-'.$item->kodeakun)
-            ->map(function ($group) use ($sekolah) {
+            ->map(function ($group) use ($sekolah, $bulanArray) { // Tambahkan $bulanArray ke closure 'use'
                 $first = $group->first();
                 $pagu = $group->sum('pagu_triwulan');
                 $realisasi = $group->sum('realisasi_triwulan');
 
+                // Filter NPD Pending berdasarkan Bulan di Triwulan Aktif
                 $npdPending = Npd::where('sekolah_id', $sekolah->id)
                     ->where('idbl', $first->idbl)
                     ->where('kodeakun', $first->kodeakun)
-                    ->whereIn(DB::raw('MONTH(tanggal)'), $bulanArray) // <-- Tambahan filter Triwulan
+                    ->whereIn(DB::raw('MONTH(tanggal)'), $bulanArray) // <-- Penyesuaian di sini
                     ->whereNotIn('status', ['ditolak'])
                     ->sum('nilai_npd');
 
