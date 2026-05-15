@@ -125,22 +125,7 @@
     <div class="halaman">
 
         {{-- 1. KOP SURAT (SESUAI TEMPLATE) --}}
-        <div class="kop-container">
-            {{-- Ganti path logo sesuai lokasi file Anda --}}
-            <img src="{{ public_path('images/logo_dki.png') }}" class="kop-logo" alt="Logo">
-
-            <div class="kop-teks">
-                <div class="text-bold">PEMERINTAH PROVINSI DAERAH KHUSUS IBUKOTA JAKARTA</div>
-                <div class="text-bold">DINAS PENDIDIKAN</div>
-                <div class="kop-nama">{{ strtoupper($sekolah->nama_sekolah) }}</div>
-                <div class="kop-alamat">
-                    {{ $sekolah->alamat }}<br>
-                    Kel. {{ $sekolah->kelurahan ?? '-' }}, Kec. {{ $sekolah->kecamatan ?? '-' }}<br>
-                    Telepon: {{ $sekolah->no_telp ?? '-' }}, E-mail: {{ $sekolah->email ?? '-' }}<br>
-                    JAKARTA, Kode Pos : {{ $sekolah->kodepos ?? '-' }}
-                </div>
-            </div>
-        </div>
+        <x-kop :sekolah="$sekolah" />
 
         {{-- 2. JUDUL --}}
         <div class="judul-dokumen">DOKUMENTASI BARANG/PEKERJAAN</div>
