@@ -18,26 +18,17 @@
     $fotoPertama = $allFotos->first();
     $fotoSisaChunks = $allFotos->slice(1)->chunk(2);
 
-    // 4. Helper untuk Judul TABEL (Mengingat status tabel yang sudah dicetak)
+    // 4. Helper untuk Judul TABEL (Standar tanpa teks Lanjutan)
     function getJudulTabel($status, $isPerbaikan) {
-    static $printedStatuses = []; // Memori penyimpan status
     $status = strtolower($status ?? 'umum');
 
-    // Cek apakah tabel untuk status ini sudah pernah dibuat di halaman sebelumnya
-    $isLanjutan = in_array($status, $printedStatuses);
-    if (!$isLanjutan) {
-    $printedStatuses[] = $status; // Simpan ke memori jika baru
-    }
+    if (!$isPerbaikan) return "FOTO PEKERJAAN/BARANG";
 
-    $teksLanjutan = $isLanjutan ? " (Lanjutan)" : "";
+    if ($status == 'sebelum') return "FOTO SEBELUM PERBAIKAN";
+    if ($status == 'proses') return "FOTO PROSES PERBAIKAN";
+    if ($status == 'setelah') return "FOTO SETELAH PERBAIKAN";
 
-    if (!$isPerbaikan) return "FOTO PEKERJAAN/BARANG" . $teksLanjutan;
-
-    if ($status == 'sebelum') return "FOTO SEBELUM PERBAIKAN" . $teksLanjutan;
-    if ($status == 'proses') return "FOTO PROSES PERBAIKAN" . $teksLanjutan;
-    if ($status == 'setelah') return "FOTO SETELAH PERBAIKAN" . $teksLanjutan;
-
-    return "DOKUMENTASI PERBAIKAN" . $teksLanjutan;
+    return "DOKUMENTASI PERBAIKAN";
     }
     @endphp
 
