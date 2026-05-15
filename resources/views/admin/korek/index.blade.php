@@ -122,16 +122,21 @@
                                     {{ $item->singkat ?? '-' }}
                                 </td>
                                 <td class="px-4 py-3 text-center">
-                                    @if($item->jenis_belanja)
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase
-                                                {{ $item->jenis_belanja == 'operasional' ? 'bg-blue-100 text-blue-800' :
-                                                  ($item->jenis_belanja == 'mesin' ? 'bg-orange-100 text-orange-800' :
-                                                  'bg-emerald-100 text-emerald-800') }}">
-                                        {{ $item->jenis_belanja }}
-                                    </span>
-                                    @else
-                                    <span class="text-gray-400 italic text-[11px]">Belum diatur</span>
-                                    @endif
+                                    <select
+                                        class="jenis-belanja-select block w-full text-[11px] font-bold uppercase tracking-wider rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 cursor-pointer transition-colors
+        {{ $item->jenis_belanja == 'operasional' ? 'bg-blue-50 text-blue-800' :
+           ($item->jenis_belanja == 'mesin' ? 'bg-orange-50 text-orange-800' :
+           ($item->jenis_belanja == 'aset lainnya' ? 'bg-emerald-50 text-emerald-800' : 'bg-gray-50 text-gray-400')) }}"
+                                        data-id="{{ $item->id }}">
+                                        <option value="" class="bg-white text-gray-700" {{ is_null($item->jenis_belanja)
+                                            ? 'selected' : '' }}>-- BELUM DIATUR --</option>
+                                        <option value="operasional" class="bg-white text-gray-700" {{ $item->
+                                            jenis_belanja == 'operasional' ? 'selected' : '' }}>OPERASIONAL</option>
+                                        <option value="mesin" class="bg-white text-gray-700" {{ $item->jenis_belanja ==
+                                            'mesin' ? 'selected' : '' }}>MESIN</option>
+                                        <option value="aset lainnya" class="bg-white text-gray-700" {{ $item->
+                                            jenis_belanja == 'aset lainnya' ? 'selected' : '' }}>ASET LAINNYA</option>
+                                    </select>
                                 </td>
                                 <td class="px-4 py-3 text-center">
                                     <div class="flex justify-center gap-3">
@@ -174,4 +179,61 @@
 
         </div>
     </div>
+    <x-slot name="scripts">
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const selects = document.querySelectorAll('.jenis-belanja-select');
+
+                selects.forEach(select => {
+                    select.addEventListener('change', function () {
+                        const korekId = this.getAttribute('data-id');
+                        const jenisBelanja = this.value;
+
+                        // Ubah warna background select box seketika saat user memilih
+                        this.className = `jenis-belanja-select block w-full text-[11px] font-bold uppercase tracking-wider rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 cursor-pointer transition-colors ${
+                            jenisBelanja === 'operasional' ? 'bg-blue-50 text-blue-800' :
+                            (jenisBelanja === 'mesin' ? 'bg-orange-50 text-orange-800' :
+                            (jenisBelanja === 'aset lainnya' ? 'bg-emerald-50 text-emerald-800' : 'bg-gray-50 text-gray-400'))
+                        }`;
+
+                        // Kirim data ke server tanpa refresh (AJAX)
+                        fetch(`/admin/korek/${korekId}/update-jenis-belanja`, {
+                            method: 'PATCH',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({ jenis_belanja: jenisBelanja })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                // Tampilkan notifikasi pop-up kecil di pojok (Toast)
+                                Swal.fire({
+                                    toast: true,
+                                    position: 'top-end',
+                                    icon: 'success',
+                                    title: 'Tersimpan!',
+                                    showConfirmButton: false,
+                                    timer: 1500
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'error',
+                                title: 'Gagal menyimpan!',
+                                showConfirmButton: false,
+                                timer: 1500
+                            });
+                        });
+                    });
+                });
+            });
+        </script>
+    </x-slot>
 </x-app-layout>

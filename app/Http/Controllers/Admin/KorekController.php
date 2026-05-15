@@ -136,4 +136,23 @@ class KorekController extends Controller
             return redirect()->back()->with('error', 'Terjadi kesalahan saat import: '.$e->getMessage());
         }
     }
+
+    /**
+     * Update cepat Jenis Belanja via AJAX dari halaman Index
+     */
+    public function updateJenisBelanjaAjax(Request $request, Korek $korek)
+    {
+        $validated = $request->validate([
+            'jenis_belanja' => 'nullable|string|in:operasional,mesin,aset lainnya',
+        ]);
+
+        $korek->update([
+            'jenis_belanja' => $validated['jenis_belanja'],
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Jenis belanja berhasil diperbarui!',
+        ]);
+    }
 }

@@ -337,6 +337,8 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     // Route untuk Master Kode Rekening
     Route::resource('korek', KorekController::class)->except(['show']);
     Route::post('korek/import-update', [KorekController::class, 'importKorekUpdate'])->name('korek.import_update');
+    // Tambahkan baris ini di dalam group route admin Anda (biasanya di bawah resource korek)
+    Route::patch('korek/{korek}/update-jenis-belanja', [KorekController::class, 'updateJenisBelanjaAjax'])->name('korek.update_jenis_belanja');
 });
 Route::middleware(['auth'])->group(function () {
     // 1. Menampilkan Halaman Form Upload
