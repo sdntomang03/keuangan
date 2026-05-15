@@ -19,7 +19,7 @@ class RekananSheet implements FromView, ShouldAutoSize, WithTitle
     public function view(): View
     {
         // Mengirim data 1 rekanan dan kumpulan belanjanya ke View
-        return view('exports.excel_rekanan_transaksi', [
+        return view('exports.excel_rekanan_semua_transaksi', [
             'rekanan' => $this->rekanan,
             'belanjas' => $this->rekanan->belanjas,
         ]);
