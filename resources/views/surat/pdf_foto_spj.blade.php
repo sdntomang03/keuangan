@@ -123,28 +123,38 @@
         });
         @endphp
 
-        @foreach($groupedByStatus as $status => $fotosInGroup)
+        {{-- Buka tag table HANYA 1 KALI di luar looping status --}}
         <table
             style="width: 100%; border-collapse: collapse; border: 1px solid #000; margin-bottom: 15px; page-break-inside: avoid;">
+
+            @foreach($groupedByStatus as $status => $fotosInGroup)
+
+            {{-- Baris Judul Header --}}
             <tr>
                 <td
-                    style="text-align: center; font-weight: bold; padding: 5px; border-bottom: 1px solid #000; background-color: #5adb03;">
+                    style="text-align: center; font-weight: bold; padding: 5px; border-bottom: 1px solid #000; background-color: #5adb03; {{ !$loop->first ? 'border-top: 1px solid #000;' : '' }}">
                     {{ getJudulTabel($status, $isPerbaikan) }}
                 </td>
             </tr>
 
-            {{-- Looping baris foto di dalam 1 tabel --}}
+            {{-- Looping baris foto --}}
             @foreach($fotosInGroup as $fotoSisa)
             <tr>
-                {{-- Jika ada lebih dari 1 foto di tabel yang sama, beri garis putus-putus sebagai pemisah --}}
-                <td
-                    style="text-align: center; padding: 10px; vertical-align: middle; {{ !$loop->last ? 'border-bottom: 1px dashed #888;' : '' }}">
+                <td style="text-align: center; padding: 10px; vertical-align: middle;
+                        {{-- Jika bukan foto terakhir di status ini, pakai garis putus-putus --}}
+                        @if(!$loop->last) border-bottom: 1px dashed #888;
+                        {{-- Jika foto terakhir di status ini, TAPI masih ada status lain di bawahnya, pakai garis solid hitam --}}
+                        @elseif(!$loop->parent->last) border-bottom: 1px solid #000;
+                        @endif">
+
                     @php
                     $pathSisa = storage_path('app/public/' . $fotoSisa->path);
                     $srcSisa = file_exists($pathSisa) ? $pathSisa : public_path('images/no-image.jpg');
                     @endphp
+
                     <img src="{{ $srcSisa }}"
                         style="max-width: 100%; height: auto; max-height: 270px; object-fit: contain;">
+
                     @if($fotoSisa->keterangan)
                     <p style="margin-top: 5px; font-style: italic; font-size: 10pt;">Ket: {{ $fotoSisa->keterangan }}
                     </p>
@@ -152,8 +162,11 @@
                 </td>
             </tr>
             @endforeach
+
+            @endforeach
+
         </table>
-        @endforeach
+        {{-- Tutup tag table --}}
 
         {{-- TTD di halaman paling terakhir --}}
         @if($loop->last)
