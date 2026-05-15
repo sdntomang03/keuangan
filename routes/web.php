@@ -124,6 +124,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/belanja/cetak/{id}', [SuratController::class, 'cetakDokumenLengkap'])->name('belanja.print');
     Route::get('/rekap/export', [RealisasiController::class, 'exportExcel'])->name('belanja.export');
     Route::get('/rekap/rekanan', [RealisasiController::class, 'rekapPerRekanan'])->name('realisasi.rekanan');
+    Route::get('/rekap-rekanan/export-semua', [RealisasiController::class, 'exportSemuaRekanan'])
+        ->name('rekap-rekanan.export-semua');
     Route::get('/rekap/rekanan/export/{id}', [RealisasiController::class, 'exportDetailRekanan'])->name('rekap.rekanan.export_detail');
 });
 Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {

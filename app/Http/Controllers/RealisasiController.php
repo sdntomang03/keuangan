@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Exports\BelanjaExport;
 use App\Exports\RealisasiKomponenExport;
 use App\Exports\RekananMultipleSheetExport;
+use App\Exports\SemuaRekananExport;
 use App\Models\Belanja;
 use App\Models\DasarPajak;
 use App\Models\Rekanan;
@@ -369,6 +370,35 @@ class RealisasiController extends Controller
         $fileName = 'URK_Belanja_'.strtoupper($cleanName).'.xlsx';
 
         return Excel::download(new RekananMultipleSheetExport($dataBelanja, $rekanan), $fileName);
+    }
+
+    public function exportSemuaRekanan(Request $request)
+    {
+        // 1. Ambil Data Anggaran & Sekolah
+        $anggaran = $request->anggaran_data ?? Auth::user()->sekolah->anggaranAktif;
+        $sekolah = Auth::user()->sekolah;
+
+        // 2. Ambil Semua Rekanan yang punya transaksi
+        $daftarRekanan = Rekanan::whereHas('belanjas', function ($q) use ($anggaran, $sekolah) {
+            $q->where('anggaran_id', $anggaran->id)
+                ->where('tw', $sekolah->triwulan_aktif);
+        })
+            ->with(['belanjas' => function ($q) use ($anggaran, $sekolah) {
+                $q->where('anggaran_id', $anggaran->id)
+                    ->where('tw', $sekolah->triwulan_aktif)
+                    ->with(['rincis.rkas.kegiatan', 'rincis.rkas.korek', 'pajaks.masterPajak'])
+                    ->orderBy('tanggal', 'asc');
+            }])
+            ->get();
+
+        if ($daftarRekanan->isEmpty()) {
+            return back()->with('error', 'Tidak ada data transaksi untuk seluruh rekanan.');
+        }
+
+        $fileName = 'Seluruh_Belanja_Rekanan_TW_'.$sekolah->triwulan_aktif.'.xlsx';
+
+        // 3. Panggil Class Export Baru
+        return Excel::download(new SemuaRekananExport($daftarRekanan), $fileName);
     }
 
     public function exportKomponen(Request $request)
