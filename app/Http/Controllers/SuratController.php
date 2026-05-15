@@ -720,7 +720,7 @@ class SuratController extends Controller
             'path' => $path,
             'latitude' => $lat,
             'longitude' => $lng,
-            'tanggal' => $tanggalBast,
+            'tanggal' => $request->input('tanggal_bast_foto'),
             'status' => $request->input('status', 'umum'),
         ]);
 
