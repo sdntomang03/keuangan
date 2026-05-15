@@ -1,3 +1,94 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Dokumentasi Barang/Pekerjaan</title>
+    <style>
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 11pt;
+        }
+
+        .page-break {
+            page-break-after: always;
+        }
+
+        /* Layout Tabel & Header */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 5px;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .text-bold {
+            font-weight: bold;
+        }
+
+        .va-top {
+            vertical-align: top;
+        }
+
+
+
+        /* Judul Halaman */
+        .judul-dokumen {
+            text-align: center;
+            font-weight: bold;
+            font-size: 14pt;
+            text-decoration: underline;
+            margin-bottom: 20px;
+        }
+
+        /* Tabel Informasi */
+        .table-info td {
+            padding: 3px;
+            vertical-align: top;
+        }
+
+        .label-col {
+            width: 140px;
+        }
+
+        .sep-col {
+            width: 10px;
+        }
+
+        /* Container Foto */
+        .foto-container {
+            width: 100%;
+            height: 500px;
+            /* Tinggi fix agar layout tidak lari */
+            border: 1px solid #000;
+            display: table;
+            /* Hack untuk centering vertical di PDF lama */
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .foto-cell {
+            display: table-cell;
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        .foto-img {
+            max-width: 95%;
+            max-height: 430px;
+            object-fit: contain;
+        }
+
+        /* Tanda Tangan */
+        .ttd-container {
+            margin-top: 10px;
+            page-break-inside: avoid;
+        }
+    </style>
+</head>
+
 <body>
     @php
     // 1. Deteksi perbaikan
@@ -18,17 +109,26 @@
     $fotoPertama = $allFotos->first();
     $fotoSisaChunks = $allFotos->slice(1)->chunk(2);
 
-    // 4. Helper untuk Judul TABEL (Standar tanpa teks Lanjutan)
+    // 4. Helper untuk Judul TABEL (Mengingat status tabel yang sudah dicetak)
     function getJudulTabel($status, $isPerbaikan) {
+    static $printedStatuses = []; // Memori penyimpan status
     $status = strtolower($status ?? 'umum');
 
-    if (!$isPerbaikan) return "FOTO PEKERJAAN/BARANG";
+    // Cek apakah tabel untuk status ini sudah pernah dibuat di halaman sebelumnya
+    $isLanjutan = in_array($status, $printedStatuses);
+    if (!$isLanjutan) {
+    $printedStatuses[] = $status; // Simpan ke memori jika baru
+    }
 
-    if ($status == 'sebelum') return "FOTO SEBELUM PERBAIKAN";
-    if ($status == 'proses') return "FOTO PROSES PERBAIKAN";
-    if ($status == 'setelah') return "FOTO SETELAH PERBAIKAN";
+    $teksLanjutan = $isLanjutan ? " (Lanjutan)" : "";
 
-    return "DOKUMENTASI PERBAIKAN";
+    if (!$isPerbaikan) return "FOTO PEKERJAAN/BARANG" . $teksLanjutan;
+
+    if ($status == 'sebelum') return "FOTO SEBELUM PERBAIKAN" . $teksLanjutan;
+    if ($status == 'proses') return "FOTO PROSES PERBAIKAN" . $teksLanjutan;
+    if ($status == 'setelah') return "FOTO SETELAH PERBAIKAN" . $teksLanjutan;
+
+    return "DOKUMENTASI PERBAIKAN" . $teksLanjutan;
     }
     @endphp
 
@@ -193,3 +293,5 @@
     @endforeach
     @endif
 </body>
+
+</html>
