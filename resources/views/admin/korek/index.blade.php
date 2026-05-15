@@ -92,85 +92,107 @@
             </div>
 
             {{-- TABEL DATA --}}
-            <div class="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full border-collapse text-[12px]">
-                        <thead class="bg-gray-800 text-white uppercase tracking-wider">
-                            <tr>
-                                <th class="px-4 py-3 text-center font-bold w-12">No</th>
-                                <th class="px-4 py-3 text-left font-bold w-48">Kode Rekening</th>
-                                <th class="px-4 py-3 text-left font-bold">Uraian / Keterangan</th>
-                                <th class="px-4 py-3 text-center font-bold w-32">Singkatan</th>
-                                <th class="px-4 py-3 text-center font-bold w-36">Jenis Belanja</th>
-                                <th class="px-4 py-3 text-center font-bold w-28">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100">
-                            @forelse($koreks as $index => $item)
-                            <tr class="hover:bg-gray-50 transition">
-                                <td class="px-4 py-3 text-center text-gray-500 font-medium">
-                                    {{ $koreks->firstItem() + $index }}
-                                </td>
-                                <td class="px-4 py-3">
-                                    <div class="font-mono font-bold text-indigo-700 text-[13px]">{{ $item->kode }}</div>
-                                </td>
-                                <td class="px-4 py-3">
-                                    <div class="font-bold text-gray-800">{{ $item->uraian_singkat ?? '-' }}</div>
-                                    <div class="text-[11px] text-gray-500 mt-0.5">Ket: {{ $item->ket ?? '-' }}</div>
-                                </td>
-                                <td class="px-4 py-3 text-center font-medium text-gray-600">
-                                    {{ $item->singkat ?? '-' }}
-                                </td>
-                                <td class="px-4 py-3 text-center">
-                                    <select
-                                        class="jenis-belanja-select block w-full text-[11px] font-bold uppercase tracking-wider rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 cursor-pointer transition-colors
-        {{ $item->jenis_belanja == 'operasional' ? 'bg-blue-50 text-blue-800' :
-           ($item->jenis_belanja == 'mesin' ? 'bg-orange-50 text-orange-800' :
-           ($item->jenis_belanja == 'aset lainnya' ? 'bg-emerald-50 text-emerald-800' : 'bg-gray-50 text-gray-400')) }}"
-                                        data-id="{{ $item->id }}">
-                                        <option value="" class="bg-white text-gray-700" {{ is_null($item->jenis_belanja)
-                                            ? 'selected' : '' }}>-- BELUM DIATUR --</option>
-                                        <option value="operasional" class="bg-white text-gray-700" {{ $item->
-                                            jenis_belanja == 'operasional' ? 'selected' : '' }}>OPERASIONAL</option>
-                                        <option value="mesin" class="bg-white text-gray-700" {{ $item->jenis_belanja ==
-                                            'mesin' ? 'selected' : '' }}>MESIN</option>
-                                        <option value="aset lainnya" class="bg-white text-gray-700" {{ $item->
-                                            jenis_belanja == 'aset lainnya' ? 'selected' : '' }}>ASET LAINNYA</option>
-                                    </select>
-                                </td>
-                                <td class="px-4 py-3 text-center">
-                                    <div class="flex justify-center gap-3">
+            {{-- FORM AKSI MASSAL & TABEL DATA --}}
+            <form action="{{ route('admin.korek.bulk_update_jenis') }}" method="POST">
+                @csrf
+
+                {{-- Panel Aksi Massal (Muncul di atas tabel) --}}
+                <div
+                    class="bg-indigo-50/50 p-3 rounded-t-xl border border-b-0 border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <span class="text-xs font-bold text-indigo-800 uppercase tracking-wider pl-2">Aksi Massal:</span>
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <select name="jenis_belanja" required
+                            class="w-full sm:w-48 text-xs font-bold border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 uppercase">
+                            <option value="">-- Set Terpilih Ke --</option>
+                            <option value="operasional">OPERASIONAL</option>
+                            <option value="mesin">MESIN</option>
+                            <option value="aset lainnya">ASET LAINNYA</option>
+                        </select>
+                        <button type="submit"
+                            onclick="return confirm('Terapkan jenis belanja ini ke semua data yang dicentang?')"
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 text-xs font-bold uppercase rounded-lg shadow-sm transition whitespace-nowrap">
+                            Terapkan
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white shadow-sm rounded-b-xl rounded-tr-none border border-gray-200 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse text-[12px]">
+                            <thead class="bg-gray-800 text-white uppercase tracking-wider">
+                                <tr>
+                                    {{-- CHECKBOX SELECT ALL --}}
+                                    <th class="px-4 py-3 text-center w-12">
+                                        <input type="checkbox" id="selectAll"
+                                            class="rounded border-gray-400 text-indigo-600 shadow-sm focus:ring-indigo-500 cursor-pointer">
+                                    </th>
+                                    <th class="px-2 py-3 text-center font-bold w-12">No</th>
+                                    <th class="px-4 py-3 text-left font-bold w-48">Kode Rekening</th>
+                                    <th class="px-4 py-3 text-left font-bold">Uraian / Keterangan</th>
+                                    <th class="px-4 py-3 text-center font-bold w-32">Singkatan</th>
+                                    <th class="px-4 py-3 text-center font-bold w-36">Jenis Belanja</th>
+                                    <th class="px-4 py-3 text-center font-bold w-28">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                @forelse($koreks as $index => $item)
+                                <tr class="hover:bg-gray-50 transition">
+                                    {{-- CHECKBOX ITEM --}}
+                                    <td class="px-4 py-3 text-center">
+                                        <input type="checkbox" name="ids[]" value="{{ $item->id }}"
+                                            class="checkItem rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 cursor-pointer">
+                                    </td>
+                                    <td class="px-2 py-3 text-center text-gray-500 font-medium">
+                                        {{ $koreks->firstItem() + $index }}
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <div class="font-mono font-bold text-indigo-700 text-[13px]">{{ $item->kode }}
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <div class="font-bold text-gray-800">{{ $item->uraian_singkat ?? '-' }}</div>
+                                        <div class="text-[11px] text-gray-500 mt-0.5">Ket: {{ $item->ket ?? '-' }}</div>
+                                    </td>
+                                    <td class="px-4 py-3 text-center font-medium text-gray-600">
+                                        {{ $item->singkat ?? '-' }}
+                                    </td>
+                                    <td class="px-4 py-3 text-center">
+                                        @if($item->jenis_belanja)
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase
+                                                {{ $item->jenis_belanja == 'operasional' ? 'bg-blue-100 text-blue-800' :
+                                                ($item->jenis_belanja == 'mesin' ? 'bg-orange-100 text-orange-800' :
+                                                'bg-emerald-100 text-emerald-800') }}">
+                                            {{ $item->jenis_belanja }}
+                                        </span>
+                                        @else
+                                        <span class="text-gray-400 italic text-[11px] font-medium">Belum diatur</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-3 text-center">
                                         <a href="{{ route('admin.korek.edit', $item->id) }}"
-                                            class="text-blue-600 hover:text-blue-800 font-bold" title="Edit">
+                                            class="text-blue-600 hover:text-blue-800 font-bold px-2 py-1 bg-blue-50 rounded"
+                                            title="Edit">
                                             Edit
                                         </a>
-                                        <form action="{{ route('admin.korek.destroy', $item->id) }}" method="POST"
-                                            onsubmit="return confirm('Apakah Anda yakin ingin menghapus Kode Rekening ini? Jika kode ini sudah dipakai di Transaksi/RKAS, maka penghapusan akan ditolak otomatis oleh sistem.');"
-                                            class="inline-block">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="text-red-600 hover:text-red-800 font-bold"
-                                                title="Hapus">
-                                                Hapus
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="6" class="px-4 py-12 text-center">
-                                    <div class="text-gray-400 font-bold text-lg uppercase tracking-widest mb-1">Data
-                                        Tidak Ditemukan</div>
-                                    <p class="text-gray-500 text-xs">Silakan tambahkan data kode rekening baru atau
-                                        perbaiki kata kunci pencarian Anda.</p>
-                                </td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                                        {{-- Tombol hapus satuan dihapus di sini agar tidak konflik (nested form).
+                                        Hapus bisa dilakukan dari halaman Edit. --}}
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="7" class="px-4 py-12 text-center">
+                                        <div class="text-gray-400 font-bold text-lg uppercase tracking-widest mb-1">Data
+                                            Tidak Ditemukan</div>
+                                        <p class="text-gray-500 text-xs">Silakan tambahkan data kode rekening baru atau
+                                            perbaiki kata kunci pencarian Anda.</p>
+                                    </td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
+            </form>
 
             {{-- PAGINATION --}}
             <div class="mt-4">
@@ -231,6 +253,34 @@
                                 timer: 1500
                             });
                         });
+                    });
+                });
+            });
+        </script>
+    </x-slot>
+    <x-slot name="scripts">
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const selectAll = document.getElementById('selectAll');
+                const checkItems = document.querySelectorAll('.checkItem');
+
+                // Jika Select All dicentang, centang semua item
+                selectAll.addEventListener('change', function () {
+                    checkItems.forEach(item => {
+                        item.checked = selectAll.checked;
+                    });
+                });
+
+                // Jika salah satu item dihapus centangnya, hapus juga centang Select All
+                checkItems.forEach(item => {
+                    item.addEventListener('change', function () {
+                        if (!this.checked) {
+                            selectAll.checked = false;
+                        } else {
+                            // Cek apakah semua item sudah dicentang
+                            const allChecked = Array.from(checkItems).every(i => i.checked);
+                            selectAll.checked = allChecked;
+                        }
                     });
                 });
             });

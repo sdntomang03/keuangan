@@ -155,4 +155,25 @@ class KorekController extends Controller
             'message' => 'Jenis belanja berhasil diperbarui!',
         ]);
     }
+
+    /**
+     * Update Jenis Belanja secara massal via Checkbox
+     */
+    public function bulkUpdateJenisBelanja(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:koreks,id',
+            'jenis_belanja' => 'required|in:operasional,mesin,aset lainnya',
+        ], [
+            'ids.required' => 'Silakan centang setidaknya satu data terlebih dahulu.',
+            'jenis_belanja.required' => 'Pilih jenis belanja yang ingin diterapkan.',
+        ]);
+
+        Korek::whereIn('id', $request->ids)->update([
+            'jenis_belanja' => $request->jenis_belanja,
+        ]);
+
+        return redirect()->back()->with('success', count($request->ids).' Kode Rekening berhasil diubah menjadi '.strtoupper($request->jenis_belanja).'.');
+    }
 }

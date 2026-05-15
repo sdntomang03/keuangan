@@ -339,6 +339,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::post('korek/import-update', [KorekController::class, 'importKorekUpdate'])->name('korek.import_update');
     // Tambahkan baris ini di dalam group route admin Anda (biasanya di bawah resource korek)
     Route::patch('korek/{korek}/update-jenis-belanja', [KorekController::class, 'updateJenisBelanjaAjax'])->name('korek.update_jenis_belanja');
+    Route::post('korek/bulk-update-jenis', [KorekController::class, 'bulkUpdateJenisBelanja'])->name('korek.bulk_update_jenis');
 });
 Route::middleware(['auth'])->group(function () {
     // 1. Menampilkan Halaman Form Upload
