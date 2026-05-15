@@ -1,7 +1,7 @@
 <x-kop :sekolah="$sekolah" />
 
 {{-- JUDUL SURAT --}}
-{{-- JUDUL SURAT --}}
+
 <div style="text-align: center; font-weight: bold; font-size: 12pt; margin-bottom: 2px; text-transform: uppercase;">
     BERITA ACARA PEMERIKSAAN BARANG/PEKERJAAN
 </div>
