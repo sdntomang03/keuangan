@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('belanja_fotos', function (Blueprint $table) {
             $table->id();
             $table->foreignId('belanja_id')->constrained()->onDelete('cascade');
+            $table->date('tanggal')->nullable();
             $table->string('path');
             $table->string('latitude')->nullable();
             $table->string('longitude')->nullable();

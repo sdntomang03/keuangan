@@ -91,28 +91,15 @@
 
 <body>
 
-    @php
-    // Mengelompokkan foto berdasarkan atribut 'tanggal'.
-    // Jika nama kolom di database Anda berbeda (misal: created_at), sesuaikan di bawah ini.
-    $groupedFotos = $belanja->fotos->groupBy(function($item) {
-    // Memastikan waktu (jam/menit) diabaikan, hanya mengelompokkan berdasarkan format Y-m-d
-    return date('Y-m-d', strtotime($item->tanggal ?? $item->created_at));
-    });
-    @endphp
+    @foreach($belanja->fotos as $index => $foto)
 
-    {{-- LOOPING PERTAMA: Berdasarkan Kelompok Tanggal (1 Halaman per Tanggal) --}}
-    @foreach($groupedFotos as $tanggal => $fotosGroup)
-
-    {{-- WRAPPER PER HALAMAN --}}
     <div class="halaman">
-
-        {{-- 1. KOP SURAT --}}
+        {{-- 1. KOP SURAT & INFO HANYA DI HALAMAN PERTAMA --}}
+        @if($loop->first)
         <x-kop :sekolah="$sekolah" />
 
-        {{-- 2. JUDUL --}}
         <div class="judul-dokumen">DOKUMENTASI BARANG/PEKERJAAN</div>
 
-        {{-- 3. TABEL INFORMASI --}}
         <table class="table-info">
             <tr>
                 <td class="label-col">Nama Sekolah</td>
@@ -125,67 +112,59 @@
                 <td>{{ $belanja->anggaran->nama_anggaran ?? 'BOSP' }} Tahun {{ $belanja->anggaran->tahun }}</td>
             </tr>
             <tr>
-                <td>Kode Rekening</td>
-                <td>:</td>
-                <td>{{ $belanja->korek->ket ?? '-' }}</td>
-            </tr>
-            <tr>
                 <td>Kegiatan Belanja</td>
                 <td>:</td>
                 <td>{{ $belanja->uraian }}</td>
             </tr>
             <tr>
-                <td>Triwulan</td>
+                <td>Triwulan / Tahun</td>
                 <td>:</td>
-                <td>{{ $triwulan }}</td>
-            </tr>
-            <tr>
-                <td>Tanggal Dok.</td>
-                <td>:</td>
-                <td>{{ \Carbon\Carbon::parse($tanggal)->translatedFormat('d F Y') }}</td>
+                <td>{{ $triwulan }} / {{ $tahun }}</td>
             </tr>
         </table>
-
         <br>
+        @else
+        {{-- Berikan jarak sedikit di halaman kedua dst agar foto tidak terlalu menempel ke atas --}}
+        <div style="height: 30px;"></div>
+        @endif
 
-        {{-- 4. FOTO (Satu Tabel, Berisi Banyak Foto Berdasarkan Tanggal yang Sama) --}}
+        {{-- 2. TABEL FOTO (Muncul di setiap halaman untuk setiap foto) --}}
         <table style="width: 100%; border-collapse: collapse; border: 1px solid #000;">
             <tr>
                 <td
                     style="text-align: center; font-weight: bold; padding: 5px; border-bottom: 1px solid #000; background-color: #5adb03;">
-                    FOTO PEKERJAAN/BARANG
+                    FOTO PEKERJAAN/BARANG (Ke-{{ $index + 1 }})
                 </td>
             </tr>
-
-            {{-- LOOPING KEDUA: Menampilkan semua foto dalam kelompok tanggal ini --}}
-            @foreach($fotosGroup as $foto)
             <tr>
-                <td style="text-align: center; padding: 10px; border-bottom: 1px solid #000; vertical-align: middle;">
+                <td style="text-align: center; padding: 15px; vertical-align: middle;">
                     @php
-                    // Pastikan path sesuai dengan konfigurasi filesystem Anda
                     $fullPath = storage_path('app/public/' . $foto->path);
-
-                    // Cek file ada atau tidak
                     if (!file_exists($fullPath)) {
                     $fullPath = public_path('images/no-image.jpg');
                     }
                     @endphp
 
-                    {{-- Render Gambar. Max-height sedikit dikurangi agar jika ada 2-3 foto di tanggal yang sama, TTD
-                    tidak terdorong ke halaman baru --}}
+                    {{-- Sesuaikan max-height. Di halaman 1 lebih kecil karena ada KOP,
+                    di halaman 2 bisa lebih besar karena KOP hilang --}}
                     <img src="{{ $fullPath }}"
-                        style="max-width: 100%; height: auto; max-height: 250px; margin-bottom: 5px;">
+                        style="max-width: 100%; height: auto; max-height: {{ $loop->first ? '350px' : '650px' }}; object-fit: contain;">
+
+                    @if($foto->keterangan)
+                    <p style="margin-top: 10px; font-style: italic;">Keterangan: {{ $foto->keterangan }}</p>
+                    @endif
                 </td>
             </tr>
-            @endforeach
         </table>
 
-        {{-- 5. TANDA TANGAN --}}
+        {{-- 3. TANDA TANGAN HANYA DI HALAMAN TERAKHIR --}}
+        @if($loop->last)
         <div class="ttd-container">
             <table style="width: 100%;">
                 <tr>
-                    <td width="50%"></td> {{-- Kiri Kosong --}}
+                    <td width="50%"></td>
                     <td width="50%" class="text-center">
+                        Jakarta, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}<br>
                         Kepala {{ $sekolah->nama_sekolah }},
                         <br><br><br><br><br>
                         <b><u>{{ $sekolah->nama_kepala_sekolah }}</u></b><br>
@@ -194,10 +173,10 @@
                 </tr>
             </table>
         </div>
-
+        @endif
     </div>
 
-    {{-- PAGE BREAK (Kecuali kelompok foto terakhir) --}}
+    {{-- PAGE BREAK: Pindah halaman jika bukan foto terakhir --}}
     @if(!$loop->last)
     <div class="page-break"></div>
     @endif
