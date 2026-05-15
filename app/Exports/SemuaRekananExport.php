@@ -18,13 +18,8 @@ class SemuaRekananExport implements WithMultipleSheets
         $sheets = [];
 
         foreach ($this->daftarRekanan as $rekanan) {
-            $dataBelanja = $rekanan->belanjas;
-
-            if ($dataBelanja->isNotEmpty()) {
-                // Kita gunakan ulang class RekapRekananSheet yang sudah Anda miliki!
-                // 1 Tab (Sheet) di Excel = 1 Rekanan
-                $sheets[] = new RekapRekananSheet($dataBelanja, $rekanan);
-            }
+            // Setiap rekanan dibuatkan satu sheet yang berisi semua transaksinya
+            $sheets[] = new RekananSheet($rekanan);
         }
 
         return $sheets;
