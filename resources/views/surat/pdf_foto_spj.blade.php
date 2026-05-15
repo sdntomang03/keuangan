@@ -121,7 +121,7 @@
     static $urutanSama = 1;
 
     if (!$isPerbaikan) {
-    return "FOTO PEKERJAAN/BARANG (Ke-" . ($index + 1) . ")";
+    return "FOTO PEKERJAAN/BARANG";
     }
 
     $statusSaatIni = strtolower($foto->status ?? 'umum');
@@ -129,19 +129,18 @@
     // Cek: Jika status foto ini SAMA persis dengan foto sebelumnya
     if ($statusSaatIni === $statusSebelumnya) {
     $urutanSama++;
-    $teksLanjutan = " (Lanjutan " . $urutanSama . ")";
+
     } else {
     // Jika status BERBEDA (baru berganti tahap)
     $statusSebelumnya = $statusSaatIni;
     $urutanSama = 1; // Reset hitungan ke 1
-    $teksLanjutan = "";
     }
 
-    if ($statusSaatIni == 'sebelum') return "FOTO SEBELUM PERBAIKAN" . $teksLanjutan;
-    if ($statusSaatIni == 'proses') return "FOTO PROSES PERBAIKAN" . $teksLanjutan;
-    if ($statusSaatIni == 'setelah') return "FOTO SETELAH PERBAIKAN" . $teksLanjutan;
+    if ($statusSaatIni == 'sebelum') return "FOTO SEBELUM PERBAIKAN";
+    if ($statusSaatIni == 'proses') return "FOTO PROSES PERBAIKAN";
+    if ($statusSaatIni == 'setelah') return "FOTO SETELAH PERBAIKAN";
 
-    return "DOKUMENTASI PERBAIKAN" . $teksLanjutan;
+    return "DOKUMENTASI PERBAIKAN";
     }
     @endphp
 
