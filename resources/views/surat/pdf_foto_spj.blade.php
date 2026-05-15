@@ -90,30 +90,42 @@
 </head>
 
 <body>
-
     @php
-    // 1. Hitung total foto
-    $totalFotos = $belanja->fotos->count();
+    // 1. Deteksi apakah ini pekerjaan perbaikan atau bukan
+    // Anda bisa menyesuaikan logika ini, misal cek kata 'perbaikan' di uraian
+    $isPerbaikan = str_contains(strtolower($belanja->uraian), 'perbaikan') ||
+    str_contains(strtolower($belanja->uraian), 'pemeliharaan');
 
-    // 2. Ambil foto pertama untuk Halaman 1
-    $fotoPertama = $belanja->fotos->first();
+    // 2. Ambil semua foto
+    $allFotos = $belanja->fotos;
+    $totalFotos = $allFotos->count();
 
-    // 3. Ambil sisa foto, lalu pecah per kelompok isi 2 foto untuk Halaman 2 dst
-    $fotoSisaChunks = $belanja->fotos->slice(1)->chunk(2);
+    // 3. Pisahkan Foto Pertama (Halaman 1) dan Sisanya (Halaman 2 dst)
+    $fotoPertama = $allFotos->first();
+    $fotoSisaChunks = $allFotos->slice(1)->chunk(2);
 
-    // 4. Format Tanggal dari Foto Pertama
-    $tanggalRaw = $fotoPertama->tanggal ?? $fotoPertama->created_at;
-    $tanggalFoto = \Carbon\Carbon::parse($tanggalRaw)->translatedFormat('d F Y');
+    // 4. Helper untuk Label Foto
+    // Mengasumsikan ada kolom 'status' di tabel foto (sebelum/proses/setelah)
+    // Jika tidak ada, fungsi ini akan mengembalikan label default
+    function getLabelFoto($foto, $isPerbaikan, $index) {
+    if (!$isPerbaikan) return "FOTO PEKERJAAN/BARANG (Ke-" . ($index + 1) . ")";
+
+    $status = strtolower($foto->status ?? ''); // misal: sebelum, proses, setelah
+    if ($status == 'sebelum') return "FOTO SEBELUM PERBAIKAN";
+    if ($status == 'proses') return "FOTO PROSES PERBAIKAN";
+    if ($status == 'setelah') return "FOTO SETELAH PERBAIKAN";
+
+    return "DOKUMENTASI PERBAIKAN (Ke-" . ($index + 1) . ")";
+    }
     @endphp
 
     {{-- ========================================================== --}}
-    {{-- HALAMAN 1: KOP SURAT, TABEL INFO, & FOTO PERTAMA --}}
+    {{-- HALAMAN 1: KOP, INFO, & HANYA 1 FOTO --}}
     {{-- ========================================================== --}}
     <div class="halaman">
-
         <x-kop :sekolah="$sekolah" />
 
-        <div class="judul-dokumen">DOKUMENTASI BARANG/PEKERJAAN</div>
+        <div class="judul-dokumen">DOKUMENTASI {{ $isPerbaikan ? 'PERBAIKAN' : 'BARANG/PEKERJAAN' }}</div>
 
         <table class="table-info">
             <tr>
@@ -127,11 +139,6 @@
                 <td>{{ $belanja->anggaran->nama_anggaran ?? 'BOSP' }} Tahun {{ $belanja->anggaran->tahun }}</td>
             </tr>
             <tr>
-                <td>Kode Rekening</td>
-                <td>:</td>
-                <td>{{ $belanja->korek->ket ?? '-' }}</td>
-            </tr>
-            <tr>
                 <td>Kegiatan Belanja</td>
                 <td>:</td>
                 <td>{{ $belanja->uraian }}</td>
@@ -141,45 +148,36 @@
                 <td>:</td>
                 <td>{{ $triwulan }} / {{ $tahun }}</td>
             </tr>
-            <tr>
-                <td>Tanggal Dok.</td>
-                <td>:</td>
-                <td>{{ $tanggalFoto }}</td>
-            </tr>
         </table>
         <br>
 
-        <table style="width: 100%; border-collapse: collapse; border: 1px solid #000;">
+        {{-- Tabel Foto Pertama --}}
+        <table style="width: 100%; border-collapse: collapse; border: 1px solid #000; page-break-inside: avoid;">
             <tr>
                 <td
-                    style="text-align: center; font-weight: bold; padding: 4px; border-bottom: 1px solid #000; background-color: #5adb03;">
-                    FOTO PEKERJAAN/BARANG (Ke-1)
+                    style="text-align: center; font-weight: bold; padding: 5px; border-bottom: 1px solid #000; background-color: #5adb03;">
+                    {{ getLabelFoto($fotoPertama, $isPerbaikan, 0) }}
                 </td>
             </tr>
             <tr>
                 <td style="text-align: center; padding: 10px; vertical-align: middle;">
                     @php
-                    $fullPath = storage_path('app/public/' . $fotoPertama->path);
-                    if (!file_exists($fullPath)) {
-                    $fullPath = public_path('images/no-image.jpg');
-                    }
+                    $path1 = storage_path('app/public/' . $fotoPertama->path);
+                    $src1 = file_exists($path1) ? $path1 : public_path('images/no-image.jpg');
                     @endphp
-
-                    {{-- Max height 350px agar pas disandingkan dengan Kop Surat --}}
-                    <img src="{{ $fullPath }}"
+                    <img src="{{ $src1 }}"
                         style="max-width: 100%; height: auto; max-height: 350px; object-fit: contain;">
-
                     @if($fotoPertama->keterangan)
-                    <p style="margin-top: 5px; font-style: italic; font-size: 10pt;">Keterangan: {{
-                        $fotoPertama->keterangan }}</p>
+                    <p style="margin-top: 5px; font-style: italic; font-size: 10pt;">Ket: {{ $fotoPertama->keterangan }}
+                    </p>
                     @endif
                 </td>
             </tr>
         </table>
 
-        {{-- Jika HANYA ADA 1 FOTO secara total, Tanda Tangan langsung diletakkan di Halaman 1 --}}
+        {{-- TTD Jika hanya ada 1 foto --}}
         @if($totalFotos == 1)
-        <div class="ttd-container" style="margin-top: 20px;">
+        <div class="ttd-container" style="margin-top: 20px; page-break-inside: avoid;">
             <table style="width: 100%;">
                 <tr>
                     <td width="50%"></td>
@@ -196,58 +194,48 @@
         @endif
     </div>
 
-
     {{-- ========================================================== --}}
-    {{-- HALAMAN 2 DST: FOTO KE-2, KE-3 Dst (MAX 2 FOTO PER HALAMAN)--}}
+    {{-- HALAMAN 2 DST: SISANYA (MAX 2 FOTO PER HALAMAN) --}}
     {{-- ========================================================== --}}
     @if($totalFotos > 1)
-    {{-- Berikan Page Break setelah Halaman 1 selesai --}}
     <div class="page-break"></div>
 
-    @php $fotoCounter = 2; @endphp
-
-    @foreach($fotoSisaChunks as $chunk)
+    @foreach($fotoSisaChunks as $chunkIndex => $chunk)
     <div class="halaman">
-        <div style="height: 10px;"></div> {{-- Spasi atas diperkecil --}}
+        <div style="height: 10px;"></div>
 
-        @foreach($chunk as $fotoSisa)
-        {{-- page-break-inside: avoid mencegah 1 tabel foto terbelah dua --}}
+        @foreach($chunk as $subIndex => $fotoSisa)
+        @php
+        // Hitung index asli untuk label
+        $originalIndex = ($chunkIndex * 2) + $subIndex + 1;
+        @endphp
         <table
             style="width: 100%; border-collapse: collapse; border: 1px solid #000; margin-bottom: 15px; page-break-inside: avoid;">
             <tr>
                 <td
-                    style="text-align: center; font-weight: bold; padding: 4px; border-bottom: 1px solid #000; background-color: #5adb03;">
-                    FOTO PEKERJAAN/BARANG (Ke-{{ $fotoCounter++ }})
+                    style="text-align: center; font-weight: bold; padding: 5px; border-bottom: 1px solid #000; background-color: #5adb03;">
+                    {{ getLabelFoto($fotoSisa, $isPerbaikan, $originalIndex) }}
                 </td>
             </tr>
             <tr>
-                {{-- Padding diperkecil agar ruang untuk foto lebih banyak --}}
                 <td style="text-align: center; padding: 8px; vertical-align: middle;">
                     @php
-                    $fullPathSisa = storage_path('app/public/' . $fotoSisa->path);
-                    if (!file_exists($fullPathSisa)) {
-                    $fullPathSisa = public_path('images/no-image.jpg');
-                    }
+                    $pathSisa = storage_path('app/public/' . $fotoSisa->path);
+                    $srcSisa = file_exists($pathSisa) ? $pathSisa : public_path('images/no-image.jpg');
                     @endphp
-
-                    {{-- DIPERKECIL: Max height 270px (Sebelumnya 320px)
-                    270px x 2 foto = 540px.
-                    A4 tinggi area cetak ~900px, jadi sisa ruang sangat lega untuk tanda tangan --}}
-                    <img src="{{ $fullPathSisa }}"
+                    <img src="{{ $srcSisa }}"
                         style="max-width: 100%; height: auto; max-height: 270px; object-fit: contain;">
-
                     @if($fotoSisa->keterangan)
-                    <p style="margin-top: 5px; font-style: italic; font-size: 10pt;">Keterangan: {{
-                        $fotoSisa->keterangan }}</p>
+                    <p style="margin-top: 5px; font-style: italic; font-size: 10pt;">Ket: {{ $fotoSisa->keterangan }}
+                    </p>
                     @endif
                 </td>
             </tr>
         </table>
         @endforeach
 
-        {{-- Jika ini adalah kelompok foto yang TERAKHIR, tampilkan Tanda Tangan --}}
+        {{-- TTD Hanya di halaman paling terakhir --}}
         @if($loop->last)
-        {{-- page-break-inside: avoid agar tanda tangan dan nama tidak terpisah halaman --}}
         <div class="ttd-container" style="margin-top: 15px; page-break-inside: avoid;">
             <table style="width: 100%;">
                 <tr>
@@ -265,13 +253,11 @@
         @endif
     </div>
 
-    {{-- Berikan page break kecuali di kelompok (chunk) yang paling akhir --}}
     @if(!$loop->last)
     <div class="page-break"></div>
     @endif
     @endforeach
     @endif
-
 </body>
 
 </html>
