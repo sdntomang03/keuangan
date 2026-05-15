@@ -8,9 +8,19 @@
 if (!$sekolah && auth()->check()) {
 $sekolah = auth()->user()->sekolah;
 }
+
+// 3. LOGIKA BASE64 UNTUK GAMBAR (ANTI GAGAL DI PDF)
+$logoPath = public_path('storage/jayakarta.png');
+$logoBase64 = '';
+
+if (file_exists($logoPath) && !is_dir($logoPath)) {
+$type = pathinfo($logoPath, PATHINFO_EXTENSION);
+$data = file_get_contents($logoPath);
+$logoBase64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+}
 @endphp
 
-{{-- 3. Cek apakah data sekolah ditemukan untuk mencegah error --}}
+{{-- 4. Cek apakah data sekolah ditemukan untuk mencegah error --}}
 @if($sekolah)
 <style>
     .kop-table {
@@ -49,7 +59,6 @@ $sekolah = auth()->user()->sekolah;
         font-size: 13pt;
         font-weight: bold;
         text-transform: uppercase;
-
         line-height: 1.2;
     }
 
@@ -72,8 +81,12 @@ $sekolah = auth()->user()->sekolah;
     <tbody>
         <tr>
             <td class="kop-logo-cell">
-                {{-- Pastikan path storage benar --}}
-                <img src="{{ asset('storage/' . ('jayakarta.png')) }}" alt="Logo Sekolah">
+                {{-- Gunakan Base64 jika berhasil, gunakan asset() biasa sebagai cadangan (jika dibuka di web) --}}
+                @if($logoBase64)
+                <img src="{{ $logoBase64 }}" alt="Logo Jakarta">
+                @else
+                <img src="{{ asset('storage/jayakarta.png') }}" alt="Logo Jakarta">
+                @endif
             </td>
             <td class="kop-text-cell">
                 <h2>PEMERINTAH PROVINSI DAERAH KHUSUS IBUKOTA JAKARTA</h2>
