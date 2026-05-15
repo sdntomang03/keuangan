@@ -95,7 +95,7 @@
     $isPerbaikan = str_contains(strtolower($belanja->uraian), 'perbaikan') ||
     str_contains(strtolower($belanja->uraian), 'pemeliharaan');
 
-    // 2. Urutkan Foto
+    // 2. Urutkan Foto (Sebelum -> Proses -> Setelah)
     $bobotStatus = ['sebelum' => 1, 'proses' => 2, 'setelah' => 3, 'umum' => 4];
     $allFotos = $belanja->fotos->sortBy(function($foto) use ($bobotStatus) {
     $status = strtolower($foto->status ?? 'umum');
@@ -108,7 +108,20 @@
     $fotoPertama = $allFotos->first();
     $fotoSisaChunks = $allFotos->slice(1)->chunk(2);
 
-    // 4. Variabel Pelacak Status (Kunci agar header tidak mengulang)
+    // 4. Helper Judul TABEL (Diubah jadi variabel Closure agar 100% aman di Blade)
+    $getJudulTabel = function($status, $isPerbaikan) {
+    $status = strtolower($status ?? 'umum');
+
+    if (!$isPerbaikan) return "FOTO PEKERJAAN/BARANG";
+
+    if ($status == 'sebelum') return "FOTO SEBELUM PERBAIKAN";
+    if ($status == 'proses') return "FOTO PROSES PERBAIKAN";
+    if ($status == 'setelah') return "FOTO SETELAH PERBAIKAN";
+
+    return "DOKUMENTASI PERBAIKAN";
+    };
+
+    // 5. Variabel Pelacak Status (Kunci agar header tidak mengulang)
     $lastStatus = '';
     @endphp
 
@@ -144,12 +157,14 @@
         </table>
         <br>
 
+        {{-- Jika ada foto, tampilkan foto pertama --}}
+        @if($fotoPertama)
         <table style="width: 100%; border-collapse: collapse; border: 1px solid #000; page-break-inside: avoid;">
             @php $lastStatus = strtolower($fotoPertama->status ?? 'umum'); @endphp
             <tr>
                 <td
                     style="text-align: center; font-weight: bold; padding: 5px; border-bottom: 1px solid #000; background-color: #5adb03;">
-                    {{ getJudulTabel($lastStatus, $isPerbaikan) }}
+                    {{ $getJudulTabel($lastStatus, $isPerbaikan) }}
                 </td>
             </tr>
             <tr>
@@ -165,10 +180,24 @@
                 </td>
             </tr>
         </table>
-
-        @if($totalFotos == 1)
-        @include('surat.partials.ttd_dokumentasi') {{-- Gunakan partial agar rapi --}}
         @endif
+
+        @if($totalFotos <= 1) {{-- Tanda Tangan jika fotonya cuma 1 --}} <div class="ttd-container"
+            style="margin-top: 20px; page-break-inside: avoid;">
+            <table style="width: 100%;">
+                <tr>
+                    <td width="50%"></td>
+                    <td width="50%" class="text-center">
+                        Jakarta, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}<br>
+                        Kepala {{ $sekolah->nama_sekolah }},
+                        <br><br><br><br><br>
+                        <b><u>{{ $sekolah->nama_kepala_sekolah }}</u></b><br>
+                        NIP. {{ $sekolah->nip_kepala_sekolah }}
+                    </td>
+                </tr>
+            </table>
+    </div>
+    @endif
     </div>
 
     {{-- ========================================================== --}}
@@ -191,7 +220,7 @@
             <tr>
                 <td
                     style="text-align: center; font-weight: bold; padding: 5px; border-bottom: 1px solid #000; background-color: #5adb03; {{ !$loop->first ? 'border-top: 1px solid #000;' : '' }}">
-                    {{ getJudulTabel($currentStatus, $isPerbaikan) }}
+                    {{ $getJudulTabel($currentStatus, $isPerbaikan) }}
                 </td>
             </tr>
             @php $lastStatus = $currentStatus; @endphp
