@@ -1,107 +1,11 @@
-<!DOCTYPE html>
-<html>
-
-<head>
-    <title>Dokumentasi Barang/Pekerjaan</title>
-    <style>
-        body {
-            font-family: 'Times New Roman', Times, serif;
-            font-size: 11pt;
-        }
-
-        .page-break {
-            page-break-after: always;
-        }
-
-        /* Layout Tabel & Header */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 5px;
-        }
-
-        .text-center {
-            text-align: center;
-        }
-
-        .text-bold {
-            font-weight: bold;
-        }
-
-        .va-top {
-            vertical-align: top;
-        }
-
-
-
-        /* Judul Halaman */
-        .judul-dokumen {
-            text-align: center;
-            font-weight: bold;
-            font-size: 14pt;
-            text-decoration: underline;
-            margin-bottom: 20px;
-        }
-
-        /* Tabel Informasi */
-        .table-info td {
-            padding: 3px;
-            vertical-align: top;
-        }
-
-        .label-col {
-            width: 140px;
-        }
-
-        .sep-col {
-            width: 10px;
-        }
-
-        /* Container Foto */
-        .foto-container {
-            width: 100%;
-            height: 500px;
-            /* Tinggi fix agar layout tidak lari */
-            border: 1px solid #000;
-            display: table;
-            /* Hack untuk centering vertical di PDF lama */
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .foto-cell {
-            display: table-cell;
-            vertical-align: middle;
-            text-align: center;
-        }
-
-        .foto-img {
-            max-width: 95%;
-            max-height: 430px;
-            object-fit: contain;
-        }
-
-        /* Tanda Tangan */
-        .ttd-container {
-            margin-top: 10px;
-            page-break-inside: avoid;
-        }
-    </style>
-</head>
-
 <body>
     @php
-    // 1. Deteksi apakah ini pekerjaan perbaikan atau bukan
+    // 1. Deteksi perbaikan
     $isPerbaikan = str_contains(strtolower($belanja->uraian), 'perbaikan') ||
     str_contains(strtolower($belanja->uraian), 'pemeliharaan');
 
-    // 2. MENGURUTKAN FOTO (Sebelum -> Proses -> Setelah)
-    $bobotStatus = [
-    'sebelum' => 1,
-    'proses' => 2,
-    'setelah' => 3,
-    'umum' => 4
-    ];
+    // 2. Mengurutkan foto (Sebelum -> Proses -> Setelah)
+    $bobotStatus = ['sebelum' => 1, 'proses' => 2, 'setelah' => 3, 'umum' => 4];
 
     $allFotos = $belanja->fotos->sortBy(function($foto) use ($bobotStatus) {
     $status = strtolower($foto->status ?? 'umum');
@@ -110,42 +14,35 @@
 
     $totalFotos = $allFotos->count();
 
-    // 3. Pisahkan Foto Pertama (Halaman 1) dan Sisanya (Halaman 2 dst)
+    // 3. Pisahkan Foto Pertama dan Sisanya
     $fotoPertama = $allFotos->first();
     $fotoSisaChunks = $allFotos->slice(1)->chunk(2);
 
-    // 4. Helper untuk Label Foto (DENGAN LOGIKA LANJUTAN)
-    function getLabelFoto($foto, $isPerbaikan, $index) {
-    // Gunakan static variable untuk "mengingat" status foto sebelumnya
-    static $statusSebelumnya = '';
-    static $urutanSama = 1;
+    // 4. Helper untuk Judul TABEL (Mengingat status tabel yang sudah dicetak)
+    function getJudulTabel($status, $isPerbaikan) {
+    static $printedStatuses = []; // Memori penyimpan status
+    $status = strtolower($status ?? 'umum');
 
-    if (!$isPerbaikan) {
-    return "FOTO PEKERJAAN/BARANG";
+    // Cek apakah tabel untuk status ini sudah pernah dibuat di halaman sebelumnya
+    $isLanjutan = in_array($status, $printedStatuses);
+    if (!$isLanjutan) {
+    $printedStatuses[] = $status; // Simpan ke memori jika baru
     }
 
-    $statusSaatIni = strtolower($foto->status ?? 'umum');
+    $teksLanjutan = $isLanjutan ? " (Lanjutan)" : "";
 
-    // Cek: Jika status foto ini SAMA persis dengan foto sebelumnya
-    if ($statusSaatIni === $statusSebelumnya) {
-    $urutanSama++;
+    if (!$isPerbaikan) return "FOTO PEKERJAAN/BARANG" . $teksLanjutan;
 
-    } else {
-    // Jika status BERBEDA (baru berganti tahap)
-    $statusSebelumnya = $statusSaatIni;
-    $urutanSama = 1; // Reset hitungan ke 1
-    }
+    if ($status == 'sebelum') return "FOTO SEBELUM PERBAIKAN" . $teksLanjutan;
+    if ($status == 'proses') return "FOTO PROSES PERBAIKAN" . $teksLanjutan;
+    if ($status == 'setelah') return "FOTO SETELAH PERBAIKAN" . $teksLanjutan;
 
-    if ($statusSaatIni == 'sebelum') return "FOTO SEBELUM PERBAIKAN";
-    if ($statusSaatIni == 'proses') return "FOTO PROSES PERBAIKAN";
-    if ($statusSaatIni == 'setelah') return "FOTO SETELAH PERBAIKAN";
-
-    return "DOKUMENTASI PERBAIKAN";
+    return "DOKUMENTASI PERBAIKAN" . $teksLanjutan;
     }
     @endphp
 
     {{-- ========================================================== --}}
-    {{-- HALAMAN 1: KOP, INFO, & HANYA 1 FOTO --}}
+    {{-- HALAMAN 1: KOP, INFO, & FOTO PERTAMA --}}
     {{-- ========================================================== --}}
     <div class="halaman">
         <x-kop :sekolah="$sekolah" />
@@ -181,7 +78,7 @@
             <tr>
                 <td
                     style="text-align: center; font-weight: bold; padding: 5px; border-bottom: 1px solid #000; background-color: #5adb03;">
-                    {{ getLabelFoto($fotoPertama, $isPerbaikan, 0) }}
+                    {{ getJudulTabel($fotoPertama->status, $isPerbaikan) }}
                 </td>
             </tr>
             <tr>
@@ -200,7 +97,6 @@
             </tr>
         </table>
 
-        {{-- TTD Jika hanya ada 1 foto --}}
         @if($totalFotos == 1)
         <div class="ttd-container" style="margin-top: 20px; page-break-inside: avoid;">
             <table style="width: 100%;">
@@ -220,30 +116,38 @@
     </div>
 
     {{-- ========================================================== --}}
-    {{-- HALAMAN 2 DST: SISANYA (MAX 2 FOTO PER HALAMAN) --}}
+    {{-- HALAMAN 2 DST: SISANYA (GROUPING BERDASARKAN STATUS) --}}
     {{-- ========================================================== --}}
     @if($totalFotos > 1)
     <div class="page-break"></div>
 
-    @foreach($fotoSisaChunks as $chunkIndex => $chunk)
+    @foreach($fotoSisaChunks as $chunk)
     <div class="halaman">
         <div style="height: 10px;"></div>
 
-        @foreach($chunk as $subIndex => $fotoSisa)
         @php
-        // Hitung index asli untuk label
-        $originalIndex = ($chunkIndex * 2) + $subIndex + 1;
+        // KUNCI UTAMA: Kelompokkan max 2 foto di halaman ini berdasarkan statusnya
+        $groupedByStatus = $chunk->groupBy(function($item) {
+        return strtolower($item->status ?? 'umum');
+        });
         @endphp
+
+        @foreach($groupedByStatus as $status => $fotosInGroup)
         <table
             style="width: 100%; border-collapse: collapse; border: 1px solid #000; margin-bottom: 15px; page-break-inside: avoid;">
             <tr>
                 <td
                     style="text-align: center; font-weight: bold; padding: 5px; border-bottom: 1px solid #000; background-color: #5adb03;">
-                    {{ getLabelFoto($fotoSisa, $isPerbaikan, $originalIndex) }}
+                    {{ getJudulTabel($status, $isPerbaikan) }}
                 </td>
             </tr>
+
+            {{-- Looping baris foto di dalam 1 tabel --}}
+            @foreach($fotosInGroup as $fotoSisa)
             <tr>
-                <td style="text-align: center; padding: 8px; vertical-align: middle;">
+                {{-- Jika ada lebih dari 1 foto di tabel yang sama, beri garis putus-putus sebagai pemisah --}}
+                <td
+                    style="text-align: center; padding: 10px; vertical-align: middle; {{ !$loop->last ? 'border-bottom: 1px dashed #888;' : '' }}">
                     @php
                     $pathSisa = storage_path('app/public/' . $fotoSisa->path);
                     $srcSisa = file_exists($pathSisa) ? $pathSisa : public_path('images/no-image.jpg');
@@ -256,10 +160,11 @@
                     @endif
                 </td>
             </tr>
+            @endforeach
         </table>
         @endforeach
 
-        {{-- TTD Hanya di halaman paling terakhir --}}
+        {{-- TTD di halaman paling terakhir --}}
         @if($loop->last)
         <div class="ttd-container" style="margin-top: 15px; page-break-inside: avoid;">
             <table style="width: 100%;">
@@ -284,5 +189,3 @@
     @endforeach
     @endif
 </body>
-
-</html>
