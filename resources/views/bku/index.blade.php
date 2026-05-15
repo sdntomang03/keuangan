@@ -740,16 +740,31 @@
 
                                                     <template x-for="pjk in data.belanja.pajaks"
                                                         :key="pjk.dasar_pajak_id">
-                                                        <div
-                                                            class="flex justify-between items-center bg-white p-2.5 rounded-lg border border-red-50 shadow-sm">
-                                                            <div class="flex flex-col">
+                                                        <div x-data="{
+            teksUraian: `${pjk.is_setor == 1 ? 'Disetor' : 'Diterima'} (${pjk.master_pajak?.nama_pajak || 'Pajak'}) atas SPJ ${data.belanja?.uraian || ''} dari rekanan ${data.belanja?.rekanan?.nama_rekanan || '-'}`
+         }" class="flex justify-between items-center bg-white p-2.5 rounded-lg border border-red-50 shadow-sm">
+
+                                                            <div class="flex flex-col pr-2">
                                                                 <span
                                                                     class="font-black text-gray-800 text-[10px] uppercase"
                                                                     x-text="pjk.master_pajak?.nama_pajak || 'Pajak'"></span>
-                                                                <span class="text-[8px] text-gray-400 font-medium"
-                                                                    x-text="pjk.is_setor == 1 ? 'Disetor ' + pjk.master_pajak?.nama_pajak : 'Diterima ' + pjk.master_pajak?.nama_pajak"></span>
+
+                                                                <div class="flex items-start gap-1.5 mt-0.5">
+                                                                    <span
+                                                                        class="text-[8px] text-gray-400 font-medium leading-tight"
+                                                                        x-text="teksUraian"></span>
+
+                                                                    <button type="button" @click="
+                        navigator.clipboard.writeText(teksUraian);
+                        $el.innerText = 'Copied!';
+                        setTimeout(() => $el.innerText = 'Copy', 2000)
+                    " class="text-[7px] font-bold bg-blue-50 text-blue-500 px-1.5 py-0.5 rounded cursor-pointer hover:bg-blue-100 transition-colors shrink-0">
+                                                                        Copy
+                                                                    </button>
+                                                                </div>
                                                             </div>
-                                                            <div class="text-right">
+
+                                                            <div class="text-right shrink-0">
                                                                 <span class="font-black text-red-600 font-mono text-xs"
                                                                     x-text="new Intl.NumberFormat('id-ID').format(pjk.nominal)"></span>
                                                             </div>
