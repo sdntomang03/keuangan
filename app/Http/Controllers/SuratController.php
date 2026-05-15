@@ -720,6 +720,8 @@ class SuratController extends Controller
             'path' => $path,
             'latitude' => $lat,
             'longitude' => $lng,
+            'tanggal' => $tanggalBast,
+            'status' => $request->input('status', 'umum'),
         ]);
 
         return redirect(url()->previous().'#foto')->with('success', 'Foto berhasil diunggah');

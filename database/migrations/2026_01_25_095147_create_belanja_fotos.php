@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('belanja_id')->constrained()->onDelete('cascade');
             $table->date('tanggal')->nullable();
             $table->string('path');
+            $table->enum('status', ['sebelum', 'proses', 'setelah', 'umum'])->default('umum');
             $table->string('latitude')->nullable();
             $table->string('longitude')->nullable();
             $table->timestamps();

@@ -531,6 +531,16 @@
                                     <input type="time" name="waktu_foto" value="{{ old('waktu_foto', '09:00') }}"
                                         class="w-full rounded-lg border-gray-300 dark:border-gray-600 focus:ring-indigo-500 text-sm font-bold">
                                 </div>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-bold text-gray-700">Kategori Foto</label>
+                                    <select name="status"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                        <option value="umum">Umum / Pembelian Barang</option>
+                                        <option value="sebelum">Sebelum Perbaikan (0%)</option>
+                                        <option value="proses">Proses Perbaikan (50%)</option>
+                                        <option value="setelah">Setelah Perbaikan (100%)</option>
+                                    </select>
+                                </div>
                                 @if($belanja->fotos->count() > 0)
                                 <a href="{{ route('belanja.cetak_foto', $belanja->id) }}" target="_blank"
                                     class="bg-blue-600 text-white px-5 py-2.5 rounded-2xl hover:bg-blue-700 text-xs font-black shadow-xl shadow-blue-100 transition-all flex items-center gap-2">
