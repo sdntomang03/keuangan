@@ -32,35 +32,7 @@
             vertical-align: top;
         }
 
-        /* Kop Surat (Standar Dinas) */
-        .kop-container {
-            border-bottom: 3px double black;
-            margin-bottom: 15px;
-            padding-bottom: 5px;
-            position: relative;
-        }
 
-        .kop-logo {
-            position: absolute;
-            left: 0;
-            top: 5px;
-            width: 90px;
-        }
-
-        .kop-teks {
-            text-align: center;
-            margin-left: 80px;
-            /* Memberi ruang untuk logo */
-        }
-
-        .kop-nama {
-            font-size: 14pt;
-            font-weight: bold;
-        }
-
-        .kop-alamat {
-            font-size: 10pt;
-        }
 
         /* Judul Halaman */
         .judul-dokumen {
