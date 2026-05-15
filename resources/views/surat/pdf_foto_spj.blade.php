@@ -91,13 +91,12 @@
 
 <body>
     @php
-    // 1. Deteksi perbaikan
+    // 1. Identifikasi Perbaikan
     $isPerbaikan = str_contains(strtolower($belanja->uraian), 'perbaikan') ||
     str_contains(strtolower($belanja->uraian), 'pemeliharaan');
 
-    // 2. Mengurutkan foto (Sebelum -> Proses -> Setelah)
+    // 2. Urutkan Foto
     $bobotStatus = ['sebelum' => 1, 'proses' => 2, 'setelah' => 3, 'umum' => 4];
-
     $allFotos = $belanja->fotos->sortBy(function($foto) use ($bobotStatus) {
     $status = strtolower($foto->status ?? 'umum');
     return $bobotStatus[$status] ?? 5;
@@ -105,31 +104,12 @@
 
     $totalFotos = $allFotos->count();
 
-    // 3. Pisahkan Foto Pertama dan Sisanya
+    // 3. Pisahkan Foto Halaman 1 dan Sisanya
     $fotoPertama = $allFotos->first();
     $fotoSisaChunks = $allFotos->slice(1)->chunk(2);
 
-    // 4. Helper untuk Judul TABEL (Mengingat status tabel yang sudah dicetak)
-    function getJudulTabel($status, $isPerbaikan) {
-    static $printedStatuses = []; // Memori penyimpan status
-    $status = strtolower($status ?? 'umum');
-
-    // Cek apakah tabel untuk status ini sudah pernah dibuat di halaman sebelumnya
-    $isLanjutan = in_array($status, $printedStatuses);
-    if (!$isLanjutan) {
-    $printedStatuses[] = $status; // Simpan ke memori jika baru
-    }
-
-    $teksLanjutan = $isLanjutan ? " (Lanjutan)" : "";
-
-    if (!$isPerbaikan) return "FOTO PEKERJAAN/BARANG" . $teksLanjutan;
-
-    if ($status == 'sebelum') return "FOTO SEBELUM PERBAIKAN" . $teksLanjutan;
-    if ($status == 'proses') return "FOTO PROSES PERBAIKAN" . $teksLanjutan;
-    if ($status == 'setelah') return "FOTO SETELAH PERBAIKAN" . $teksLanjutan;
-
-    return "DOKUMENTASI PERBAIKAN" . $teksLanjutan;
-    }
+    // 4. Variabel Pelacak Status (Kunci agar header tidak mengulang)
+    $lastStatus = '';
     @endphp
 
     {{-- ========================================================== --}}
@@ -164,12 +144,12 @@
         </table>
         <br>
 
-        {{-- Tabel Foto Pertama --}}
         <table style="width: 100%; border-collapse: collapse; border: 1px solid #000; page-break-inside: avoid;">
+            @php $lastStatus = strtolower($fotoPertama->status ?? 'umum'); @endphp
             <tr>
                 <td
                     style="text-align: center; font-weight: bold; padding: 5px; border-bottom: 1px solid #000; background-color: #5adb03;">
-                    {{ getJudulTabel($fotoPertama->status, $isPerbaikan) }}
+                    {{ getJudulTabel($lastStatus, $isPerbaikan) }}
                 </td>
             </tr>
             <tr>
@@ -180,34 +160,19 @@
                     @endphp
                     <img src="{{ $src1 }}"
                         style="max-width: 100%; height: auto; max-height: 350px; object-fit: contain;">
-                    @if($fotoPertama->keterangan)
-                    <p style="margin-top: 5px; font-style: italic; font-size: 10pt;">Ket: {{ $fotoPertama->keterangan }}
-                    </p>
-                    @endif
+                    @if($fotoPertama->keterangan)<p style="margin-top: 5px; font-style: italic; font-size: 10pt;">Ket:
+                        {{ $fotoPertama->keterangan }}</p>@endif
                 </td>
             </tr>
         </table>
 
         @if($totalFotos == 1)
-        <div class="ttd-container" style="margin-top: 20px; page-break-inside: avoid;">
-            <table style="width: 100%;">
-                <tr>
-                    <td width="50%"></td>
-                    <td width="50%" class="text-center">
-                        Jakarta, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}<br>
-                        Kepala {{ $sekolah->nama_sekolah }},
-                        <br><br><br><br><br>
-                        <b><u>{{ $sekolah->nama_kepala_sekolah }}</u></b><br>
-                        NIP. {{ $sekolah->nip_kepala_sekolah }}
-                    </td>
-                </tr>
-            </table>
-        </div>
+        @include('surat.partials.ttd_dokumentasi') {{-- Gunakan partial agar rapi --}}
         @endif
     </div>
 
     {{-- ========================================================== --}}
-    {{-- HALAMAN 2 DST: SISANYA (GROUPING BERDASARKAN STATUS) --}}
+    {{-- HALAMAN 2 DST: SISANYA (KONTINU) --}}
     {{-- ========================================================== --}}
     @if($totalFotos > 1)
     <div class="page-break"></div>
@@ -216,60 +181,40 @@
     <div class="halaman">
         <div style="height: 10px;"></div>
 
-        @php
-        // KUNCI UTAMA: Kelompokkan max 2 foto di halaman ini berdasarkan statusnya
-        $groupedByStatus = $chunk->groupBy(function($item) {
-        return strtolower($item->status ?? 'umum');
-        });
-        @endphp
-
-        {{-- Buka tag table HANYA 1 KALI di luar looping status --}}
         <table
             style="width: 100%; border-collapse: collapse; border: 1px solid #000; margin-bottom: 15px; page-break-inside: avoid;">
+            @foreach($chunk as $fotoSisa)
+            @php $currentStatus = strtolower($fotoSisa->status ?? 'umum'); @endphp
 
-            @foreach($groupedByStatus as $status => $fotosInGroup)
-
-            {{-- Baris Judul Header --}}
+            {{-- HEADER HANYA MUNCUL JIKA STATUS BERUBAH --}}
+            @if($currentStatus !== $lastStatus)
             <tr>
                 <td
                     style="text-align: center; font-weight: bold; padding: 5px; border-bottom: 1px solid #000; background-color: #5adb03; {{ !$loop->first ? 'border-top: 1px solid #000;' : '' }}">
-                    {{ getJudulTabel($status, $isPerbaikan) }}
+                    {{ getJudulTabel($currentStatus, $isPerbaikan) }}
                 </td>
             </tr>
+            @php $lastStatus = $currentStatus; @endphp
+            @endif
 
-            {{-- Looping baris foto --}}
-            @foreach($fotosInGroup as $fotoSisa)
             <tr>
-                <td style="text-align: center; padding: 10px; vertical-align: middle;
-                        {{-- Jika bukan foto terakhir di status ini, pakai garis putus-putus --}}
-                        @if(!$loop->last) border-bottom: 1px dashed #888;
-                        {{-- Jika foto terakhir di status ini, TAPI masih ada status lain di bawahnya, pakai garis solid hitam --}}
-                        @elseif(!$loop->parent->last) border-bottom: 1px solid #000;
-                        @endif">
-
+                <td
+                    style="text-align: center; padding: 10px; vertical-align: middle; {{ !$loop->last ? 'border-bottom: 1px dashed #888;' : '' }}">
                     @php
                     $pathSisa = storage_path('app/public/' . $fotoSisa->path);
                     $srcSisa = file_exists($pathSisa) ? $pathSisa : public_path('images/no-image.jpg');
                     @endphp
-
                     <img src="{{ $srcSisa }}"
                         style="max-width: 100%; height: auto; max-height: 270px; object-fit: contain;">
-
-                    @if($fotoSisa->keterangan)
-                    <p style="margin-top: 5px; font-style: italic; font-size: 10pt;">Ket: {{ $fotoSisa->keterangan }}
-                    </p>
-                    @endif
+                    @if($fotoSisa->keterangan)<p style="margin-top: 5px; font-style: italic; font-size: 10pt;">Ket: {{
+                        $fotoSisa->keterangan }}</p>@endif
                 </td>
             </tr>
             @endforeach
-
-            @endforeach
-
         </table>
-        {{-- Tutup tag table --}}
 
-        {{-- TTD di halaman paling terakhir --}}
         @if($loop->last)
+        {{-- Bagian Tanda Tangan --}}
         <div class="ttd-container" style="margin-top: 15px; page-break-inside: avoid;">
             <table style="width: 100%;">
                 <tr>
@@ -287,9 +232,7 @@
         @endif
     </div>
 
-    @if(!$loop->last)
-    <div class="page-break"></div>
-    @endif
+    @if(!$loop->last)<div class="page-break"></div>@endif
     @endforeach
     @endif
 </body>
