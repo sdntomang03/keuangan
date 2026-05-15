@@ -84,9 +84,9 @@
             <tr>
                 <th style="width: 6%; text-align: center;">No</th>
                 <th>Nama Barang/Jasa</th>
-                <th style="width: 18%; text-align: center;">Kuantitas</th>
-                <th style="width: 15%; text-align: center;">Harga Penawaran</th>
-                <th style="width: 15%; text-align: center;">Harga Negosiasi</th>
+                <th style="width: 16%; text-align: center;">Kuantitas</th>
+                <th style="width: 16%; text-align: center;">Harga Penawaran</th>
+                <th style="width: 16%; text-align: center;">Harga Negosiasi</th>
             </tr>
         </thead>
         <tbody>
