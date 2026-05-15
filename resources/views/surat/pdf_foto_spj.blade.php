@@ -91,11 +91,26 @@
 
 <body>
 
-    @foreach($belanja->fotos as $index => $foto)
+    @php
+    // 1. Hitung total foto
+    $totalFotos = $belanja->fotos->count();
 
+    // 2. Ambil foto pertama untuk Halaman 1
+    $fotoPertama = $belanja->fotos->first();
+
+    // 3. Ambil sisa foto, lalu pecah per kelompok isi 2 foto untuk Halaman 2 dst
+    $fotoSisaChunks = $belanja->fotos->slice(1)->chunk(2);
+
+    // 4. Format Tanggal dari Foto Pertama
+    $tanggalRaw = $fotoPertama->tanggal ?? $fotoPertama->created_at;
+    $tanggalFoto = \Carbon\Carbon::parse($tanggalRaw)->translatedFormat('d F Y');
+    @endphp
+
+    {{-- ========================================================== --}}
+    {{-- HALAMAN 1: KOP SURAT, TABEL INFO, & FOTO PERTAMA --}}
+    {{-- ========================================================== --}}
     <div class="halaman">
-        {{-- 1. KOP SURAT & INFO HANYA DI HALAMAN PERTAMA --}}
-        @if($loop->first)
+
         <x-kop :sekolah="$sekolah" />
 
         <div class="judul-dokumen">DOKUMENTASI BARANG/PEKERJAAN</div>
@@ -112,6 +127,11 @@
                 <td>{{ $belanja->anggaran->nama_anggaran ?? 'BOSP' }} Tahun {{ $belanja->anggaran->tahun }}</td>
             </tr>
             <tr>
+                <td>Kode Rekening</td>
+                <td>:</td>
+                <td>{{ $belanja->korek->ket ?? '-' }}</td>
+            </tr>
+            <tr>
                 <td>Kegiatan Belanja</td>
                 <td>:</td>
                 <td>{{ $belanja->uraian }}</td>
@@ -121,45 +141,45 @@
                 <td>:</td>
                 <td>{{ $triwulan }} / {{ $tahun }}</td>
             </tr>
+            <tr>
+                <td>Tanggal Dok.</td>
+                <td>:</td>
+                <td>{{ $tanggalFoto }}</td>
+            </tr>
         </table>
         <br>
-        @else
-        {{-- Berikan jarak sedikit di halaman kedua dst agar foto tidak terlalu menempel ke atas --}}
-        <div style="height: 30px;"></div>
-        @endif
 
-        {{-- 2. TABEL FOTO (Muncul di setiap halaman untuk setiap foto) --}}
         <table style="width: 100%; border-collapse: collapse; border: 1px solid #000;">
             <tr>
                 <td
-                    style="text-align: center; font-weight: bold; padding: 5px; border-bottom: 1px solid #000; background-color: #5adb03;">
-                    FOTO PEKERJAAN/BARANG (Ke-{{ $index + 1 }})
+                    style="text-align: center; font-weight: bold; padding: 4px; border-bottom: 1px solid #000; background-color: #5adb03;">
+                    FOTO PEKERJAAN/BARANG (Ke-1)
                 </td>
             </tr>
             <tr>
-                <td style="text-align: center; padding: 15px; vertical-align: middle;">
+                <td style="text-align: center; padding: 10px; vertical-align: middle;">
                     @php
-                    $fullPath = storage_path('app/public/' . $foto->path);
+                    $fullPath = storage_path('app/public/' . $fotoPertama->path);
                     if (!file_exists($fullPath)) {
                     $fullPath = public_path('images/no-image.jpg');
                     }
                     @endphp
 
-                    {{-- Sesuaikan max-height. Di halaman 1 lebih kecil karena ada KOP,
-                    di halaman 2 bisa lebih besar karena KOP hilang --}}
+                    {{-- Max height 350px agar pas disandingkan dengan Kop Surat --}}
                     <img src="{{ $fullPath }}"
-                        style="max-width: 100%; height: auto; max-height: {{ $loop->first ? '350px' : '650px' }}; object-fit: contain;">
+                        style="max-width: 100%; height: auto; max-height: 350px; object-fit: contain;">
 
-                    @if($foto->keterangan)
-                    <p style="margin-top: 10px; font-style: italic;">Keterangan: {{ $foto->keterangan }}</p>
+                    @if($fotoPertama->keterangan)
+                    <p style="margin-top: 5px; font-style: italic; font-size: 10pt;">Keterangan: {{
+                        $fotoPertama->keterangan }}</p>
                     @endif
                 </td>
             </tr>
         </table>
 
-        {{-- 3. TANDA TANGAN HANYA DI HALAMAN TERAKHIR --}}
-        @if($loop->last)
-        <div class="ttd-container">
+        {{-- Jika HANYA ADA 1 FOTO secara total, Tanda Tangan langsung diletakkan di Halaman 1 --}}
+        @if($totalFotos == 1)
+        <div class="ttd-container" style="margin-top: 20px;">
             <table style="width: 100%;">
                 <tr>
                     <td width="50%"></td>
@@ -176,12 +196,81 @@
         @endif
     </div>
 
-    {{-- PAGE BREAK: Pindah halaman jika bukan foto terakhir --}}
+
+    {{-- ========================================================== --}}
+    {{-- HALAMAN 2 DST: FOTO KE-2, KE-3 Dst (MAX 2 FOTO PER HALAMAN)--}}
+    {{-- ========================================================== --}}
+    @if($totalFotos > 1)
+    {{-- Berikan Page Break setelah Halaman 1 selesai --}}
+    <div class="page-break"></div>
+
+    @php $fotoCounter = 2; @endphp
+
+    @foreach($fotoSisaChunks as $chunk)
+    <div class="halaman">
+        <div style="height: 10px;"></div> {{-- Spasi atas diperkecil --}}
+
+        @foreach($chunk as $fotoSisa)
+        {{-- page-break-inside: avoid mencegah 1 tabel foto terbelah dua --}}
+        <table
+            style="width: 100%; border-collapse: collapse; border: 1px solid #000; margin-bottom: 15px; page-break-inside: avoid;">
+            <tr>
+                <td
+                    style="text-align: center; font-weight: bold; padding: 4px; border-bottom: 1px solid #000; background-color: #5adb03;">
+                    FOTO PEKERJAAN/BARANG (Ke-{{ $fotoCounter++ }})
+                </td>
+            </tr>
+            <tr>
+                {{-- Padding diperkecil agar ruang untuk foto lebih banyak --}}
+                <td style="text-align: center; padding: 8px; vertical-align: middle;">
+                    @php
+                    $fullPathSisa = storage_path('app/public/' . $fotoSisa->path);
+                    if (!file_exists($fullPathSisa)) {
+                    $fullPathSisa = public_path('images/no-image.jpg');
+                    }
+                    @endphp
+
+                    {{-- DIPERKECIL: Max height 270px (Sebelumnya 320px)
+                    270px x 2 foto = 540px.
+                    A4 tinggi area cetak ~900px, jadi sisa ruang sangat lega untuk tanda tangan --}}
+                    <img src="{{ $fullPathSisa }}"
+                        style="max-width: 100%; height: auto; max-height: 270px; object-fit: contain;">
+
+                    @if($fotoSisa->keterangan)
+                    <p style="margin-top: 5px; font-style: italic; font-size: 10pt;">Keterangan: {{
+                        $fotoSisa->keterangan }}</p>
+                    @endif
+                </td>
+            </tr>
+        </table>
+        @endforeach
+
+        {{-- Jika ini adalah kelompok foto yang TERAKHIR, tampilkan Tanda Tangan --}}
+        @if($loop->last)
+        {{-- page-break-inside: avoid agar tanda tangan dan nama tidak terpisah halaman --}}
+        <div class="ttd-container" style="margin-top: 15px; page-break-inside: avoid;">
+            <table style="width: 100%;">
+                <tr>
+                    <td width="50%"></td>
+                    <td width="50%" class="text-center">
+                        Jakarta, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}<br>
+                        Kepala {{ $sekolah->nama_sekolah }},
+                        <br><br><br><br><br>
+                        <b><u>{{ $sekolah->nama_kepala_sekolah }}</u></b><br>
+                        NIP. {{ $sekolah->nip_kepala_sekolah }}
+                    </td>
+                </tr>
+            </table>
+        </div>
+        @endif
+    </div>
+
+    {{-- Berikan page break kecuali di kelompok (chunk) yang paling akhir --}}
     @if(!$loop->last)
     <div class="page-break"></div>
     @endif
-
     @endforeach
+    @endif
 
 </body>
 
