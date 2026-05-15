@@ -95,7 +95,7 @@
     $isPerbaikan = str_contains(strtolower($belanja->uraian), 'perbaikan') ||
     str_contains(strtolower($belanja->uraian), 'pemeliharaan');
 
-    // 2. Urutkan Foto (Sebelum -> Proses -> Setelah -> Umum)
+    // 2. Urutkan Foto
     $bobotStatus = ['sebelum' => 1, 'proses' => 2, 'setelah' => 3, 'umum' => 4];
     $allFotos = $belanja->fotos->sortBy(function($foto) use ($bobotStatus) {
     $status = strtolower($foto->status ?? 'umum');
@@ -104,12 +104,10 @@
 
     $totalFotos = $allFotos->count();
 
-    // 3. LOGIKA PEMBAGIAN HALAMAN DINAMIS (KERTAS F4 - 33cm)
-    if ($totalFotos <= 2) { $limitPage1=1; // Halaman 1 isi 1 foto $chunkSize=1; // Halaman 2 dst isi 1 foto
-        $maxHeight1='400px' ; // F4 lebih tinggi, foto bisa jauh lebih besar $maxHeight2='420px' ; // F4 lebih tinggi,
-        foto bisa jauh lebih besar } else { $limitPage1=2; // Halaman 1 isi 2 foto $chunkSize=3; // Halaman 2 dst isi 3
-        foto $maxHeight1='265px' ; // Diperbesar agar muat 2 foto + Kop Surat di F4 $maxHeight2='245px' ; // Diperbesar
-        agar muat 3 foto + TTD di F4 } $fotoPage1=$allFotos->take($limitPage1);
+    // 3. LOGIKA PEMBAGIAN HALAMAN DINAMIS
+    if ($totalFotos <= 2) { $limitPage1=1; $chunkSize=1; $maxHeight1='400px' ; $maxHeight2='420px' ; } else {
+        $limitPage1=2; $chunkSize=3; $maxHeight1='265px' ; $maxHeight2='245px' ; } $fotoPage1=$allFotos->
+        take($limitPage1);
         $fotoSisaChunks = $allFotos->slice($limitPage1)->chunk($chunkSize);
 
         // 4. Helper Judul TABEL
