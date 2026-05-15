@@ -97,12 +97,15 @@
                 <td style="text-align:center;">1 {{ $item->satuan }}</td>
 
 
-                {{-- PERBAIKAN DI DUA BARIS BAWAH INI --}}
-                {{-- Menggunakan 'harga_satuan' (sesuai controller) sebagai Harga Penawaran --}}
-                <td style="text-align:right;">{{ number_format($item->harga_penawaran, 0, ',', '.') }}</td>
+                {{-- Menggunakan 'harga_penawaran' sebagai Harga Penawaran --}}
+                <td style="text-align:right; white-space:nowrap;">
+                    Rp {{ number_format((float) $item->harga_penawaran, 0, ',', '.') }}
+                </td>
 
-                {{-- Menggunakan 'harga_nego' (sesuai controller) sebagai Harga Negosiasi --}}
-                <td style="text-align:right;">{{ number_format($item->harga_satuan, 0, ',', '.') }}</td>
+                {{-- Menggunakan 'harga_satuan' (atau harga_nego) sebagai Harga Negosiasi --}}
+                <td style="text-align:right; white-space:nowrap;">
+                    Rp {{ number_format((float) $item->harga_satuan, 0, ',', '.') }}
+                </td>
             </tr>
             @endforeach
         </tbody>
