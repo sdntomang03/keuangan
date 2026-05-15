@@ -1009,10 +1009,11 @@ class SuratController extends Controller
         // Perhatikan: Menggunakan DomPdf::loadView, bukan Pdf::loadView
         $pdf = PDF::loadView('surat.pdf_foto_spj', compact('belanja', 'sekolah', 'triwulan', 'tahun'));
 
-        // Set ukuran kertas
-        $pdf->setPaper('a4', 'portrait');
+        // Set ukuran kertas F4/Folio (Width: 609.448 pt, Height: 935.433 pt)
+        $customPaper = [0, 0, 609.448, 935.433];
+        $pdf->setPaper($customPaper, 'portrait');
 
-        // 4. Download / Stream
+        // Download / Stream
         return $pdf->stream('Dokumentasi_SPJ_'.$belanja->id.'.pdf');
     }
 
@@ -2180,8 +2181,8 @@ class SuratController extends Controller
             'tahun' => $tahun,
             'labelJenis' => $labelJenis,
         ]);
-
-        $pdf->setPaper('a4', 'landscape'); // Landscape agar kolom nomor surat yang panjang tidak terpotong
+        $customPaper = [0, 0, 609.448, 935.433];
+        $pdf->setPaper($customPaper, 'landscape');
 
         return $pdf->stream("AGENDA_SURAT_KELUAR_TW_{$triwulan}.pdf");
     }
