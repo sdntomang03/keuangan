@@ -58,6 +58,7 @@ class NpdController extends Controller
                 $npdPending = Npd::where('sekolah_id', $sekolah->id)
                     ->where('idbl', $first->idbl)
                     ->where('kodeakun', $first->kodeakun)
+                    ->whereIn('bulan', $bulanArray)
                     ->whereNotIn('status', ['ditolak'])
                     ->sum('nilai_npd');
 
