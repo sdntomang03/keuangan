@@ -741,7 +741,7 @@
                                                     <template x-for="pjk in data.belanja.pajaks"
                                                         :key="pjk.dasar_pajak_id">
                                                         <div x-data="{
-            teksUraian: `${pjk.is_setor == 1 ? 'Disetor' : 'Diterima'} (${pjk.master_pajak?.nama_pajak || 'Pajak'}) atas SPJ ${data.belanja?.uraian || ''} dari rekanan ${data.belanja?.rekanan?.nama_rekanan || '-'}`
+            teksUraian: `${pjk.is_setor == 1 ? 'Disetor' : 'Diterima'} ${pjk.master_pajak?.nama_pajak || 'Pajak'} atas SPJ ${data.belanja?.uraian || ''} dari ${data.belanja?.rekanan?.nama_rekanan || '-'}`
          }" class="flex justify-between items-center bg-white p-2.5 rounded-lg border border-red-50 shadow-sm">
 
                                                             <div class="flex flex-col pr-2">
@@ -754,12 +754,38 @@
                                                                         class="text-[8px] text-gray-400 font-medium leading-tight"
                                                                         x-text="teksUraian"></span>
 
-                                                                    <button type="button" @click="
-                        navigator.clipboard.writeText(teksUraian);
-                        $el.innerText = 'Copied!';
-                        setTimeout(() => $el.innerText = 'Copy', 2000)
-                    " class="text-[7px] font-bold bg-blue-50 text-blue-500 px-1.5 py-0.5 rounded cursor-pointer hover:bg-blue-100 transition-colors shrink-0">
-                                                                        Copy
+                                                                    <button type="button" x-data="{ copied: false }"
+                                                                        @click="
+        navigator.clipboard.writeText(teksUraian);
+        copied = true;
+        setTimeout(() => copied = false, 2000)
+    " class="relative flex items-center justify-center p-1 rounded-md transition-all duration-200 shrink-0 group"
+                                                                        :class="copied ? 'bg-green-50 text-green-600' : 'bg-gray-50 text-gray-400 hover:bg-blue-50 hover:text-blue-500'">
+
+                                                                        <svg x-show="!copied"
+                                                                            xmlns="http://www.w3.org/2000/svg"
+                                                                            class="w-3 h-3" fill="none"
+                                                                            viewBox="0 0 24 24" stroke="currentColor"
+                                                                            stroke-width="2.5">
+                                                                            <path stroke-linecap="round"
+                                                                                stroke-linejoin="round"
+                                                                                d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+                                                                        </svg>
+
+                                                                        <svg x-show="copied"
+                                                                            xmlns="http://www.w3.org/2000/svg"
+                                                                            class="w-3 h-3" fill="none"
+                                                                            viewBox="0 0 24 24" stroke="currentColor"
+                                                                            stroke-width="3">
+                                                                            <path stroke-linecap="round"
+                                                                                stroke-linejoin="round"
+                                                                                d="M5 13l4 4L19 7" />
+                                                                        </svg>
+
+                                                                        <span x-show="!copied"
+                                                                            class="absolute bottom-full mb-1 hidden group-hover:block bg-gray-800 text-white text-[8px] px-1.5 py-0.5 rounded shadow-sm whitespace-nowrap">
+                                                                            Salin Uraian
+                                                                        </span>
                                                                     </button>
                                                                 </div>
                                                             </div>
