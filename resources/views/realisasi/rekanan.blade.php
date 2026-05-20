@@ -6,16 +6,32 @@
                 {{ __('Laporan Realisasi Per Rekanan') }}
             </h2>
 
-            {{-- Tombol Cetak --}}
-            <button onclick="window.print()"
-                class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-all active:scale-95">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z">
-                    </path>
-                </svg>
-                <span>Cetak Laporan</span>
-            </button>
+            {{-- Kumpulan Tombol Aksi --}}
+            <div class="flex items-center gap-3 w-full md:w-auto">
+
+                {{-- Tombol Export Semua --}}
+                <a href="{{ route('rekap-rekanan.export-semua') }}"
+                    class="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-all active:scale-95 w-full md:w-auto">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4">
+                        </path>
+                    </svg>
+                    <span>Export Semua</span>
+                </a>
+
+                {{-- Tombol Cetak --}}
+                <button onclick="window.print()"
+                    class="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-all active:scale-95 w-full md:w-auto">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z">
+                        </path>
+                    </svg>
+                    <span>Cetak</span>
+                </button>
+
+            </div>
         </div>
     </x-slot>
 
@@ -59,7 +75,7 @@
                                 <th rowspan="2" class="border border-gray-300 px-4 py-2 text-center align-middle w-10">
                                     No</th>
                                 <th rowspan="2" class="border border-gray-300 px-4 py-2 text-left align-middle">Nama
-                                    Rekanan / Toko</th>
+                                    Rekanan</th>
                                 <th colspan="4" class="border border-gray-300 px-4 py-2 text-center">Realisasi Per
                                     Triwulan</th>
                                 <th rowspan="2" class="border border-gray-300 px-4 py-2 text-right align-middle">Total
