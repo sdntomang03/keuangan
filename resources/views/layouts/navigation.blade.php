@@ -167,6 +167,10 @@
                     <a href="{{ route('pajak.rekap') }}"
                         class="block py-1.5 text-sm {{ request()->routeIs('pajak.*') ? 'text-indigo-600 font-bold' : 'text-gray-500 hover:text-indigo-500' }}">Rekap
                         Pajak</a>
+                    <a href="{{ route('sts.index') }}"
+                        class="block py-1.5 text-sm {{ request()->routeIs('sts.*') ? 'text-indigo-600 font-bold' : 'text-gray-500 hover:text-indigo-500' }}">
+                        Surat Tanda Setoran (STS)
+                    </a>
                 </div>
             </div>
 
