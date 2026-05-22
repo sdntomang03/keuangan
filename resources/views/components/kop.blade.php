@@ -93,7 +93,7 @@ $logoBase64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
                 <h2>DINAS PENDIDIKAN</h2>
                 <h3>{{ $sekolah->nama_sekolah }}</h3>
                 <p>{{ $sekolah->alamat }}, Kel. {{ $sekolah->kelurahan }}, Kec. {{ $sekolah->kecamatan }}</p>
-                <p>Telp {{ $sekolah->telp ?? '-' }} | Email: {{ $sekolah->email ?? '-' }}</p>
+                <p>Telp {{ $sekolah->telp ?? '-' }}, Email: {{ $sekolah->email ?? '-' }}</p>
                 <p style="letter-spacing: 3px;">{{ strtoupper($sekolah->provinsi ?? 'JAKARTA') }}</p>
                 <p style="text-align:right; font-size:10pt; margin-top:0px; margin-right: -30px;">
                     Kode Pos: {{ $sekolah->kodepos ?? '-' }}
