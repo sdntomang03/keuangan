@@ -108,13 +108,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Perbaikan URL: sekarang menjadi /penerimaan/{id}/edit
         Route::get('/{id}/edit', [PenerimaanController::class, 'edit'])->name('edit');
 
-        // Perbaikan URL: sekarang menjadi /penerimaan/{id}
-        Route::put('/{id}', [PenerimaanController::class, 'update'])->name('update');
-        Route::post('/sts', [StsController::class, 'store'])->name('sts.store');
-        Route::get('/sts/{id}/edit', [StsController::class, 'edit'])->name('sts.edit');
-        Route::put('/sts/{id}', [StsController::class, 'update'])->name('sts.update');
-        Route::delete('/sts/{id}', [StsController::class, 'destroy'])->name('sts.destroy');
     });
+    // Perbaikan URL: sekarang menjadi /penerimaan/{id}
+    Route::put('/{id}', [PenerimaanController::class, 'update'])->name('update');
+    Route::post('/sts', [StsController::class, 'store'])->name('sts.store');
+    Route::get('/sts/{id}/edit', [StsController::class, 'edit'])->name('sts.edit');
+    Route::put('/sts/{id}', [StsController::class, 'update'])->name('sts.update');
+    Route::delete('/sts/{id}', [StsController::class, 'destroy'])->name('sts.destroy');
     Route::get('/sts', [StsController::class, 'index'])->name('sts.index');
 });
 Route::middleware(['auth', 'verified'])->group(function () {
