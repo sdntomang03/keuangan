@@ -32,6 +32,7 @@ return new class extends Migration
             $table->integer('tw')->nullable();
             // Indexing agar query cepat saat data sudah ribuan
             $table->index(['anggaran_id']);
+            $table->unsignedBigInteger('sts_id')->nullable();
         });
     }
 

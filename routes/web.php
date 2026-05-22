@@ -25,6 +25,7 @@ use App\Http\Controllers\RekananController;
 use App\Http\Controllers\RkasController;
 use App\Http\Controllers\SekolahController;
 use App\Http\Controllers\SettingController;
+use App\Http\Controllers\StsController;
 use App\Http\Controllers\SuratController;
 use Illuminate\Support\Facades\Route;
 
@@ -109,6 +110,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Perbaikan URL: sekarang menjadi /penerimaan/{id}
         Route::put('/{id}', [PenerimaanController::class, 'update'])->name('update');
+        Route::post('/sts', [StsController::class, 'store'])->name('sts.store');
+        Route::get('/sts/{id}/edit', [StsController::class, 'edit'])->name('sts.edit');
+        Route::put('/sts/{id}', [StsController::class, 'update'])->name('sts.update');
+        Route::delete('/sts/{id}', [StsController::class, 'destroy'])->name('sts.destroy');
+        Route::get('/sts', [StsController::class, 'index'])->name('sts.index');
     });
 });
 Route::middleware(['auth', 'verified'])->group(function () {

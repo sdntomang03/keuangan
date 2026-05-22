@@ -9,10 +9,16 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
+    public function up()
     {
         Schema::create('sts', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('anggaran_id')->constrained('anggarans')->cascadeOnDelete();
+            $table->date('tanggal');
+            $table->string('no_bukti');
+            $table->text('uraian');
+            $table->double('nominal');
+            $table->integer('tw'); // Triwulan
             $table->timestamps();
         });
     }
