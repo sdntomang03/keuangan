@@ -273,6 +273,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/npd/{id}', [NpdController::class, 'show'])->name('npd.show');
     Route::delete('/npd/{id}', [NpdController::class, 'destroy'])->name('npd.destroy');
 
+    Route::delete('/npd/hapus-triwulan-aktif', [NpdController::class, 'destroyTriwulan'])->name('npd.destroy_triwulan');
+
     // API saldo
     Route::get('/api/npd/cek-saldo', [NpdController::class, 'getSaldoAnggaran'])->name('api.npd.saldo');
 });

@@ -10,7 +10,25 @@
                 Monitoring Penarikan Dana — <span class="text-indigo-600 font-black">Triwulan {{ $triwulanAktif
                     }}</span>
             </h2>
-            <div class="flex gap-2">
+            <div class="flex items-center gap-2">
+                {{-- Tombol Hapus: Hanya muncul jika ada data pengajuan di Triwulan ini --}}
+                @if($totalPengajuan > 0)
+                <form action="{{ route('npd.destroy_triwulan') }}" method="POST"
+                    onsubmit="return confirm('⚠️ PERINGATAN!\n\nApakah Anda yakin ingin menghapus seluruh data pengajuan NPD di Triwulan {{ $triwulanAktif }} ini?\n\nData yang sudah dihapus tidak dapat dikembalikan.');">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit"
+                        class="inline-flex items-center px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg font-bold text-xs uppercase tracking-widest hover:bg-red-600 hover:text-white shadow-sm transition duration-150">
+                        <svg class="w-4 h-4 me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                            </path>
+                        </svg>
+                        Hapus NPD TW {{ $triwulanAktif }}
+                    </button>
+                </form>
+                @endif
+
                 <a href="{{ route('npd.create') }}"
                     class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-lg font-bold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 shadow-md transition duration-150">
                     <svg class="w-4 h-4 me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -18,7 +36,6 @@
                     </svg>
                     Buat NPD Baru
                 </a>
-
             </div>
         </div>
     </x-slot>

@@ -240,4 +240,36 @@ class NpdController extends Controller
 
         return back()->with('success', 'Surat berhasil disimpan.');
     }
+
+    public function destroyTriwulan()
+    {
+        $user = Auth::user();
+        $sekolah = $user->sekolah;
+        $triwulanAktif = $sekolah->triwulan_aktif;
+        $anggaranId = $sekolah->anggaran_id_aktif;
+
+        DB::beginTransaction();
+        try {
+            // Hapus semua NPD sekolah ini pada triwulan dan anggaran yang aktif
+            $deleted = Npd::where('sekolah_id', $sekolah->id)
+                ->where('anggaran_id', $anggaranId)
+                ->where('triwulan', $triwulanAktif)
+                ->delete();
+
+            if ($deleted) {
+                DB::commit();
+
+                return redirect()->route('npd.index')->with('success', "Berhasil menghapus $deleted data pengajuan NPD pada Triwulan $triwulanAktif.");
+            } else {
+                DB::rollBack();
+
+                return back()->with('error', "Tidak ada data NPD yang bisa dihapus pada Triwulan $triwulanAktif.");
+            }
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return back()->with('error', 'Terjadi kesalahan sistem saat menghapus data: '.$e->getMessage());
+        }
+    }
 }
