@@ -686,115 +686,117 @@
                                 </div>
 
                                 {{-- 3. TAMPILAN JIKA MEMILIH BAPB --}}
-                                x-transition style="display: none;">
-                                <div class="space-y-4">
-                                    <div
-                                        class="p-5 bg-orange-50/40 rounded-3xl border border-orange-100 relative overflow-hidden">
-                                        <div class="absolute left-0 top-0 bottom-0 w-1 bg-orange-200"></div>
+                                <div x-show="jenisSurat === 'BAPB'" x-transition style="display: none;">
+                                    <div class="space-y-4">
+                                        <div
+                                            class="p-5 bg-orange-50/40 rounded-3xl border border-orange-100 relative overflow-hidden">
+                                            <div class="absolute left-0 top-0 bottom-0 w-1 bg-orange-200"></div>
 
-                                        {{-- Header & Tombol Tambah --}}
-                                        <div class="flex justify-between items-center mb-3">
-                                            <p
-                                                class="text-[10px] font-black text-orange-400 uppercase tracking-widest flex items-center gap-2">
-                                                <span>Referensi BAST / Surat Jalan</span>
-                                                <span
-                                                    class="bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded text-[8px]">Wajib</span>
-                                            </p>
-                                            <button type="button" @click="addBast()"
-                                                class="text-[10px] font-bold bg-orange-200 text-orange-700 px-2 py-1 rounded hover:bg-orange-300 transition">
-                                                + Tambah Tanggal
-                                            </button>
+                                            {{-- Header & Tombol Tambah --}}
+                                            <div class="flex justify-between items-center mb-3">
+                                                <p
+                                                    class="text-[10px] font-black text-orange-400 uppercase tracking-widest flex items-center gap-2">
+                                                    <span>Referensi BAST / Surat Jalan</span>
+                                                    <span
+                                                        class="bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded text-[8px]">Wajib</span>
+                                                </p>
+                                                <button type="button" @click="addBast()"
+                                                    class="text-[10px] font-bold bg-orange-200 text-orange-700 px-2 py-1 rounded hover:bg-orange-300 transition">
+                                                    + Tambah Tanggal
+                                                </button>
+                                            </div>
+
+                                            {{-- Looping Form Input BAST --}}
+                                            <template x-for="(bast, index) in bastList" :key="index">
+                                                <div class="grid grid-cols-12 gap-3 mb-3 items-end">
+                                                    <div class="col-span-5">
+                                                        <label
+                                                            class="text-[10px] font-bold text-gray-400 mb-1 block">Nomor
+                                                            BAST/SJ</label>
+                                                        <input type="text" name="no_bast[]" x-model="bast.no"
+                                                            placeholder="No. BAST dari Toko" required
+                                                            class="w-full text-xs border-none rounded-xl p-3 font-bold focus:ring-1 focus:ring-orange-300">
+                                                    </div>
+                                                    <div class="col-span-5">
+                                                        <label
+                                                            class="text-[10px] font-bold text-gray-400 mb-1 block">Tanggal
+                                                            BAST</label>
+                                                        <input type="date" name="tanggal_bast[]" x-model="bast.tgl"
+                                                            required
+                                                            class="w-full text-xs border-none rounded-xl p-3 font-bold focus:ring-1 focus:ring-orange-300">
+                                                    </div>
+                                                    <div class="col-span-2 pb-0.5">
+                                                        <button type="button" @click="removeBast(index)"
+                                                            x-show="bastList.length > 1"
+                                                            class="w-full bg-red-100 text-red-600 p-3 rounded-xl text-xs font-bold hover:bg-red-200 text-center transition">
+                                                            Hapus
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </template>
+
                                         </div>
+                                    </div>
+                                </div>
 
-                                        {{-- Looping Form Input BAST --}}
-                                        <template x-for="(bast, index) in bastList" :key="index">
-                                            <div class="grid grid-cols-12 gap-3 mb-3 items-end">
-                                                <div class="col-span-5">
-                                                    <label class="text-[10px] font-bold text-gray-400 mb-1 block">Nomor
-                                                        BAST/SJ</label>
-                                                    <input type="text" name="no_bast[]" x-model="bast.no"
-                                                        placeholder="No. BAST dari Toko" required
-                                                        class="w-full text-xs border-none rounded-xl p-3 font-bold focus:ring-1 focus:ring-orange-300">
-                                                </div>
-                                                <div class="col-span-5">
-                                                    <label
-                                                        class="text-[10px] font-bold text-gray-400 mb-1 block">Tanggal
-                                                        BAST</label>
-                                                    <input type="date" name="tanggal_bast[]" x-model="bast.tgl" required
-                                                        class="w-full text-xs border-none rounded-xl p-3 font-bold focus:ring-1 focus:ring-orange-300">
-                                                </div>
-                                                <div class="col-span-2 pb-0.5">
-                                                    <button type="button" @click="removeBast(index)"
-                                                        x-show="bastList.length > 1"
-                                                        class="w-full bg-red-100 text-red-600 p-3 rounded-xl text-xs font-bold hover:bg-red-200 text-center transition">
-                                                        Hapus
-                                                    </button>
+                                {{-- 4. PILIH BARANG (TETAP SAMA) --}}
+                                <div class="bg-gray-50 rounded-3xl p-5">
+                                    <div class="flex justify-between items-center mb-4">
+                                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Pilih
+                                            Barang & Volume</p>
+                                        <label class="flex items-center gap-2 cursor-pointer">
+                                            <input type="checkbox" x-model="selectAll" @change="toggleAll()"
+                                                class="rounded text-indigo-600 focus:ring-0 w-4 h-4">
+                                            <span class="text-[10px] font-bold text-gray-500">Pilih Semua</span>
+                                        </label>
+                                    </div>
+                                    <div class="max-h-52 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+                                        @foreach($belanja->rincis as $item)
+                                        <div
+                                            class="flex items-center justify-between p-3 bg-white rounded-2xl border border-gray-100 hover:border-indigo-200 transition-colors">
+                                            <div class="flex items-center gap-3">
+                                                <input type="checkbox" name="items[{{ $item->id }}][selected]" value="1"
+                                                    checked
+                                                    class="item-checkbox rounded text-indigo-600 focus:ring-indigo-500">
+                                                <div class="text-xs">
+                                                    <p class="font-bold text-gray-700 leading-none">{{
+                                                        $item->namakomponen }}</p>
+                                                    <p class="text-[9px] text-gray-400 mt-1">Total: {{
+                                                        number_format($item->volume, 0) }} {{ $item->satuan }}</p>
                                                 </div>
                                             </div>
-                                        </template>
-
+                                            <input type="number" name="items[{{ $item->id }}][volume]"
+                                                value="{{ $item->volume }}" max="{{ $item->volume }}"
+                                                class="w-16 bg-gray-50 border-none rounded-lg p-1 text-xs text-right font-black text-indigo-600 focus:ring-1 focus:ring-indigo-400">
+                                        </div>
+                                        @endforeach
                                     </div>
                                 </div>
                             </div>
 
-                            {{-- 4. PILIH BARANG (TETAP SAMA) --}}
-                            <div class="bg-gray-50 rounded-3xl p-5">
-                                <div class="flex justify-between items-center mb-4">
-                                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Pilih
-                                        Barang & Volume</p>
-                                    <label class="flex items-center gap-2 cursor-pointer">
-                                        <input type="checkbox" x-model="selectAll" @change="toggleAll()"
-                                            class="rounded text-indigo-600 focus:ring-0 w-4 h-4">
-                                        <span class="text-[10px] font-bold text-gray-500">Pilih Semua</span>
-                                    </label>
-                                </div>
-                                <div class="max-h-52 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
-                                    @foreach($belanja->rincis as $item)
-                                    <div
-                                        class="flex items-center justify-between p-3 bg-white rounded-2xl border border-gray-100 hover:border-indigo-200 transition-colors">
-                                        <div class="flex items-center gap-3">
-                                            <input type="checkbox" name="items[{{ $item->id }}][selected]" value="1"
-                                                checked
-                                                class="item-checkbox rounded text-indigo-600 focus:ring-indigo-500">
-                                            <div class="text-xs">
-                                                <p class="font-bold text-gray-700 leading-none">{{
-                                                    $item->namakomponen }}</p>
-                                                <p class="text-[9px] text-gray-400 mt-1">Total: {{
-                                                    number_format($item->volume, 0) }} {{ $item->satuan }}</p>
-                                            </div>
-                                        </div>
-                                        <input type="number" name="items[{{ $item->id }}][volume]"
-                                            value="{{ $item->volume }}" max="{{ $item->volume }}"
-                                            class="w-16 bg-gray-50 border-none rounded-lg p-1 text-xs text-right font-black text-indigo-600 focus:ring-1 focus:ring-indigo-400">
-                                    </div>
-                                    @endforeach
-                                </div>
+                            <div class="p-6 bg-gray-50 flex justify-end gap-3">
+                                {{-- Tombol Download Semua Parsial --}}
+                                @if($belanja->surats->where('is_parsial', true)->count() > 0)
+                                <a href="{{ route('surat.download_semua_parsial', $belanja->id) }}"
+                                    class="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md transition-all hover:-translate-y-0.5">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                    </svg>
+                                    <span>DOWNLOAD SEMUA PARSIAL (ZIP)</span>
+                                </a>
+                                @endif
+                                <button @click="showModal = false" type="button"
+                                    class="px-6 py-3 text-xs font-black text-gray-400 uppercase tracking-widest hover:text-gray-600 transition-colors">Batal</button>
+                                <button type="submit"
+                                    class="bg-indigo-600 text-white px-8 py-3 rounded-2xl text-xs font-black shadow-lg shadow-indigo-100 uppercase tracking-widest hover:bg-indigo-700 transition-all">Simpan
+                                    Data</button>
                             </div>
                         </div>
-
-                        <div class="p-6 bg-gray-50 flex justify-end gap-3">
-                            {{-- Tombol Download Semua Parsial --}}
-                            @if($belanja->surats->where('is_parsial', true)->count() > 0)
-                            <a href="{{ route('surat.download_semua_parsial', $belanja->id) }}"
-                                class="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md transition-all hover:-translate-y-0.5">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                </svg>
-                                <span>DOWNLOAD SEMUA PARSIAL (ZIP)</span>
-                            </a>
-                            @endif
-                            <button @click="showModal = false" type="button"
-                                class="px-6 py-3 text-xs font-black text-gray-400 uppercase tracking-widest hover:text-gray-600 transition-colors">Batal</button>
-                            <button type="submit"
-                                class="bg-indigo-600 text-white px-8 py-3 rounded-2xl text-xs font-black shadow-lg shadow-indigo-100 uppercase tracking-widest hover:bg-indigo-700 transition-all">Simpan
-                                Data</button>
-                        </div>
+                    </form>
                 </div>
-                </form>
             </div>
         </div>
-    </div>
     </div>
 
     <div id="modalEditTanggal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title"
