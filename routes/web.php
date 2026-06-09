@@ -152,13 +152,13 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
         ->name('users.reset-password');
 
     // Rute Role
-    Route::post('/roles', [AdminUserController::class, 'storeRole'])->name('admin.roles.store');
-    Route::put('/roles/{role}/permissions', [AdminUserController::class, 'updateRolePermissions'])->name('admin.roles.update_permissions');
-    Route::delete('/roles/{role}', [AdminUserController::class, 'destroyRole'])->name('admin.roles.destroy');
+    Route::post('/roles', [AdminUserController::class, 'storeRole'])->name('roles.store');
+    Route::put('/roles/{role}/permissions', [AdminUserController::class, 'updateRolePermissions'])->name('roles.update_permissions');
+    Route::delete('/roles/{role}', [AdminUserController::class, 'destroyRole'])->name('roles.destroy');
 
     // Rute Permission
-    Route::post('/permissions', [AdminUserController::class, 'storePermission'])->name('admin.permissions.store');
-    Route::delete('/permissions/{permission}', [AdminUserController::class, 'destroyPermission'])->name('admin.permissions.destroy');
+    Route::post('/permissions', [AdminUserController::class, 'storePermission'])->name('permissions.store');
+    Route::delete('/permissions/{permission}', [AdminUserController::class, 'destroyPermission'])->name('permissions.destroy');
 
 });
 // Tambahkan 'admin/' pada prefix dan 'admin.' pada name
