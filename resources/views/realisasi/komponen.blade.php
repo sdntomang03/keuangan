@@ -360,6 +360,7 @@
     <style>
         @media print {
 
+            /* 1. Sembunyikan elemen yang tidak perlu */
             nav,
             aside,
             footer,
@@ -367,79 +368,63 @@
                 display: none !important;
             }
 
-            .py-6,
-            .py-12 {
-                padding-top: 0 !important;
-                padding-bottom: 0 !important;
-            }
-
-            .max-w-7xl {
-                max-width: 100% !important;
-                width: 100% !important;
-                margin: 0 !important;
-                padding: 0 !important;
-            }
-
-            body {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-
+            /* 2. Reset ukuran halaman */
             @page {
                 size: A4 landscape;
-                /* Landscape agar tabel lebar muat */
                 margin: 1cm;
             }
 
-            .shadow-xl,
-            .shadow-sm {
-                box-shadow: none !important;
+            /* 3. RESET SUPER AGRESIF: Paksa SEMUA wrapper menjadi 100% tanpa batasan */
+            body,
+            html,
+            main,
+            .py-6,
+            .max-w-7xl,
+            .sm\:px-6,
+            .lg\:px-8 {
+                width: 100% !important;
+                max-width: 100% !important;
+                min-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: visible !important;
             }
 
-            .rounded-xl,
-            .rounded-\[2rem\] {
-                border-radius: 0 !important;
+            /* 4. Hapus sifat overflow-hidden dari Tailwind yang suka memotong gambar/tabel */
+            div[class*="overflow-hidden"],
+            div[class*="overflow-x-auto"] {
+                overflow: visible !important;
             }
 
-            .print\:block {
-                display: block !important;
-                page-break-inside: avoid;
+            /* 5. FIX TABEL: Paksa mengecil & wrap teks */
+            table {
+                width: 100% !important;
+                max-width: 100% !important;
+                /* table-layout: fixed sangat ampuh memaksa tabel tidak meluber ke kanan */
+                table-layout: fixed !important;
             }
 
-            /* Memaksa batas tabel jelas saat di print */
-            table,
+            /* 6. ANULIR lebar fix (w-32, w-24) dari Tailwind di header tabel */
             th,
             td {
-                border: 1px solid #d1d5db !important;
+                width: auto !important;
+                white-space: normal !important;
+                word-wrap: break-word !important;
+                overflow-wrap: break-word !important;
+                border: 1pt solid #000 !important;
+                /* Garis hitam tegas untuk print */
+                padding: 4px !important;
+                /* Kurangi padding agar lebih muat banyak */
             }
 
+            /* Atur warna header tabel */
             th {
                 background-color: #e5e7eb !important;
                 color: #000 !important;
             }
 
-            /* 1. Paksa wrapper agar tidak memotong tabel */
-            .overflow-hidden {
-                overflow: visible !important;
-            }
-
-            /* 2. Paksa lebar tabel mentok di ukuran kertas dan teks otomatis turun ke bawah */
-            table {
-                width: 100% !important;
-                max-width: 100% !important;
-                table-layout: auto !important;
-            }
-
-            td,
-            th {
-                white-space: normal !important;
-                word-wrap: break-word !important;
-            }
-
-            /* 3. Trik opsional: Perkecil skala tampilan khusus saat diprint (Bekerja sangat baik di Chrome/Edge) */
+            /* Pastikan warna background/badge ikut tercetak */
             body {
-                zoom: 0.85;
-                /* Sesuaikan angka ini (0.8 - 0.9) jika dirasa masih kurang muat */
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
