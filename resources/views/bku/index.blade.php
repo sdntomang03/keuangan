@@ -209,7 +209,8 @@
                                 @endif
                                 {{-- ========================================================== --}}
 
-                                @forelse($bkus as $item)
+                                @forelse($bkus->reverse() as $item)
+
                                 <tr
                                     class="hover:bg-gray-50 transition-colors {{ $item->kredit > 0 ? 'bg-red-50/30' : '' }} {{ $item->debit > 0 ? 'bg-green-50/30' : '' }}">
                                     <td class="px-6 py-4 text-center font-mono text-gray-400 italic">
