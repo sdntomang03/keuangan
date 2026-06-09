@@ -39,7 +39,8 @@
                 $sisaTotal = $grandAnggaran - $grandRealisasi;
                 @endphp
 
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                <div
+                    class="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden print:overflow-visible print:shadow-none print:border-gray-400">
                     <p class="text-[10px] text-gray-400 uppercase font-black">Pagu {{ Str::limit($periodeText, 25) }}
                     </p>
                     <p class="text-xl font-black text-gray-800">Rp {{ number_format($grandAnggaran, 0, ',', '.') }}</p>
@@ -415,6 +416,32 @@
             th {
                 background-color: #e5e7eb !important;
                 color: #000 !important;
+            }
+
+            /* 1. Paksa wrapper agar tidak memotong tabel */
+            .overflow-hidden {
+                overflow: visible !important;
+            }
+
+            /* 2. Paksa lebar tabel mentok di ukuran kertas dan teks otomatis turun ke bawah */
+            table {
+                width: 100% !important;
+                max-width: 100% !important;
+                table-layout: auto !important;
+            }
+
+            td,
+            th {
+                white-space: normal !important;
+                word-wrap: break-word !important;
+            }
+
+            /* 3. Trik opsional: Perkecil skala tampilan khusus saat diprint (Bekerja sangat baik di Chrome/Edge) */
+            body {
+                zoom: 0.85;
+                /* Sesuaikan angka ini (0.8 - 0.9) jika dirasa masih kurang muat */
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
             }
         }
     </style>
