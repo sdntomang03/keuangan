@@ -6,57 +6,36 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
     /**
-     * Menampilkan daftar semua user dan role mereka
+     * ==========================================
+     * MANAJEMEN USER
+     * ==========================================
+     */
+
+    /**
+     * Menampilkan daftar semua user, role, dan permission
      */
     public function index()
     {
         $users = User::with(['roles', 'sekolah'])->paginate(10);
-        $roles = \Spatie\Permission\Models\Role::all();
-        $sekolahs = \App\Models\Sekolah::all(); // Tambahkan ini
 
-        return view('admin.users.index', compact('users', 'roles', 'sekolahs'));
-    }
+        // Memuat role beserta permission yang dimilikinya
+        $roles = Role::with('permissions')->get();
+        $permissions = Permission::all();
+        $sekolahs = \App\Models\Sekolah::all();
 
-    /**
-     * Menampilkan form edit user & role
-     */
-    public function edit(User $user)
-    {
-        $roles = Role::all();
-
-        return view('admin.users.edit', compact('user', 'roles'));
-    }
-
-    /**
-     * Update Role User
-     */
-    public function update(Request $request, User $user)
-    {
-        $request->validate([
-            'role' => 'required|exists:roles,name',
-            'sekolah_id' => 'nullable|exists:sekolahs,id', // Tambahkan validasi sekolah
-        ]);
-
-        // 1. Update data sekolah_id di table users
-        $user->update([
-            'sekolah_id' => $request->sekolah_id,
-        ]);
-
-        // 2. Spatie: Sinkronisasi role
-        $user->syncRoles($request->role);
-
-        return redirect()->route('admin.users.index')
-            ->with('success', 'Data user '.$user->name.' (Role & Sekolah) berhasil diperbarui.');
+        return view('admin.users.index', compact('users', 'roles', 'permissions', 'sekolahs'));
     }
 
     public function create()
     {
-        $roles = \Spatie\Permission\Models\Role::all();
+        $roles = Role::all();
         $sekolahs = \App\Models\Sekolah::all();
 
         return view('admin.users.tambah', compact('roles', 'sekolahs'));
@@ -72,10 +51,10 @@ class UserController extends Controller
             'sekolah_id' => 'nullable|exists:sekolahs,id',
         ]);
 
-        $user = \App\Models\User::create([
+        $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'password' => \Illuminate\Support\Facades\Hash::make($request->password),
+            'password' => Hash::make($request->password),
             'sekolah_id' => $request->sekolah_id,
         ]);
 
@@ -84,12 +63,36 @@ class UserController extends Controller
         return back()->with('success', 'User berhasil ditambahkan!');
     }
 
+    public function edit(User $user)
+    {
+        $roles = Role::all();
+
+        return view('admin.users.edit', compact('user', 'roles'));
+    }
+
+    public function update(Request $request, User $user)
+    {
+        $request->validate([
+            'role' => 'required|exists:roles,name',
+            'sekolah_id' => 'nullable|exists:sekolahs,id',
+        ]);
+
+        // 1. Update data sekolah_id di table users
+        $user->update([
+            'sekolah_id' => $request->sekolah_id,
+        ]);
+
+        // 2. Spatie: Sinkronisasi role
+        $user->syncRoles([$request->role]);
+
+        return redirect()->route('admin.users.index')
+            ->with('success', 'Data user '.$user->name.' (Role & Sekolah) berhasil diperbarui.');
+    }
+
     public function destroy($id)
     {
-        // Cari user berdasarkan ID
-        $user = \App\Models\User::findOrFail($id);
+        $user = User::findOrFail($id);
 
-        // Proteksi agar tidak menghapus diri sendiri
         if ($user->id === auth()->id()) {
             return back()->with('error', 'Keamanan Sistem: Anda tidak bisa menghapus akun yang sedang aktif digunakan.');
         }
@@ -97,7 +100,6 @@ class UserController extends Controller
         try {
             $name = $user->name;
 
-            // Penanganan Khusus SQLite untuk "Foreign Key Mismatch"
             if (config('database.default') === 'sqlite') {
                 DB::statement('PRAGMA foreign_keys = OFF');
             }
@@ -119,10 +121,81 @@ class UserController extends Controller
     public function resetPassword(User $user)
     {
         $user->update([
-            'password' => \Illuminate\Support\Facades\Hash::make('12345678'),
+            'password' => Hash::make('12345678'),
         ]);
 
         return redirect()->route('admin.users.index')
             ->with('success', "Password untuk user $user->name telah berhasil direset menjadi 12345678.");
+    }
+
+    /**
+     * ==========================================
+     * MANAJEMEN ROLE & SINKRONISASI PERMISSION
+     * ==========================================
+     */
+    public function storeRole(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|unique:roles,name',
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'exists:permissions,name',
+        ]);
+
+        $role = Role::create(['name' => $request->name]);
+
+        // Jika saat membuat role langsung mencentang permissions
+        if ($request->has('permissions')) {
+            $role->syncPermissions($request->permissions);
+        }
+
+        return back()->with('success', 'Role baru berhasil dibuat.');
+    }
+
+    public function updateRolePermissions(Request $request, Role $role)
+    {
+        $request->validate([
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'exists:permissions,name',
+        ]);
+
+        // Sinkronisasi permission (otomatis hapus yang tidak dicentang dan tambah yang baru)
+        $role->syncPermissions($request->permissions ?? []);
+
+        return back()->with('success', 'Hak akses (Permission) untuk Role '.$role->name.' berhasil diperbarui.');
+    }
+
+    public function destroyRole(Role $role)
+    {
+        // Proteksi agar role utama sistem tidak terhapus
+        if ($role->name === 'Super Admin') {
+            return back()->with('error', 'Keamanan Sistem: Role Super Admin tidak boleh dihapus.');
+        }
+
+        $role->delete();
+
+        return back()->with('success', 'Role berhasil dihapus.');
+    }
+
+    /**
+     * ==========================================
+     * MANAJEMEN MASTER PERMISSION (OPSIONAL)
+     * ==========================================
+     */
+    public function storePermission(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|unique:permissions,name',
+        ]);
+
+        Permission::create(['name' => $request->name]);
+
+        return back()->with('success', 'Data Permission baru berhasil ditambahkan.');
+    }
+
+    public function destroyPermission(Permission $permission)
+    {
+        $permission->delete();
+
+        return back()->with('success', 'Permission berhasil dihapus.');
     }
 }
