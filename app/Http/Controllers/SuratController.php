@@ -491,8 +491,10 @@ class SuratController extends Controller
         }
         // Tambahkan aturan khusus jika pilih BAPB
         elseif ($request->jenis_surat == 'BAPB') {
-            $rules['no_bast'] = 'required';      // Wajib karena BAPB butuh BAST
-            $rules['tanggal_bast'] = 'required|date';
+            $rules['no_bast'] = 'required|array|min:1';
+            $rules['no_bast.*'] = 'required|string';
+            $rules['tanggal_bast'] = 'required|array|min:1';
+            $rules['tanggal_bast.*'] = 'required|date';
         }
 
         // Jalankan Validasi
@@ -544,27 +546,35 @@ class SuratController extends Controller
 
             // --- SKENARIO B: BUAT BAPB (& DATA BAST) ---
             elseif ($request->jenis_surat == 'BAPB') {
-                $bapb = Surat::create([
-                    'sekolah_id' => $user->sekolah_id,
-                    'belanja_id' => $belanjaId,
-                    'triwulan' => $user->sekolah->triwulan_aktif ?? 1,
-                    'jenis_surat' => 'BAPB',
-                    'nomor_surat' => $request->no_bast,
-                    'tanggal_surat' => $request->tanggal_bast,
 
-                    // Data BAST (Disimpan di kolom milik BAPB atau Surat)
-                    'no_bast' => $request->no_bast,
-                    'tanggal_bast' => $request->tanggal_bast,
+                // Looping sebanyak tanggal BAST yang diinputkan user di form dinamis
+                foreach ($request->no_bast as $index => $nomorBast) {
+                    $tanggalBast = $request->tanggal_bast[$index];
 
-                    'is_parsial' => true,
-                    'keterangan' => $request->keterangan,
+                    // Tambahkan urutan di keterangan agar mudah dibaca jika input banyak
+                    $tambahanKeterangan = count($request->no_bast) > 1 ? ' (Tahap '.($index + 1).')' : '';
 
-                    // Sambungkan ke SP Induk (Jika user memilihnya di dropdown)
-                    'sp_referensi_id' => $request->sp_referensi_id ?: null,
-                ]);
+                    $bapb = Surat::create([
+                        'sekolah_id' => $user->sekolah_id,
+                        'belanja_id' => $belanjaId,
+                        'triwulan' => $user->sekolah->triwulan_aktif ?? 1,
+                        'jenis_surat' => 'BAPB',
 
-                // Simpan Rincian Barang
-                $bapb->rincis()->attach($pivotData);
+                        'nomor_surat' => $nomorBast,
+                        'tanggal_surat' => $tanggalBast,
+
+                        'no_bast' => $nomorBast,
+                        'tanggal_bast' => $tanggalBast,
+
+                        'is_parsial' => true,
+                        'keterangan' => $request->keterangan.$tambahanKeterangan,
+
+                        'sp_referensi_id' => $request->sp_referensi_id ?: null,
+                    ]);
+
+                    // Simpan Rincian Barang (Pivot) yang sama (Qty & Item Identik) ke masing-masing Surat
+                    $bapb->rincis()->attach($pivotData);
+                }
             }
 
         });
