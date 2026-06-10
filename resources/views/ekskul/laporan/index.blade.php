@@ -241,42 +241,35 @@
                 class="p-5 sm:p-8 text-left max-h-[90vh] overflow-y-auto custom-scroll">
                 @csrf
                 <div class="border-b pb-3 mb-5">
-                    <h2 class="text-lg font-extrabold text-gray-900">Form Laporan Ekskul Baru</h2>
-                    <p class="text-[10px] text-indigo-500 font-black uppercase tracking-wider mt-0.5">Mendukung Banyak
-                        Foto Per Pertemuan</p>
+                    <h2 class="text-lg font-extrabold text-gray-900">Upload Dokumentasi Latihan</h2>
+                    <p class="text-[10px] text-indigo-500 font-black uppercase tracking-wider mt-0.5">Tambahkan
+                        pertemuan baru ke dalam ekskul Anda</p>
                 </div>
 
-                <div
-                    class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5 bg-indigo-50/40 p-4 rounded-xl border border-indigo-100">
-                    <div>
-                        <x-input-label for="nama_ekskul" value="Pilih Cabang Ekskul"
-                            class="text-[10px] font-bold uppercase text-gray-400" />
-                        {{-- Mengganti input text menjadi select dropdown dari tabel ref_ekskul --}}
-                        <select id="nama_ekskul" name="nama_ekskul"
-                            class="mt-1 block w-full border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 rounded-xl text-xs font-bold py-2.5"
-                            required>
-                            <option value="">-- Pilih Ekskul --</option>
-                            @foreach($refEkskuls as $ref)
-                            <option value="{{ $ref->nama }}">{{ $ref->nama }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <x-input-label value="Periode Laporan (Otomatis)"
-                            class="text-[10px] font-bold uppercase text-gray-400" />
-                        {{-- Menginfokan ke pelatih bahwa periode dihitung otomatis, menghilangkan input manual --}}
-                        <div
-                            class="mt-1 p-2.5 bg-gray-100 border border-gray-200 text-gray-500 rounded-xl text-[11px] font-bold italic flex items-center h-[38px]">
-                            ✨ Ditentukan otomatis dari tanggal kegiatan
-                        </div>
-                    </div>
-                    <div class="sm:col-span-2">
-                        <x-input-label for="keterangan" value="Keterangan Tambahan (Opsional)"
-                            class="text-[10px] font-bold uppercase text-gray-400" />
-                        <textarea id="keterangan" name="keterangan" rows="2"
-                            class="mt-1 block w-full border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 rounded-xl text-xs font-semibold"
-                            placeholder="Tuliskan catatan tambahan jadwal latihan..."></textarea>
-                    </div>
+                {{-- MENGAMBIL DATA EKSKUL & PERIODE SESUAI USER_ID --}}
+                <div class="mb-5 bg-indigo-50/40 p-4 rounded-xl border border-indigo-100 shadow-sm">
+                    <x-input-label for="ekskul_id" value="Pilih Data Induk Ekskul Anda"
+                        class="text-[10px] font-bold uppercase text-gray-400 mb-1" />
+
+                    <select id="ekskul_id" name="ekskul_id"
+                        class="mt-1 block w-full border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 rounded-xl text-sm font-bold py-2.5 bg-white cursor-pointer"
+                        required>
+                        <option value="">-- Pilih Cabang Ekskul & Periode --</option>
+                        @foreach($dropdownEkskuls as $item)
+                        <option value="{{ $item->id }}">
+                            {{ $item->nama_ekskul }} | Periode: {{ $item->periode ?? 'Semua Waktu' }}
+                            @can('akses-admin-pusat') - (Pelatih: {{ $item->user->name }}) @endcan
+                        </option>
+                        @endforeach
+                    </select>
+
+                    @if($dropdownEkskuls->isEmpty())
+                    <p class="text-[10px] text-red-500 mt-2 font-bold italic">⚠️ Anda belum memiliki data Induk Ekskul.
+                        Silakan hubungi Admin untuk dibuatkan data Induk terlebih dahulu.</p>
+                    @else
+                    <p class="text-[10px] text-gray-500 mt-2 font-medium italic">Nama ekskul dan periode dimuat otomatis
+                        berdasarkan akun Anda.</p>
+                    @endif
                 </div>
 
                 <div class="flex justify-between items-center mb-3">
@@ -297,29 +290,29 @@
                             <div class="grid grid-cols-1 gap-3 pt-2">
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div>
-                                        <label
-                                            class="block text-[10px] font-black text-gray-400 uppercase mb-1">Tanggal</label>
+                                        <label class="block text-[10px] font-black text-gray-400 uppercase mb-1">Tanggal
+                                            Kegiatan</label>
                                         <input type="date" :name="`pertemuan[${index}][tanggal_kegiatan]`" required
                                             class="w-full text-xs font-bold border-gray-200 rounded-xl">
                                     </div>
                                     <div>
                                         <label class="block text-[10px] font-black text-gray-400 uppercase mb-1">Materi
-                                            Latihan</label>
+                                            / Bahasan Latihan</label>
                                         <input type="text" :name="`pertemuan[${index}][materi]`" required
-                                            placeholder="Contoh: Latihan Dasar Fisik"
+                                            placeholder="Contoh: Latihan Fisik Dasar"
                                             class="w-full text-xs font-bold border-gray-200 rounded-xl">
                                     </div>
                                 </div>
                                 <div>
-                                    <label class="block text-[10px] font-black text-gray-400 uppercase mb-1">Pilih
-                                        Gambar Dokumentasi (Bisa pilih lebih dari 1 foto)</label>
+                                    <label class="block text-[10px] font-black text-gray-400 uppercase mb-1">Unggah Foto
+                                        (Bisa pilih banyak foto sekaligus)</label>
                                     <input type="file" :name="`pertemuan[${index}][fotos][]`" multiple required
                                         accept="image/*"
                                         class="w-full text-xs border border-gray-200 rounded-xl bg-white p-1 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[10px] file:font-black file:bg-indigo-50 file:text-indigo-700">
                                 </div>
                                 <div>
                                     <input type="text" :name="`pertemuan[${index}][catatan]`"
-                                        placeholder="Catatan/absensi singkat pertemuan (Opsional)"
+                                        placeholder="Catatan opsional (misal: cuaca hujan, absensi...)"
                                         class="w-full text-[11px] font-medium text-gray-500 border-gray-100 rounded-xl bg-white/50">
                                 </div>
                             </div>
@@ -329,7 +322,7 @@
 
                 <div class="mt-6 flex justify-end gap-3 border-t pt-4">
                     <x-secondary-button x-on:click="$dispatch('close')">Batal</x-secondary-button>
-                    <x-primary-button class="bg-indigo-600 shadow-md">Simpan Laporan</x-primary-button>
+                    <x-primary-button class="bg-indigo-600 shadow-md">Simpan Foto Latihan</x-primary-button>
                 </div>
             </form>
         </x-modal>
