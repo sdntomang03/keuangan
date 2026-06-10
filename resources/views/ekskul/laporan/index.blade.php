@@ -197,7 +197,7 @@
         {{-- ========================================================================= --}}
         {{-- MODAL 1: FORM INPUT DINAMIS LAPORAN BARU --}}
         {{-- ========================================================================= --}}
-        <x-modal name="add-ekskul-laporan-modal" max-width="4xl" focusable>
+        <x-modal name="add-ekskul-laporan-modal" max-width="2xl" focusable>
             <form action="{{ route('ekskul.laporan.store') }}" method="POST" enctype="multipart/form-data"
                 class="p-8 text-left">
                 @csrf
