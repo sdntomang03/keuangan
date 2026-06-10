@@ -263,7 +263,7 @@
             @endunlessrole
 
             <!-- ADMIN AREA (Hanya tampil jika user adalah admin) -->
-            @role('admin')
+            @can('akses-admin-pusat')
             <div class="mt-6 border-t border-red-100 dark:border-red-900/30 pt-4"
                 x-data="{ open: {{ request()->routeIs('admin.*', 'setting.kegiatan.importjson') ? 'true' : 'false' }} }">
                 <p class="px-3 text-[10px] font-black tracking-wider text-red-400 uppercase mb-2">Admin Area</p>
@@ -305,7 +305,7 @@
                         Anggaran</a>
                 </div>
             </div>
-            @endrole
+            @endcan
         </div>
 
         <!-- AREA BAWAH (Hanya Muncul di Layar HP - Pemilih Anggaran) -->
