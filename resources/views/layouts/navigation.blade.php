@@ -1,22 +1,16 @@
-<!-- Efek Layar Gelap (Backdrop) saat Sidebar terbuka di layar HP -->
 <div x-show="sidebarOpen" x-transition.opacity class="fixed inset-0 z-40 bg-gray-900/60 backdrop-blur-sm lg:hidden"
     @click="sidebarOpen = false"></div>
 
-<!-- SIDEBAR -->
-<!-- Animasi Width: Saat tertutup lebarnya 0, saat terbuka lebarnya 64 (256px) -->
 <aside :class="sidebarOpen ? 'w-64 translate-x-0' : 'w-0 -translate-x-full lg:w-0 lg:-translate-x-full'"
     class="fixed lg:static inset-y-0 left-0 z-50 flex flex-col h-screen bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 ease-in-out overflow-hidden flex-shrink-0 shadow-2xl lg:shadow-none">
 
-    <!-- Wrapper Inner dengan lebar tetap (w-64) agar teks di dalamnya tidak gepeng/rusak saat animasi -->
     <div class="w-64 flex flex-col h-full">
 
-        <!-- LOGO SEKOLAH / APLIKASI -->
         <div class="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-700 shrink-0">
             <a href="{{ route('dashboard') }}" class="flex items-center">
                 <x-application-logo class="block h-9 w-auto fill-current text-indigo-600" />
                 <span class="ml-3 font-black text-2xl text-gray-800 dark:text-white tracking-tight">KEUANGAN</span>
             </a>
-            <!-- Tombol Close (Hanya untuk HP) -->
             <button @click="sidebarOpen = false" class="lg:hidden text-gray-400 hover:text-gray-600 p-1">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
@@ -25,7 +19,6 @@
             </button>
         </div>
 
-        <!-- AREA MENU (Bisa di-scroll) -->
         <div class="flex-1 overflow-y-auto custom-scroll p-4 space-y-2">
 
             <a href="{{ route('dashboard') }}"
@@ -38,6 +31,7 @@
                 </svg>
                 Dashboard
             </a>
+
             <a href="{{ route('barang.index') }}"
                 class="flex items-center px-3 py-2.5 text-sm font-bold rounded-lg transition-colors {{ request()->routeIs('barang.index') ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700' }}">
                 <svg class="w-5 h-5 mr-3 {{ request()->routeIs('barang.index') ? 'text-indigo-600' : 'text-gray-400' }}"
@@ -49,9 +43,7 @@
                 Cari Barang
             </a>
 
-            @unlessrole('admin')
-
-            <!-- ACCORDION: ANGGARAN -->
+            @can('view-anggaran')
             <div x-data="{ open: {{ request()->routeIs('rkas.*', 'akb.*', 'arkas.*') ? 'true' : 'false' }} }">
                 <button @click="open = !open"
                     class="flex items-center justify-between w-full px-3 py-2.5 text-sm font-bold text-gray-600 rounded-lg dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
@@ -94,8 +86,9 @@
                         AKB</a>
                 </div>
             </div>
+            @endcan
 
-            <!-- ACCORDION: TRANSAKSI & EKSKUL -->
+            @can('input-transaksi')
             <div x-data="{ open: {{ request()->routeIs('belanja.*', 'talangan.*', 'ekskul.*') ? 'true' : 'false' }} }">
                 <button @click="open = !open"
                     class="flex items-center justify-between w-full px-3 py-2.5 text-sm font-bold text-gray-600 rounded-lg dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
@@ -128,10 +121,11 @@
                         Pelatih</a>
                 </div>
             </div>
+            @endcan
 
-            <!-- ACCORDION: PEMBUKUAN -->
+            @can('kelola-pembukuan')
             <div
-                x-data="{ open: {{ request()->routeIs('bku.*', 'npd.*', 'realisasi.*', 'pajak.*') ? 'true' : 'false' }} }">
+                x-data="{ open: {{ request()->routeIs('bku.*', 'npd.*', 'realisasi.*', 'pajak.*', 'sts.*') ? 'true' : 'false' }} }">
                 <button @click="open = !open"
                     class="flex items-center justify-between w-full px-3 py-2.5 text-sm font-bold text-gray-600 rounded-lg dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                     <div class="flex items-center">
@@ -168,13 +162,14 @@
                         class="block py-1.5 text-sm {{ request()->routeIs('pajak.*') ? 'text-indigo-600 font-bold' : 'text-gray-500 hover:text-indigo-500' }}">Rekap
                         Pajak</a>
                     <a href="{{ route('sts.index') }}"
-                        class="block py-1.5 text-sm {{ request()->routeIs('sts.*') ? 'text-indigo-600 font-bold' : 'text-gray-500 hover:text-indigo-500' }}">
-                        Surat Tanda Setoran (STS)
+                        class="block py-1.5 text-sm {{ request()->routeIs('sts.*') ? 'text-indigo-600 font-bold' : 'text-gray-500 hover:text-indigo-500' }}">Surat
+                        Tanda Setoran (STS)
                     </a>
                 </div>
             </div>
+            @endcan
 
-            <!-- ACCORDION: CETAK DOKUMEN -->
+            @can('cetak-dokumen')
             <div x-data="{ open: {{ request()->routeIs('surat.*', 'cetak.*', 'persediaan.*') ? 'true' : 'false' }} }">
                 <button @click="open = !open"
                     class="flex items-center justify-between w-full px-3 py-2.5 text-sm font-bold text-gray-600 rounded-lg dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
@@ -210,8 +205,9 @@
                         class="block py-1.5 text-sm {{ request()->routeIs('persediaan.*') ? 'text-indigo-600 font-bold' : 'text-gray-500 hover:text-indigo-500' }}">Persediaan</a>
                 </div>
             </div>
+            @endcan
 
-            <!-- ACCORDION: MASTER DATA -->
+            @can('kelola-master-data')
             <div
                 x-data="{ open: {{ request()->routeIs('setting.rekanan.*', 'setting.kegiatan.*') ? 'true' : 'false' }} }">
                 <button @click="open = !open"
@@ -239,8 +235,9 @@
                         Kegiatan</a>
                 </div>
             </div>
+            @endcan
 
-            <!-- TOMBOL PERENCANAAN HIGHLIGHT -->
+            @can('kelola-perencanaan')
             <div class="mt-4 pt-2 border-t border-gray-100 dark:border-gray-700">
                 <a href="{{ route('perencanaan.dashboard') }}"
                     class="flex items-center px-3 py-2.5 text-sm font-bold rounded-lg border transition-all duration-300 {{ request()->routeIs('perencanaan.*', 'kegiatan.*') ? 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-sm' : 'border-gray-200 text-gray-700 hover:border-indigo-300 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800' }}">
@@ -260,9 +257,8 @@
                     Perencanaan
                 </a>
             </div>
-            @endunlessrole
+            @endcan
 
-            <!-- ADMIN AREA (Hanya tampil jika user adalah admin) -->
             @can('akses-admin-pusat')
             <div class="mt-6 border-t border-red-100 dark:border-red-900/30 pt-4"
                 x-data="{ open: {{ request()->routeIs('admin.*', 'setting.kegiatan.importjson') ? 'true' : 'false' }} }">
@@ -306,9 +302,9 @@
                 </div>
             </div>
             @endcan
+
         </div>
 
-        <!-- AREA BAWAH (Hanya Muncul di Layar HP - Pemilih Anggaran) -->
         @if(isset($anggaranAktif) && $anggaranAktif)
         <div
             class="sm:hidden border-t border-gray-200 dark:border-gray-700 p-4 shrink-0 bg-gray-50 dark:bg-gray-800/80">
