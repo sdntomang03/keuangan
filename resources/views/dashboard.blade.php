@@ -454,7 +454,7 @@
                 class="bg-gradient-to-r from-indigo-600 to-blue-700 rounded-3xl p-8 sm:p-10 text-white shadow-lg shadow-indigo-200 relative overflow-hidden flex flex-col md:flex-row items-center justify-between">
                 <div class="relative z-10 w-full">
                     <span
-                        class="bg-white/20 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest backdrop-blur-sm">Panel
+                        class="bg-white/20 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest backdrop-blur-sm">Halaman
                         Pelatih & Pembina</span>
                     <h1 class="mt-4 text-3xl font-black tracking-tight">Selamat Datang, {{ auth()->user()->name }}! 👋
                     </h1>
