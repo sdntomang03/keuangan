@@ -13,6 +13,7 @@ use App\Http\Controllers\BkuController;
 use App\Http\Controllers\CetakController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EkskulController;
+use App\Http\Controllers\EkskulLaporanController;
 use App\Http\Controllers\KegiatanController;
 use App\Http\Controllers\KegiatanManualController;
 use App\Http\Controllers\NpdController;
@@ -414,5 +415,9 @@ Route::delete('/barang/truncate', [BarangController::class, 'truncate'])->name('
 
 Route::get('/cetak-cover', [CetakController::class, 'cetakCover'])->name('cetak.cover');
 // Jika Anda mengirim file dari halaman index/rincian
-
+Route::middleware(['auth'])->group(function () {
+    Route::get('/ekskul-laporan', [EkskulLaporanController::class, 'index'])->name('ekskul.laporan.index');
+    Route::post('/ekskul-laporan', [EkskulLaporanController::class, 'store'])->name('ekskul.laporan.store');
+    Route::delete('/ekskul-laporan/{id}', [EkskulLaporanController::class, 'destroy'])->name('ekskul.laporan.destroy');
+});
 require __DIR__.'/auth.php';
