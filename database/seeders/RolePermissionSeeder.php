@@ -23,6 +23,14 @@ class RolePermissionSeeder extends Seeder
             'input-transaksi',
             'verifikasi-laporan',
             'akses-admin-pusat',
+            // Tambahan untuk fitur Surat/BAPB
+            'view-anggaran',
+            'input-belanja',
+            'generate-surat-spj',
+            'cetak-dokumen',
+            'upload-foto-dokumentasi',
+            'kelola-dana-talangan',
+            'buat-cover-lpj',
         ];
 
         foreach ($permissions as $p) {
@@ -34,7 +42,14 @@ class RolePermissionSeeder extends Seeder
         $roleAdmin->givePermissionTo(Permission::all()); // Admin dapat semua akses
 
         $roleBendahara = Role::firstOrCreate(['name' => 'bendahara']);
-        $roleBendahara->givePermissionTo(['input-transaksi', 'kelola-sekolah']);
+        $roleBendahara->givePermissionTo([
+            'input-transaksi',
+            'kelola-sekolah',
+            'input-belanja',
+            'generate-surat-spj',
+            'cetak-dokumen',
+            'upload-foto-dokumentasi',
+        ]);
 
         $roleKepalaSekolah = Role::firstOrCreate(['name' => 'kepala sekolah']);
         $roleKepalaSekolah->givePermissionTo(['verifikasi-laporan']);
