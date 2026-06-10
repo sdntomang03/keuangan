@@ -416,6 +416,7 @@ Route::delete('/barang/truncate', [BarangController::class, 'truncate'])->name('
 Route::get('/cetak-cover', [CetakController::class, 'cetakCover'])->name('cetak.cover');
 // Jika Anda mengirim file dari halaman index/rincian
 Route::middleware(['auth'])->group(function () {
+    // Taruh di luar grup admin, agar semua yang login bisa mengakses (selama tombolnya muncul di sidebar)
     Route::get('/ekskul-laporan', [EkskulLaporanController::class, 'index'])->name('ekskul.laporan.index');
     Route::post('/ekskul-laporan', [EkskulLaporanController::class, 'store'])->name('ekskul.laporan.store');
     Route::delete('/ekskul-laporan/{id}', [EkskulLaporanController::class, 'destroy'])->name('ekskul.laporan.destroy');
