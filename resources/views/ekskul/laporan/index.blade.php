@@ -13,8 +13,8 @@
                     <h2 class="font-black text-xl text-gray-800 leading-tight italic uppercase tracking-tight">
                         {{ __('Laporan Kegiatan Ekskul') }}
                     </h2>
-                    <p class="text-xs text-gray-500 font-medium mt-0.5">Pencatatan materi latihan dan multi-upload foto
-                        dokumentasi</p>
+                    <p class="text-xs text-gray-500 font-medium mt-0.5">Pencatatan materi latihan dan dokumentasi foto
+                        langsung tanpa klik rincian</p>
                 </div>
                 <button x-on:click="$dispatch('open-modal', 'add-ekskul-laporan-modal')"
                     class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-3 px-5 rounded-xl transition shadow-md flex items-center justify-center border border-indigo-500 active:scale-95 duration-150">
@@ -56,57 +56,35 @@
                             <thead>
                                 <tr
                                     class="bg-gray-50/50 border-b text-gray-400 text-[10px] uppercase tracking-widest font-extrabold">
-                                    <th class="p-4">Nama Ekskul & Periode</th>
-                                    <th class="p-4">Pelatih / Sekolah</th>
-                                    <th class="p-4 text-center">Jumlah Kegiatan</th>
-                                    <th class="p-4 text-right">Aksi</th>
+                                    <th class="p-4 w-1/3">Nama Ekskul & Periode</th>
+                                    <th class="p-4 w-1/3">Pelatih / Sekolah</th>
+                                    <th class="p-4 text-right w-1/3">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100">
                                 @forelse($ekskuls as $ekskul)
-                                <tr class="hover:bg-indigo-50/10 transition duration-150 font-semibold"
-                                    x-data="{ expanded: false }">
+                                {{-- Baris Utama Informasi Induk --}}
+                                <tr class="bg-indigo-50/20 font-semibold border-t">
                                     <td class="p-4 text-sm text-gray-800">
-                                        <div class="flex items-center gap-2">
-                                            <button @click="expanded = !expanded"
-                                                class="text-gray-400 hover:text-indigo-600 p-1 rounded-lg hover:bg-gray-100 transition">
-                                                <svg class="w-4 h-4 transform transition-transform duration-200"
-                                                    :class="expanded ? 'rotate-180' : ''" fill="none"
-                                                    stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                                </svg>
-                                            </button>
-                                            <div>
-                                                <span class="font-bold text-gray-900 block">{{ $ekskul->nama_ekskul
-                                                    }}</span>
-                                                <span class="text-[11px] text-gray-400 font-medium block mt-0.5">{{
-                                                    $ekskul->periode ?? 'Semua Periode' }}</span>
-                                            </div>
+                                        <div>
+                                            <span class="font-black text-gray-900 text-base block">{{
+                                                $ekskul->nama_ekskul }}</span>
+                                            <span class="text-[11px] text-gray-400 font-bold block mt-0.5">🕒 {{
+                                                $ekskul->periode ?? 'Semua Periode' }}</span>
                                         </div>
                                     </td>
                                     <td class="p-4 text-sm text-gray-700">
-                                        <div class="text-gray-800 font-bold leading-tight">{{ $ekskul->user->name ??
-                                            'Pelatih Luar' }}</div>
-                                        <div class="text-[11px] text-indigo-500 font-medium tracking-wide mt-0.5">{{
+                                        <div class="text-gray-800 font-bold leading-tight">{{ $user->name ??
+                                            $ekskul->user->name ?? 'Pelatih' }}</div>
+                                        <div class="text-[11px] text-indigo-500 font-black tracking-wide mt-0.5">🏫 {{
                                             $ekskul->sekolah->nama_sekolah ?? 'Pusat' }}</div>
                                     </td>
-                                    <td class="p-4 text-center">
-                                        <span
-                                            class="bg-indigo-50 text-indigo-700 border border-indigo-100 px-2.5 py-1 rounded-xl text-xs font-black">
-                                            {{ $ekskul->laporans->count() }} Pertemuan
-                                        </span>
-                                    </td>
-                                    <td class="p-4 text-right flex justify-end items-center gap-2">
-                                        <button @click="expanded = !expanded"
-                                            :class="expanded ? 'bg-indigo-600 text-white' : 'bg-gray-50 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600'"
-                                            class="px-3 py-1.5 rounded-lg text-xs transition font-bold shadow-sm">
-                                            Rincian
-                                        </button>
+                                    <td class="p-4 text-right flex justify-end items-center gap-2 h-full pt-6">
                                         <button @click="
                                             selectedEkskul = { id: '{{ $ekskul->id }}', nama: '{{ addslashes($ekskul->nama_ekskul) }}' };
                                             $dispatch('open-modal', 'confirm-ekskul-deletion-modal');"
-                                            class="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition shadow-sm">
+                                            class="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition shadow-sm"
+                                            title="Hapus Semua Laporan">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
@@ -116,14 +94,15 @@
                                     </td>
                                 </tr>
 
-                                {{-- EXPANDABLE GALLERY (JALUR SUKSES TANPA KATA PUBLIC) --}}
-                                <tr x-show="expanded" x-transition.opacity style="display: none;" class="bg-gray-50/40">
-                                    <td colspan="4" class="p-4 sm:p-6 border-t border-b border-gray-100">
-                                        <div class="space-y-6">
+                                {{-- LANGSUNG DI-TAMPILKAN (Tanpa x-show atau tombol pemicu) --}}
+                                <tr class="bg-white">
+                                    <td colspan="3" class="p-4 sm:p-6 pb-8">
+                                        <div class="space-y-4">
                                             @forelse($ekskul->laporans as $laporan)
-                                            <div class="bg-white p-4 rounded-2xl border border-gray-200/80 shadow-sm">
+                                            <div
+                                                class="bg-gray-50/50 p-4 rounded-xl border border-gray-100 shadow-inner">
                                                 <div
-                                                    class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-2 mb-3">
+                                                    class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-200/60 pb-2 mb-3">
                                                     <div
                                                         class="text-xs font-black text-gray-800 uppercase tracking-wide">
                                                         📌 Materi: {{ $laporan->materi }}</div>
@@ -140,14 +119,12 @@
                                                     $laporan->catatan }}"</p>
                                                 @endif
 
-                                                {{-- GRID FOTO RESPONSIVE --}}
+                                                {{-- GRID GAMBAR DOKUMENTASI LANGSUNG AKTIF --}}
                                                 <div
                                                     class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                                                     @foreach($laporan->fotos as $foto)
                                                     <div
-                                                        class="relative rounded-xl overflow-hidden shadow-sm border border-gray-100 group bg-gray-50">
-                                                        {{-- AKURAT: Menggunakan format asset('storage/' . path) sesuai
-                                                        link sukses anda --}}
+                                                        class="relative rounded-xl overflow-hidden shadow-sm border border-gray-200 group bg-gray-100">
                                                         <img src="{{ asset('storage/' . $foto->path_foto) }}"
                                                             alt="Bukti Kegiatan"
                                                             class="w-full h-24 sm:h-32 object-cover">
@@ -162,14 +139,14 @@
                                             </div>
                                             @empty
                                             <div class="text-center py-2 text-xs font-bold text-gray-400 italic">Belum
-                                                ada rincian pertemuan.</div>
+                                                ada rincian pertemuan untuk kelompok kegiatan ini.</div>
                                             @endforelse
                                         </div>
                                     </td>
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="4" class="p-8 text-center text-sm font-bold text-gray-400 italic">Belum
+                                    <td colspan="3" class="p-8 text-center text-sm font-bold text-gray-400 italic">Belum
                                         ada rekaman laporan kegiatan.</td>
                                 </tr>
                                 @endforelse
@@ -181,7 +158,7 @@
             </div>
         </div>
 
-        {{-- MODAL INPUT DATA (MAX-WIDTH 2XL - AMAN DARI ERROR BLANK) --}}
+        {{-- MODAL INPUT DATA (MAX-WIDTH 2XL - RESPONSIVE & AMAN ERROR) --}}
         <x-modal name="add-ekskul-laporan-modal" max-width="2xl" focusable>
             <form action="{{ route('ekskul.laporan.store') }}" method="POST" enctype="multipart/form-data"
                 class="p-5 sm:p-8 text-left max-h-[90vh] overflow-y-auto custom-scroll">
@@ -206,7 +183,7 @@
                             class="text-[10px] font-bold uppercase text-gray-400" />
                         <x-text-input id="periode" name="periode" type="text"
                             class="mt-1 block w-full rounded-xl border-gray-200 py-2.5 text-xs font-bold"
-                            placeholder="Contoh: Bulan Januari 2026" />
+                            placeholder="Contoh: Bulan Juni 2026" />
                     </div>
                     <div class="sm:col-span-2">
                         <x-input-label for="keterangan" value="Keterangan Tambahan (Opsional)"
