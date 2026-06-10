@@ -249,18 +249,26 @@
                 <div
                     class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5 bg-indigo-50/40 p-4 rounded-xl border border-indigo-100">
                     <div>
-                        <x-input-label for="nama_ekskul" value="Nama Cabang Ekskul"
+                        <x-input-label for="nama_ekskul" value="Pilih Cabang Ekskul"
                             class="text-[10px] font-bold uppercase text-gray-400" />
-                        <x-text-input id="nama_ekskul" name="nama_ekskul" type="text"
-                            class="mt-1 block w-full rounded-xl border-gray-200 py-2.5 text-xs font-bold"
-                            placeholder="Contoh: Futsal, Tari Tradisional" required />
+                        {{-- Mengganti input text menjadi select dropdown dari tabel ref_ekskul --}}
+                        <select id="nama_ekskul" name="nama_ekskul"
+                            class="mt-1 block w-full border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 rounded-xl text-xs font-bold py-2.5"
+                            required>
+                            <option value="">-- Pilih Ekskul --</option>
+                            @foreach($refEkskuls as $ref)
+                            <option value="{{ $ref->nama }}">{{ $ref->nama }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div>
-                        <x-input-label for="periode" value="Periode Waktu Laporan"
+                        <x-input-label value="Periode Laporan (Otomatis)"
                             class="text-[10px] font-bold uppercase text-gray-400" />
-                        <x-text-input id="periode" name="periode" type="text"
-                            class="mt-1 block w-full rounded-xl border-gray-200 py-2.5 text-xs font-bold"
-                            placeholder="Contoh: Bulan Juni 2026" />
+                        {{-- Menginfokan ke pelatih bahwa periode dihitung otomatis, menghilangkan input manual --}}
+                        <div
+                            class="mt-1 p-2.5 bg-gray-100 border border-gray-200 text-gray-500 rounded-xl text-[11px] font-bold italic flex items-center h-[38px]">
+                            ✨ Ditentukan otomatis dari tanggal kegiatan
+                        </div>
                     </div>
                     <div class="sm:col-span-2">
                         <x-input-label for="keterangan" value="Keterangan Tambahan (Opsional)"

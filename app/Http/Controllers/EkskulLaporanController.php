@@ -15,41 +15,65 @@ class EkskulLaporanController extends Controller
     {
         $user = Auth::user();
 
-        $ekskuls = Ekskul::with('laporans.fotos')
-            ->where('sekolah_id', $user->sekolah_id)
-            ->where('user_id', $user->id)
-            ->latest()
-            ->get();
+        // 1. Ambil list master ekskul dari tabel ref_ekskul untuk dropdown di View
+        $refEkskuls = DB::table('ref_ekskul')->get();
 
-        return view('ekskul.laporan.index', compact('ekskuls'));
+        if ($user->can('akses-admin-pusat')) {
+            $ekskuls = Ekskul::with(['laporans.fotos', 'user', 'sekolah'])->latest()->paginate(10);
+        } else {
+            $ekskuls = Ekskul::with('laporans.fotos')
+                ->where('sekolah_id', $user->sekolah_id)
+                ->where('user_id', $user->id)
+                ->latest()
+                ->get();
+        }
+
+        // Kirim $refEkskuls ke dalam view
+        return view('ekskul.laporan.index', compact('ekskuls', 'refEkskuls'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'nama_ekskul' => 'required|string|max:255',
-            'periode' => 'nullable|string',
+            'nama_ekskul' => 'required|string|max:255', // Menyimpan string nama dari dropdown
             'keterangan' => 'nullable|string',
             'pertemuan' => 'required|array|min:1',
             'pertemuan.*.tanggal_kegiatan' => 'required|date',
             'pertemuan.*.materi' => 'required|string|max:255',
-            'pertemuan.*.fotos' => 'required|array|min:1', // Setiap pertemuan wajib ada minimal 1 foto
-            'pertemuan.*.fotos.*' => 'image|mimes:jpeg,png,jpg|max:5120', // Validasi file gambar
+            'pertemuan.*.fotos' => 'required|array|min:1',
+            'pertemuan.*.fotos.*' => 'image|mimes:jpeg,png,jpg|max:5120',
         ]);
+
+        // =========================================================================
+        // LOGIKA OTOMATISASI PERIODE TRIWULAN (TW)
+        // =========================================================================
+        // Mengambil tanggal kegiatan dari baris pertemuan pertama sebagai acuan periode
+        $tanggalAcuan = $request->pertemuan[0]['tanggal_kegiatan'];
+        $carbonDate = Carbon::parse($tanggalAcuan);
+
+        $bulan = $carbonDate->month; // Ambil angka bulan (1-12)
+        $tahun = $carbonDate->year;  // Ambil angka tahun
+
+        // Rumus matematika untuk menentukan TW (Bulan dibagi 3 lalu dibulatkan ke atas)
+        $angkaTw = ceil($bulan / 3);
+
+        // Menghasilkan string format: "TW 1 - 2026"
+        $periodeOtomatis = 'TW '.$angkaTw.' - '.$tahun;
+        // =========================================================================
 
         $user = Auth::user();
 
-        // 1. Simpan Data Induk
+        // 1. Simpan Data Induk menggunakan nama ekskul dari dropdown & periode hasil hitungan otomatis
         $ekskul = Ekskul::create([
             'sekolah_id' => $user->sekolah_id,
             'user_id' => $user->id,
             'nama_ekskul' => $request->nama_ekskul,
-            'periode' => $request->periode,
+            'periode' => $periodeOtomatis,
             'keterangan' => $request->keterangan,
         ]);
 
         // 2. Loop Baris Pertemuan
-        foreach ($request->pertemuan as $index => $item) {
+        foreach ($request->pertemuan as $item) {
             $laporan = LaporanEkskul::create([
                 'ekskul_id' => $ekskul->id,
                 'tanggal_kegiatan' => $item['tanggal_kegiatan'],
@@ -58,12 +82,11 @@ class EkskulLaporanController extends Controller
             ]);
 
             // 3. Loop Upload Banyak Gambar untuk Pertemuan ini
-            if ($request->hasFile("pertemuan.$index.fotos")) {
-                foreach ($request->file("pertemuan.$index.fotos") as $file) {
+            if (isset($item['fotos']) && is_array($item['fotos'])) {
+                foreach ($item['fotos'] as $file) {
                     $filename = 'img_'.time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
                     $path = $file->storeAs('laporan_ekskul/foto', $filename, 'public');
 
-                    // Simpan ke tabel foto
                     LaporanEkskulFoto::create([
                         'laporan_ekskul_id' => $laporan->id,
                         'path_foto' => $path,
@@ -72,7 +95,7 @@ class EkskulLaporanController extends Controller
             }
         }
 
-        return back()->with('success', 'Laporan ekskul dan seluruh foto dokumentasi berhasil diunggah.');
+        return back()->with('success', 'Laporan ekskul berhasil disimpan. Sistem mendeteksi aktivitas ini masuk ke dalam '.$periodeOtomatis);
     }
 
     public function destroy($id)
