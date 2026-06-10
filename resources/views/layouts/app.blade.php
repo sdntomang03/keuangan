@@ -83,6 +83,7 @@
                         <span class="text-[10px] font-bold uppercase px-3 text-gray-400 dark:text-gray-500">
                             {{ $anggaranAktif->tahun }}
                         </span>
+                        @can('kelola-sekolah')
                         <div class="flex space-x-1">
                             @foreach(['bos', 'bop'] as $item)
                             <form method="POST" action="{{ route('anggaran.switch') }}">
@@ -100,6 +101,7 @@
                             </form>
                             @endforeach
                         </div>
+                        @endcan
                     </div>
                     @endif
 
@@ -132,6 +134,7 @@
                                         </path>
                                     </svg> {{ __('Profile') }}</div>
                             </x-dropdown-link>
+                            @can('kelola-sekolah')
                             <x-dropdown-link :href="route('sekolah.index')">
                                 <div class="flex items-center"><svg class="w-4 h-4 mr-2" fill="none"
                                         stroke="currentColor" viewBox="0 0 24 24">
@@ -142,6 +145,7 @@
                                             d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                     </svg> {{ __('Pengaturan Anggaran') }}</div>
                             </x-dropdown-link>
+                            @endcan
                             <div class="border-t border-gray-100 dark:border-gray-700"></div>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
