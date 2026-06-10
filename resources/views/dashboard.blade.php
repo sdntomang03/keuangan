@@ -224,7 +224,7 @@
                     </div>
                 </div>
             </div>
-            @endcan
+
 
             {{-- SIAPKAN DATA PHP --}}
             @php
@@ -315,7 +315,7 @@
                     </div>
                 </div>
             </div>
-
+            @endcan
         </div>
     </div>
 
