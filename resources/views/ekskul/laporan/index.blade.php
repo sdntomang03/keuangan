@@ -104,7 +104,7 @@
                                     + Tambah Pertemuan
                                 </button>
 
-                                @can('akses-admin-pusat')
+                                @can('input-ekskul')
                                 <button @click="
                                     selectedEkskul = { id: '{{ $ekskul->id }}', nama: '{{ addslashes($ekskul->nama_ekskul) }}' };
                                     $dispatch('open-modal', 'confirm-ekskul-deletion-modal');"
