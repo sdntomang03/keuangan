@@ -20,7 +20,7 @@
         </div>
 
         <div class="flex-1 overflow-y-auto custom-scroll p-4 space-y-2">
-
+            @can('view-anggaran')
             <a href="{{ route('dashboard') }}"
                 class="flex items-center px-3 py-2.5 text-sm font-bold rounded-lg transition-colors {{ request()->routeIs('dashboard') ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700' }}">
                 <svg class="w-5 h-5 mr-3 {{ request()->routeIs('dashboard') ? 'text-indigo-600' : 'text-gray-400' }}"
@@ -43,7 +43,8 @@
                 Cari Barang
             </a>
 
-            @can('view-anggaran')
+
+
             <div x-data="{ open: {{ request()->routeIs('rkas.*', 'akb.*', 'arkas.*') ? 'true' : 'false' }} }">
                 <button @click="open = !open"
                     class="flex items-center justify-between w-full px-3 py-2.5 text-sm font-bold text-gray-600 rounded-lg dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
