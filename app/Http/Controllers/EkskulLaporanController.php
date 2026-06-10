@@ -8,6 +8,7 @@ use App\Models\LaporanEkskulFoto;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Intervention\Image\Drivers\Imagick\Driver;
 use Intervention\Image\Drivers\Imagick\Encoders\WebpEncoder;
 use Intervention\Image\ImageManager;
