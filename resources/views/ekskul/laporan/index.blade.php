@@ -24,7 +24,7 @@
                 </button>
             </div>
         </x-slot>
-
+        @dd($laporan)
         <div class="py-6 sm:py-8">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
@@ -140,8 +140,7 @@
                                                 @endif
 
                                                 {{-- GRID FOTO RESPONSIVE --}}
-                                                <div @dd($laporan->fotos)
-                                                    class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5
+                                                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5
                                                     gap-3">
                                                     @foreach($laporan->fotos as $foto)
                                                     <div
