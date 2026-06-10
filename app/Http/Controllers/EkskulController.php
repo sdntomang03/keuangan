@@ -15,6 +15,8 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage; // Pastikan model ini ada
+use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\ImageManager;
 
 class EkskulController extends Controller
 {
@@ -424,7 +426,7 @@ class EkskulController extends Controller
         $waktu = $jamInput;
 
         // 3. Inisialisasi Manager
-        $manager = new \Intervention\Image\ImageManager(new \Intervention\Image\Drivers\Gd\Driver);
+        $manager = new ImageManager(new Driver);
         $img = $manager->read($file);
 
         // Standardisasi ukuran
