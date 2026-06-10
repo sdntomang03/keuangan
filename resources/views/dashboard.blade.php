@@ -318,7 +318,7 @@
             @endcan
         </div>
     </div>
-
+    @can('kelola-sekolah')
     {{-- SCRIPT JS UNTUK CHART DAN ANIMASI COUNTER CURRENCY --}}
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
@@ -442,4 +442,5 @@
             });
         });
     </script>
+    @endcan
 </x-app-layout>
