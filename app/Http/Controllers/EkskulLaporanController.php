@@ -15,16 +15,11 @@ class EkskulLaporanController extends Controller
     {
         $user = Auth::user();
 
-        // Mengambil data dengan eager loading relasi bertingkat (laporans.fotos)
-        if ($user->can('akses-admin-pusat')) {
-            $ekskuls = Ekskul::with(['laporans.fotos', 'user', 'sekolah'])->latest()->paginate(10);
-        } else {
-            $ekskuls = Ekskul::with('laporans.fotos')
-                ->where('sekolah_id', $user->sekolah_id)
-                ->where('user_id', $user->id)
-                ->latest()
-                ->get();
-        }
+        $ekskuls = Ekskul::with('laporans.fotos')
+            ->where('sekolah_id', $user->sekolah_id)
+            ->where('user_id', $user->id)
+            ->latest()
+            ->get();
 
         return view('ekskul.laporan.index', compact('ekskuls'));
     }

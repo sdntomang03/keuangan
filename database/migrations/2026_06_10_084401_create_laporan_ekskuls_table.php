@@ -16,7 +16,6 @@ return new class extends Migration
 
             $table->date('tanggal_kegiatan');
             $table->string('materi'); // Materi latihan
-            $table->string('path_gambar'); // Path file foto di storage
             $table->text('catatan')->nullable();
 
             $table->timestamps();
