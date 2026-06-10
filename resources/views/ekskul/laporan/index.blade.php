@@ -79,7 +79,7 @@
                             class="p-4 sm:p-5 bg-indigo-50/30 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                             <div>
                                 <span
-                                    class="bg-indigo-600 text-white text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wider">Cabang
+                                    class="bg-indigo-600 text-white text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wider">
                                     Ekskul</span>
                                 <h3 class="font-black text-gray-900 text-lg mt-1 leading-tight">{{ $ekskul->nama_ekskul
                                     }}</h3>

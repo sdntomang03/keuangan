@@ -444,4 +444,191 @@
         });
     </script>
     @endcan
+
+    @can('input-ekskul')
+    <div class="py-10 bg-gray-50 min-h-screen font-sans">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8">
+
+            {{-- 1. WELCOME BANNER --}}
+            <div
+                class="bg-gradient-to-r from-indigo-600 to-blue-700 rounded-3xl p-8 sm:p-10 text-white shadow-lg shadow-indigo-200 relative overflow-hidden flex flex-col md:flex-row items-center justify-between">
+                <div class="relative z-10 w-full">
+                    <span
+                        class="bg-white/20 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest backdrop-blur-sm">Panel
+                        Pelatih & Pembina</span>
+                    <h1 class="mt-4 text-3xl font-black tracking-tight">Selamat Datang, {{ auth()->user()->name }}! 👋
+                    </h1>
+                    <p class="mt-2 text-indigo-100 font-medium text-sm max-w-xl leading-relaxed">
+                        Pantau ringkasan kegiatan dan kelola dokumentasi laporan ekstrakurikuler Anda di <span
+                            class="font-bold text-white">{{ auth()->user()->sekolah->nama_sekolah ?? 'Pusat' }}</span>
+                        dengan mudah dan cepat.
+                    </p>
+                </div>
+                {{-- Ilustrasi Dekoratif (Opsional) --}}
+                <div class="hidden md:block opacity-20 absolute -right-10 -bottom-10">
+                    <svg class="w-64 h-64" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                    </svg>
+                </div>
+            </div>
+
+            {{-- 2. KARTU STATISTIK RINGKASAN --}}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div
+                    class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex items-center gap-5 hover:shadow-md transition">
+                    <div
+                        class="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+                            </path>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-[11px] font-black text-gray-400 uppercase tracking-widest">Cabang Ekskul</p>
+                        <h3 class="text-2xl font-black text-gray-900 mt-0.5">{{ $totalEkskul ?? 0 }} <span
+                                class="text-xs font-bold text-gray-400">Kelompok</span></h3>
+                    </div>
+                </div>
+
+                <div
+                    class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex items-center gap-5 hover:shadow-md transition">
+                    <div
+                        class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4">
+                            </path>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-[11px] font-black text-gray-400 uppercase tracking-widest">Total Pertemuan</p>
+                        <h3 class="text-2xl font-black text-gray-900 mt-0.5">{{ $totalPertemuan ?? 0 }} <span
+                                class="text-xs font-bold text-gray-400">Laporan</span></h3>
+                    </div>
+                </div>
+
+                <div
+                    class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex items-center gap-5 hover:shadow-md transition">
+                    <div
+                        class="w-14 h-14 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
+                            </path>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-[11px] font-black text-gray-400 uppercase tracking-widest">Dokumentasi Foto</p>
+                        <h3 class="text-2xl font-black text-gray-900 mt-0.5">{{ $totalFoto ?? 0 }} <span
+                                class="text-xs font-bold text-gray-400">Berkas</span></h3>
+                    </div>
+                </div>
+            </div>
+
+            {{-- 3. JALAN PINTAS & AKTIVITAS TERBARU --}}
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+
+                {{-- Panel Kiri: Jalan Pintas / Quick Actions --}}
+                <div class="bg-white rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-sm">
+                    <h3 class="text-sm font-black text-gray-800 uppercase tracking-wide mb-6 flex items-center gap-2">
+                        <span>⚡</span> Aksi Cepat
+                    </h3>
+
+                    <div class="space-y-4">
+                        <a href="{{ route('ekskul.laporan.index') }}"
+                            class="group block p-4 rounded-2xl bg-indigo-50/50 hover:bg-indigo-600 border border-indigo-100 hover:border-indigo-600 transition duration-300">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h4 class="font-bold text-indigo-900 group-hover:text-white transition">Upload
+                                        Laporan Baru</h4>
+                                    <p
+                                        class="text-xs text-indigo-600/70 group-hover:text-indigo-200 font-medium mt-1 transition">
+                                        Unggah foto dan materi pertemuan</p>
+                                </div>
+                                <div
+                                    class="bg-white text-indigo-600 group-hover:bg-indigo-500 group-hover:text-white w-8 h-8 rounded-full flex items-center justify-center transition shadow-sm">
+                                    →
+                                </div>
+                            </div>
+                        </a>
+
+                        <a href="{{ route('ekskul.laporan.index') }}"
+                            class="group block p-4 rounded-2xl bg-gray-50 hover:bg-gray-800 border border-gray-100 hover:border-gray-800 transition duration-300">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h4 class="font-bold text-gray-700 group-hover:text-white transition">Lihat Seluruh
+                                        Arsip</h4>
+                                    <p
+                                        class="text-xs text-gray-500 group-hover:text-gray-400 font-medium mt-1 transition">
+                                        Akses galeri dokumentasi ekskul</p>
+                                </div>
+                                <div
+                                    class="bg-white text-gray-600 group-hover:bg-gray-700 group-hover:text-white w-8 h-8 rounded-full flex items-center justify-center transition shadow-sm">
+                                    →
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                {{-- Panel Kanan: Tabel Mini Aktivitas Terakhir --}}
+                <div class="lg:col-span-2 bg-white rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-sm">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-sm font-black text-gray-800 uppercase tracking-wide flex items-center gap-2">
+                            <span>🕒</span> Laporan Pertemuan Terakhir
+                        </h3>
+                        <a href="{{ route('ekskul.laporan.index') }}"
+                            class="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-3 py-1.5 rounded-lg transition">Lihat
+                            Semua</a>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr
+                                    class="border-b border-gray-100 text-gray-400 text-[10px] uppercase tracking-widest font-extrabold">
+                                    <th class="pb-3 pl-2">Tanggal</th>
+                                    <th class="pb-3">Cabang Ekskul</th>
+                                    <th class="pb-3">Materi Latihan</th>
+                                    <th class="pb-3 text-center">Dokumentasi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-50">
+                                @forelse($laporanTerbaru ?? [] as $laporan)
+                                <tr class="hover:bg-gray-50/50 transition">
+                                    <td class="py-3 pl-2 text-xs font-bold text-gray-600">
+                                        {{ \Carbon\Carbon::parse($laporan->tanggal_kegiatan)->translatedFormat('d M Y')
+                                        }}
+                                    </td>
+                                    <td class="py-3 text-xs font-black text-indigo-600">
+                                        {{ $laporan->ekskul->nama_ekskul ?? '-' }}
+                                    </td>
+                                    <td class="py-3 text-xs font-semibold text-gray-700">
+                                        {{ Str::limit($laporan->materi, 40) }}
+                                    </td>
+                                    <td class="py-3 text-center">
+                                        <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-[10px] font-bold">
+                                            {{ $laporan->fotos_count ?? $laporan->fotos->count() ?? 0 }} Foto
+                                        </span>
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="4"
+                                        class="py-8 text-center text-xs font-bold text-gray-400 italic bg-gray-50/50 rounded-xl">
+                                        Belum ada data laporan yang diunggah.
+                                    </td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+    @endcan
 </x-app-layout>
