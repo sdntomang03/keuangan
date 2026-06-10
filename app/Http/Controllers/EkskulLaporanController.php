@@ -8,6 +8,9 @@ use App\Models\LaporanEkskulFoto;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Intervention\Image\Drivers\Imagick\Driver;
+use Intervention\Image\Drivers\Imagick\Encoders\WebpEncoder;
+use Intervention\Image\ImageManager;
 
 class EkskulLaporanController extends Controller
 {
@@ -36,20 +39,20 @@ class EkskulLaporanController extends Controller
 
     public function store(Request $request)
     {
-        // 1. Validasi Input (Menggunakan ekskul_id dari dropdown)
         $request->validate([
-            'ekskul_id' => 'required|exists:ekskuls,id', // Wajib memilih ekskul yang sudah ada
+            'ekskul_id' => 'required|exists:ekskuls,id',
             'pertemuan' => 'required|array|min:1',
             'pertemuan.*.tanggal_kegiatan' => 'required|date',
             'pertemuan.*.materi' => 'required|string|max:255',
             'pertemuan.*.fotos' => 'required|array|min:1',
-            'pertemuan.*.fotos.*' => 'image|mimes:jpeg,png,jpg|max:5120',
+            'pertemuan.*.fotos.*' => 'image|mimes:jpeg,png,jpg,webp|max:5120',
         ]);
 
-        // 2. Cari Data Induk Ekskul yang dipilih
         $ekskul = Ekskul::findOrFail($request->ekskul_id);
 
-        // 3. Langsung Loop Baris Pertemuan dan masukkan ke Ekskul tersebut
+        // INISIALISASI MANAGER (Di luar loop agar memori server lebih efisien)
+        $manager = ImageManager::usingDriver(Driver::class);
+
         foreach ($request->pertemuan as $item) {
             $laporan = LaporanEkskul::create([
                 'ekskul_id' => $ekskul->id,
@@ -58,15 +61,25 @@ class EkskulLaporanController extends Controller
                 'catatan' => $item['catatan'] ?? null,
             ]);
 
-            // 4. Proses Simpan Gambar Multiple
+            // PROSES FOTO MULTIPLE KE WEBP
             if (isset($item['fotos']) && is_array($item['fotos'])) {
                 foreach ($item['fotos'] as $file) {
-                    $filename = 'img_'.time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
-                    $path = $file->storeAs('laporan_ekskul/foto', $filename, 'public');
 
+                    // Generate nama file dengan folder (Mirip dengan pola Anda)
+                    $filename = 'laporan_ekskul/foto/img_'.time().'_'.Str::random(10).'.webp';
+
+                    // Proses Encode ke Webp Kualitas 85
+                    $encoded = $manager
+                        ->decode($file->getPathname())
+                        ->encode(new WebpEncoder(quality: 85));
+
+                    // Simpan menggunakan Storage Facade
+                    Storage::disk('public')->put($filename, (string) $encoded);
+
+                    // Simpan path relatif ke Database
                     LaporanEkskulFoto::create([
                         'laporan_ekskul_id' => $laporan->id,
-                        'path_foto' => $path,
+                        'path_foto' => $filename,
                     ]);
                 }
             }
