@@ -51,7 +51,7 @@ class EkskulLaporanController extends Controller
         $ekskul = Ekskul::findOrFail($request->ekskul_id);
 
         // INISIALISASI MANAGER (Di luar loop agar memori server lebih efisien)
-        $manager = ImageManager::usingDriver(Driver::class);
+        $manager = new ImageManager(new Driver);
 
         foreach ($request->pertemuan as $item) {
             $laporan = LaporanEkskul::create([
