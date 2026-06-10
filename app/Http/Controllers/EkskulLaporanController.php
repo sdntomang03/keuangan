@@ -52,6 +52,7 @@ class EkskulLaporanController extends Controller
         $ekskul = Ekskul::findOrFail($request->ekskul_id);
 
         // INISIALISASI MANAGER (Di luar loop agar memori server lebih efisien)
+        // INISIALISASI MANAGER YANG BENAR
         $manager = new ImageManager(new Driver);
 
         foreach ($request->pertemuan as $item) {
@@ -66,12 +67,11 @@ class EkskulLaporanController extends Controller
             if (isset($item['fotos']) && is_array($item['fotos'])) {
                 foreach ($item['fotos'] as $file) {
 
-                    // Generate nama file dengan folder (Mirip dengan pola Anda)
                     $filename = 'laporan_ekskul/foto/img_'.time().'_'.Str::random(10).'.webp';
 
-                    // Proses Encode ke Webp Kualitas 85
+                    // Gunakan read() alih-alih decode() untuk membaca file fisik
                     $encoded = $manager
-                        ->decode($file->getPathname())
+                        ->read($file->getPathname())
                         ->encode(new WebpEncoder(quality: 85));
 
                     // Simpan menggunakan Storage Facade
