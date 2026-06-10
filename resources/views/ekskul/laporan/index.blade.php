@@ -1,5 +1,6 @@
 <x-app-layout>
     <div x-data="{
+        // State untuk input dinamis multiple pertemuan di modal
         pertemuanList: [{ id: Date.now() }],
         tambahBaris() { this.pertemuanList.push({ id: Date.now() }); },
         hapusBaris(index) { if(this.pertemuanList.length > 1) this.pertemuanList.splice(index, 1); },
@@ -24,7 +25,7 @@
                 </button>
             </div>
         </x-slot>
-        @dd($ekskuls)
+
         <div class="py-6 sm:py-8">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
@@ -115,7 +116,7 @@
                                     </td>
                                 </tr>
 
-                                {{-- EXPANDABLE GRID (RESPONSIF UNTUK GALERI) --}}
+                                {{-- EXPANDABLE GALLERY (JALUR SUKSES TANPA KATA PUBLIC) --}}
                                 <tr x-show="expanded" x-transition.opacity style="display: none;" class="bg-gray-50/40">
                                     <td colspan="4" class="p-4 sm:p-6 border-t border-b border-gray-100">
                                         <div class="space-y-6">
@@ -140,13 +141,16 @@
                                                 @endif
 
                                                 {{-- GRID FOTO RESPONSIVE --}}
-                                                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5
-                                                    gap-3">
+                                                <div
+                                                    class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                                                     @foreach($laporan->fotos as $foto)
                                                     <div
                                                         class="relative rounded-xl overflow-hidden shadow-sm border border-gray-100 group bg-gray-50">
+                                                        {{-- AKURAT: Menggunakan format asset('storage/' . path) sesuai
+                                                        link sukses anda --}}
                                                         <img src="{{ asset('storage/' . $foto->path_foto) }}"
-                                                            alt="Bukti" class="w-full h-24 sm:h-32 object-cover">
+                                                            alt="Bukti Kegiatan"
+                                                            class="w-full h-24 sm:h-32 object-cover">
                                                         <a href="{{ asset('storage/' . $foto->path_foto) }}"
                                                             target="_blank"
                                                             class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-[10px] font-bold">
@@ -177,7 +181,7 @@
             </div>
         </div>
 
-        {{-- MODAL INPUT DATA: AMAN DARI ERROR KARENA MENGGUNAKAN DEFAULT 2XL DENGAN INTERIOR LAYOUT RESPONSIVE --}}
+        {{-- MODAL INPUT DATA (MAX-WIDTH 2XL - AMAN DARI ERROR BLANK) --}}
         <x-modal name="add-ekskul-laporan-modal" max-width="2xl" focusable>
             <form action="{{ route('ekskul.laporan.store') }}" method="POST" enctype="multipart/form-data"
                 class="p-5 sm:p-8 text-left max-h-[90vh] overflow-y-auto custom-scroll">
@@ -188,7 +192,6 @@
                         Foto Per Pertemuan</p>
                 </div>
 
-                {{-- RESPONSIVE FORM GRID --}}
                 <div
                     class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5 bg-indigo-50/40 p-4 rounded-xl border border-indigo-100">
                     <div>
@@ -249,7 +252,6 @@
                                 <div>
                                     <label class="block text-[10px] font-black text-gray-400 uppercase mb-1">Pilih
                                         Gambar Dokumentasi (Bisa pilih lebih dari 1 foto)</label>
-                                    {{-- KUNCI UTAMA MULTIPLE UPLOAD BERBAU ARRAY: name="...[fotos][]" multiple --}}
                                     <input type="file" :name="`pertemuan[${index}][fotos][]`" multiple required
                                         accept="image/*"
                                         class="w-full text-xs border border-gray-200 rounded-xl bg-white p-1 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[10px] file:font-black file:bg-indigo-50 file:text-indigo-700">
