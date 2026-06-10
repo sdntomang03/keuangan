@@ -15,28 +15,30 @@ class EkskulLaporanController extends Controller
     {
         $user = Auth::user();
 
-        // 1. Ambil list master ekskul dari tabel ref_ekskul untuk dropdown di View
-        $refEkskuls = DB::table('ref_ekskul')->get();
-
         if ($user->can('akses-admin-pusat')) {
             $ekskuls = Ekskul::with(['laporans.fotos', 'user', 'sekolah'])->latest()->paginate(10);
+
+            // Admin bisa melihat semua pilihan ekskul di dropdown
+            $dropdownEkskuls = Ekskul::with(['user'])->latest()->get();
         } else {
             $ekskuls = Ekskul::with('laporans.fotos')
                 ->where('sekolah_id', $user->sekolah_id)
                 ->where('user_id', $user->id)
                 ->latest()
                 ->get();
+
+            // MENGAMBIL DATA EKSKUL SESUAI USER_ID PELATIH SAJA
+            $dropdownEkskuls = Ekskul::where('user_id', $user->id)->latest()->get();
         }
 
-        // Kirim $refEkskuls ke dalam view
-        return view('ekskul.laporan.index', compact('ekskuls', 'refEkskuls'));
+        return view('ekskul.laporan.index', compact('ekskuls', 'dropdownEkskuls'));
     }
 
     public function store(Request $request)
     {
+        // 1. Validasi Input (Menggunakan ekskul_id dari dropdown)
         $request->validate([
-            'nama_ekskul' => 'required|string|max:255', // Menyimpan string nama dari dropdown
-            'keterangan' => 'nullable|string',
+            'ekskul_id' => 'required|exists:ekskuls,id', // Wajib memilih ekskul yang sudah ada
             'pertemuan' => 'required|array|min:1',
             'pertemuan.*.tanggal_kegiatan' => 'required|date',
             'pertemuan.*.materi' => 'required|string|max:255',
@@ -44,35 +46,10 @@ class EkskulLaporanController extends Controller
             'pertemuan.*.fotos.*' => 'image|mimes:jpeg,png,jpg|max:5120',
         ]);
 
-        // =========================================================================
-        // LOGIKA OTOMATISASI PERIODE TRIWULAN (TW)
-        // =========================================================================
-        // Mengambil tanggal kegiatan dari baris pertemuan pertama sebagai acuan periode
-        $tanggalAcuan = $request->pertemuan[0]['tanggal_kegiatan'];
-        $carbonDate = Carbon::parse($tanggalAcuan);
+        // 2. Cari Data Induk Ekskul yang dipilih
+        $ekskul = Ekskul::findOrFail($request->ekskul_id);
 
-        $bulan = $carbonDate->month; // Ambil angka bulan (1-12)
-        $tahun = $carbonDate->year;  // Ambil angka tahun
-
-        // Rumus matematika untuk menentukan TW (Bulan dibagi 3 lalu dibulatkan ke atas)
-        $angkaTw = ceil($bulan / 3);
-
-        // Menghasilkan string format: "TW 1 - 2026"
-        $periodeOtomatis = 'TW '.$angkaTw.' - '.$tahun;
-        // =========================================================================
-
-        $user = Auth::user();
-
-        // 1. Simpan Data Induk menggunakan nama ekskul dari dropdown & periode hasil hitungan otomatis
-        $ekskul = Ekskul::create([
-            'sekolah_id' => $user->sekolah_id,
-            'user_id' => $user->id,
-            'nama_ekskul' => $request->nama_ekskul,
-            'periode' => $periodeOtomatis,
-            'keterangan' => $request->keterangan,
-        ]);
-
-        // 2. Loop Baris Pertemuan
+        // 3. Langsung Loop Baris Pertemuan dan masukkan ke Ekskul tersebut
         foreach ($request->pertemuan as $item) {
             $laporan = LaporanEkskul::create([
                 'ekskul_id' => $ekskul->id,
@@ -81,7 +58,7 @@ class EkskulLaporanController extends Controller
                 'catatan' => $item['catatan'] ?? null,
             ]);
 
-            // 3. Loop Upload Banyak Gambar untuk Pertemuan ini
+            // 4. Proses Simpan Gambar Multiple
             if (isset($item['fotos']) && is_array($item['fotos'])) {
                 foreach ($item['fotos'] as $file) {
                     $filename = 'img_'.time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
@@ -95,7 +72,7 @@ class EkskulLaporanController extends Controller
             }
         }
 
-        return back()->with('success', 'Laporan ekskul berhasil disimpan. Sistem mendeteksi aktivitas ini masuk ke dalam '.$periodeOtomatis);
+        return back()->with('success', 'Laporan foto pertemuan berhasil ditambahkan ke dalam '.$ekskul->nama_ekskul);
     }
 
     public function destroy($id)
