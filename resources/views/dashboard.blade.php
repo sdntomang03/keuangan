@@ -1,4 +1,5 @@
 <x-app-layout>
+    @can('kelola-sekolah')
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
             {{ __('Dashboard Keuangan') }}
@@ -62,7 +63,7 @@
                             Kelola anggaran dan pantau realisasi dana BOS & BOP dengan mudah.
                         </p>
                     </div>
-                    @can('kelola-sekolah')
+
 
 
                     <div class="flex-shrink-0">
@@ -78,7 +79,7 @@
                             Pengaturan Profil
                         </a>
                     </div>
-                    @endcan
+
                 </div>
                 <div
                     class="relative bg-black/10 border-t border-white/10 p-6 md:px-10 transition-all hover:bg-black/20">
@@ -119,7 +120,7 @@
                     </div>
                 </div>
             </div>
-            @can('kelola-sekolah')
+
             {{-- 2. KARTU STATISTIK (Animasi Masuk dengan Delay + Counter Up) --}}
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div
@@ -315,10 +316,10 @@
                     </div>
                 </div>
             </div>
-            @endcan
+
         </div>
     </div>
-    @can('kelola-sekolah')
+
     {{-- SCRIPT JS UNTUK CHART DAN ANIMASI COUNTER CURRENCY --}}
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
