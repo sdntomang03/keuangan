@@ -1,4 +1,12 @@
 <x-app-layout>
+    {{-- 1. HEADER DI LUAR ALPINE SCOPE --}}
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight italic">
+            {{ __('Manajemen Akses & User') }}
+        </h2>
+    </x-slot>
+
+    {{-- 2. ALPINE JS SCOPE (Membungkus seluruh konten tab dan modal) --}}
     <div x-data="{
         activeTab: 'users', // Default tab yang terbuka
 
@@ -13,17 +21,10 @@
         // State untuk Permission
         selectedPermission: { id: '', name: '' }
     }">
-
-        <x-slot name="header">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight italic">
-                {{ __('Manajemen Akses & User') }}
-            </h2>
-        </x-slot>
-
         <div class="py-8">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
 
-                {{-- TABS NAVIGATION DIPINDAHKAN KE SINI AGAR TERBACA OLEH ALPINE.JS --}}
+                {{-- TABS NAVIGATION --}}
                 <div
                     class="mb-6 flex overflow-x-auto bg-gray-100 p-1.5 rounded-xl shadow-sm border border-gray-200 w-fit">
                     <button @click="activeTab = 'users'"
@@ -42,273 +43,248 @@
                         🔑 Hak Akses (Permission)
                     </button>
                 </div>
-                <div class="py-8">
-                    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
 
-                        {{-- ALERT SUCCESS --}}
-                        @if(session('success'))
-                        <div class="mb-6 p-4 bg-emerald-50 border-l-4 border-emerald-500 text-emerald-700 text-sm font-bold rounded-r-lg shadow-sm flex justify-between items-center"
-                            x-data="{ show: true }" x-show="show">
-                            {{ session('success') }}
-                            <button @click="show = false"
-                                class="text-emerald-500 hover:text-emerald-700">&times;</button>
-                        </div>
-                        @endif
-                        @if(session('error'))
-                        <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm font-bold rounded-r-lg shadow-sm flex justify-between items-center"
-                            x-data="{ show: true }" x-show="show">
-                            {{ session('error') }}
-                            <button @click="show = false" class="text-red-500 hover:text-red-700">&times;</button>
-                        </div>
-                        @endif
-                        @if($errors->any())
-                        <div
-                            class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm font-bold rounded-r-lg shadow-sm">
-                            <ul class="list-disc pl-5">
-                                @foreach($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
-                        @endif
+                {{-- ALERT MESSAGES --}}
+                @if(session('success'))
+                <div class="mb-6 p-4 bg-emerald-50 border-l-4 border-emerald-500 text-emerald-700 text-sm font-bold rounded-r-lg shadow-sm flex justify-between items-center"
+                    x-data="{ show: true }" x-show="show">
+                    {{ session('success') }}
+                    <button @click="show = false" class="text-emerald-500 hover:text-emerald-700">&times;</button>
+                </div>
+                @endif
+                @if(session('error'))
+                <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm font-bold rounded-r-lg shadow-sm flex justify-between items-center"
+                    x-data="{ show: true }" x-show="show">
+                    {{ session('error') }}
+                    <button @click="show = false" class="text-red-500 hover:text-red-700">&times;</button>
+                </div>
+                @endif
+                @if($errors->any())
+                <div
+                    class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm font-bold rounded-r-lg shadow-sm">
+                    <ul class="list-disc pl-5">
+                        @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+                @endif
 
-                        {{-- ======================================================= --}}
-                        {{-- TAB 1: MANAJEMEN USER --}}
-                        {{-- ======================================================= --}}
-                        <div x-show="activeTab === 'users'" x-transition.opacity style="display: none;">
-                            <div class="flex justify-end mb-4">
-                                <button x-on:click="$dispatch('open-modal', 'add-user-modal')"
-                                    class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2.5 px-5 rounded-lg transition shadow-md flex items-center border border-indigo-500">
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M12 4v16m8-8H4"></path>
-                                    </svg>
-                                    Tambah User Baru
-                                </button>
-                            </div>
+                {{-- ======================================================= --}}
+                {{-- TAB 1: MANAJEMEN USER --}}
+                {{-- ======================================================= --}}
+                <div x-show="activeTab === 'users'" x-transition.opacity style="display: none;">
+                    <div class="flex justify-end mb-4">
+                        <button x-on:click="$dispatch('open-modal', 'add-user-modal')"
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2.5 px-5 rounded-lg transition shadow-md flex items-center border border-indigo-500">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            Tambah User Baru
+                        </button>
+                    </div>
 
-                            <div class="bg-white overflow-hidden shadow-sm sm:rounded-2xl border border-gray-100">
-                                <table class="w-full text-left border-collapse">
-                                    <thead>
-                                        <tr
-                                            class="bg-gray-50/50 border-b text-gray-400 text-[10px] uppercase tracking-widest font-extrabold">
-                                            <th class="p-4">Informasi User</th>
-                                            <th class="p-4">Asal Sekolah</th>
-                                            <th class="p-4">Role Aktif</th>
-                                            <th class="p-4 text-right">Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-gray-100">
-                                        @foreach($users as $user)
-                                        <tr class="hover:bg-indigo-50/30 transition duration-150">
-                                            <td class="p-4 text-sm font-bold text-gray-800">
-                                                {{ $user->name }}
-                                                <div class="text-[11px] text-indigo-500 font-medium">{{ $user->email }}
-                                                </div>
-                                            </td>
-                                            <td class="p-4 text-sm text-gray-700">
-                                                {{ $user->sekolah->nama_sekolah ?? 'Tanpa Sekolah / Pusat' }}
-                                            </td>
-                                            <td class="p-4 uppercase text-[10px] font-extrabold text-emerald-600">
-                                                <span class="bg-emerald-50 px-2 py-1 rounded border border-emerald-200">
-                                                    {{ $user->getRoleNames()->first() ?? 'Tidak Ada Role' }}
-                                                </span>
-                                            </td>
-                                            <td class="p-4 text-right flex justify-end items-center gap-2">
-                                                {{-- Tombol Edit User --}}
-                                                <button @click="
+                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-2xl border border-gray-100">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr
+                                    class="bg-gray-50/50 border-b text-gray-400 text-[10px] uppercase tracking-widest font-extrabold">
+                                    <th class="p-4">Informasi User</th>
+                                    <th class="p-4">Asal Sekolah</th>
+                                    <th class="p-4">Role Aktif</th>
+                                    <th class="p-4 text-right">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                @foreach($users as $user)
+                                <tr class="hover:bg-indigo-50/30 transition duration-150">
+                                    <td class="p-4 text-sm font-bold text-gray-800">
+                                        {{ $user->name }}
+                                        <div class="text-[11px] text-indigo-500 font-medium">{{ $user->email }}</div>
+                                    </td>
+                                    <td class="p-4 text-sm text-gray-700">
+                                        {{ $user->sekolah->nama_sekolah ?? 'Tanpa Sekolah / Pusat' }}
+                                    </td>
+                                    <td class="p-4 uppercase text-[10px] font-extrabold text-emerald-600">
+                                        <span class="bg-emerald-50 px-2 py-1 rounded border border-emerald-200">
+                                            {{ $user->getRoleNames()->first() ?? 'Tidak Ada Role' }}
+                                        </span>
+                                    </td>
+                                    <td class="p-4 text-right flex justify-end items-center gap-2">
+                                        <button @click="
                                             selectedUser = { id: '{{ $user->id }}', name: '{{ addslashes($user->name) }}' };
                                             selectedRole = '{{ $user->getRoleNames()->first() }}';
                                             selectedSekolah = '{{ $user->sekolah_id }}';
                                             $dispatch('open-modal', 'edit-role-modal');"
-                                                    class="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-600 hover:text-white transition shadow-sm"
-                                                    title="Edit Role & Sekolah">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
-                                                        </path>
-                                                    </svg>
-                                                </button>
-                                                {{-- Tombol Reset Password --}}
-                                                <button @click="
+                                            class="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-600 hover:text-white transition shadow-sm"
+                                            title="Edit Role & Sekolah">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                                                </path>
+                                            </svg>
+                                        </button>
+                                        <button @click="
                                             selectedUser = { id: '{{ $user->id }}', name: '{{ addslashes($user->name) }}' };
                                             $dispatch('open-modal', 'confirm-password-reset');"
-                                                    class="p-2 bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-600 hover:text-white transition shadow-sm"
-                                                    title="Reset Password ke 12345678">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z">
-                                                        </path>
-                                                    </svg>
-                                                </button>
-                                                {{-- Tombol Hapus --}}
-                                                <button @click="
+                                            class="p-2 bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-600 hover:text-white transition shadow-sm"
+                                            title="Reset Password ke 12345678">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z">
+                                                </path>
+                                            </svg>
+                                        </button>
+                                        <button @click="
                                             selectedUser = { id: '{{ $user->id }}', name: '{{ addslashes($user->name) }}' };
                                             $dispatch('open-modal', 'confirm-user-deletion');"
-                                                    class="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition shadow-sm"
-                                                    title="Hapus User">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                                                        </path>
-                                                    </svg>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                                <div class="p-4 border-t">
-                                    {{ $users->links() }}
-                                </div>
-                            </div>
+                                            class="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition shadow-sm"
+                                            title="Hapus User">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                                </path>
+                                            </svg>
+                                        </button>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                        <div class="p-4 border-t">
+                            {{ $users->links() }}
                         </div>
+                    </div>
+                </div>
 
-                        {{-- ======================================================= --}}
-                        {{-- TAB 2: MANAJEMEN ROLE --}}
-                        {{-- ======================================================= --}}
-                        <div x-show="activeTab === 'roles'" x-transition.opacity style="display: none;">
-                            <div class="flex justify-end mb-4">
-                                <button x-on:click="$dispatch('open-modal', 'add-role-modal')"
-                                    class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2.5 px-5 rounded-lg transition shadow-md flex items-center border border-indigo-500">
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M12 4v16m8-8H4"></path>
-                                    </svg>
-                                    Tambah Role Baru
-                                </button>
-                            </div>
+                {{-- ======================================================= --}}
+                {{-- TAB 2: MANAJEMEN ROLE --}}
+                {{-- ======================================================= --}}
+                <div x-show="activeTab === 'roles'" x-transition.opacity style="display: none;">
+                    <div class="flex justify-end mb-4">
+                        <button x-on:click="$dispatch('open-modal', 'add-role-modal')"
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2.5 px-5 rounded-lg transition shadow-md flex items-center border border-indigo-500">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            Tambah Role Baru
+                        </button>
+                    </div>
 
-                            <div class="bg-white overflow-hidden shadow-sm sm:rounded-2xl border border-gray-100">
-                                <table class="w-full text-left border-collapse">
-                                    <thead>
-                                        <tr
-                                            class="bg-gray-50/50 border-b text-gray-400 text-[10px] uppercase tracking-widest font-extrabold">
-                                            <th class="p-4 w-1/4">Nama Role</th>
-                                            <th class="p-4 w-2/4">Hak Akses (Permissions)</th>
-                                            <th class="p-4 w-1/4 text-right">Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-gray-100">
-                                        @foreach($roles as $role)
-                                        <tr class="hover:bg-indigo-50/30 transition duration-150">
-                                            <td class="p-4 text-sm font-bold text-gray-800 uppercase">{{ $role->name }}
-                                            </td>
-                                            <td class="p-4">
-                                                <div class="flex flex-wrap gap-1.5">
-                                                    @forelse($role->permissions as $perm)
-                                                    <span
-                                                        class="bg-indigo-50 text-indigo-700 border border-indigo-200 text-[10px] font-bold px-2 py-1 rounded-md">
-                                                        {{ $perm->name }}
-                                                    </span>
-                                                    @empty
-                                                    <span class="text-xs text-gray-400 italic">Belum ada
-                                                        permission</span>
-                                                    @endforelse
-                                                </div>
-                                            </td>
-                                            <td class="p-4 text-right flex justify-end items-center gap-2">
-                                                <button @click="
+                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-2xl border border-gray-100">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr
+                                    class="bg-gray-50/50 border-b text-gray-400 text-[10px] uppercase tracking-widest font-extrabold">
+                                    <th class="p-4 w-1/4">Nama Role</th>
+                                    <th class="p-4 w-2/4">Hak Akses (Permissions)</th>
+                                    <th class="p-4 w-1/4 text-right">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                @foreach($roles as $role)
+                                <tr class="hover:bg-indigo-50/30 transition duration-150">
+                                    <td class="p-4 text-sm font-bold text-gray-800 uppercase">{{ $role->name }}</td>
+                                    <td class="p-4">
+                                        <div class="flex flex-wrap gap-1.5">
+                                            @forelse($role->permissions as $perm)
+                                            <span
+                                                class="bg-indigo-50 text-indigo-700 border border-indigo-200 text-[10px] font-bold px-2 py-1 rounded-md">
+                                                {{ $perm->name }}
+                                            </span>
+                                            @empty
+                                            <span class="text-xs text-gray-400 italic">Belum ada permission</span>
+                                            @endforelse
+                                        </div>
+                                    </td>
+                                    <td class="p-4 text-right flex justify-end items-center gap-2">
+                                        <button @click="
                                             selectedRoleData = {
                                                 id: '{{ $role->id }}',
                                                 name: '{{ addslashes($role->name) }}',
                                                 permissions: {{ json_encode($role->permissions->pluck('name')) }}
                                             };
                                             $dispatch('open-modal', 'edit-role-permission-modal');"
-                                                    class="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-600 hover:text-white transition shadow-sm"
-                                                    title="Atur Permissions">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
-                                                        </path>
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z">
-                                                        </path>
-                                                    </svg>
-                                                </button>
+                                            class="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-600 hover:text-white transition shadow-sm"
+                                            title="Atur Permissions">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
+                                                </path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            </svg>
+                                        </button>
 
-                                                @if($role->name !== 'Super Admin')
-                                                <button @click="
+                                        @if($role->name !== 'Super Admin')
+                                        <button @click="
                                             selectedRoleData = { id: '{{ $role->id }}', name: '{{ addslashes($role->name) }}' };
                                             $dispatch('open-modal', 'confirm-role-deletion');"
-                                                    class="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition shadow-sm"
-                                                    title="Hapus Role">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                                                        </path>
-                                                    </svg>
-                                                </button>
-                                                @endif
-                                            </td>
-                                        </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+                                            class="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition shadow-sm"
+                                            title="Hapus Role">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                                </path>
+                                            </svg>
+                                        </button>
+                                        @endif
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
 
-                        {{-- ======================================================= --}}
-                        {{-- TAB 3: MANAJEMEN PERMISSION --}}
-                        {{-- ======================================================= --}}
-                        <div x-show="activeTab === 'permissions'" x-transition.opacity style="display: none;">
-                            <div class="flex justify-end mb-4">
-                                <button x-on:click="$dispatch('open-modal', 'add-permission-modal')"
-                                    class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2.5 px-5 rounded-lg transition shadow-md flex items-center border border-indigo-500">
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M12 4v16m8-8H4"></path>
-                                    </svg>
-                                    Tambah Permission Baru
-                                </button>
-                            </div>
+                {{-- ======================================================= --}}
+                {{-- TAB 3: MANAJEMEN PERMISSION --}}
+                {{-- ======================================================= --}}
+                <div x-show="activeTab === 'permissions'" x-transition.opacity style="display: none;">
+                    <div class="flex justify-end mb-4">
+                        <button x-on:click="$dispatch('open-modal', 'add-permission-modal')"
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2.5 px-5 rounded-lg transition shadow-md flex items-center border border-indigo-500">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            Tambah Permission Baru
+                        </button>
+                    </div>
 
-                            <div class="bg-white overflow-hidden shadow-sm sm:rounded-2xl border border-gray-100">
-                                <table class="w-full text-left border-collapse">
-                                    <thead>
-                                        <tr
-                                            class="bg-gray-50/50 border-b text-gray-400 text-[10px] uppercase tracking-widest font-extrabold">
-                                            <th class="p-4 w-3/4">Nama Permission</th>
-                                            <th class="p-4 w-1/4 text-right">Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-gray-100">
-                                        @foreach($permissions as $perm)
-                                        <tr class="hover:bg-indigo-50/30 transition duration-150">
-                                            <td class="p-4 text-sm font-bold text-gray-800 tracking-wide font-mono">{{
-                                                $perm->name }}</td>
-                                            <td class="p-4 text-right flex justify-end items-center gap-2">
-                                                <button @click="
+                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-2xl border border-gray-100">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr
+                                    class="bg-gray-50/50 border-b text-gray-400 text-[10px] uppercase tracking-widest font-extrabold">
+                                    <th class="p-4 w-3/4">Nama Permission</th>
+                                    <th class="p-4 w-1/4 text-right">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                @foreach($permissions as $perm)
+                                <tr class="hover:bg-indigo-50/30 transition duration-150">
+                                    <td class="p-4 text-sm font-bold text-gray-800 tracking-wide font-mono">{{
+                                        $perm->name }}</td>
+                                    <td class="p-4 text-right flex justify-end items-center gap-2">
+                                        <button @click="
                                             selectedPermission = { id: '{{ $perm->id }}', name: '{{ addslashes($perm->name) }}' };
                                             $dispatch('open-modal', 'confirm-permission-deletion');"
-                                                    class="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition shadow-sm"
-                                                    title="Hapus Permission">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                                                        </path>
-                                                    </svg>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
+                                            class="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition shadow-sm"
+                                            title="Hapus Permission">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                                </path>
+                                            </svg>
+                                        </button>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
@@ -316,7 +292,6 @@
                 {{-- AREA MODALS (POPUP) --}}
                 {{-- ========================================================================= --}}
 
-                {{-- Modal Tambah User --}}
                 <x-modal name="add-user-modal" focusable>
                     <form action="{{ route('admin.users.store') }}" method="post" class="p-8">
                         @csrf
@@ -363,7 +338,6 @@
                     </form>
                 </x-modal>
 
-                {{-- Modal Edit Role & Sekolah User --}}
                 <x-modal name="edit-role-modal" focusable>
                     <form :action="'{{ url('admin/users') }}/' + selectedUser.id" method="post" class="p-8">
                         @csrf
@@ -401,7 +375,6 @@
                     </form>
                 </x-modal>
 
-                {{-- Modal Tambah Role --}}
                 <x-modal name="add-role-modal" focusable>
                     <form action="{{ route('admin.roles.store') }}" method="post" class="p-8">
                         @csrf
@@ -432,7 +405,6 @@
                     </form>
                 </x-modal>
 
-                {{-- Modal Edit Role Permission --}}
                 <x-modal name="edit-role-permission-modal" focusable>
                     <form :action="'{{ url('admin/roles') }}/' + selectedRoleData.id + '/permissions'" method="post"
                         class="p-8">
@@ -463,7 +435,6 @@
                     </form>
                 </x-modal>
 
-                {{-- Modal Tambah Permission --}}
                 <x-modal name="add-permission-modal" focusable>
                     <form action="{{ route('admin.permissions.store') }}" method="post" class="p-8">
                         @csrf
@@ -482,7 +453,6 @@
                     </form>
                 </x-modal>
 
-                {{-- Modal Konfirmasi Hapus (Re-usable layout) --}}
                 <x-modal name="confirm-user-deletion" focusable>
                     <form :action="'{{ url('admin/users') }}/' + selectedUser.id" method="post" class="p-8 text-center">
                         @csrf @method('delete')
@@ -575,4 +545,6 @@
                 </x-modal>
 
             </div>
+        </div>
+    </div>
 </x-app-layout>
