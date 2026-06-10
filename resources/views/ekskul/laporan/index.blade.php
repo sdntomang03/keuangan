@@ -12,7 +12,7 @@
         lightboxImages: [], // Menampung semua daftar url foto dalam satu pertemuan
         lightboxIndex: 0,   // Menampung index foto yang sedang aktif
 
-        bukaLightbox(urls, index awal) {
+ bukaLightbox(urls, index) {
             this.lightboxImages = urls;
             this.lightboxIndex = index;
             this.lightboxOpen = true;
