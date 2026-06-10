@@ -140,8 +140,9 @@
                                                 @endif
 
                                                 {{-- GRID FOTO RESPONSIVE --}}
-                                                <div
-                                                    class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                                                <div @dd($laporan->fotos)
+                                                    class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5
+                                                    gap-3">
                                                     @foreach($laporan->fotos as $foto)
                                                     <div
                                                         class="relative rounded-xl overflow-hidden shadow-sm border border-gray-100 group bg-gray-50">
