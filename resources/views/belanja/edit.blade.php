@@ -364,56 +364,47 @@
                     }).format(val || 0);
                 },
 
-                            roundItem(index) {
+                            // Tambahkan fungsi helper ini di dalam methods Anda
+calculateRounding(harga) {
+    let nilai = parseFloat(harga);
+
+    if (nilai < 1000) {
+        // Harga di bawah 1.000 dibulatkan ke bawah ratusan terdekat
+        return Math.floor(nilai / 100) * 100;
+    } else if (nilai < 100000) {
+        // Harga 1.000 - 99.999 dibulatkan ke bawah ribuan terdekat
+        return Math.floor(nilai / 1000) * 1000;
+    } else {
+        // Harga 100.000 ke atas dibulatkan ke bawah kelipatan 10.000
+        return Math.floor(nilai / 10000) * 10000;
+    }
+},
+
+roundItem(index) {
     // Ambil item berdasarkan index yang dikirim dari tombol
     let item = this.items[index];
 
     if (item && item.harga_satuan) {
-        let harga = parseFloat(item.harga_satuan);
-
-        if (harga < 1000) {
-    // Jika harga di bawah 1.000 (contoh: 280)
-    // 280 / 100 = 2.8 -> floor(2.8) = 2 -> 2 * 100 = 200
-    item.harga_satuan = Math.floor(harga / 100) * 100;
-
-} else if (harga < 100000) {
-    // Jika harga antara 1.000 sampai 99.999
-    item.harga_satuan = Math.floor(harga / 1000) * 1000;
-
-} else {
-    // Jika harga 100.000 ke atas
-    item.harga_satuan = Math.floor(harga / 50000) * 50000;
-}
+        // Panggil fungsi helper
+        item.harga_satuan = this.calculateRounding(item.harga_satuan);
 
         // Trigger perubahan agar UI Alpine.js terupdate
         this.items[index].harga_satuan = item.harga_satuan;
         this.calculateTotal();
     }
 },
-                roundAllPricesDown() {
+
+roundAllPricesDown() {
     if (confirm('Apakah anda yakin akan membulatkan semua harga?')) {
         this.items.forEach(item => {
             if (item.harga_satuan) {
-                let harga = parseFloat(item.harga_satuan);
-
-        if (harga < 1000) {
-    // Jika harga di bawah 1.000 (contoh: 280)
-    // 280 / 100 = 2.8 -> floor(2.8) = 2 -> 2 * 100 = 200
-    item.harga_satuan = Math.floor(harga / 100) * 100;
-
-} else if (harga < 100000) {
-    // Jika harga antara 1.000 sampai 99.999
-    item.harga_satuan = Math.floor(harga / 1000) * 1000;
-
-} else {
-    // Jika harga 100.000 ke atas
-    item.harga_satuan = Math.floor(harga / 50000) * 50000;
-}
+                // Panggil fungsi helper
+                item.harga_satuan = this.calculateRounding(item.harga_satuan);
             }
         });
         this.calculateTotal(); // Refresh total harga, pajak, dan transfer
     }
-},
+}
             }
         }
     </script>

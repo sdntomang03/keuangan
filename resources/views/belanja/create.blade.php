@@ -519,51 +519,42 @@ this.selectedKeterangan = 'ALL';
             formatRupiah(val) {
                 return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val || 0);
             },
-            roundAllPricesDown() {
-                    if (confirm('Bulatkan semua harga satuan sesuai ketentuan (Ribuan/Puluh Ribu/Ratus Ribu)?')) {
-                        this.items.forEach(item => {
-                            if (item.harga_satuan) {
-                                let harga = parseFloat(item.harga_satuan);
 
-                     if (harga < 1000) {
-    // Jika harga di bawah 1.000 (contoh: 280)
-    // 280 / 100 = 2.8 -> floor(2.8) = 2 -> 2 * 100 = 200
-    item.harga_satuan = Math.floor(harga / 100) * 100;
+            // Tambahkan fungsi helper ini di dalam methods Anda
+calculateRounding(harga) {
+    let nilai = parseFloat(harga);
 
-} else if (harga < 100000) {
-    // Jika harga antara 1.000 sampai 99.999
-    item.harga_satuan = Math.floor(harga / 1000) * 1000;
+    if (nilai < 1000) {
+        // Harga di bawah 1.000 dibulatkan ke bawah ratusan terdekat
+        return Math.floor(nilai / 100) * 100;
+    } else if (nilai < 100000) {
+        // Harga 1.000 - 99.999 dibulatkan ke bawah ribuan terdekat
+        return Math.floor(nilai / 1000) * 1000;
+    } else {
+        // Harga 100.000 ke atas dibulatkan ke bawah kelipatan 10.000
+        return Math.floor(nilai / 10000) * 10000;
+    }
+},
 
-} else {
-    // Jika harga 100.000 ke atas
-    item.harga_satuan = Math.floor(harga / 50000) * 50000;
-}
-                            }
-                        });
-                        this.calculateTotal();
-                    }
-                },
-                roundDownThousand(item) {
-                    if (item.harga_satuan) {
-                        let harga = parseFloat(item.harga_satuan);
+roundAllPricesDown() {
+    if (confirm('Bulatkan semua harga satuan sesuai ketentuan (Ratusan/Ribuan/Lima Puluh Ribuan)?')) {
+        this.items.forEach(item => {
+            if (item.harga_satuan) {
+                // Panggil fungsi helper
+                item.harga_satuan = this.calculateRounding(item.harga_satuan);
+            }
+        });
+        this.calculateTotal();
+    }
+},
 
-                 if (harga < 1000) {
-    // Jika harga di bawah 1.000 (contoh: 280)
-    // 280 / 100 = 2.8 -> floor(2.8) = 2 -> 2 * 100 = 200
-    item.harga_satuan = Math.floor(harga / 100) * 100;
-
-} else if (harga < 100000) {
-    // Jika harga antara 1.000 sampai 99.999
-    item.harga_satuan = Math.floor(harga / 1000) * 1000;
-
-} else {
-    // Jika harga 100.000 ke atas
-    item.harga_satuan = Math.floor(harga / 50000) * 50000;
-}
-
-                        this.calculateTotal();
-                    }
-                },
+roundDownThousand(item) {
+    if (item.harga_satuan) {
+        // Panggil fungsi helper
+        item.harga_satuan = this.calculateRounding(item.harga_satuan);
+        this.calculateTotal();
+    }
+},
             // Tambahkan fungsi pendukung lainnya (removeItem, addPajak, dll) di sini...
             addPajak() { this.pajaks.push({ id_master: '', nominal: 0 }); },
             removePajak(index) { this.pajaks.splice(index, 1); this.calculateTotal(); },
