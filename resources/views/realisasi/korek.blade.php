@@ -212,7 +212,6 @@
                 </table>
             </div>
 
-
             {{-- Tabel Rekapitulasi Per Kode Rekening --}}
             <div class="mt-8 mb-6 print:mt-8 print:break-inside-avoid">
                 <h3
