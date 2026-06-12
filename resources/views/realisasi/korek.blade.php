@@ -319,6 +319,20 @@
         @media print {
 
             /* 1. TAMBAHKAN KODE INI UNTUK MENCEGAH TERPOTONG */
+            /* 1. Sembunyikan header, nav, aside, dan footer sepenuhnya */
+            nav,
+            aside,
+            footer,
+            header {
+                display: none !important;
+            }
+
+            /* 2. Matikan efek melayang (sticky/fixed) yang menimpa konten */
+            * {
+                position: static !important;
+            }
+
+            /* 3. Mencegah tabel terpotong (dari solusi sebelumnya) */
             html,
             body {
                 height: auto !important;
