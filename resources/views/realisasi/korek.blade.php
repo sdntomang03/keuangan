@@ -318,6 +318,23 @@
     <style>
         @media print {
 
+            /* 1. TAMBAHKAN KODE INI UNTUK MENCEGAH TERPOTONG */
+            html,
+            body {
+                height: auto !important;
+                overflow: visible !important;
+            }
+
+            .overflow-hidden,
+            .overflow-x-auto,
+            .overflow-y-auto {
+                overflow: visible !important;
+                height: auto !important;
+            }
+
+            /* ============================================== */
+
+            /* Kode Anda sebelumnya tetap di bawah ini */
             nav,
             aside,
             footer {
