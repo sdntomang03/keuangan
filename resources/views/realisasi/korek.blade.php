@@ -212,6 +212,91 @@
                 </table>
             </div>
 
+
+            {{-- Tabel Rekapitulasi Per Kode Rekening --}}
+            <div class="mt-8 mb-6 print:mt-8 print:break-inside-avoid">
+                <h3
+                    class="text-lg font-black text-gray-800 uppercase tracking-widest mb-4 border-l-4 border-indigo-500 pl-3">
+                    Rekapitulasi Per Kode Rekening
+                </h3>
+                <div class="bg-white shadow-xl sm:rounded-[2rem] overflow-hidden border border-gray-200">
+                    <table class="w-full border-collapse text-[11px]">
+                        <thead>
+                            <tr class="bg-gray-700 text-white uppercase tracking-widest">
+                                <th class="px-6 py-4 text-left font-bold">Uraian Rekening</th>
+                                <th class="px-4 py-4 text-right font-bold w-40">Total Pagu</th>
+                                <th class="px-4 py-4 text-right font-bold w-40">Total Realisasi</th>
+                                <th class="px-4 py-4 text-right font-bold w-40">Sisa Pagu</th>
+                                <th class="px-4 py-4 text-center font-bold w-20">%</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            @php
+                            // Mengambil semua item, lalu mengelompokkan berdasarkan nama rekening (korek->ket)
+                            $rekapRekening = $dataRkas->flatten(2)->groupBy(function($item) {
+                            return $item->korek->ket ?? 'Rekening tidak ditemukan';
+                            })->sortKeys(); // Mengurutkan alfabetis berdasarkan nama rekening
+                            @endphp
+
+                            @forelse($rekapRekening as $namaRekening => $itemsRek)
+                            @php
+                            $rekPagu = $itemsRek->sum('total_anggaran');
+                            $rekRealisasi = $itemsRek->sum('total_realisasi');
+                            $rekSisa = $rekPagu - $rekRealisasi;
+                            $rekPersen = $rekPagu > 0 ? ($rekRealisasi / $rekPagu) * 100 : 0;
+                            @endphp
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="px-6 py-3 font-medium text-gray-800">{{ $namaRekening }}</td>
+                                <td class="px-4 py-3 text-right text-gray-500 font-mono">
+                                    {{ number_format($rekPagu, 0, ',', '.') }}
+                                </td>
+                                <td class="px-4 py-3 text-right font-bold text-gray-800 font-mono">
+                                    {{ number_format($rekRealisasi, 0, ',', '.') }}
+                                </td>
+                                <td
+                                    class="px-4 py-3 text-right font-bold font-mono {{ $rekSisa < 0 ? 'text-red-600' : 'text-emerald-600' }}">
+                                    {{ number_format($rekSisa, 0, ',', '.') }}
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <div
+                                        class="text-[10px] font-black {{ $rekPersen > 100 ? 'text-red-600' : 'text-gray-400' }}">
+                                        {{ number_format($rekPersen, 0) }}%
+                                    </div>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="5" class="py-10 text-center text-gray-400 italic">Data rekap tidak
+                                    tersedia.</td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+
+                        {{-- Footer Total Rekap --}}
+                        @if ($rekapRekening->count() > 0)
+                        <tfoot
+                            class="bg-gray-800 text-white font-bold uppercase tracking-widest border-t-4 border-indigo-500">
+                            <tr>
+                                <td class="px-6 py-4 text-right">TOTAL KESELURUHAN</td>
+                                <td class="px-4 py-4 text-right font-mono text-sm">
+                                    {{ number_format($grandAnggaran, 0, ',', '.') }}
+                                </td>
+                                <td class="px-4 py-4 text-right font-mono text-sm text-yellow-400">
+                                    {{ number_format($grandRealisasi, 0, ',', '.') }}
+                                </td>
+                                <td class="px-4 py-4 text-right font-mono text-sm">
+                                    {{ number_format($grandSisa, 0, ',', '.') }}
+                                </td>
+                                <td class="px-4 py-4 text-center text-xs">
+                                    {{ number_format($grandPersen, 1) }}%
+                                </td>
+                            </tr>
+                        </tfoot>
+                        @endif
+                    </table>
+                </div>
+            </div>
+
             {{-- Tanda Tangan --}}
             <div class="hidden print:block mt-16">
                 <div class="flex justify-around text-xs text-center font-bold">
