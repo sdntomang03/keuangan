@@ -91,7 +91,7 @@ class NpdExport implements FromArray, ShouldAutoSize, WithColumnFormatting, With
         return $rows;
     }
 
-    public function columnFormatting(): array
+    public function columnFormats(): array
     {
         $formatRupiah = '_("Rp"* #,##0_);_("Rp"* -#,##0_);_("Rp"* 0_);_(@_)';
 
