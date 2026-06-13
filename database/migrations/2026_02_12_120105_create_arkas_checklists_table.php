@@ -13,10 +13,12 @@ return new class extends Migration
     {
         Schema::create('arkas_checklists', function (Blueprint $table) {
             $table->id();
-            // Relasi ke tabel rkas
+            // Relasi ke tabel arkas
+
             $table->foreignId('rkas_id')->constrained('rkas')->onDelete('cascade');
             // Status checklist (true = sudah input, false = belum)
             $table->boolean('status')->default(true);
+            $table->foreignId('sekolah_id')->constrained('sekolahs')->onDelete('cascade');
             $table->timestamps();
         });
     }

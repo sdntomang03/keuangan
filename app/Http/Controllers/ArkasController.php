@@ -20,8 +20,12 @@ class ArkasController extends Controller
 
         $sekolahId = auth()->user()->sekolah_id;
 
-        $dataRkas = Rkas::with(['akbRincis', 'kegiatan', 'korek', 'arkasChecklist'])
+        // Data RKAS dan Checklist dilimit HANYA untuk sekolah yang login
+        $dataRkas = Rkas::with(['akbRincis', 'kegiatan', 'korek', 'arkasChecklist' => function ($q) use ($sekolahId) {
+            $q->where('sekolah_id', $sekolahId);
+        }])
             ->where('anggaran_id', $anggaran->id)
+            ->where('sekolah_id', $sekolahId)
             ->orderBy('idbl', 'asc')
             ->paginate(50);
 
@@ -31,7 +35,7 @@ class ArkasController extends Controller
     public function updateIdKomponen(Request $request, $id)
     {
         $request->validate([
-            'idkomponen' => 'nullable|string|max:255', // Sesuaikan validasi
+            'idkomponen' => 'nullable|string|max:255',
         ]);
 
         $rkas = Rkas::findOrFail($id);
@@ -47,18 +51,21 @@ class ArkasController extends Controller
 
     public function toggleStatusArkas($id)
     {
-        // Cari data checklist berdasarkan rkas_id
-        $checklist = ArkasChecklist::where('rkas_id', $id)->first();
+        $sekolahId = auth()->user()->sekolah_id;
+
+        // Cari checklist spesifik milik sekolah ini
+        $checklist = ArkasChecklist::where('rkas_id', $id)
+            ->where('sekolah_id', $sekolahId)
+            ->first();
 
         if ($checklist) {
-            // Jika sudah ada, update statusnya (kebalikannya)
             $checklist->status = ! $checklist->status;
             $checklist->save();
             $statusAkhir = $checklist->status;
         } else {
-            // Jika belum ada, buat baru dengan status true
             ArkasChecklist::create([
                 'rkas_id' => $id,
+                'sekolah_id' => $sekolahId, // Checklist mengikat ke sekolah
                 'status' => true,
             ]);
             $statusAkhir = true;
@@ -71,10 +78,13 @@ class ArkasController extends Controller
         ]);
     }
 
-    // 1. Tampilkan Halaman Index (Hanya Kerangka HTML)
+    // =========================================================================
+    // AREA DATA MASTER ARKAS (GLOBAL UNTUK SEMUA SEKOLAH)
+    // =========================================================================
+
     public function komponen()
     {
-        // Ambil list untuk filter dropdown
+        // Query global tanpa where('sekolah_id')
         $listJenisBelanja = Arkas::select('jenis_belanja')
             ->distinct()
             ->orderBy('jenis_belanja')
@@ -83,17 +93,15 @@ class ArkasController extends Controller
         return view('arkas.komponen', compact('listJenisBelanja'));
     }
 
-    // 2. Endpoint AJAX: Mengembalikan JSON Data
     public function getData(Request $request)
     {
+        // Query global tanpa di-limit sekolah_id
         $query = Arkas::query();
 
-        // Filter Jenis Belanja
         if ($request->filled('jenis_belanja')) {
             $query->where('jenis_belanja', $request->jenis_belanja);
         }
 
-        // Search
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -103,42 +111,40 @@ class ArkasController extends Controller
             });
         }
 
-        // Sorting
         if ($request->sort == 'termurah') {
             $query->orderBy('harga_maksimal', 'asc');
         } elseif ($request->sort == 'termahal') {
             $query->orderBy('harga_maksimal', 'desc');
         } else {
-            $query->latest(); // Default
+            $query->latest();
         }
 
-        // Pagination 10 per halaman
         $data = $query->paginate(50);
 
         return response()->json($data);
     }
 
-    // 3. Tampilkan Halaman Import
     public function importPage()
     {
+        // Query global
         $listJenisBelanja = Arkas::select('jenis_belanja')->distinct()->pluck('jenis_belanja');
 
         return view('arkas.import', compact('listJenisBelanja'));
     }
 
-    // 4. Proses Import Excel
     public function storeImport(Request $request)
     {
         $request->validate([
             'file' => 'required|mimes:xlsx,xls,csv|max:10240',
         ]);
 
-        set_time_limit(300); // Anti timeout
+        set_time_limit(300);
 
         try {
+            // Import berjalan secara global tanpa melempar sekolahId
             Excel::import(new ArkasImport($request->jenis_belanja_input), $request->file('file'));
 
-            return redirect()->route('arkas.index')->with('success', 'Data berhasil diimport!');
+            return redirect()->route('arkas.index')->with('success', 'Data Master ARKAS berhasil diimport secara global!');
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal Import: '.$e->getMessage());
         }
