@@ -25,11 +25,8 @@ class DashboardController extends Controller
         // Jika user memiliki izin mengelola ekskul, jalankan perhitungannya
         if ($user->can('input-ekskul')) {
             $totalEkskul = \App\Models\Ekskul::where('user_id', $user->id)->count();
-
             $myEkskulIds = \App\Models\Ekskul::where('user_id', $user->id)->pluck('id');
-
             $totalPertemuan = \App\Models\LaporanEkskul::whereIn('ekskul_id', $myEkskulIds)->count();
-
             $totalFoto = \App\Models\LaporanEkskulFoto::whereHas('laporanEkskul', function ($query) use ($myEkskulIds) {
                 $query->whereIn('ekskul_id', $myEkskulIds);
             })->count();
@@ -43,7 +40,18 @@ class DashboardController extends Controller
         }
 
         // =========================================================================
-        // 2. INISIALISASI DASAR KEUANGAN
+        // PENGECEKAN PERMISSION (Pemisah View)
+        // =========================================================================
+        // Jika user TIDAK memiliki permission 'view-anggaran', langsung return ke view khusus
+        // (Pastikan nama permission 'view-anggaran' disesuaikan dengan yang ada di database Anda)
+        if (! $user->can('view-anggaran')) {
+            return view('dashboard-ekskul', compact(
+                'totalEkskul', 'totalPertemuan', 'totalFoto', 'laporanTerbaru'
+            ));
+        }
+
+        // =========================================================================
+        // 2. INISIALISASI DASAR KEUANGAN (Hanya dieksekusi jika punya permission)
         // =========================================================================
         $anggaran = $request->anggaran_data; // Data dari Middleware
         $tw = $request->get('tw', 'tahun'); // Ambil filter Triwulan dari request
@@ -58,12 +66,9 @@ class DashboardController extends Controller
             $dataRkas = collect();
             $persenPpn = 11;
 
-            // Tampilkan warning HANYA jika dia bukan sekadar pelatih ekskul
-            if (! $user->can('input-ekskul')) {
-                session()->now('warning', 'Silakan pilih atau import anggaran terlebih dahulu di menu Pengaturan.');
-            }
+            session()->now('warning', 'Silakan pilih atau import anggaran terlebih dahulu di menu Pengaturan.');
 
-            // Kembalikan view beserta variabel ekskul agar tidak error undefined variable
+            // Kembalikan view utama
             return view('dashboard', compact(
                 'setting', 'stats', 'anggaran', 'dataRkas', 'tw', 'persenPpn',
                 'totalEkskul', 'totalPertemuan', 'totalFoto', 'laporanTerbaru'
@@ -132,7 +137,7 @@ class DashboardController extends Controller
             })
             ->groupBy(['idbl']);
 
-        // Final Return menggabungkan data Keuangan dan Ekskul
+        // Final Return menggabungkan data Keuangan dan Ekskul (Untuk Admin/Kepsek)
         return view('dashboard', compact(
             'setting', 'stats', 'anggaran', 'dataRkas', 'tw', 'persenPpn',
             'totalEkskul', 'totalPertemuan', 'totalFoto', 'laporanTerbaru'
