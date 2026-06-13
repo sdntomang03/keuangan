@@ -67,7 +67,7 @@ class RkasImportService
                         continue;
                     }
 
-                    $uniqueId = $jenisAnggaran.$item['idblrinci'];
+                    $uniqueId = $jenisAnggaran.$item['idblrinci'].$anggaran->id;
                     $processedIds[] = $uniqueId;
 
                     $finalIdbl = isset($item['idbl']) && ! empty($item['idbl'])

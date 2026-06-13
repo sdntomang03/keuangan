@@ -16,7 +16,7 @@ class AkbService
      */
     public function importData($files, $anggaran, $settingId)
     {
-        $mapAnggaran = ['bos' => 10, 'bop' => 20];
+
         $singkatan = strtolower($anggaran->singkatan);
         $jenisAnggaran = $mapAnggaran[$singkatan] ?? 30; // Default 30 jika tidak terdaftar
 
@@ -30,7 +30,7 @@ class AkbService
                 Akb::updateOrCreate(
                     [
                         // KUNCI PENCARIAN
-                        'idblrinci' => $jenisAnggaran.$item['idblrinci'],
+                        'idblrinci' => $jenisAnggaran.$item['idblrinci'].$anggaran->id,
                     ],
                     [
                         'idakun' => $item['idakun'] ?? null,
@@ -158,7 +158,7 @@ class AkbService
                     continue;
                 }
 
-                $idblrinciUnik = $jenisAnggaran.$idRaw;
+                $idblrinciUnik = $jenisAnggaran.$idRaw.$anggaran->id;
                 $dataJsonMerged[$idblrinciUnik] = $item;
             }
         }
