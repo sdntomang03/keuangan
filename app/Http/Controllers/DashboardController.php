@@ -24,9 +24,14 @@ class DashboardController extends Controller
 
         // Jika user memiliki izin mengelola ekskul, jalankan perhitungannya
         if ($user->can('input-ekskul')) {
-            $totalEkskul = \App\Models\Ekskul::where('user_id', $user->id)->count();
-            $myEkskulIds = \App\Models\Ekskul::where('user_id', $user->id)->pluck('id');
+            // --- TAMBAHKAN BARIS INI untuk mengambil data objek ekskul lengkap ---
+            $myEkskuls = \App\Models\Ekskul::where('user_id', $user->id)->get();
+            $totalEkskul = $myEkskuls->count();
+
+            $myEkskulIds = $myEkskuls->pluck('id');
+
             $totalPertemuan = \App\Models\LaporanEkskul::whereIn('ekskul_id', $myEkskulIds)->count();
+
             $totalFoto = \App\Models\LaporanEkskulFoto::whereHas('laporanEkskul', function ($query) use ($myEkskulIds) {
                 $query->whereIn('ekskul_id', $myEkskulIds);
             })->count();
