@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Anggaran;
+use App\Models\Ekskul;
+use App\Models\LaporanEkskul;
+use App\Models\LaporanEkskulFoto;
 use App\Models\Sekolah;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -25,18 +28,18 @@ class DashboardController extends Controller
         // Jika user memiliki izin mengelola ekskul, jalankan perhitungannya
         if ($user->can('input-ekskul')) {
             // --- TAMBAHKAN BARIS INI untuk mengambil data objek ekskul lengkap ---
-            $myEkskuls = \App\Models\Ekskul::where('user_id', $user->id)->get();
+            $myEkskuls = Ekskul::where('user_id', $user->id)->get();
             $totalEkskul = $myEkskuls->count();
 
             $myEkskulIds = $myEkskuls->pluck('id');
 
-            $totalPertemuan = \App\Models\LaporanEkskul::whereIn('ekskul_id', $myEkskulIds)->count();
+            $totalPertemuan = LaporanEkskul::whereIn('ekskul_id', $myEkskulIds)->count();
 
-            $totalFoto = \App\Models\LaporanEkskulFoto::whereHas('laporanEkskul', function ($query) use ($myEkskulIds) {
+            $totalFoto = LaporanEkskulFoto::whereHas('laporanEkskul', function ($query) use ($myEkskulIds) {
                 $query->whereIn('ekskul_id', $myEkskulIds);
             })->count();
 
-            $laporanTerbaru = \App\Models\LaporanEkskul::with(['ekskul'])
+            $laporanTerbaru = LaporanEkskul::with(['ekskul'])
                 ->withCount('fotos')
                 ->whereIn('ekskul_id', $myEkskulIds)
                 ->latest()
@@ -51,7 +54,7 @@ class DashboardController extends Controller
         // (Pastikan nama permission 'view-anggaran' disesuaikan dengan yang ada di database Anda)
         if (! $user->can('view-anggaran')) {
             return view('dashboard-ekskul', compact(
-                'totalEkskul', 'totalPertemuan', 'totalFoto', 'laporanTerbaru'
+                'totalEkskul', 'totalPertemuan', 'totalFoto', 'laporanTerbaru', 'myEkskuls'
             ));
         }
 
@@ -60,7 +63,7 @@ class DashboardController extends Controller
         // =========================================================================
         $anggaran = $request->anggaran_data; // Data dari Middleware
         $tw = $request->get('tw', 'tahun'); // Ambil filter Triwulan dari request
-        $setting = \App\Models\Sekolah::where('id', $sekolahId)->first();
+        $setting = Sekolah::where('id', $sekolahId)->first();
 
         // CEK APAKAH ANGGARAN ADA
         if (! $anggaran) {
