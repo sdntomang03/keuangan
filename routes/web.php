@@ -274,7 +274,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Tampilan form input massal
     Route::get('/npd/create', [NpdController::class, 'create'])->name('npd.create');
-
+    Route::get('/npd/export', [NpdController::class, 'exportExcel'])->name('npd.export');
     // Proses simpan massal
     Route::post('/npd/store', [NpdController::class, 'storeMassal'])->name('npd.store_massal');
     Route::post('/npd/storesurat', [NpdController::class, 'storeSurat'])->name('npd.store_surat');

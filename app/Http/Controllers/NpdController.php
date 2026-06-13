@@ -272,4 +272,81 @@ class NpdController extends Controller
             return back()->with('error', 'Terjadi kesalahan sistem saat menghapus data: '.$e->getMessage());
         }
     }
+
+    public function exportExcel()
+    {
+        $user = auth()->user();
+        $sekolahId = $user->sekolah_id;
+        $triwulanAktif = $user->sekolah->triwulan_aktif;
+
+        // Filter bulan berdasarkan triwulan
+        $bulanArray = match ($triwulanAktif) {
+            1 => [1, 2, 3],
+            2 => [4, 5, 6],
+            3 => [7, 8, 9],
+            4 => [10, 11, 12],
+            default => []
+        };
+
+        // Ambil semua data (tanpa pagination)
+        $listNpd = Npd::with(['kegiatan', 'korek'])
+            ->where('sekolah_id', $sekolahId)
+            ->where('triwulan', $triwulanAktif)
+            ->withSum(['belanjas as realisasi_nota' => function ($q) use ($bulanArray) {
+                $q->whereIn(DB::raw('MONTH(tanggal)'), $bulanArray);
+            }], DB::raw('subtotal + ppn'))
+            ->orderBy('tanggal', 'desc')
+            ->orderBy('nomor_npd', 'desc')
+            ->get();
+
+        // Siapkan nama file
+        $fileName = "Data_NPD_Triwulan_{$triwulanAktif}_".date('Ymd_His').'.csv';
+
+        // Headers untuk memicu download di browser
+        $headers = [
+            'Content-type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=$fileName",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+        ];
+
+        // Judul Kolom (Header Excel)
+        $columns = ['Nomor NPD', 'Tanggal', 'Kegiatan', 'Kode Rekening', 'Pagu NPD (A)', 'Realisasi Spj (B)', 'Sisa Dana (A-B)', 'Status'];
+
+        // Proses tulis data ke file
+        $callback = function () use ($listNpd, $columns) {
+            $file = fopen('php://output', 'w');
+
+            // Catatan: Menggunakan titik koma (;) sebagai pemisah agar rapi saat dibuka di Excel ber-region Indonesia
+            fputcsv($file, $columns, ';');
+
+            foreach ($listNpd as $npd) {
+                $realisasi = $npd->realisasi_nota ?? 0;
+                $sisa = $npd->nilai_npd - $realisasi;
+                $status = $sisa > 0 ? 'STS' : 'Sesuai';
+
+                fputcsv($file, [
+                    $npd->nomor_npd,
+                    $npd->tanggal->format('d/m/Y'),
+                    $npd->kegiatan->namagiat ?? '-',
+                    $npd->korek->ket ?? '',
+                    $npd->nilai_npd,
+                    $realisasi,
+                    $sisa,
+                    $status,
+                ], ';');
+            }
+
+            // Baris Total di paling bawah
+            $totalPagu = $listNpd->sum('nilai_npd');
+            $totalRealisasi = $listNpd->sum('realisasi_nota');
+            $totalSisa = $totalPagu - $totalRealisasi;
+            fputcsv($file, ['', '', '', 'TOTAL', $totalPagu, $totalRealisasi, $totalSisa, ''], ';');
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
 }
