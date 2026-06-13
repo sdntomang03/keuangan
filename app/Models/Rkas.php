@@ -66,4 +66,21 @@ class Rkas extends Model
     {
         return $this->belongsTo(Anggaran::class, 'anggaran_id');
     }
+
+    public function scopeWithTotalBulanan($query, $anggaranId)
+    {
+        // 1. Total Setahun
+        $query->withSum(['akbrincis as total_akb_setahun' => function ($q) use ($anggaranId) {
+            $q->where('anggaran_id', $anggaranId);
+        }], 'nominal');
+
+        // 2. Total Per Bulan (Menggunakan Looping agar rapi)
+        for ($i = 1; $i <= 12; $i++) {
+            $query->withSum(["akbrincis as bln_{$i}" => function ($q) use ($anggaranId, $i) {
+                $q->where('anggaran_id', $anggaranId)->where('bulan', $i);
+            }], 'nominal');
+        }
+
+        return $query;
+    }
 }
