@@ -30,395 +30,321 @@ use App\Http\Controllers\StsController;
 use App\Http\Controllers\SuratController;
 use Illuminate\Support\Facades\Route;
 
+// =========================================================================
+// 1. ZONA PUBLIK (Tanpa Login)
+// =========================================================================
 Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->middleware(['auth', 'verified'])
-    ->name('dashboard');
-
-Route::middleware('auth')->group(function () {
+// =========================================================================
+// 2. ZONA PENGGUNA TERAUTENTIKASI (Semua User yang Login)
+// =========================================================================
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Akses global untuk semua yang login
     Route::post('/anggaran/switch', [DashboardController::class, 'switch'])->name('anggaran.switch');
-});
+    Route::get('/cetak-cover', [CetakController::class, 'cetakCover'])->name('cetak.cover');
 
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/rkas', [RkasController::class, 'index'])->name('rkas.index');
-    Route::get('/rkas/anggaran', [RkasController::class, 'anggaran'])->name('rkas.anggaran');
-    Route::get('/rkas/rekap', [RkasController::class, 'rekap'])->name('rkas.rekap');
-    Route::post('/rkas/import', [RkasController::class, 'import'])->name('rkas.import');
-    Route::get('/rkas/rincian', [RkasController::class, 'rincian'])->name('rkas.rincian');
-    Route::get('/rkas/cetak-laporan', [RkasController::class, 'cetakLaporan'])->name('rkas.cetak_laporan');
-    Route::patch('/rkas/{id}/update-idkomponen', [RkasController::class, 'updateIdKomponen'])->name('rkas.update.idkomponen');
+    // =========================================================================
+    // 3A. ZONA KEUANGAN (AKSES BACA / VIEW)
+    // Permission: 'view-anggaran' ATAU 'kelola-anggaran'
+    // Hanya berisi Route::get (Melihat, Rekap, Cetak, Export, API Pencarian)
+    // =========================================================================
+    Route::middleware(['canany:view-anggaran,kelola-anggaran'])->group(function () {
 
-});
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/akb', [AkbController::class, 'index'])->name('akb.index');
-    Route::post('/akb/import', [AkbController::class, 'import'])->name('akb.import');
-    Route::get('/akb/rincian', [AkbController::class, 'rincian'])->name('akb.rincian');
-    Route::get('/akb/generate', [AkbController::class, 'generate'])->name('akb.generate');
-    Route::get('/akb/rincianakb', [AkbController::class, 'indexRincian'])->name('akb.indexrincian');
-    Route::get('/akb/export-excel', [AkbController::class, 'exportExcel'])->name('akb.export_excel');
-    Route::get('/akb/satuan', [AkbController::class, 'satuan'])->name('akb.satuan');
-    Route::get('/akb/ringkas', [AkbController::class, 'ringkas'])->name('akb.ringkas');
-    // Route untuk menampilkan halaman awal (beserta Modal)
-    Route::get('/akb/perbandingan', [AkbController::class, 'indexPerbandingan'])->name('akb.perbandingan.index');
+        // --- RKAS ---
+        Route::prefix('rkas')->name('rkas.')->group(function () {
+            Route::get('/', [RkasController::class, 'index'])->name('index');
+            Route::get('/anggaran', [RkasController::class, 'anggaran'])->name('anggaran');
+            Route::get('/rekap', [RkasController::class, 'rekap'])->name('rekap');
+            Route::get('/rincian', [RkasController::class, 'rincian'])->name('rincian');
+            Route::get('/cetak-laporan', [RkasController::class, 'cetakLaporan'])->name('cetak_laporan');
+        });
 
-    // Route untuk memproses upload JSON dari Modal
-    Route::post('/akb/perbandingan/proses', [AkbController::class, 'perbandingan'])->name('akb.perbandingan.proses');
+        // --- AKB ---
+        Route::prefix('akb')->name('akb.')->group(function () {
+            Route::get('/', [AkbController::class, 'index'])->name('index');
+            Route::get('/rincian', [AkbController::class, 'rincian'])->name('rincian');
+            Route::get('/rincianakb', [AkbController::class, 'indexRincian'])->name('indexrincian');
+            Route::get('/export-excel', [AkbController::class, 'exportExcel'])->name('export_excel');
+            Route::get('/satuan', [AkbController::class, 'satuan'])->name('satuan');
+            Route::get('/ringkas', [AkbController::class, 'ringkas'])->name('ringkas');
+            Route::get('/perbandingan', [AkbController::class, 'indexPerbandingan'])->name('perbandingan.index');
+        });
+        Route::get('/api/rkas/{anggaranId}/data', [AkbController::class, 'getData'])->name('api.rkas.data');
 
-    Route::patch('/rkas/{id}/update-idkomponen', [AkbController::class, 'updateIdKomponen'])
-        ->name('rkas.update.idkomponen');
-    // 2. Route API Data (AJAX) - Perhatikan URL-nya harus cocok dengan fetch() di JS
-    Route::get('/api/rkas/{anggaranId}/data', [AkbController::class, 'getData'])->name('api.rkas.data');
+        // --- BELANJA (Hanya Index & Show) ---
+        Route::resource('belanja', BelanjaController::class)->only(['index', 'show']);
+        Route::get('/belanja/{id}/json', [BelanjaController::class, 'getJson'])->name('belanja.json');
+        Route::prefix('api')->group(function () {
+            Route::get('/get-rekening', [BelanjaController::class, 'getRekening'])->name('api.rekening');
+            Route::get('/get-komponen', [BelanjaController::class, 'getKomponen'])->name('api.komponen');
+            Route::get('/get-keterangan', [BelanjaController::class, 'getKeterangan'])->name('get_keterangan');
+        });
 
-});
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/settings', [SekolahController::class, 'index'])->name('sekolah.index');
-    Route::post('/settings', [SekolahController::class, 'store'])->name('sekolah.store');
-});
+        // --- BKU & STS (Hanya Lihat) ---
+        Route::get('/bku', [BkuController::class, 'index'])->name('bku.index');
+        Route::resource('sts', StsController::class)->only(['index', 'show']);
 
-Route::middleware(['auth', 'verified'])->group(function () {
+        // --- PAJAK (Hanya Lihat & Rekap) ---
+        Route::get('/pajak/siap-setor', [PajakController::class, 'siapSetor'])->name('pajak.siap-setor');
+        Route::get('/pajak/rekap', [PajakController::class, 'rekap'])->name('pajak.rekap');
 
-    // Otomatis mencakup: index, create, store, show, edit, update, destroy
-    Route::resource('belanja', BelanjaController::class);
-    Route::get('/belanja/{id}/json', [BelanjaController::class, 'getJson'])->name('belanja.json');
-    Route::post('/{id}/post', [BelanjaController::class, 'post'])->name('belanja.post');
-    // Rute API tambahan untuk pencarian data
-    Route::prefix('api')->group(function () {
-        Route::get('/get-rekening', [BelanjaController::class, 'getRekening'])->name('api.rekening');
-        Route::get('/get-komponen', [BelanjaController::class, 'getKomponen'])->name('api.komponen');
-        Route::get('/get-keterangan', [BelanjaController::class, 'getKeterangan'])->name('get_keterangan');
+        // --- REALISASI & REKAP ---
+        Route::prefix('realisasi')->name('realisasi.')->group(function () {
+            Route::get('/komponen', [RealisasiController::class, 'komponen'])->name('komponen');
+            Route::get('/korek', [RealisasiController::class, 'korek'])->name('korek');
+            Route::get('/jenis-belanja', [RealisasiController::class, 'jenisBelanja'])->name('jenis-belanja');
+            Route::get('/komponen/export', [RealisasiController::class, 'exportKomponen'])->name('komponen.export');
+            Route::get('/rekanan', [RealisasiController::class, 'rekapPerRekanan'])->name('rekanan');
+        });
+        Route::get('/rekap/export', [RealisasiController::class, 'exportExcel'])->name('belanja.export');
+        Route::get('/rekap-rekanan/export-semua', [RealisasiController::class, 'exportSemuaRekanan'])->name('rekap-rekanan.export-semua');
+        Route::get('/rekap/rekanan/export/{id}', [RealisasiController::class, 'exportDetailRekanan'])->name('rekap.rekanan.export_detail');
+
+        // --- NPD (Hanya Lihat & Export) ---
+        Route::get('/npd', [NpdController::class, 'index'])->name('npd.index');
+        Route::get('/npd/export', [NpdController::class, 'exportExcel'])->name('npd.export');
+        Route::get('/npd/{id}', [NpdController::class, 'show'])->name('npd.show');
+        Route::get('/api/npd/cek-saldo', [NpdController::class, 'getSaldoAnggaran'])->name('api.npd.saldo');
+
+        // --- SURAT & DOKUMEN CETAK ---
+        Route::prefix('surat')->name('surat.')->group(function () {
+            Route::get('/manage/{belanjaId}', [SuratController::class, 'index'])->name('index');
+            Route::get('/cetak-sp/{id}', [SuratController::class, 'cetakSpParsial'])->name('cetak_sp');
+            Route::get('/cetak-bapb/{id}', [SuratController::class, 'cetakBapbParsial'])->name('cetak_bapb');
+            Route::get('/cetak-satuan/{id}/{jenis}', [SuratController::class, 'cetakSatuan'])->name('cetak_satuan');
+            Route::get('/cetakpdf/{id}', [SuratController::class, 'cetakPdf'])->name('cetakpdf');
+            Route::get('/cetaksatuanpdf/{id}/{jenis}', [SuratController::class, 'cetakSatuanPdf'])->name('cetakSatuanPdf');
+            Route::get('/cetakparsialpdf/{id}', [SuratController::class, 'cetakParsialPdf'])->name('cetakParsialPdf');
+            Route::get('/download-semua-parsial/{belanjaId}', [SuratController::class, 'downloadSemuaParsial'])->name('download_semua_parsial');
+            Route::get('/rekap-surat', [SuratController::class, 'rekapKeseluruhanTriwulanPdf'])->name('rekap_triwulan');
+            Route::get('/daftar', [SuratController::class, 'daftarSurat'])->name('daftar');
+            Route::get('/talangan-pdf/{talanganId}', [SuratController::class, 'cetakTalanganPdf'])->name('talangan_pdf');
+            Route::get('/talangan-npd', [SuratController::class, 'daftarTalanganNpd'])->name('daftar_talangan_npd');
+        });
+        Route::get('/belanja/cetak-foto/{id}', [SuratController::class, 'cetakFotoSpj'])->name('belanja.cetak_foto');
+        Route::get('/belanja/export-excel', [SuratController::class, 'exportExcel'])->name('belanja.export_excel');
+        Route::get('/belanja/{id}/download-bundel', [SuratController::class, 'downloadBundel'])->name('belanja.downloadBundel');
+        Route::get('/cetak/kop', [SuratController::class, 'cetakKopPdf'])->name('cetak.kop');
+
+        // --- BARANG, PERSEDIAAN & ARKAS (Hanya Lihat) ---
+        Route::get('/barang', [BarangController::class, 'index'])->name('barang.index');
+        Route::get('/api/barang/search', [BarangController::class, 'search'])->name('api.barang.search');
+        Route::get('/persediaan', [PersediaanController::class, 'index'])->name('persediaan.index');
+
+        Route::get('/arkas', [ArkasController::class, 'index'])->name('arkas.index');
+        Route::get('/arkas/komponen', [ArkasController::class, 'komponen'])->name('arkas.komponen');
+        Route::get('/arkas/data', [ArkasController::class, 'getData'])->name('arkas.data');
+
+        // --- KEGIATAN MANUAL (Hanya Lihat) ---
+        Route::get('/kegiatan', [KegiatanManualController::class, 'daftarKegiatan'])->name('kegiatan.index');
+        Route::get('/sumber-dana', [KegiatanManualController::class, 'indexSumberDana'])->name('sumber_dana.index');
+        Route::get('/laporan/laporan-rkas', [KegiatanManualController::class, 'rekapAnggaran'])->name('laporan.index');
+        Route::get('/perencanaan/dashboard', [KegiatanManualController::class, 'dashboard'])->name('perencanaan.dashboard');
+        Route::get('/api/komponen-by-korek', [KegiatanManualController::class, 'getKomponenByKorek'])->name('api.komponen_by_korek');
+        Route::get('/ajax/sub-programs', [KegiatanManualController::class, 'getSubPrograms'])->name('ajax.sub_programs');
     });
 
-});
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/bku', [BkuController::class, 'index'])->name('bku.index');
-    Route::put('/{belanja_id}/unpost', [BkuController::class, 'unpost'])->name('bku.unpost');
-    Route::delete('/{id}', [BkuController::class, 'destroy'])->name('bku.destroy');
-});
-Route::middleware(['auth', 'verified'])->group(function () {
+    // =========================================================================
+    // 3B. ZONA KEUANGAN (AKSES KELOLA / MANAJEMEN)
+    // Permission: 'kelola-anggaran'
+    // Berisi Route untuk Tambah (POST), Ubah (PUT/PATCH), Hapus (DELETE), & Import
+    // =========================================================================
+    Route::middleware(['can:kelola-anggaran'])->group(function () {
 
-    // Kelompokkan agar URL lebih spesifik dan tidak bentrok
-    Route::prefix('penerimaan')->name('penerimaan.')->group(function () {
-        Route::post('/store', [PenerimaanController::class, 'store'])->name('store');
+        // --- PROFIL SEKOLAH / SETTINGS ---
+        Route::get('/settings', [SekolahController::class, 'index'])->name('sekolah.index');
+        Route::post('/settings', [SekolahController::class, 'store'])->name('sekolah.store');
 
-        // Perbaikan URL: sekarang menjadi /penerimaan/{id}/edit
-        Route::get('/{id}/edit', [PenerimaanController::class, 'edit'])->name('edit');
+        // --- RKAS ---
+        Route::post('/rkas/import', [RkasController::class, 'import'])->name('rkas.import');
+        Route::patch('/rkas/{id}/update-idkomponen', [RkasController::class, 'updateIdKomponen'])->name('rkas.update.idkomponen');
 
+        // --- AKB ---
+        Route::post('/akb/import', [AkbController::class, 'import'])->name('akb.import');
+        Route::get('/akb/generate', [AkbController::class, 'generate'])->name('akb.generate');
+        Route::post('/akb/perbandingan/proses', [AkbController::class, 'perbandingan'])->name('akb.perbandingan.proses');
+
+        // --- BELANJA ---
+        Route::resource('belanja', BelanjaController::class)->except(['index', 'show']);
+        Route::post('/{id}/post', [BelanjaController::class, 'post'])->name('belanja.post');
+        Route::post('/belanja/{id}/duplicate', [BelanjaController::class, 'duplicate'])->name('belanja.duplicate');
+        Route::get('/{id}/edit-penawaran', [BelanjaController::class, 'editPenawaran'])->name('belanja.edit_penawaran');
+        Route::put('/{id}/update-penawaran', [BelanjaController::class, 'updatePenawaran'])->name('belanja.update_penawaran');
+
+        // --- BKU ---
+        Route::put('/{belanja_id}/unpost', [BkuController::class, 'unpost'])->name('bku.unpost');
+        Route::delete('/bku/{id}', [BkuController::class, 'destroy'])->name('bku.destroy');
+
+        // --- PENERIMAAN & STS ---
+        Route::post('/penerimaan/store', [PenerimaanController::class, 'store'])->name('penerimaan.store');
+        Route::get('/penerimaan/{id}/edit', [PenerimaanController::class, 'edit'])->name('penerimaan.edit');
+        Route::put('/penerimaan/{id}', [PenerimaanController::class, 'update'])->name('penerimaan.update');
+        Route::resource('sts', StsController::class)->except(['index', 'show']);
+
+        // --- PAJAK ---
+        Route::delete('/pajak/{id}/hapus-setor', [PajakController::class, 'hapusSetor'])->name('pajak.hapus_setor');
+        Route::post('/pajak/setor/{id}', [PajakController::class, 'prosesSetor'])->name('pajak.proses-setor');
+
+        // --- NPD ---
+        Route::get('/npd/create', [NpdController::class, 'create'])->name('npd.create');
+        Route::post('/npd/store', [NpdController::class, 'storeMassal'])->name('npd.store_massal');
+        Route::post('/npd/storesurat', [NpdController::class, 'storeSurat'])->name('npd.store_surat');
+        Route::delete('/npd/hapus-triwulan-aktif', [NpdController::class, 'destroyTriwulan'])->name('npd.destroy_triwulan');
+
+        // --- SURAT & TALANGAN ---
+        Route::post('/surat/generate/{belanjaId}', [SuratController::class, 'generateDefault'])->name('surat.generate');
+        Route::put('/surat/update/{id}', [SuratController::class, 'update'])->name('surat.update');
+        Route::post('/surat/store/{belanjaId}', [SuratController::class, 'store'])->name('surat.store');
+        Route::post('/surat/store-parsial/{belanjaId}', [SuratController::class, 'storeParsial'])->name('surat.store_parsial');
+        Route::delete('/surat/destroy/{id}', [SuratController::class, 'destroy'])->name('surat.destroy');
+        Route::delete('/surat/foto/{id}', [SuratController::class, 'destroyFoto'])->name('surat.delete_foto');
+        Route::put('/surat/{id}/update-tw', [SuratController::class, 'updateTw'])->name('surat.update_tw');
+        Route::get('/surat/regenerate-all', [SuratController::class, 'regenerateAllNumbers'])->name('surat.regenerate_all');
+
+        Route::get('/surat/talangan', [SuratController::class, 'createTalangan'])->name('talangan.create');
+        Route::post('/surat/talangan/store', [SuratController::class, 'storeTalangan'])->name('talangan.store');
+        Route::delete('/surat/talangan/{surat_id}', [SuratController::class, 'destroyTalangan'])->name('talangan.destroy');
+        Route::delete('/surat/talangan-npd/{id}', [SuratController::class, 'hapusSurat'])->name('hapus_talangan_npd');
+
+        Route::get('/surat/cover-lpj', [SuratController::class, 'createCoverLpj'])->name('cover_lpj.create');
+        Route::post('/surat/cover-lpj/cetak', [SuratController::class, 'generateCoverPdf'])->name('cover_lpj.generate');
+        Route::post('/surat/{id}/upload-foto', [SuratController::class, 'uploadFoto'])->name('belanja.upload_foto');
+
+        // --- BARANG ---
+        Route::post('/barang/import', [BarangController::class, 'import'])->name('barang.import');
+        Route::delete('/barang/truncate', [BarangController::class, 'truncate'])->name('barang.truncate');
+
+        // --- ARKAS ---
+        Route::get('/arkas/import', [ArkasController::class, 'importPage'])->name('arkas.import.page'); // Form Halaman Import
+        Route::post('/arkas/import', [ArkasController::class, 'storeImport'])->name('arkas.import.store');
+        Route::post('/arkas/toggle-status/{id}', [ArkasController::class, 'toggleStatusArkas'])->name('arkas.toggle_status');
+        Route::post('/arkas/update-idkomponen/{id}', [ArkasController::class, 'updateIdKomponen'])->name('arkas.update_idkomponen');
+
+        // --- SETTING (REKANAN, KEGIATAN, SUMBER DANA) ---
+        Route::prefix('setting')->name('setting.')->group(function () {
+            Route::resource('rekanan', RekananController::class);
+            Route::get('/rekanan/import', [SettingController::class, 'importRekananView'])->name('rekanan.import');
+            Route::get('/rekanan/template', [SettingController::class, 'downloadTemplateRekanan'])->name('rekanan.template');
+            Route::post('/rekanan/import', [SettingController::class, 'importRekananStore'])->name('rekanan.import.store');
+            Route::delete('/rekanan/destroy-all', [RekananController::class, 'destroyAll'])->name('rekanan.destroy_all');
+            Route::get('/rekanan/export', [RekananController::class, 'export'])->name('rekanan.export');
+            Route::post('/rekanan/{id}/toggle-status', [SuratController::class, 'toggleStatus'])->name('rekanan.toggle_status');
+
+            Route::resource('kegiatan', KegiatanController::class);
+            Route::get('/kegiatan/import', [SettingController::class, 'importKegiatanView'])->name('kegiatan.import');
+            Route::get('/kegiatan/template', [SettingController::class, 'downloadTemplateKegiatan'])->name('kegiatan.template');
+            Route::post('/kegiatan/import', [SettingController::class, 'importKegiatanStore'])->name('kegiatan.import.store');
+        });
+
+        // --- PERENCANAAN / KEGIATAN MANUAL ---
+        Route::get('/kegiatan-manual/import', [KegiatanManualController::class, 'createImport'])->name('kegiatan.import_manual');
+        Route::post('/kegiatan-manual/import', [KegiatanManualController::class, 'storeImport'])->name('manual.import.kegiatan');
+        Route::post('/sumber-dana', [KegiatanManualController::class, 'storeSumberDana'])->name('sumber_dana.store');
+
+        Route::prefix('kegiatan')->name('kegiatan.')->group(function () {
+            Route::get('/create', [KegiatanManualController::class, 'create'])->name('create');
+            Route::post('/store', [KegiatanManualController::class, 'store'])->name('store');
+            Route::get('/{id}/tambah-komponen', [KegiatanManualController::class, 'tambahKomponen'])->name('tambah_komponen');
+            Route::post('/{id}/tambah-komponen', [KegiatanManualController::class, 'storeKomponen'])->name('store_komponen');
+            Route::delete('/{kegiatan_id}/komponen/{rkas_id}', [KegiatanManualController::class, 'destroyKomponen'])->name('destroy_komponen');
+            Route::post('/{id}/cek-komponen-duplikat', [KegiatanManualController::class, 'checkKomponenDuplicate'])->name('cek_komponen');
+            Route::put('/{id}/update-multi-komponen', [KegiatanManualController::class, 'updateMultiKomponen'])->name('update_multi_komponen');
+            Route::delete('/{id}/komponen-multi', [KegiatanManualController::class, 'destroyMultiKomponen'])->name('destroy_multi_komponen');
+            Route::delete('/{id}', [KegiatanManualController::class, 'destroy'])->name('destroy');
+            Route::match(['get', 'post'], '/{id}/rekonsiliasi', [KegiatanManualController::class, 'rekonsiliasi'])->name('rekonsiliasi');
+            Route::match(['get', 'post'], '/cek-json', [KegiatanManualController::class, 'cekJson'])->name('cek_json');
+        });
+
+        Route::get('/komponen/import', [KegiatanManualController::class, 'createImportKomponen'])->name('komponen.import');
+        Route::post('/komponen/import', [KegiatanManualController::class, 'storeImportKomponen'])->name('komponen.import.store');
     });
-    // Perbaikan URL: sekarang menjadi /penerimaan/{id}
-    Route::put('/{id}', [PenerimaanController::class, 'update'])->name('update');
-    Route::post('/sts', [StsController::class, 'store'])->name('sts.store');
-    Route::get('/sts/{id}/edit', [StsController::class, 'edit'])->name('sts.edit');
-    Route::put('/sts/{id}', [StsController::class, 'update'])->name('sts.update');
-    Route::delete('/sts/{id}', [StsController::class, 'destroy'])->name('sts.destroy');
-    Route::get('/sts', [StsController::class, 'index'])->name('sts.index');
-});
-Route::middleware(['auth', 'verified'])->group(function () {
-    // Route Pajak
-    Route::get('/pajak/siap-setor', [PajakController::class, 'siapSetor'])->name('pajak.siap-setor');
-    Route::delete('/pajak/{id}/hapus-setor', [PajakController::class, 'hapusSetor'])->name('pajak.hapus_setor');
-    Route::post('/pajak/setor/{id}', [PajakController::class, 'prosesSetor'])->name('pajak.proses-setor');
-    Route::get('/pajak/rekap', [PajakController::class, 'rekap'])->name('pajak.rekap');
-    Route::get('/realisasi/komponen', [RealisasiController::class, 'komponen'])->name('realisasi.komponen');
-    Route::get('/realisasi/korek', [RealisasiController::class, 'korek'])->name('realisasi.korek');
-    Route::get('/realisasi/jenis-belanja', [RealisasiController::class, 'jenisBelanja'])->name('realisasi.jenis-belanja');
-    Route::get('/realisasi/komponen/export', [RealisasiController::class, 'exportKomponen'])->name('realisasi.komponen.export');
-    Route::get('/belanja/cetak/{id}', [SuratController::class, 'cetakDokumenLengkap'])->name('belanja.print');
-    Route::get('/rekap/export', [RealisasiController::class, 'exportExcel'])->name('belanja.export');
-    Route::get('/rekap/rekanan', [RealisasiController::class, 'rekapPerRekanan'])->name('realisasi.rekanan');
-    Route::get('/rekap-rekanan/export-semua', [RealisasiController::class, 'exportSemuaRekanan'])
-        ->name('rekap-rekanan.export-semua');
-    Route::get('/rekap/rekanan/export/{id}', [RealisasiController::class, 'exportDetailRekanan'])->name('rekap.rekanan.export_detail');
-});
-Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
 
-    // 1. Route Resource untuk Sekolah
-    // Ini otomatis membuat route: index, create, store, edit, update, destroy
-    // URL: /admin/sekolah
-    // Name: admin.sekolah.index, admin.sekolah.store, dst.
-    Route::resource('sekolah', AdminSekolahController::class);
+    // =========================================================================
+    // 4. ZONA EKSTRAKURIKULER (Hanya untuk Permission 'input-ekskul')
+    // =========================================================================
+    Route::middleware(['can:input-ekskul'])->group(function () {
 
-    // 2. Route Resource untuk Users (Manajemen Pengguna)
-    // URL: /admin/users
-    // Name: admin.users.index, admin.users.create, dst.
-    Route::resource('users', AdminUserController::class);
+        Route::prefix('ekskul')->name('ekskul.')->group(function () {
+            Route::get('/index/{belanjaId?}', [EkskulController::class, 'index'])->name('index');
+            Route::get('/create/{belanjaId?}', [EkskulController::class, 'create'])->name('create');
+            Route::post('/store', [EkskulController::class, 'store'])->name('store');
+            Route::get('/edit/{id}', [EkskulController::class, 'edit'])->name('edit');
+            Route::put('/update/{id}', [EkskulController::class, 'update'])->name('update');
+            Route::delete('/{id}', [EkskulController::class, 'destroy'])->name('destroy');
 
-    // (Opsional) Custom Route untuk User (misal: Reset Password manual)
-    Route::patch('/users/{user}/reset-password', [AdminUserController::class, 'resetPassword'])
-        ->name('users.reset-password');
+            Route::get('/get-rekening', [EkskulController::class, 'getRekening'])->name('get_rekening');
+            Route::get('/get-komponen', [EkskulController::class, 'getKomponen'])->name('get_komponen');
+            Route::get('/get-by-pelatih', [EkskulController::class, 'getByPelatih'])->name('get_by_pelatih');
 
-    // Rute Role
-    Route::post('/roles', [AdminUserController::class, 'storeRole'])->name('roles.store');
-    Route::put('/roles/{role}/permissions', [AdminUserController::class, 'updateRolePermissions'])->name('roles.update_permissions');
-    Route::delete('/roles/{role}', [AdminUserController::class, 'destroyRole'])->name('roles.destroy');
+            Route::get('/pelatih', [EkskulController::class, 'refEkskulIndex'])->name('ref.index');
+            Route::post('/pelatih', [EkskulController::class, 'refEkskulStore'])->name('ref.store');
+            Route::put('/pelatih/{id}', [EkskulController::class, 'refEkskulUpdate'])->name('ref.update');
+            Route::delete('/pelatih/{id}', [EkskulController::class, 'refEkskulDestroy'])->name('ref.destroy');
 
-    // Rute Permission
-    Route::post('/permissions', [AdminUserController::class, 'storePermission'])->name('permissions.store');
-    Route::delete('/permissions/{permission}', [AdminUserController::class, 'destroyPermission'])->name('permissions.destroy');
+            Route::get('/cetak/{id}', [EkskulController::class, 'cetak'])->name('cetak');
+            Route::get('/cetak-absensi/{id}', [EkskulController::class, 'cetakAbsensi'])->name('cetak_absensi');
 
-});
-// Tambahkan 'admin/' pada prefix dan 'admin.' pada name
-Route::middleware(['auth'])->prefix('setting')->name('setting.')->group(function () {
-    Route::post('/rekanan/{id}/toggle-status', [SuratController::class, 'toggleStatus'])
-        ->name('rekanan.toggle_status');
-    // --- REKANAN ---
-    Route::get('/rekanan/import', [SettingController::class, 'importRekananView'])->name('rekanan.import');
-    Route::get('/rekanan/template', [SettingController::class, 'downloadTemplateRekanan'])->name('rekanan.template');
-    Route::post('/rekanan/import', [SettingController::class, 'importRekananStore'])->name('rekanan.import.store');
-    Route::delete('/rekanan/destroy-all', [RekananController::class, 'destroyAll'])
-        ->name('rekanan.destroy_all');
-    Route::get('/rekanan/export', [RekananController::class, 'export'])
-        ->name('rekanan.export');
-    // --- KEGIATAN ---
-    // 1. Menampilkan Halaman Form Upload
-    Route::get('/kegiatan/import', [SettingController::class, 'importKegiatanView'])
-        ->name('kegiatan.import');
+            Route::get('/manage-details/{belanjaId}', [EkskulController::class, 'manageDetails'])->name('manage_details');
+            Route::post('/store-detail', [EkskulController::class, 'storeDetail'])->name('store_detail');
+            Route::delete('/delete-detail/{id}', [EkskulController::class, 'deleteDetail'])->name('delete_detail');
+            Route::put('/detail/{id}', [EkskulController::class, 'updateDetail'])->name('update_detail');
+            Route::get('/bulk-create/{id}', [EkskulController::class, 'create_bulk'])->name('create_bulk');
+            Route::post('/bulk-store', [EkskulController::class, 'store_detail_bulk'])->name('store_detail_bulk');
+        });
 
-    // 2. Download Template Excel (.xlsx)
-    // Sekarang route ini akan bernama: 'admin.settings.kegiatan.template' (SESUAI)
-    Route::get('/kegiatan/template', [SettingController::class, 'downloadTemplateKegiatan'])
-        ->name('kegiatan.template');
-
-    // 3. Proses Eksekusi Import (POST)
-    Route::post('/kegiatan/import', [SettingController::class, 'importKegiatanStore'])
-        ->name('kegiatan.import.store');
-
-    Route::resource('rekanan', RekananController::class);
-    Route::resource('kegiatan', KegiatanController::class);
-});
-
-Route::middleware(['auth', 'role:admin'])->prefix('setting')->group(function () {
-
-    // Rute GET untuk menampilkan halaman
-    Route::get('/import-kegiatan', [SettingController::class, 'importKegiatanJson'])
-        ->name('setting.kegiatan.importjson');
-
-    // Rute POST untuk memproses upload JSON
-    Route::post('/import-kegiatan', [SettingController::class, 'storeImportKegiatanJson'])
-        ->name('setting.kegiatan.store_import');
-
-});
-
-Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['auth', 'role:admin']], function () {
-
-    // Halaman Menu Penghapusan
-    Route::get('/rkas/cleanup', [RkasCleanupController::class, 'index'])->name('rkas.cleanup');
-
-    // API untuk mengambil anggaran berdasarkan sekolah (AJAX)
-    Route::get('/api/anggaran-by-sekolah/{sekolahId}', [RkasCleanupController::class, 'getAnggaranBySekolah']);
-
-    // Action Hapus
-    Route::delete('/rkas/cleanup/destroy', [RkasCleanupController::class, 'destroy'])->name('rkas.cleanup.destroy');
-});
-
-Route::middleware(['auth'])->prefix('surat')->group(function () {
-    Route::get('/manage/{belanjaId}', [SuratController::class, 'index'])->name('surat.index');
-    Route::post('/generate/{belanjaId}', [SuratController::class, 'generateDefault'])->name('surat.generate');
-    Route::put('/update/{id}', [SuratController::class, 'update'])->name('surat.update');
-    Route::post('/store/{belanjaId}', [SuratController::class, 'store'])->name('surat.store');
-    Route::post('/store-parsial/{belanjaId}', [SuratController::class, 'storeParsial'])->name('surat.store_parsial');
-    Route::get('/cetak-sp/{id}', [SuratController::class, 'cetakSpParsial'])->name('surat.cetak_sp');
-    Route::get('/cetak-bapb/{id}', [SuratController::class, 'cetakBapbParsial'])->name('surat.cetak_bapb');
-    Route::get('/{id}/edit-penawaran', [BelanjaController::class, 'editPenawaran'])->name('belanja.edit_penawaran');
-    Route::delete('/destroy/{id}', [SuratController::class, 'destroy'])->name('surat.destroy');
-    Route::post('/{id}/upload-foto', [SuratController::class, 'uploadFoto'])
-        ->name('belanja.upload_foto');
-    Route::get('/belanja/cetak-foto/{id}', [SuratController::class, 'cetakFotoSpj'])->name('belanja.cetak_foto');
-    Route::get('/belanja/export-excel', [SuratController::class, 'exportExcel'])->name('belanja.export_excel');
-    Route::get('/regenerate-all', [SuratController::class, 'regenerateAllNumbers'])
-        ->name('surat.regenerate_all');
-
-    Route::post('/belanja/{id}/duplicate', [BelanjaController::class, 'duplicate'])->name('belanja.duplicate');
-
-    // Route untuk Hapus Foto (Karena tadi kita tambahkan tombol hapus)
-    Route::delete('/foto/{id}', [SuratController::class, 'destroyFoto'])
-        ->name('surat.delete_foto');
-    // Proses Simpan
-    Route::put('/{id}/update-penawaran', [BelanjaController::class, 'updatePenawaran'])->name('belanja.update_penawaran');
-    Route::get('/belanja/{id}/download-bundel', [SuratController::class, 'downloadBundel'])
-        ->name('belanja.downloadBundel');
-    // Cetak Satuan (ID Belanja + Jenis Surat)
-    Route::get('/cetak-satuan/{id}/{jenis}', [SuratController::class, 'cetakSatuan'])->name('surat.cetak_satuan');
-    Route::get('/cetakpdf/{id}', [SuratController::class, 'cetakPdf'])->name('surat.cetakpdf');
-    Route::get('/cetaksatuanpdf/{id}/{jenis}', [SuratController::class, 'cetakSatuanPdf'])->name('surat.cetakSatuanPdf');
-    Route::get('/cetakparsialpdf/{id}', [SuratController::class, 'cetakParsialPdf'])->name('surat.cetakParsialPdf');
-    Route::get('/cetak/kop', [SuratController::class, 'cetakKopPdf'])->name('cetak.kop');
-    Route::get('/download-semua-parsial/{belanjaId}', [SuratController::class, 'downloadSemuaParsial'])
-        ->name('surat.download_semua_parsial');
-
-    Route::get('/rekap-surat', [SuratController::class, 'rekapKeseluruhanTriwulanPdf'])->name('surat.rekap_triwulan');
-    Route::get('/talangan', [SuratController::class, 'createTalangan'])->name('talangan.create');
-    Route::post('/talangan/store', [SuratController::class, 'storeTalangan'])->name('surat.talangan.store');
-
-    // 3. Route untuk mencetak PDF Talangan
-    Route::get('/talangan-pdf/{talanganId}', [SuratController::class, 'cetakTalanganPdf'])->name('surat.talangan_pdf');
-    // Route untuk menghapus satu paket surat talangan beserta isinya
-    Route::delete('/talangan/{surat_id}', [SuratController::class, 'destroyTalangan'])->name('surat.talangan.destroy');
-    Route::get('/cover-lpj', [SuratController::class, 'createCoverLpj'])->name('surat.cover_lpj.create');
-    Route::post('/cover-lpj/cetak', [SuratController::class, 'generateCoverPdf'])->name('surat.cover_lpj.generate');
-    Route::get('/daftar', [SuratController::class, 'daftarSurat'])->name('surat.daftar');
-    Route::get('/talangan-npd', [SuratController::class, 'daftarTalanganNpd'])->name('surat.daftar_talangan_npd');
-    Route::delete('/talangan-npd/{id}', [SuratController::class, 'hapusSurat'])
-        ->name('surat.hapus_talangan_npd');
-    Route::put('/{id}/update-tw', [SuratController::class, 'updateTw'])->name('surat.update_tw');
-});
-
-Route::middleware(['auth'])->group(function () {
-    // Tampilan daftar NPD
-    Route::get('/npd', [NpdController::class, 'index'])->name('npd.index');
-
-    // Tampilan form input massal
-    Route::get('/npd/create', [NpdController::class, 'create'])->name('npd.create');
-    Route::get('/npd/export', [NpdController::class, 'exportExcel'])->name('npd.export');
-    // Proses simpan massal
-    Route::post('/npd/store', [NpdController::class, 'storeMassal'])->name('npd.store_massal');
-    Route::post('/npd/storesurat', [NpdController::class, 'storeSurat'])->name('npd.store_surat');
-
-    // Aksi lainnya (Opsional)
-    Route::get('/npd/{id}', [NpdController::class, 'show'])->name('npd.show');
-    Route::delete('/npd/hapus-triwulan-aktif', [NpdController::class, 'destroyTriwulan'])->name('npd.destroy_triwulan');
-    // Route::delete('/npd/{id}', [NpdController::class, 'destroy'])->name('npd.destroy');
-
-    // API saldo
-    Route::get('/api/npd/cek-saldo', [NpdController::class, 'getSaldoAnggaran'])->name('api.npd.saldo');
-});
-Route::group(['middleware' => ['auth']], function () {
-
-    Route::group(['prefix' => 'ekskul', 'as' => 'ekskul.'], function () {
-
-        // 1. Halaman Index (Daftar SPJ)
-        // {belanjaId?} tanda tanya artinya parameter ini OPSIONAL.
-        // - Akses /ekskul/index          -> Menampilkan semua data
-        // - Akses /ekskul/index/5        -> Menampilkan data milik belanja ID 5 saja
-        Route::get('/index/', [EkskulController::class, 'index'])->name('index');
-
-        Route::get('/edit/{id}', [EkskulController::class, 'edit'])->name('edit');
-
-        // Proses Update Data ke Database
-        Route::put('/update/{id}', [EkskulController::class, 'update'])->name('update');
-
-        // 2. Halaman Create (Form Input)
-        // Parameter {belanjaId} WAJIB ada, karena kita butuh ID belanja untuk dikirim ke form
-        Route::get('/create/', [EkskulController::class, 'create'])->name('create');
-        // API AJAX (Penyebab Error Anda)
-        Route::get('/get-rekening', [EkskulController::class, 'getRekening'])->name('get_rekening');
-        Route::get('/get-komponen', [EkskulController::class, 'getKomponen'])->name('get_komponen');
-
-        Route::get('/get-by-pelatih', [EkskulController::class, 'getByPelatih'])->name('get_by_pelatih');
-        // 3. Proses Simpan (Store)
-        Route::post('/store', [EkskulController::class, 'store'])->name('store');
-        Route::get('/pelatih', [EkskulController::class, 'refEkskulIndex'])->name('ref.index');
-        Route::post('/pelatih', [EkskulController::class, 'refEkskulStore'])->name('ref.store');
-        Route::put('/pelatih/{id}', [EkskulController::class, 'refEkskulUpdate'])->name('ref.update');
-        Route::delete('/pelatih/{id}', [EkskulController::class, 'refEkskulDestroy'])->name('ref.destroy');
-
-        // 4. Cetak Kwitansi & Lampiran
-        Route::get('/cetak/{id}', [EkskulController::class, 'cetak'])->name('cetak');
-        Route::get('/cetak-absensi/{id}', [EkskulController::class, 'cetakAbsensi'])->name('cetak_absensi');
-        // 5. Hapus Data
-        Route::delete('/{id}', [EkskulController::class, 'destroy'])->name('destroy');
-        Route::get('/manage-details/{belanjaId}', [EkskulController::class, 'manageDetails'])->name('manage_details');
-        Route::post('/store-detail', [EkskulController::class, 'storeDetail'])->name('store_detail');
-        Route::delete('/delete-detail/{id}', [EkskulController::class, 'deleteDetail'])->name('delete_detail');
-        Route::put('/detail/{id}', [EkskulController::class, 'updateDetail'])->name('update_detail');
-        Route::get('/bulk-create/{id}', [EkskulController::class, 'create_bulk'])->name('create_bulk');
-        Route::post('/bulk-store', [EkskulController::class, 'store_detail_bulk'])->name('store_detail_bulk');
+        Route::prefix('ekskul-laporan')->name('ekskul.laporan.')->group(function () {
+            Route::get('/', [EkskulLaporanController::class, 'index'])->name('index');
+            Route::post('/', [EkskulLaporanController::class, 'store'])->name('store');
+            Route::delete('/{id}', [EkskulLaporanController::class, 'destroy'])->name('destroy');
+        });
 
     });
 
-});
+    // =========================================================================
+    // 5. ZONA SUPER ADMIN (Hanya untuk Role 'admin')
+    // =========================================================================
+    Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
 
-Route::middleware(['auth'])->group(function () {
-    // 1. Halaman Utama (Index)
-    Route::get('/arkas/komponen', [ArkasController::class, 'komponen'])->name('arkas.komponen');
+        // Manajemen Instansi Sekolah & User
+        Route::resource('sekolah', AdminSekolahController::class);
+        Route::resource('users', AdminUserController::class);
+        Route::patch('/users/{user}/reset-password', [AdminUserController::class, 'resetPassword'])->name('users.reset-password');
 
-    // 2. Endpoint AJAX (Mengambil Data JSON)
-    Route::get('/arkas/data', [ArkasController::class, 'getData'])->name('arkas.data');
+        // Manajemen Akses (Roles & Permissions)
+        Route::post('/roles', [AdminUserController::class, 'storeRole'])->name('roles.store');
+        Route::put('/roles/{role}/permissions', [AdminUserController::class, 'updateRolePermissions'])->name('roles.update_permissions');
+        Route::delete('/roles/{role}', [AdminUserController::class, 'destroyRole'])->name('roles.destroy');
+        Route::post('/permissions', [AdminUserController::class, 'storePermission'])->name('permissions.store');
+        Route::delete('/permissions/{permission}', [AdminUserController::class, 'destroyPermission'])->name('permissions.destroy');
 
-    // 3. Halaman Import
-    Route::get('/arkas/import', [ArkasController::class, 'importPage'])->name('arkas.import.page');
+        // Manajemen Master Anggaran
+        Route::get('/anggaran', [AnggaranController::class, 'index'])->name('anggaran.index');
+        Route::post('/anggaran/generate', [AnggaranController::class, 'generate'])->name('anggaran.generate');
 
-    // 4. Proses Import (Action)
-    Route::post('/arkas/import', [ArkasController::class, 'storeImport'])->name('arkas.import.store');
-    Route::get('/arkas', [ArkasController::class, 'index'])->name('arkas.index');
-    Route::post('/arkas/toggle-status/{id}', [ArkasController::class, 'toggleStatusArkas'])->name('arkas.toggle_status');
-    Route::post('/arkas/update-idkomponen/{id}', [ArkasController::class, 'updateIdKomponen'])->name('arkas.update_idkomponen');
-    Route::get('/persediaan', [PersediaanController::class, 'index'])->name('persediaan.index');
+        // Manajemen Master Kode Rekening
+        Route::resource('korek', KorekController::class)->except(['show']);
+        Route::post('korek/import-update', [KorekController::class, 'importKorekUpdate'])->name('korek.import_update');
+        Route::patch('korek/{korek}/update-jenis-belanja', [KorekController::class, 'updateJenisBelanjaAjax'])->name('korek.update_jenis_belanja');
+        Route::post('korek/bulk-update-jenis', [KorekController::class, 'bulkUpdateJenisBelanja'])->name('korek.bulk_update_jenis');
 
-});
+        // Pembersihan RKAS Global
+        Route::get('/rkas/cleanup', [RkasCleanupController::class, 'index'])->name('rkas.cleanup');
+        Route::get('/api/anggaran-by-sekolah/{sekolahId}', [RkasCleanupController::class, 'getAnggaranBySekolah']);
+        Route::delete('/rkas/cleanup/destroy', [RkasCleanupController::class, 'destroy'])->name('rkas.cleanup.destroy');
 
-Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
-    // Route untuk Master Kode Rekening
-    Route::resource('korek', KorekController::class)->except(['show']);
-    Route::post('korek/import-update', [KorekController::class, 'importKorekUpdate'])->name('korek.import_update');
-    // Tambahkan baris ini di dalam group route admin Anda (biasanya di bawah resource korek)
-    Route::patch('korek/{korek}/update-jenis-belanja', [KorekController::class, 'updateJenisBelanjaAjax'])->name('korek.update_jenis_belanja');
-    Route::post('korek/bulk-update-jenis', [KorekController::class, 'bulkUpdateJenisBelanja'])->name('korek.bulk_update_jenis');
-});
-Route::middleware(['auth'])->group(function () {
-    // 1. Menampilkan Halaman Form Upload
-    Route::get('/kegiatan/import', [KegiatanManualController::class, 'createImport'])
-        ->name('kegiatan.import');
+        // Import JSON Kegiatan Khusus Admin
+        Route::get('/setting/import-kegiatan', [SettingController::class, 'importKegiatanJson'])->name('setting.kegiatan.importjson');
+        Route::post('/setting/import-kegiatan', [SettingController::class, 'storeImportKegiatanJson'])->name('setting.kegiatan.store_import');
 
-    // 2. Proses Eksekusi Import (POST)
-    Route::post('/kegiatan/import', [KegiatanManualController::class, 'storeImport'])
-        ->name('manual.import.kegiatan');
-    // Di dalam Route::prefix('setting')->name('setting.')->group(function () { ...
-    Route::get('/sumber-dana', [KegiatanManualController::class, 'indexSumberDana'])->name('sumber_dana.index');
-    Route::post('/sumber-dana', [KegiatanManualController::class, 'storeSumberDana'])->name('sumber_dana.store');
-    Route::get('/kegiatan', [KegiatanManualController::class, 'daftarKegiatan'])->name('kegiatan.index');
-    Route::get('/kegiatan/{id}/tambah-komponen', [KegiatanManualController::class, 'tambahKomponen'])->name('kegiatan.tambah_komponen');
-    Route::post('/kegiatan/{id}/tambah-komponen', [App\Http\Controllers\KegiatanManualController::class, 'storeKomponen'])->name('kegiatan.store_komponen');
-    Route::get('/komponen/', [KegiatanManualController::class, 'createImportKomponen'])->name('komponen.import');
-    Route::post('/komponen/import', [KegiatanManualController::class, 'storeImportKomponen'])->name('komponen.import.store');
-    Route::delete('/kegiatan/{kegiatan_id}/komponen/{rkas_id}', [App\Http\Controllers\KegiatanManualController::class, 'destroyKomponen'])->name('kegiatan.destroy_komponen');
-    Route::get('/api/komponen-by-korek', [App\Http\Controllers\KegiatanManualController::class, 'getKomponenByKorek'])->name('api.komponen_by_korek');
-    Route::post('/kegiatan/{id}/cek-komponen-duplikat', [KegiatanManualController::class, 'checkKomponenDuplicate'])->name('kegiatan.cek_komponen');
-    Route::put('/kegiatan/{id}/update-multi-komponen', [KegiatanManualController::class, 'updateMultiKomponen'])->name('kegiatan.update_multi_komponen');
-    Route::delete('/kegiatan/{id}/komponen-multi', [KegiatanManualController::class, 'destroyMultiKomponen'])->name('kegiatan.destroy_multi_komponen');
-    // Menampilkan form tambah kegiatan
-    Route::get('/kegiatan/create', [KegiatanManualController::class, 'create'])->name('kegiatan.create');
-    Route::get('/laporan/laporan-rkas', [KegiatanManualController::class, 'rekapAnggaran'])->name('laporan.index');
-    Route::get('/perencanaan/dashboard', [KegiatanManualController::class, 'dashboard'])->name('perencanaan.dashboard');
+    }); // <-- Akhir Group Admin
 
-    // Memproses data dari form
-    Route::post('/kegiatan/store', [KegiatanManualController::class, 'store'])->name('kegiatan.store');
+}); // <-- Akhir ZONA PENGGUNA TERAUTENTIKASI
 
-    // Endpoint AJAX untuk mengambil Sub Program berdasarkan Program
-    Route::get('/ajax/sub-programs', [KegiatanManualController::class, 'getSubPrograms'])->name('ajax.sub_programs');
-    Route::delete('/kegiatan/{id}', [App\Http\Controllers\KegiatanManualController::class, 'destroy'])->name('kegiatan.destroy');
-    Route::match(['get', 'post'], '/kegiatan/{id}/rekonsiliasi', [KegiatanManualController::class, 'rekonsiliasi'])->name('kegiatan.rekonsiliasi');
-    Route::match(['get', 'post'], '/kegiatan/cek-json', [KegiatanManualController::class, 'cekJson'])->name('kegiatan.cek_json');
-});
-
-Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
-    // Halaman Utama Generate Anggaran
-    Route::get('/anggaran', [AnggaranController::class, 'index'])->name('anggaran.index');
-    // Proses Generate
-    Route::post('/anggaran/generate', [AnggaranController::class, 'generate'])->name('anggaran.generate');
-});
-
-Route::get('/barang', [BarangController::class, 'index'])->name('barang.index');
-
-// Endpoint memproses form upload file .json
-Route::post('/barang/import', [BarangController::class, 'import'])->name('barang.import');
-
-// Endpoint API pencarian (digunakan oleh fetch() di Alpine.js)
-Route::get('/api/barang/search', [BarangController::class, 'search'])->name('api.barang.search');
-
-Route::delete('/barang/truncate', [BarangController::class, 'truncate'])->name('barang.truncate');
-
-Route::get('/cetak-cover', [CetakController::class, 'cetakCover'])->name('cetak.cover');
-// Jika Anda mengirim file dari halaman index/rincian
-Route::middleware(['auth'])->group(function () {
-    // Taruh di luar grup admin, agar semua yang login bisa mengakses (selama tombolnya muncul di sidebar)
-    Route::get('/ekskul-laporan', [EkskulLaporanController::class, 'index'])->name('ekskul.laporan.index');
-    Route::post('/ekskul-laporan', [EkskulLaporanController::class, 'store'])->name('ekskul.laporan.store');
-    Route::delete('/ekskul-laporan/{id}', [EkskulLaporanController::class, 'destroy'])->name('ekskul.laporan.destroy');
-});
 require __DIR__.'/auth.php';
