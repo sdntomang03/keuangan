@@ -50,6 +50,33 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 // =========================================================================
+// ZONA NEW: KHUSUS INPUT TRANSAKSI BELANJA & TALANGAN
+// Permission: 'input-belanja'
+// =========================================================================
+Route::middleware(['permission:input-belanja'])->group(function () {
+
+    // Form Tambah, Edit, Simpan, dan Hapus Belanja
+    Route::get('/belanja/create', [BelanjaController::class, 'create'])->name('belanja.create');
+    Route::post('/belanja', [BelanjaController::class, 'store'])->name('belanja.store');
+    Route::get('/belanja/{id}/edit', [BelanjaController::class, 'edit'])->name('belanja.edit');
+    Route::put('/belanja/{id}', [BelanjaController::class, 'update'])->name('belanja.update');
+    Route::delete('/belanja/{id}', [BelanjaController::class, 'destroy'])->name('belanja.destroy');
+
+    // Fitur Ekstra Manipulasi Belanja
+    Route::post('/{id}/post', [BelanjaController::class, 'post'])->name('belanja.post');
+    Route::post('/belanja/{id}/duplicate', [BelanjaController::class, 'duplicate'])->name('belanja.duplicate');
+    Route::get('/{id}/edit-penawaran', [BelanjaController::class, 'editPenawaran'])->name('belanja.edit_penawaran');
+    Route::put('/{id}/update-penawaran', [BelanjaController::class, 'updatePenawaran'])->name('belanja.update_penawaran');
+    Route::post('/{id}/upload-foto', [SuratController::class, 'uploadFoto'])->name('belanja.upload_foto');
+
+    // Input Jurnal Talangan
+    Route::get('/surat/talangan', [SuratController::class, 'createTalangan'])->name('talangan.create');
+    Route::post('/surat/talangan/store', [SuratController::class, 'storeTalangan'])->name('surat.talangan.store');
+    Route::delete('/surat/talangan/{surat_id}', [SuratController::class, 'destroyTalangan'])->name('surat.talangan.destroy');
+    Route::delete('/surat/talangan-npd/{id}', [SuratController::class, 'hapusSurat'])->name('surat.hapus_talangan_npd');
+});
+
+// =========================================================================
 // ZONA 3A: KEUANGAN (AKSES BACA / VIEW-ANGGARAN)
 // Tambahkan 'input-belanja' ke dalam canany agar pengguna input juga bisa melihat halaman index
 // =========================================================================
@@ -140,33 +167,6 @@ Route::middleware(['permission:view-anggaran|kelola-anggaran|input-belanja'])->g
     Route::get('/perencanaan/dashboard', [KegiatanManualController::class, 'dashboard'])->name('perencanaan.dashboard');
     Route::get('/api/komponen-by-korek', [KegiatanManualController::class, 'getKomponenByKorek'])->name('api.komponen_by_korek');
     Route::get('/ajax/sub-programs', [KegiatanManualController::class, 'getSubPrograms'])->name('ajax.sub_programs');
-});
-
-// =========================================================================
-// ZONA NEW: KHUSUS INPUT TRANSAKSI BELANJA & TALANGAN
-// Permission: 'input-belanja'
-// =========================================================================
-Route::middleware(['permission:input-belanja'])->group(function () {
-
-    // Form Tambah, Edit, Simpan, dan Hapus Belanja
-    Route::get('/belanja/create', [BelanjaController::class, 'create'])->name('belanja.create');
-    Route::post('/belanja', [BelanjaController::class, 'store'])->name('belanja.store');
-    Route::get('/belanja/{id}/edit', [BelanjaController::class, 'edit'])->name('belanja.edit');
-    Route::put('/belanja/{id}', [BelanjaController::class, 'update'])->name('belanja.update');
-    Route::delete('/belanja/{id}', [BelanjaController::class, 'destroy'])->name('belanja.destroy');
-
-    // Fitur Ekstra Manipulasi Belanja
-    Route::post('/{id}/post', [BelanjaController::class, 'post'])->name('belanja.post');
-    Route::post('/belanja/{id}/duplicate', [BelanjaController::class, 'duplicate'])->name('belanja.duplicate');
-    Route::get('/{id}/edit-penawaran', [BelanjaController::class, 'editPenawaran'])->name('belanja.edit_penawaran');
-    Route::put('/{id}/update-penawaran', [BelanjaController::class, 'updatePenawaran'])->name('belanja.update_penawaran');
-    Route::post('/{id}/upload-foto', [SuratController::class, 'uploadFoto'])->name('belanja.upload_foto');
-
-    // Input Jurnal Talangan
-    Route::get('/surat/talangan', [SuratController::class, 'createTalangan'])->name('talangan.create');
-    Route::post('/surat/talangan/store', [SuratController::class, 'storeTalangan'])->name('surat.talangan.store');
-    Route::delete('/surat/talangan/{surat_id}', [SuratController::class, 'destroyTalangan'])->name('surat.talangan.destroy');
-    Route::delete('/surat/talangan-npd/{id}', [SuratController::class, 'hapusSurat'])->name('surat.hapus_talangan_npd');
 });
 
 // =========================================================================
