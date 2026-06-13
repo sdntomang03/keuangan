@@ -278,7 +278,7 @@ class NpdController extends Controller
     public function exportExcel()
     {
         $user = auth()->user();
-        $sekolahId = $user->sekolah_id;
+        $sekolah = $user->sekolah;
         $triwulanAktif = $user->sekolah->triwulan_aktif;
 
         // Filter bulan berdasarkan triwulan
@@ -290,21 +290,21 @@ class NpdController extends Controller
             default => []
         };
 
-        // Ambil semua data (tanpa pagination)
         $listNpd = Npd::with(['kegiatan', 'korek'])
-            ->where('sekolah_id', $sekolahId)
+            ->where('sekolah_id', $sekolah->id)
             ->where('triwulan', $triwulanAktif)
             ->withSum(['belanjas as realisasi_nota' => function ($q) use ($bulanArray) {
                 $q->whereIn(DB::raw('MONTH(tanggal)'), $bulanArray);
             }], DB::raw('subtotal + ppn'))
             ->orderBy('tanggal', 'desc')
-            ->orderBy('nomor_npd', 'desc')
             ->get();
 
-        // Siapkan nama file (Ganti ekstensi menjadi .xlsx)
-        $fileName = "Data_NPD_Triwulan_{$triwulanAktif}_".date('Ymd_His').'.xlsx';
+        $fileName = "Monitoring_NPD_TW_{$triwulanAktif}_".date('Ymd_His').'.xlsx';
 
-        // Panggil class Export dari Maatwebsite
-        return Excel::download(new NpdExport($listNpd), $fileName);
+        // Kirim data tambahan ke Constructor Export
+        return Excel::download(
+            new NpdExport($listNpd, $triwulanAktif, $sekolah->nama_sekolah),
+            $fileName
+        );
     }
 }
