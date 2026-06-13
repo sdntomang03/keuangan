@@ -73,13 +73,14 @@ class NpdExport implements FromArray, ShouldAutoSize, WithColumnFormatting, With
     // 3. Tambahkan fungsi ini untuk memformat kolom E, F, dan G
     public function columnFormats(): array
     {
-        // Ini adalah kode format Accounting Rupiah asli milik Microsoft Excel
-        $formatAccountingRupiah = '_("Rp"* #,##0_);_("Rp"* \(#,##0\);_("Rp"* "-"??_);_(@_)';
+        // Penjelasan Format Excel: [Positif] ; [Negatif] ; [Nol] ; [Teks]
+        // Pada bagian [Nol] (urutan ketiga), kita paksa agar memunculkan angka 0
+        $formatRupiah = '_("Rp"* #,##0_);_("Rp"* -#,##0_);_("Rp"* 0_);_(@_)';
 
         return [
-            'E' => $formatAccountingRupiah, // Kolom Pagu NPD (A)
-            'F' => $formatAccountingRupiah, // Kolom Realisasi Spj (B)
-            'G' => $formatAccountingRupiah, // Kolom Sisa Dana (A-B)
+            'E' => $formatRupiah, // Kolom Pagu NPD (A)
+            'F' => $formatRupiah, // Kolom Realisasi Spj (B)
+            'G' => $formatRupiah, // Kolom Sisa Dana (A-B)
         ];
     }
 
