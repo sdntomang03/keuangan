@@ -24,6 +24,7 @@ class DashboardController extends Controller
         $totalPertemuan = 0;
         $totalFoto = 0;
         $laporanTerbaru = collect();
+        $myEkskuls = collect();
 
         // Jika user memiliki izin mengelola ekskul, jalankan perhitungannya
         if ($user->can('input-ekskul')) {
