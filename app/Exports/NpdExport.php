@@ -38,23 +38,18 @@ class NpdExport implements FromArray, ShouldAutoSize, WithColumnFormatting, With
     public function array(): array
     {
         $rows = [];
-
-        // Buat variabel penampung untuk menghitung total secara manual
-        $totalPagu = 0;
-        $totalRealisasi = 0;
-        $totalSisa = 0;
+        $currentRow = 2; // Baris data pertama di Excel (karena baris 1 digunakan untuk Header)
 
         foreach ($this->listNpd as $npd) {
-            // Paksa konversi ke float agar tidak ada nilai null yang merusak perhitungan
             $pagu = (float) ($npd->nilai_npd ?? 0);
             $realisasi = (float) ($npd->realisasi_nota ?? 0);
-            $sisa = $pagu - $realisasi;
-            $status = $sisa > 0 ? 'STS' : 'Sesuai';
 
-            // Tambahkan ke grand total
-            $totalPagu += $pagu;
-            $totalRealisasi += $realisasi;
-            $totalSisa += $sisa;
+            // 1. FORMULA PENGURANGAN EXCEL UNTUK SISA DANA (Kolom G = Kolom E - Kolom F)
+            $formulaSisa = "=E{$currentRow}-F{$currentRow}";
+
+            // 2. FORMULA IF EXCEL UNTUK STATUS (Jika Kolom G > 0 maka "STS", jika tidak maka "Sesuai")
+            // Kita buat dinamis juga agar status ikut berubah jika angka di Excel diedit manual
+            $formulaStatus = "=IF(G{$currentRow}>0,\"STS\",\"Sesuai\")";
 
             $rows[] = [
                 $npd->nomor_npd,
@@ -63,17 +58,22 @@ class NpdExport implements FromArray, ShouldAutoSize, WithColumnFormatting, With
                 $npd->korek->ket ?? '',
                 $pagu,
                 $realisasi,
-                $sisa,
-                $status,
+                $formulaSisa,   // Menggunakan rumus Excel
+                $formulaStatus, // Menggunakan rumus Excel
             ];
+
+            $currentRow++;
         }
 
-        // Baris Total di paling bawah menggunakan hasil hitungan manual
+        // Tentukan batas baris data terakhir untuk referensi rumus SUM
+        $lastDataRow = $currentRow - 1;
+
+        // 3. FORMULA SUM EXCEL UNTUK TOTAL KESELURUHAN (Baris paling bawah)
         $rows[] = [
             '', '', '', 'TOTAL KESELURUHAN',
-            $totalPagu,
-            $totalRealisasi,
-            $totalSisa,
+            "=SUM(E2:E{$lastDataRow})", // SUM Pagu NPD
+            "=SUM(F2:F{$lastDataRow})", // SUM Realisasi Spj
+            "=SUM(G2:G{$lastDataRow})", // SUM Sisa Dana
             '',
         ];
 
@@ -82,7 +82,7 @@ class NpdExport implements FromArray, ShouldAutoSize, WithColumnFormatting, With
 
     public function columnFormats(): array
     {
-        // Memaksa angka 0 tetap muncul sebagai "Rp 0" dan bukan strip (-)
+        // Format Accounting agar angka 0 tetap muncul sebagai "Rp 0"
         $formatRupiah = '_("Rp"* #,##0_);_("Rp"* -#,##0_);_("Rp"* 0_);_(@_)';
 
         return [
@@ -94,18 +94,17 @@ class NpdExport implements FromArray, ShouldAutoSize, WithColumnFormatting, With
 
     public function styles(Worksheet $sheet)
     {
-        // Hitung total baris (Data + 1 baris Header + 1 baris Total)
         $lastRow = count($this->listNpd) + 2;
 
-        // 1. Style untuk Header (Baris 1)
+        // Style untuk Header (Baris 1)
         $sheet->getStyle('A1:H1')->applyFromArray([
             'font' => [
                 'bold' => true,
-                'color' => ['argb' => 'FFFFFFFF'], // Teks Putih
+                'color' => ['argb' => 'FFFFFFFF'],
             ],
             'fill' => [
                 'fillType' => Fill::FILL_SOLID,
-                'startColor' => ['argb' => 'FF1F2937'], // Background Abu-abu gelap (Gray-800)
+                'startColor' => ['argb' => 'FF1F2937'],
             ],
             'alignment' => [
                 'horizontal' => Alignment::HORIZONTAL_CENTER,
@@ -113,34 +112,32 @@ class NpdExport implements FromArray, ShouldAutoSize, WithColumnFormatting, With
             ],
         ]);
 
-        // 2. Style untuk seluruh Tabel (Memberikan Border)
+        // Style untuk Border seluruh tabel
         $sheet->getStyle('A1:H'.$lastRow)->applyFromArray([
             'borders' => [
                 'allBorders' => [
                     'borderStyle' => Border::BORDER_THIN,
-                    'color' => ['argb' => 'FF4B5563'], // Warna border abu-abu
+                    'color' => ['argb' => 'FF4B5563'],
                 ],
             ],
         ]);
 
-        // 3. Style untuk Baris Total (Baris Paling Bawah)
+        // Style untuk Baris Total (Baris Terakhir)
         $sheet->getStyle('A'.$lastRow.':H'.$lastRow)->applyFromArray([
             'font' => [
                 'bold' => true,
             ],
             'fill' => [
                 'fillType' => Fill::FILL_SOLID,
-                'startColor' => ['argb' => 'FFE5E7EB'], // Background abu-abu terang
+                'startColor' => ['argb' => 'FFE5E7EB'],
             ],
             'alignment' => [
                 'vertical' => Alignment::VERTICAL_CENTER,
             ],
         ]);
 
-        // Rata Kanan khusus untuk teks "TOTAL KESELURUHAN"
+        // Perataan Letak Teks
         $sheet->getStyle('D'.$lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-
-        // 4. Rata Tengah (Center) untuk kolom Tanggal dan Status
         $sheet->getStyle('B2:B'.$lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet->getStyle('H2:H'.$lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
