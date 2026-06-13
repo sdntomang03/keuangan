@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\NpdExport;
 use App\Models\Npd;
 use App\Models\Rkas;
 use App\Models\Sekolah;
@@ -9,6 +10,7 @@ use App\Models\Surat;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Excel;
 
 class NpdController extends Controller
 {
@@ -299,54 +301,10 @@ class NpdController extends Controller
             ->orderBy('nomor_npd', 'desc')
             ->get();
 
-        // Siapkan nama file
-        $fileName = "Data_NPD_Triwulan_{$triwulanAktif}_".date('Ymd_His').'.csv';
+        // Siapkan nama file (Ganti ekstensi menjadi .xlsx)
+        $fileName = "Data_NPD_Triwulan_{$triwulanAktif}_".date('Ymd_His').'.xlsx';
 
-        // Headers untuk memicu download di browser
-        $headers = [
-            'Content-type' => 'text/csv',
-            'Content-Disposition' => "attachment; filename=$fileName",
-            'Pragma' => 'no-cache',
-            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
-            'Expires' => '0',
-        ];
-
-        // Judul Kolom (Header Excel)
-        $columns = ['Nomor NPD', 'Tanggal', 'Kegiatan', 'Kode Rekening', 'Pagu NPD (A)', 'Realisasi Spj (B)', 'Sisa Dana (A-B)', 'Status'];
-
-        // Proses tulis data ke file
-        $callback = function () use ($listNpd, $columns) {
-            $file = fopen('php://output', 'w');
-
-            // Catatan: Menggunakan titik koma (;) sebagai pemisah agar rapi saat dibuka di Excel ber-region Indonesia
-            fputcsv($file, $columns, ';');
-
-            foreach ($listNpd as $npd) {
-                $realisasi = $npd->realisasi_nota ?? 0;
-                $sisa = $npd->nilai_npd - $realisasi;
-                $status = $sisa > 0 ? 'STS' : 'Sesuai';
-
-                fputcsv($file, [
-                    $npd->nomor_npd,
-                    $npd->tanggal->format('d/m/Y'),
-                    $npd->kegiatan->namagiat ?? '-',
-                    $npd->korek->ket ?? '',
-                    $npd->nilai_npd,
-                    $realisasi,
-                    $sisa,
-                    $status,
-                ], ';');
-            }
-
-            // Baris Total di paling bawah
-            $totalPagu = $listNpd->sum('nilai_npd');
-            $totalRealisasi = $listNpd->sum('realisasi_nota');
-            $totalSisa = $totalPagu - $totalRealisasi;
-            fputcsv($file, ['', '', '', 'TOTAL', $totalPagu, $totalRealisasi, $totalSisa, ''], ';');
-
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
+        // Panggil class Export dari Maatwebsite
+        return Excel::download(new NpdExport($listNpd), $fileName);
     }
 }
