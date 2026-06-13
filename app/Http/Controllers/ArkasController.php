@@ -20,12 +20,12 @@ class ArkasController extends Controller
 
         $sekolahId = auth()->user()->sekolah_id;
 
-        // Data RKAS dan Checklist dilimit HANYA untuk sekolah yang login
+        // Data RKAS difilter lewat anggaran_id.
+        // Sedangkan Checklist difilter lewat sekolah_id di dalam relasi (closure).
         $dataRkas = Rkas::with(['akbRincis', 'kegiatan', 'korek', 'arkasChecklist' => function ($q) use ($sekolahId) {
             $q->where('sekolah_id', $sekolahId);
         }])
-            ->where('anggaran_id', $anggaran->id)
-            ->where('sekolah_id', $sekolahId)
+            ->where('anggaran_id', $anggaran->id) // Ini sudah cukup untuk mengunci data ke 1 sekolah
             ->orderBy('idbl', 'asc')
             ->paginate(50);
 
