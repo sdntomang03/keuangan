@@ -55,7 +55,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Permission: 'view-anggaran' ATAU 'kelola-anggaran'
     // Hanya berisi Route::get (Melihat, Rekap, Cetak, Export, API Pencarian)
     // =========================================================================
-    Route::middleware(['canany:view-anggaran,kelola-anggaran'])->group(function () {
+    // Menggunakan middleware 'permission' bawaan Spatie dengan tanda pipa (|) yang berarti ATAU
+    Route::middleware(['permission:view-anggaran|kelola-anggaran'])->group(function () {
 
         // --- RKAS ---
         Route::prefix('rkas')->name('rkas.')->group(function () {
