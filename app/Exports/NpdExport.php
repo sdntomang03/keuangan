@@ -4,21 +4,21 @@ namespace App\Exports;
 
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\WithStyles;
+use Maatwebsite\Excel\Concerns\WithStyles; // 1. Tambahkan ini
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class NpdExport implements FromArray, ShouldAutoSize, WithHeadings, WithStyles
+// 2. Tambahkan implement "WithColumnFormatting" di bawah ini
+class NpdExport implements FromArray, ShouldAutoSize, WithColumnFormatting, WithHeadings, WithStyles
 {
     protected $listNpd;
 
-    // Menerima data dari Controller
     public function __construct($listNpd)
     {
         $this->listNpd = $listNpd;
     }
 
-    // Mengatur Judul Kolom (Header)
     public function headings(): array
     {
         return [
@@ -33,7 +33,6 @@ class NpdExport implements FromArray, ShouldAutoSize, WithHeadings, WithStyles
         ];
     }
 
-    // Mengatur isi data baris demi baris
     public function array(): array
     {
         $rows = [];
@@ -48,9 +47,9 @@ class NpdExport implements FromArray, ShouldAutoSize, WithHeadings, WithStyles
                 $npd->tanggal->format('d/m/Y'),
                 $npd->kegiatan->namagiat ?? '-',
                 $npd->korek->ket ?? '',
-                $npd->nilai_npd,
-                $realisasi,
-                $sisa,
+                $npd->nilai_npd, // Pastikan ini murni angka (jangan pakai number_format di sini)
+                $realisasi,      // Murni angka
+                $sisa,           // Murni angka
                 $status,
             ];
         }
@@ -71,10 +70,21 @@ class NpdExport implements FromArray, ShouldAutoSize, WithHeadings, WithStyles
         return $rows;
     }
 
-    // Opsional: Membuat tulisan Header dan Baris Total menjadi Bold
+    // 3. Tambahkan fungsi ini untuk memformat kolom E, F, dan G
+    public function columnFormats(): array
+    {
+        // Ini adalah kode format Accounting Rupiah asli milik Microsoft Excel
+        $formatAccountingRupiah = '_("Rp"* #,##0_);_("Rp"* \(#,##0\);_("Rp"* "-"??_);_(@_)';
+
+        return [
+            'E' => $formatAccountingRupiah, // Kolom Pagu NPD (A)
+            'F' => $formatAccountingRupiah, // Kolom Realisasi Spj (B)
+            'G' => $formatAccountingRupiah, // Kolom Sisa Dana (A-B)
+        ];
+    }
+
     public function styles(Worksheet $sheet)
     {
-        // Hitung baris terakhir (Jumlah data + 1 baris header + 1 baris total)
         $lastRow = count($this->listNpd) + 2;
 
         return [
