@@ -299,7 +299,7 @@ class NpdController extends Controller
             ->orderBy('tanggal', 'desc')
             ->get();
 
-        $fileName = "Monitoring_NPD_TW_{$triwulanAktif}_".date('Ymd_His').'.xlsx';
+        $fileName = "NPD_{$sekolah->nama_sekolah}_TW_{$triwulanAktif}_".date('Ymd_His').'.xlsx';
 
         // Kirim data tambahan ke Constructor Export
         return Excel::download(
