@@ -2558,4 +2558,28 @@ class SuratController extends Controller
         // 6. Kembali ke halaman sebelumnya dengan pesan sukses
         return back()->with('success', $jumlahSurat.' dokumen surat berhasil dipindah ke Triwulan '.$request->tw);
     }
+
+    public function indexSeluruhSurat(Request $request)
+    {
+        $user = Auth::user();
+        $sekolah = \App\Models\Sekolah::find($user->sekolah_id);
+
+        if (! $sekolah) {
+            return back()->with('error', 'Data sekolah tidak ditemukan.');
+        }
+
+        $triwulanAktif = $sekolah->triwulan_aktif;
+        $tahunAktif = $sekolah->tahun_aktif ?? date('Y');
+
+        // Mengambil semua surat milik sekolah di triwulan dan tahun aktif
+        $listSurat = Surat::with(['belanja']) // Load relasi belanja jika dibutuhkan
+            ->where('sekolah_id', $sekolah->id)
+            ->where('triwulan', $triwulanAktif)
+            ->whereYear('tanggal_surat', $tahunAktif)
+            ->orderBy('tanggal_surat', 'desc')
+            ->orderBy('id', 'desc')
+            ->paginate(20);
+
+        return view('surat.index_seluruh', compact('listSurat', 'triwulanAktif', 'tahunAktif'));
+    }
 }

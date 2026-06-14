@@ -219,6 +219,7 @@ Route::middleware(['permission:kelola-anggaran'])->group(function () {
     Route::delete('/surat/foto/{id}', [SuratController::class, 'destroyFoto'])->name('surat.delete_foto');
     Route::put('/{id}/update-tw', [SuratController::class, 'updateTw'])->name('surat.update_tw');
     Route::get('/surat/regenerate-all', [SuratController::class, 'regenerateAllNumbers'])->name('surat.regenerate_all');
+    Route::get('/surat/semua', [SuratController::class, 'indexSeluruhSurat'])->name('surat.index_semua');
 
     // Barang & Arkas Master
     Route::post('/barang/import', [BarangController::class, 'import'])->name('barang.import');
