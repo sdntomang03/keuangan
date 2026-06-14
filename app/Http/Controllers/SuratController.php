@@ -1029,31 +1029,27 @@ class SuratController extends Controller
 
     public function regenerateAllNumbers()
     {
-        // Gunakan Transaction biar aman datanya
-        DB::transaction(function () {
-            // 1. Ambil semua kombinasi Sekolah, Tahun, dan Triwulan yang unik dari tabel surats
-            // Kita butuh grup ini agar pengurutan per sekolah/triwulan tidak tercampur
-            $groups = Surat::select(
-                'sekolah_id',
-                'triwulan',
-                DB::raw('YEAR(tanggal_surat) as tahun')
-            )
-                ->whereNotNull('tanggal_surat') // Pastikan tanggal valid
-                ->distinct() // Ambil yang unik saja
-                ->get();
+        $user = Auth::user();
+        $sekolah = Sekolah::find($user->sekolah_id);
 
-            // 2. Loop setiap grup dan jalankan pengurutan ulang
-            foreach ($groups as $group) {
-                // Panggil fungsi private yang sudah ada
-                $this->urutkanUlangNomorSurat(
-                    $group->sekolah_id,
-                    $group->tahun,
-                    $group->triwulan
-                );
-            }
+        if (! $sekolah) {
+            return back()->with('error', 'Data sekolah tidak ditemukan.');
+        }
+
+        $triwulanAktif = $sekolah->triwulan_aktif;
+        $tahunAktif = $sekolah->tahun_aktif ?? date('Y');
+
+        // Gunakan Transaction biar aman datanya
+        DB::transaction(function () use ($sekolah, $tahunAktif, $triwulanAktif) {
+            // HANYA panggil fungsi pengurutan untuk Triwulan Aktif dan Tahun Aktif
+            $this->urutkanUlangNomorSurat(
+                $sekolah->id,
+                $tahunAktif,
+                $triwulanAktif
+            );
         });
 
-        return back()->with('success', 'Semua nomor surat di database berhasil diurutkan ulang.');
+        return back()->with('success', "Semua nomor surat pada Triwulan $triwulanAktif berhasil diurutkan ulang.");
     }
 
     /**
