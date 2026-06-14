@@ -355,7 +355,7 @@ class SuratController extends Controller
             ->orderBy('id', 'asc')
             ->get();
 
-        dd($surats->pluck('nomor_surat', 'jenis_surat'), "Base Number Awal: $baseNumber");
+        dd($surats);
 
         // 3. Tentukan Nomor Urut Mulai
         // Karena base_number adalah nomor urut surat awal untuk TW ini,
