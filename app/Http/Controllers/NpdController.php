@@ -99,16 +99,6 @@ class NpdController extends Controller
         $triwulanAktif = $sekolah->triwulan_aktif; // Ambil triwulan aktif
         $anggaranIdAktif = $sekolah->anggaran_id_aktif; // Pastikan kolom ini sesuai di model Sekolah
 
-        // --- CEK APAKAH SUDAH ADA DATA UNTUK ANGGARAN & TRIWULAN INI ---
-        $exists = Npd::where('sekolah_id', $sekolahId)
-            ->where('anggaran_id', $anggaranIdAktif)
-            ->where('triwulan', $triwulanAktif)
-            ->exists();
-
-        if ($exists) {
-            return back()->with('error', "Gagal! Data NPD untuk Anggaran ini pada Triwulan $triwulanAktif sudah pernah disimpan sebelumnya.");
-        }
-
         $tahun = date('Y', strtotime($request->tanggal));
         $validItems = [];
 
