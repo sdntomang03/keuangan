@@ -69,7 +69,7 @@
                     <div class="flex items-center gap-2 shrink-0 pl-4 border-l border-gray-200">
 
                         {{-- Tombol Rekap Surat --}}
-                        <a href="{{ route('surat.rekap_triwulan') }}" target="_blank"
+                        <a href="{{ route('surat.index_semua') }}" target="_blank"
                             class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition flex items-center gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
