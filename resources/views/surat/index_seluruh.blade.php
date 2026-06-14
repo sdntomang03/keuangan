@@ -60,8 +60,11 @@
                                 <td class="px-6 py-4 text-center flex justify-center gap-2">
 
                                     {{-- Tombol Edit (Membuka Modal) --}}
-                                    <button type="button"
-                                        @click="openEditModal = true; editId = '{{ $surat->id }}'; editTanggal = '{{ $surat->tanggal_surat }}'; editBast = '{{ $surat->no_bast }}'; jenisSurat = '{{ $surat->jenis_surat }}';"
+                                    <button type="button" @click="openEditModal = true;
+            editId = '{{ $surat->id }}';
+            editTanggal = '{{ \Carbon\Carbon::parse($surat->tanggal_surat)->format('Y-m-d') }}';
+            editBast = '{{ $surat->no_bast }}';
+            jenisSurat = '{{ $surat->jenis_surat }}';"
                                         class="inline-flex items-center px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-md font-bold text-xs transition">
                                         Edit
                                     </button>
