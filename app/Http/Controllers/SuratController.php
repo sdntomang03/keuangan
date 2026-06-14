@@ -334,11 +334,11 @@ class SuratController extends Controller
      */
     private function urutkanUlangNomorSurat($sekolahId, $tahun, $triwulanAktif)
     {
-        // 1. Ambil data sekolah untuk mendapatkan "nomor_surat" awal/terakhir
+        // 1. Ambil data sekolah untuk mendapatkan "nomor_surat" awal pada triwulan aktif
         $sekolah = Sekolah::find($sekolahId);
 
         // Default jika field kosong
-        $baseNumber = 0;
+        $baseNumber = 1;
 
         if ($sekolah && $sekolah->nomor_surat) {
             // Ambil angka depan dari field nomor_surat di tabel sekolahs
@@ -347,14 +347,7 @@ class SuratController extends Controller
             $baseNumber = (int) $parts[0];
         }
 
-        // 2. Ambil total surat yang sudah ada di triwulan SEBELUMNYA
-        // Ini penting agar nomor di TW 2 melanjutkan nomor yang sudah terpakai di TW 1
-        // $suratTerpakaiLalu = Surat::where('sekolah_id', $sekolahId)
-        //     ->whereYear('tanggal_surat', $tahun)
-        //     ->where('triwulan', '<', $triwulanAktif)
-        //     ->count();
-
-        // 3. Ambil surat di triwulan aktif untuk diurutkan
+        // 2. Ambil surat hanya di triwulan aktif untuk diurutkan
         $surats = Surat::where('sekolah_id', $sekolahId)
             ->whereYear('tanggal_surat', $tahun)
             ->where('triwulan', $triwulanAktif)
@@ -362,9 +355,10 @@ class SuratController extends Controller
             ->orderBy('id', 'asc')
             ->get();
 
-        // 4. Hitung Nomor Mulai
-        // Rumus: (Nomor di Profil Sekolah) + (Surat yang sudah dibuat di triwulan lalu) + 1
-        $noUrut = $baseNumber + 1;
+        // 3. Tentukan Nomor Urut Mulai
+        // Karena base_number adalah nomor urut surat awal untuk TW ini,
+        // maka nomor urut langsung dimulai dari nilai tersebut (tanpa ditambah 1)
+        $noUrut = $baseNumber;
 
         foreach ($surats as $surat) {
             $strNoUrut = str_pad($noUrut, 3, '0', STR_PAD_LEFT);
