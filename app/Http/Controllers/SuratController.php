@@ -347,7 +347,6 @@ class SuratController extends Controller
             $baseNumber = (int) $parts[0];
         }
 
-        dd($baseNumber);
         // 2. Ambil surat hanya di triwulan aktif untuk diurutkan
         $surats = Surat::where('sekolah_id', $sekolahId)
             ->whereYear('tanggal_surat', $tahun)
@@ -355,6 +354,8 @@ class SuratController extends Controller
             ->orderBy('tanggal_surat', 'asc')
             ->orderBy('id', 'asc')
             ->get();
+
+        dd($surats->pluck('nomor_surat', 'jenis_surat'), "Base Number Awal: $baseNumber");
 
         // 3. Tentukan Nomor Urut Mulai
         // Karena base_number adalah nomor urut surat awal untuk TW ini,
