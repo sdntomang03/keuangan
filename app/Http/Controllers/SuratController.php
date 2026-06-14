@@ -355,8 +355,6 @@ class SuratController extends Controller
             ->orderBy('id', 'asc')
             ->get();
 
-        dd($surats);
-
         // 3. Tentukan Nomor Urut Mulai
         // Karena base_number adalah nomor urut surat awal untuk TW ini,
         // maka nomor urut langsung dimulai dari nilai tersebut (tanpa ditambah 1)
