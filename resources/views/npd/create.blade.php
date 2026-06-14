@@ -18,10 +18,6 @@
                             <input type="date" name="tanggal" value="{{ date('Y-m-d') }}" required
                                 class="mt-1 border-gray-300 rounded-md shadow-sm text-sm font-bold">
                         </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 uppercase">Nomor Start</label>
-                            <span class="font-mono font-bold text-lg text-indigo-700">{{ $nomorNpd }}</span>
-                        </div>
                     </div>
                     <div class="text-right">
                         <span class="block font-bold text-indigo-600">Anggaran: {{ $anggaran->nama_anggaran }}</span>
