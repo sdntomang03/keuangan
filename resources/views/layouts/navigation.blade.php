@@ -142,12 +142,29 @@
                 </button>
                 <div x-show="open" x-transition.opacity.duration.200ms style="display: none;"
                     class="pl-11 pr-2 py-1 space-y-1">
+
                     <a href="{{ route('belanja.index') }}"
-                        class="block py-1.5 text-sm {{ request()->routeIs('belanja.*') ? 'text-indigo-600 font-bold' : 'text-gray-500 hover:text-indigo-500' }}">Input
-                        Belanja</a>
+                        class="flex items-center px-3 py-2.5 text-sm font-bold rounded-lg transition-colors {{ request()->routeIs('belanja.*') ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700' }}">
+                        <svg class="w-5 h-5 mr-3 {{ request()->routeIs('belanja.*') ? 'text-indigo-600' : 'text-gray-400' }}"
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z">
+                            </path>
+                        </svg>
+                        Input Belanja
+                    </a>
+
                     <a href="{{ route('talangan.create') }}"
-                        class="block py-1.5 text-sm {{ request()->routeIs('talangan.*') ? 'text-indigo-600 font-bold' : 'text-gray-500 hover:text-indigo-500' }}">Input
-                        Talangan</a>
+                        class="flex items-center px-3 py-2.5 text-sm font-bold rounded-lg transition-colors {{ request()->routeIs('talangan.*') ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700' }}">
+                        <svg class="w-5 h-5 mr-3 {{ request()->routeIs('talangan.*') ? 'text-indigo-600' : 'text-gray-400' }}"
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z">
+                            </path>
+                        </svg>
+                        Input Talangan
+                    </a>
+
                     <a href="{{ route('ekskul.index') }}"
                         class="flex items-center px-3 py-2.5 text-sm font-bold rounded-lg transition-colors {{ request()->routeIs('ekskul.index') ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700' }}">
                         <svg class="w-5 h-5 mr-3 {{ request()->routeIs('ekskul.index') ? 'text-indigo-600' : 'text-gray-400' }}"
@@ -158,6 +175,7 @@
                         </svg>
                         Kelola Kelompok
                     </a>
+
                     <a href="{{ route('ekskul.ref.index') }}"
                         class="flex items-center px-3 py-2.5 text-sm font-bold rounded-lg transition-colors {{ request()->routeIs('ekskul.ref.*') ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700' }}">
                         <svg class="w-5 h-5 mr-3 {{ request()->routeIs('ekskul.ref.*') ? 'text-indigo-600' : 'text-gray-400' }}"
