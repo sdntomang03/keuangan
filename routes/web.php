@@ -128,7 +128,6 @@ Route::middleware(['permission:view-anggaran|kelola-anggaran|input-belanja'])->g
     // NPD (Read Only)
     Route::get('/npd', [NpdController::class, 'index'])->name('npd.index');
     Route::get('/npd/export', [NpdController::class, 'exportExcel'])->name('npd.export');
-    Route::get('/npd/{id}', [NpdController::class, 'show'])->name('npd.show');
     Route::get('/api/npd/cek-saldo', [NpdController::class, 'getSaldoAnggaran'])->name('api.npd.saldo');
 
     // Surat & Cetak

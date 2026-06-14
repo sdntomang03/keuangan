@@ -97,7 +97,6 @@ class NpdController extends Controller
         $sekolah = $user->sekolah; // Ambil data sekolah dari user yang login
         $sekolahId = $user->sekolah_id;
         $triwulanAktif = $sekolah->triwulan_aktif; // Ambil triwulan aktif
-
         $anggaranIdAktif = $sekolah->anggaran_id_aktif; // Pastikan kolom ini sesuai di model Sekolah
 
         // --- CEK APAKAH SUDAH ADA DATA UNTUK ANGGARAN & TRIWULAN INI ---
@@ -111,71 +110,88 @@ class NpdController extends Controller
         }
 
         $tahun = date('Y', strtotime($request->tanggal));
-        $berhasil = 0;
+        $validItems = [];
 
-        // 2. Jalankan Database Transaction
+        // 2. Kumpulkan baris item yang valid (Nominal > 0 dan Tidak Melebihi Pagu)
+        foreach ($request->items as $item) {
+            $nominal = (float) preg_replace('/[^0-9]/', '', $item['nominal']);
+            $pagu = (float) ($item['pagu_hidden'] ?? 0);
+
+            if ($nominal > 0 && $nominal <= $pagu) {
+                $validItems[] = [
+                    'item' => $item,
+                    'nominal' => $nominal,
+                    'pagu' => $pagu,
+                ];
+            }
+        }
+
+        if (empty($validItems)) {
+            return back()->with('error', 'Tidak ada data yang valid untuk disimpan. Pastikan nominal diisi dan tidak melebihi pagu.');
+        }
+
+        // 3. Jalankan Database Transaction
         DB::beginTransaction();
         try {
-            // Ambil nomor urut terakhir di tahun tersebut untuk penomoran otomatis
-            $lastCount = Npd::where('sekolah_id', $sekolahId)
-                ->whereYear('tanggal', $tahun)
-                ->max(DB::raw("CAST(SUBSTRING_INDEX(nomor_npd, '/', 1) AS UNSIGNED)")) ?? 0;
+            // --- MENGADOPSI LOGIKA PENOMORAN SURAT RESMI ---
+            $baseNumber = 0;
+            if ($sekolah->nomor_surat) {
+                $parts = explode('/', $sekolah->nomor_surat);
+                $baseNumber = (int) $parts[0];
+            }
 
-            foreach ($request->items as $item) {
-                // 3. Bersihkan Nominal & Realisasi
-                $nominal = (float) preg_replace('/[^0-9]/', '', $item['nominal']);
+            // Hitung total seluruh surat untuk mendapatkan nomor urut selanjutnya
+            $totalSurat = Surat::where('sekolah_id', $sekolahId)
+                ->whereYear('tanggal_surat', $tahun)
+                ->count();
 
-                // Perbaikan: ambil realisasi dari hidden input di blade
+            $nextUrut = $baseNumber + $totalSurat + 1;
+            $strNoUrut = str_pad($nextUrut, 3, '0', STR_PAD_LEFT);
+            $kodeSurat = $sekolah->kode_surat ?? 'NPD/'.$tahun;
+
+            $nomorNpd = "{$strNoUrut}/{$kodeSurat}";
+
+            // 4. BUAT INDUK SURAT NPD (Terintegrasi ke Manajemen Surat)
+            $suratNpd = \App\Models\Surat::create([
+                'sekolah_id' => $sekolahId,
+                'belanja_id' => null, // Null karena mencakup banyak kode rekening
+                'triwulan' => $triwulanAktif,
+                'jenis_surat' => 'NPD',
+                'nomor_surat' => $nomorNpd,
+                'tanggal_surat' => $request->tanggal,
+                'keterangan' => 'Pengajuan NPD Massal Triwulan '.$triwulanAktif,
+            ]);
+
+            // 5. Looping untuk menyimpan Rincian Rekening dengan 1 Nomor Surat
+            foreach ($validItems as $data) {
+                $item = $data['item'];
+                $nominal = $data['nominal'];
+                $pagu = $data['pagu'];
+
                 $realisasiValue = $item['realisasi_hidden'] ?? 0;
                 $realisasi = (float) preg_replace('/[^0-9]/', '', $realisasiValue);
+                $uraian = 'Pengajuan Dana '.($item['nama_rekening_hidden'] ?? '');
 
-                // Hanya simpan jika nominal lebih dari 0
-                if ($nominal > 0) {
-
-                    // Validasi sisi server: Jangan melebihi pagu
-                    $pagu = (float) ($item['pagu_hidden'] ?? 0);
-                    if ($nominal > $pagu) {
-                        continue; // Skip baris yang melanggar aturan
-                    }
-
-                    $lastCount++;
-                    $nomorNpd = sprintf('%03d/NPD/%s', $lastCount, $tahun);
-
-                    // Uraian otomatis berdasarkan nama rekening
-                    $uraian = 'Pengajuan Dana '.($item['nama_rekening_hidden'] ?? '');
-
-                    // 4. Create Data NPD
-                    Npd::create([
-                        'sekolah_id' => $sekolahId,
-                        'nomor_npd' => $nomorNpd,
-                        'tanggal' => $request->tanggal,
-                        'triwulan' => $triwulanAktif, // <--- PENAMBAHAN KOLOM TRIWULAN
-                        'idbl' => $item['idbl'],
-                        'kodeakun' => $item['kodeakun'],
-                        'uraian' => $uraian,
-                        'nilai_npd' => $nominal,
-                        'status' => 'diajukan',
-                        'total_realisasi' => $realisasi,
-                        'anggaran_id' => $sekolah->anggaran_id_aktif,
-                        // Snapshot untuk history
-                        'pagu_anggaran' => $pagu,
-                        'sisa_anggaran' => $pagu - $nominal,
-                    ]);
-
-                    $berhasil++;
-                }
+                Npd::create([
+                    'sekolah_id' => $sekolahId,
+                    'nomor_npd' => $suratNpd->nomor_surat, // <-- Integrasi dengan Nomor Surat Induk
+                    'tanggal' => $request->tanggal,
+                    'triwulan' => $triwulanAktif,
+                    'idbl' => $item['idbl'],
+                    'kodeakun' => $item['kodeakun'],
+                    'uraian' => $uraian,
+                    'nilai_npd' => $nominal,
+                    'status' => 'diajukan',
+                    'total_realisasi' => $realisasi,
+                    'anggaran_id' => $anggaranIdAktif,
+                    'pagu_anggaran' => $pagu,
+                    'sisa_anggaran' => $pagu - $nominal,
+                ]);
             }
 
-            // 5. Finalisasi
-            if ($berhasil > 0) {
-                DB::commit();
+            DB::commit();
 
-                return redirect()->route('npd.index')->with('success', "Berhasil menyimpan $berhasil pengajuan NPD untuk Triwulan $triwulanAktif.");
-            } else {
-                DB::rollBack();
-
-                return back()->with('error', 'Tidak ada data yang valid untuk disimpan. Pastikan nominal diisi dan tidak melebihi pagu.');
-            }
+            return redirect()->route('npd.index')->with('success', 'Berhasil menyimpan '.count($validItems)." pengajuan NPD dengan Nomor Surat $nomorNpd.");
 
         } catch (\Exception $e) {
             DB::rollBack();
