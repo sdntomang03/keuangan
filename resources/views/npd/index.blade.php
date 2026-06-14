@@ -11,6 +11,13 @@
                     }}</span>
             </h2>
             <div class="flex items-center gap-2">
+                <a href="{{ route('npd.create') }}"
+                    class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-lg font-bold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 shadow-md transition duration-150">
+                    <svg class="w-4 h-4 me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    Tambah NPD
+                </a>
                 {{-- Tombol Hapus: Hanya muncul jika ada data pengajuan di Triwulan ini --}}
                 @if($totalPengajuan > 0)
                 <form action="{{ route('npd.destroy_triwulan') }}" method="POST"
