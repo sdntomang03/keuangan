@@ -33,7 +33,6 @@
         .header h3 {
             margin: 0;
             font-size: 14px;
-            tracking-visible: 1px;
         }
 
         .header h2 {
@@ -220,7 +219,8 @@
                     <div style="font-size: 9px; color: #555;">u.p. {{ $surat->belanja->rekanan->pimpinan }}</div>
                     @endif
                     @else
-                    <span style="color: #777;">Internal / Sekolah</span>
+                    <strong>{{ $sekolah->sudin ?? 'Suku Dinas Pendidikan' }}</strong>
+                    <div style="font-size: 9px; color: #777; font-style: italic;">Internal / Sekolah</div>
                     @endif
                 </td>
             </tr>
