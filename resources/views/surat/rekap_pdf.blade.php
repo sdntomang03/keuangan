@@ -158,31 +158,6 @@
         <div class="garis-pembatas"></div>
     </div>
 
-    <table class="summary-container">
-        <tr>
-            <td width="22%" style="padding-right: 10px;">
-                <div class="summary-box">
-                    <div class="summary-title">Total Volume Surat</div>
-                    <div class="summary-value">{{ $totalSurat }} Dokumen</div>
-                </div>
-            </td>
-            <td width="78%">
-                <div class="summary-box" style="font-size: 10px;">
-                    <span class="summary-title" style="display:block; margin-bottom:3px;">Rekapitulasi Berdasarkan Jenis
-                        Dokumen:</span>
-                    <div style="margin-top: 2px;">
-                        @foreach($labelJenis as $key => $label)
-                        @if(($statistik[$key] ?? 0) > 0)
-                        <span style="margin-right: 15px; display: inline-block;">
-                            <strong>{{ $key }}:</strong> {{ $statistik[$key] }} berkas
-                        </span>
-                        @endif
-                        @endforeach
-                    </div>
-                </div>
-            </td>
-        </tr>
-    </table>
 
     <table class="data-table">
         <thead>
@@ -206,7 +181,6 @@
                     {{ $surat->nomor_surat }}
                 </td>
                 <td>
-                    <strong>{{ $surat->jenis_surat }}</strong>
                     <div style="font-size: 9px; color: #333; margin-top: 2px;">
                         {{ $labelJenis[$surat->jenis_surat] ?? $surat->jenis_surat }}
                     </div>
@@ -228,13 +202,12 @@
                 </td>
                 <td>
                     @if($surat->belanja && $surat->belanja->rekanan)
-                    <strong>{{ $surat->belanja->rekanan->nama_rekanan }}</strong>
+                    {{ $surat->belanja->rekanan->nama_rekanan }}
                     @if($surat->belanja->rekanan->pimpinan)
                     <div style="font-size: 9px; color: #444;">u.p. {{ $surat->belanja->rekanan->pimpinan }}</div>
                     @endif
                     @else
-                    <strong>{{ $sekolah->relasiSudin->nama ?? 'Suku Dinas Pendidikan' }}</strong>
-                    <div style="font-size: 9px; color: #555; font-style: italic;">Internal Instansi</div>
+                    {{ $sekolah->relasiSudin->nama ?? 'Suku Dinas Pendidikan' }}
                     @endif
                 </td>
             </tr>
