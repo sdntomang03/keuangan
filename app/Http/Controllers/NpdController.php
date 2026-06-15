@@ -149,7 +149,7 @@ class NpdController extends Controller
                 'jenis_surat' => 'NPD',
                 'nomor_surat' => $nomorNpd,
                 'tanggal_surat' => $request->tanggal,
-                'keterangan' => 'Pengajuan NPD Triwulan '.$triwulanAktif,
+                'keterangan' => 'Permohonan NPD BOP Alokasi Dasar Triwulan '.$triwulanAktif.' tahun '.$tahun.' '.$sekolah->nama_sekolah,
             ]);
 
             // 5. Looping untuk menyimpan Rincian Rekening dengan 1 Nomor Surat
