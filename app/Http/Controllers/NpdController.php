@@ -262,6 +262,8 @@ class NpdController extends Controller
             ->where('triwulan', $triwulanAktif)
             ->get();
 
+        dd($npdRecords); // Debug: Pastikan data yang diambil sesuai dengan kriteria
+
         // 2. CEK APAKAH KOSONG?
         if ($npdRecords->isEmpty()) {
             return back()->with('error', "Tidak ada data NPD yang ditemukan untuk dihapus pada Triwulan $triwulanAktif.");
