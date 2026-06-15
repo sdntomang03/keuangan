@@ -75,4 +75,10 @@ class Sekolah extends Model
     {
         return $this->belongsTo(Sudin::class, 'sudin');
     }
+
+    public function relasiSudin(): BelongsTo
+    {
+        // Ubah nama method menjadi relasiSudin agar tidak bentrok dengan kolom 'sudin'
+        return $this->belongsTo(Sudin::class, 'sudin');
+    }
 }

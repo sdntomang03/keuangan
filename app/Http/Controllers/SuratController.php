@@ -2147,7 +2147,7 @@ class SuratController extends Controller
         $user = Auth::user();
 
         // Pastikan mengambil objek Sekolah
-        $sekolah = Sekolah::find($user->sekolah_id);
+        $sekolah = Sekolah::with('relasiSudin')->find($user->sekolah_id);
         if (! $sekolah) {
             return back()->with('error', 'Data sekolah tidak ditemukan.');
         }
