@@ -2250,7 +2250,8 @@ class SuratController extends Controller
             'jenis_surat' => 'talangan', // Jika ada kolom pembeda tipe
             'sekolah_id' => auth()->user()->sekolah_id,
             'triwulan' => $sekolah->triwulan_aktif,
-            'belanja_id' => null, // Karena ini talangan, tidak terkait langsung ke satu belanja
+            'keterangan' => 'Surat Talangan '.$sekolah->anggaran->nama_anggaran.' Triwulan '.$sekolah->triwulan_aktif.' Tahun '.$sekolah->tahun_aktif,
+            'belanja_id' => null, // Bisa null karena kita simpan item di tabel Talangan, atau bisa diisi dengan ID belanja jika ingin referensi langsung
         ]);
 
         // 2. Simpan rincian ke model Talangan menggunakan ID surat tadi
