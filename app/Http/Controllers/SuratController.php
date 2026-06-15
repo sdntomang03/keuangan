@@ -2240,7 +2240,7 @@ class SuratController extends Controller
 
         // --- PERBAIKAN: Ambil data anggaran spesifik yang sedang aktif ---
         // Pastikan namespace model Anggaran sudah di-import di atas: use App\Models\Anggaran;
-        $anggaranAktif = \App\Models\Anggaran::find($anggaranId);
+        $anggaranAktif = Anggaran::find($anggaranId);
         $namaAnggaran = $anggaranAktif ? $anggaranAktif->nama_anggaran : 'Tidak Diketahui';
         $tahunAnggaran = $anggaranAktif ? $anggaranAktif->tahun : ($sekolah->tahun_aktif ?? date('Y'));
 
@@ -2257,7 +2257,7 @@ class SuratController extends Controller
             'jenis_surat' => 'talangan', // Jika ada kolom pembeda tipe
             'sekolah_id' => auth()->user()->sekolah_id,
             'triwulan' => $sekolah->triwulan_aktif,
-            // --- PERBAIKAN: Gunakan variabel $namaAnggaran dan $tahunAnggaran ---
+
             'keterangan' => 'Surat Talangan '.$namaAnggaran.' Triwulan '.$sekolah->triwulan_aktif.' Tahun '.$tahunAnggaran,
             'belanja_id' => null, // Bisa null karena kita simpan item di tabel Talangan
         ]);
