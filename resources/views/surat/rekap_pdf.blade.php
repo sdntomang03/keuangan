@@ -219,7 +219,7 @@
                     <div style="font-size: 9px; color: #555;">u.p. {{ $surat->belanja->rekanan->pimpinan }}</div>
                     @endif
                     @else
-                    <strong>{{ $sekolah->sudin->nama_sudin ?? ($sekolah->sudin->nama ?? 'Suku Dinas Pendidikan')
+                    <strong>{{ $sekolah->sudin->nama_sudin ?? ($sekolah->sudins->nama ?? 'Suku Dinas Pendidikan')
                         }}</strong>
                     <div style="font-size: 9px; color: #777; font-style: italic;">Internal / Sekolah</div>
                     @endif
