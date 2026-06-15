@@ -6,10 +6,10 @@
     <title>Agenda Surat Keluar TW {{ $triwulan }}</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: Arial, Helvetica, sans-serif;
             font-size: 11px;
-            color: #333;
-            line-height: 1.4;
+            color: #000;
+            line-height: 1.5;
         }
 
         .text-center {
@@ -24,31 +24,44 @@
             text-align: left;
         }
 
-        .header {
-            border-bottom: 3px double #000;
-            padding-bottom: 8px;
-            margin-bottom: 15px;
+        .uppercase {
+            text-transform: uppercase;
         }
 
-        .header h3 {
+        /* KOP LAPORAN RESMI KEDINASAN */
+        .kop-laporan {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .kop-laporan h3 {
             margin: 0;
-            font-size: 14px;
+            font-size: 13px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
         }
 
-        .header h2 {
-            margin: 3px 0;
-            font-size: 18px;
-            color: #1a237e;
-        }
-
-        .header p {
-            margin: 0;
-            font-size: 11px;
-            color: #555;
+        .kop-laporan h2 {
+            margin: 2px 0 5px 0;
+            font-size: 16px;
             font-weight: bold;
         }
 
-        /* KARTU STATISTIK RINGKASAN */
+        .kop-laporan p {
+            margin: 0;
+            font-size: 11px;
+            font-weight: normal;
+        }
+
+        .garis-pembatas {
+            border-bottom: 2px solid #000;
+            border-top: 1px solid #000;
+            height: 2px;
+            margin-top: 8px;
+            margin-bottom: 15px;
+        }
+
+        /* PANEL STATISTIK / RESUME EKSEKUTIF */
         .summary-container {
             width: 100%;
             margin-bottom: 15px;
@@ -56,28 +69,26 @@
         }
 
         .summary-box {
-            border: 1px solid #dcdcdc;
-            background-color: #f8f9fa;
-            padding: 6px 10px;
-            border-radius: 4px;
+            border: 1px solid #000;
+            background-color: #fcfcfc;
+            padding: 8px 12px;
             text-align: left;
         }
 
         .summary-title {
             font-size: 9px;
-            color: #666;
+            color: #444;
             text-transform: uppercase;
             font-weight: bold;
         }
 
         .summary-value {
-            font-size: 14px;
+            font-size: 13px;
             font-weight: bold;
-            color: #1a237e;
             margin-top: 2px;
         }
 
-        /* TABEL UTAMA */
+        /* TABEL AGENDA RESMI */
         table.data-table {
             width: 100%;
             border-collapse: collapse;
@@ -85,79 +96,81 @@
         }
 
         table.data-table th {
-            border: 1px solid #444;
-            background-color: #e8eaf6;
-            color: #1a237e;
-            padding: 8px 5px;
+            border: 1px solid #000;
+            background-color: #f2f2f2;
+            color: #000;
+            padding: 8px 4px;
             font-size: 10px;
             font-weight: bold;
             text-transform: uppercase;
         }
 
         table.data-table td {
-            border: 1px solid #666;
+            border: 1px solid #000;
             padding: 6px 6px;
             vertical-align: top;
         }
 
         .sub-info {
             font-size: 9px;
-            color: #555;
-            margin-top: 3px;
+            color: #444;
+            margin-top: 4px;
             font-style: italic;
         }
 
-        .badge {
-            display: inline-block;
-            padding: 2px 5px;
-            font-size: 9px;
-            font-weight: bold;
-            border-radius: 3px;
-            background-color: #eee;
-            color: #333;
-            border: 1px solid #ccc;
-        }
-
-        /* FOOTER SIGNATURE */
-        .footer {
+        /* FORMAT LEGALISASI / TANDA TANGAN (SIGNATURE) */
+        .footer-legalisasi {
             margin-top: 40px;
             page-break-inside: avoid;
         }
 
-        .footer table {
+        .footer-legalisasi table {
             width: 100%;
             border: none;
         }
 
-        .footer td {
+        .footer-legalisasi td {
             border: none;
             text-align: center;
             vertical-align: top;
             font-size: 11px;
+            padding: 0 15px;
+        }
+
+        .space-tanda-tangan {
+            height: 75px;
+            /* Jarak aman dan proporsional untuk tanda tangan fisik & stempel dinas */
+        }
+
+        .nama-pejabat {
+            text-decoration: underline;
+            font-weight: bold;
+            text-transform: uppercase;
         }
     </style>
 </head>
 
 <body>
-    <div class="header text-center">
+    <div class="kop-laporan">
         <h3>DAFTAR AGENDA REGISTRASI SURAT KELUAR</h3>
         <h2>{{ strtoupper($sekolah->nama_sekolah) }}</h2>
-        <p>Triwulan {{ $triwulan }} — Tahun Anggaran {{ $tahun }}</p>
+        <p>Periode: Triwulan {{ $triwulan }} — Tahun Anggaran {{ $tahun }}</p>
+        <div class="garis-pembatas"></div>
     </div>
 
     <table class="summary-container">
         <tr>
-            <td width="20%" style="padding-right: 10px;">
+            <td width="22%" style="padding-right: 10px;">
                 <div class="summary-box">
-                    <div class="summary-title">Total Surat Keluar</div>
+                    <div class="summary-title">Total Volume Surat</div>
                     <div class="summary-value">{{ $totalSurat }} Dokumen</div>
                 </div>
             </td>
-            <td width="80%">
-                <div class="summary-box" style="font-size: 10px; padding: 7px 12px;">
-                    <span class="summary-title" style="display:block; margin-bottom:4px;">Rincian Berdasarkan Jenis
+            <td width="78%">
+                <div class="summary-box" style="font-size: 10px;">
+                    <span class="summary-title" style="display:block; margin-bottom:3px;">Rekapitulasi Berdasarkan Jenis
                         Dokumen:</span>
-                    <div style="margin-top: 3px;">
+                    <div style="margin-top: 2px;">
                         @foreach($labelJenis as $key => $label)
                         @if(($statistik[$key] ?? 0) > 0)
                         <span style="margin-right: 15px; display: inline-block;">
@@ -175,11 +188,11 @@
         <thead>
             <tr>
                 <th width="4%">No</th>
-                <th width="10%">Tanggal Surat</th>
-                <th width="18%">Nomor Agenda Surat</th>
-                <th width="18%">Jenis Dokumen</th>
-                <th width="32%">Uraian & Deskripsi Kegiatan</th>
-                <th width="18%">Tujuan / Pihak Rekanan</th>
+                <th width="10%">Tanggal</th>
+                <th width="20%">Nomor Surat</th>
+                <th width="16%">Jenis Dokumen</th>
+                <th width="32%">Uraian / Maksud Kegiatan Belanja</th>
+                <th width="18%">Tujuan / Pihak Penerima</th>
             </tr>
         </thead>
         <tbody>
@@ -187,18 +200,19 @@
             <tr>
                 <td class="text-center">{{ $index + 1 }}</td>
                 <td class="text-center">
-                    {{ \Carbon\Carbon::parse($surat->tanggal_surat)->translatedFormat('d M Y') }}
+                    {{ \Carbon\Carbon::parse($surat->tanggal_surat)->translatedFormat('d/m/Y') }}
                 </td>
-                <td style="font-family: monospace; font-size: 11px; font-weight: bold;">
+                <td style="font-family: 'Courier New', Courier, monospace; font-size: 11px; font-weight: bold;">
                     {{ $surat->nomor_surat }}
                 </td>
                 <td>
-                    <span class="badge">{{ $surat->jenis_surat }}</span>
-                    <div style="margin-top:3px; font-size:10px;">{{ $labelJenis[$surat->jenis_surat] ??
-                        $surat->jenis_surat }}</div>
+                    <strong>{{ $surat->jenis_surat }}</strong>
+                    <div style="font-size: 9px; color: #333; margin-top: 2px;">
+                        {{ $labelJenis[$surat->jenis_surat] ?? $surat->jenis_surat }}
+                    </div>
                 </td>
                 <td>
-                    <div style="font-weight: 500;">
+                    <div style="font-weight: normal; text-align: justify;">
                         {{ $surat->belanja->uraian ?? ($surat->jenis_surat == 'NPD' ? 'Nota Permintaan Dana (NPD)
                         Triwulan ' . $triwulan . ' TA ' . $tahun : ($surat->jenis_surat == 'talangan' ? 'Pernyataan Dana
                         Talangan Triwulan ' . $triwulan . ' TA ' . $tahun : 'Sisa Tanda Setoran Triwulan ' . $triwulan .
@@ -207,7 +221,7 @@
 
                     @if(isset($surat->belanja->korek))
                     <div class="sub-info">
-                        Kode Akun: {{ $surat->belanja->korek->kode }} — {{ $surat->belanja->korek->uraian_singkat ??
+                        Kode Rekening: {{ $surat->belanja->korek->kode }} — {{ $surat->belanja->korek->uraian_singkat ??
                         $surat->belanja->korek->ket }}
                     </div>
                     @endif
@@ -216,39 +230,41 @@
                     @if($surat->belanja && $surat->belanja->rekanan)
                     <strong>{{ $surat->belanja->rekanan->nama_rekanan }}</strong>
                     @if($surat->belanja->rekanan->pimpinan)
-                    <div style="font-size: 9px; color: #555;">u.p. {{ $surat->belanja->rekanan->pimpinan }}</div>
+                    <div style="font-size: 9px; color: #444;">u.p. {{ $surat->belanja->rekanan->pimpinan }}</div>
                     @endif
                     @else
                     <strong>{{ $sekolah->relasiSudin->nama ?? 'Suku Dinas Pendidikan' }}</strong>
-                    <div style="font-size: 9px; color: #777; font-style: italic;">Internal / Sekolah</div>
+                    <div style="font-size: 9px; color: #555; font-style: italic;">Internal Instansi</div>
                     @endif
                 </td>
             </tr>
             @empty
             <tr>
-                <td colspan="6" class="text-center" style="padding: 20px; color: #777; font-style: italic;">
-                    Belum ada riwayat surat keluar yang dibuat atau digenerate pada periode Triwulan {{ $triwulan }}
-                    Tahun {{ $tahun }}.
+                <td colspan="6" class="text-center" style="padding: 20px; color: #444; font-style: italic;">
+                    Belum ada riwayat registrasi surat keluar untuk periode Triwulan {{ $triwulan }} Tahun Anggaran {{
+                    $tahun }}.
                 </td>
             </tr>
             @endforelse
         </tbody>
     </table>
 
-    <div class="footer">
+    <div class="footer-legalisasi">
         <table width="100%">
             <tr>
                 <td width="50%">
                     Mengetahui,<br>
-                    Kepala Sekolah<br><br><br><br><br>
-                    <strong style="text-decoration: underline;">{{ $sekolah->nama_kepala_sekolah }}</strong><br>
+                    Kepala {{ $sekolah->nama_sekolah }}<br>
+                    <div class="space-tanda-tangan"></div>
+                    <span class="nama-pejabat">{{ $sekolah->nama_kepala_sekolah }}</span><br>
                     NIP. {{ $sekolah->nip_kepala_sekolah }}
                 </td>
                 <td width="50%">
                     Jakarta, {{ now()->translatedFormat('d F Y') }}<br>
-                    Bendahara Sekolah<br><br><br><br><br>
-                    <strong style="text-decoration: underline;">{{ $sekolah->nama_bendahara ??
-                        $sekolah->nama_pengurus_barang }}</strong><br>
+                    Bendahara Sekolah<br>
+                    <div class="space-tanda-tangan"></div>
+                    <span class="nama-pejabat">{{ $sekolah->nama_bendahara ?? $sekolah->nama_pengurus_barang
+                        }}</span><br>
                     NIP. {{ $sekolah->nip_bendahara ?? $sekolah->nip_pengurus_barang }}
                 </td>
             </tr>
