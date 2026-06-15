@@ -2258,7 +2258,7 @@ class SuratController extends Controller
             'sekolah_id' => auth()->user()->sekolah_id,
             'triwulan' => $sekolah->triwulan_aktif,
             // --- PERBAIKAN: Gunakan variabel $namaAnggaran dan $tahunAnggaran ---
-            'keterangan' => 'Surat Talangan ' . $namaAnggaran . ' Triwulan ' . $sekolah->triwulan_aktif . ' Tahun ' . $tahunAnggaran,
+            'keterangan' => 'Surat Talangan '.$namaAnggaran.' Triwulan '.$sekolah->triwulan_aktif.' Tahun '.$tahunAnggaran,
             'belanja_id' => null, // Bisa null karena kita simpan item di tabel Talangan
         ]);
 
