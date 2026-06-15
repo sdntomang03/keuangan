@@ -2155,8 +2155,8 @@ class SuratController extends Controller
         $triwulan = $sekolah->triwulan_aktif;
         $tahun = $sekolah->tahun_aktif ?? date('Y');
 
-        // Query langsung ke tabel surats
-        $listSurat = Surat::with(['belanja.rekanan'])
+        // Query langsung ke tabel surats dengan eger loading yang lengkap
+        $listSurat = Surat::with(['belanja.rekanan', 'belanja.korek'])
             ->where('sekolah_id', $sekolah->id)
             ->where('triwulan', $triwulan)
             ->whereYear('tanggal_surat', $tahun)
@@ -2164,7 +2164,7 @@ class SuratController extends Controller
             ->orderBy('nomor_surat', 'asc')
             ->get();
 
-        // Mapping Label
+        // Mapping Label Jenis Surat
         $labelJenis = [
             'PH' => 'Permintaan Harga',
             'NH' => 'Negosiasi Harga',
@@ -2172,7 +2172,14 @@ class SuratController extends Controller
             'BAPB' => 'Berita Acara Penyerahan Barang',
             'talangan' => 'Pernyataan Dana Talangan',
             'NPD' => 'Nota Permintaan Dana',
+            'STS' => 'Surat Tanda Setoran',
         ];
+
+        // --- TAMBAHAN: Hitung Statistik Ringkasan untuk PDF ---
+        $totalSurat = $listSurat->count();
+        $statistik = $listSurat->groupBy('jenis_surat')->map(function ($row) {
+            return $row->count();
+        });
 
         $pdf = PDF::loadView('surat.rekap_pdf', [
             'listSurat' => $listSurat,
@@ -2180,7 +2187,11 @@ class SuratController extends Controller
             'triwulan' => $triwulan,
             'tahun' => $tahun,
             'labelJenis' => $labelJenis,
+            'totalSurat' => $totalSurat,
+            'statistik' => $statistik,
         ]);
+
+        // Ukuran kertas F4 / Custom Folio Landscape
         $customPaper = [0, 0, 609.448, 935.433];
         $pdf->setPaper($customPaper, 'landscape');
 
