@@ -256,23 +256,30 @@ class NpdController extends Controller
         $triwulanAktif = $sekolah->triwulan_aktif;
         $anggaranId = $sekolah->anggaran_id_aktif;
 
+        // 1. CARI DATA TERLEBIH DAHULU (GET)
+        $npdRecords = Npd::where('sekolah_id', $sekolah->id)
+            ->where('anggaran_id', $anggaranId)
+            ->where('triwulan', $triwulanAktif)
+            ->get();
+
+        // 2. CEK APAKAH KOSONG?
+        if ($npdRecords->isEmpty()) {
+            return back()->with('error', "Tidak ada data NPD yang ditemukan untuk dihapus pada Triwulan $triwulanAktif.");
+        }
+
+        // 3. JIKA ADA, HITUNG JUMLAHNYA LALU HAPUS
         DB::beginTransaction();
         try {
-            // Hapus semua NPD sekolah ini pada triwulan dan anggaran yang aktif
-            $deleted = Npd::where('sekolah_id', $sekolah->id)
-                ->where('anggaran_id', $anggaranId)
-                ->where('triwulan', $triwulanAktif)
-                ->delete();
+            $jumlahDihapus = $npdRecords->count();
 
-            if ($deleted) {
-                DB::commit();
+            // Eksekusi hapus berdasarkan ID yang sudah pasti ditemukan
+            $idsTobeDeleted = $npdRecords->pluck('id');
+            Npd::whereIn('id', $idsTobeDeleted)->delete();
 
-                return redirect()->route('npd.index')->with('success', "Berhasil menghapus $deleted data pengajuan NPD pada Triwulan $triwulanAktif.");
-            } else {
-                DB::rollBack();
+            DB::commit();
 
-                return back()->with('error', "Tidak ada data NPD yang bisa dihapus pada Triwulan $triwulanAktif.");
-            }
+            return redirect()->route('npd.index')
+                ->with('success', "Berhasil menghapus $jumlahDihapus data pengajuan NPD pada Triwulan $triwulanAktif.");
 
         } catch (\Exception $e) {
             DB::rollBack();
