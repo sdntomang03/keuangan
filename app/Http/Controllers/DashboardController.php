@@ -180,6 +180,13 @@ class DashboardController extends Controller
         $target->is_aktif = true;
         $target->save();
 
+        // 5. UPDATE UTAMA: Sinkronkan anggaran_id_aktif di tabel sekolah
+        $sekolah = auth()->user()->sekolah;
+        if ($sekolah) {
+            $sekolah->anggaran_id_aktif = $target->id;
+            $sekolah->save();
+        }
+
         return back()->with('success', "Berhasil beralih ke {$target->singkatan} {$target->tahun}");
     }
 }
