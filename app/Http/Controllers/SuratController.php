@@ -2237,6 +2237,13 @@ class SuratController extends Controller
         }
 
         $anggaranId = $sekolah->anggaran_id_aktif;
+
+        // --- PERBAIKAN: Ambil data anggaran spesifik yang sedang aktif ---
+        // Pastikan namespace model Anggaran sudah di-import di atas: use App\Models\Anggaran;
+        $anggaranAktif = \App\Models\Anggaran::find($anggaranId);
+        $namaAnggaran = $anggaranAktif ? $anggaranAktif->nama_anggaran : 'Tidak Diketahui';
+        $tahunAnggaran = $anggaranAktif ? $anggaranAktif->tahun : ($sekolah->tahun_aktif ?? date('Y'));
+
         $request->validate([
             'nomor_surat' => 'required|string',
             'tanggal_surat' => 'required|date',
@@ -2250,8 +2257,9 @@ class SuratController extends Controller
             'jenis_surat' => 'talangan', // Jika ada kolom pembeda tipe
             'sekolah_id' => auth()->user()->sekolah_id,
             'triwulan' => $sekolah->triwulan_aktif,
-            'keterangan' => 'Surat Talangan '.$sekolah->anggarans->nama_anggaran.' Triwulan '.$sekolah->triwulan_aktif.' Tahun '.$sekolah->tahun_aktif,
-            'belanja_id' => null, // Bisa null karena kita simpan item di tabel Talangan, atau bisa diisi dengan ID belanja jika ingin referensi langsung
+            // --- PERBAIKAN: Gunakan variabel $namaAnggaran dan $tahunAnggaran ---
+            'keterangan' => 'Surat Talangan ' . $namaAnggaran . ' Triwulan ' . $sekolah->triwulan_aktif . ' Tahun ' . $tahunAnggaran,
+            'belanja_id' => null, // Bisa null karena kita simpan item di tabel Talangan
         ]);
 
         // 2. Simpan rincian ke model Talangan menggunakan ID surat tadi
@@ -2259,15 +2267,17 @@ class SuratController extends Controller
             if (isset($item['selected']) && $item['selected'] == 1) {
                 $belanja = Belanja::find($belanjaId);
 
-                Talangan::create([
-                    'surat_id' => $surat->id, // Mengacu pada primary key model Surat
-                    'anggaran_id' => $belanja->anggaran_id,
-                    'triwulan' => $belanja->tw,
-                    'kodeakun' => $belanja->kodeakun,
-                    'kodepelanggan' => $item['kodepelanggan'],
-                    'bulan' => $item['bulan'],
-                    'jumlah' => $item['jumlah'],
-                ]);
+                if ($belanja) {
+                    Talangan::create([
+                        'surat_id' => $surat->id, // Mengacu pada primary key model Surat
+                        'anggaran_id' => $belanja->anggaran_id,
+                        'triwulan' => $belanja->tw,
+                        'kodeakun' => $belanja->kodeakun,
+                        'kodepelanggan' => $item['kodepelanggan'],
+                        'bulan' => $item['bulan'],
+                        'jumlah' => $item['jumlah'],
+                    ]);
+                }
             }
         }
 
