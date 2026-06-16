@@ -181,12 +181,12 @@
                     {{ $surat->nomor_surat }}
                 </td>
                 <td>
-                    <div style="font-weight: normal; text-align: justify;">
+                    <div style="font-weight: normal;">
                         {{ $labelJenis[$surat->jenis_surat] ?? $surat->jenis_surat }}
                     </div>
                 </td>
                 <td>
-                    <div style="font-weight: normal; text-align: justify;">
+                    <div style="font-weight: normal;">
                         {{ $surat->belanja->uraian ?? ($surat->jenis_surat == 'NPD' ? 'Nota Permintaan Dana (NPD)
                         Triwulan ' . $triwulan . ' TA ' . $tahun : ($surat->jenis_surat == 'talangan' ? 'Pernyataan Dana
                         Talangan Triwulan ' . $triwulan . ' TA ' . $tahun : 'Sisa Tanda Setoran Triwulan ' . $triwulan .
