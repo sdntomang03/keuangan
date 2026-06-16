@@ -164,9 +164,9 @@
             <tr>
                 <th width="4%">No</th>
                 <th width="10%">Tanggal</th>
-                <th width="20%">Nomor Surat</th>
-                <th width="16%">Jenis Dokumen</th>
-                <th width="32%">Uraian / Maksud Kegiatan Belanja</th>
+                <th width="15%">Nomor Surat</th>
+                <th width="15%">Jenis Dokumen</th>
+                <th>Uraian / Maksud Kegiatan Belanja</th>
                 <th width="18%">Tujuan / Pihak Penerima</th>
             </tr>
         </thead>
