@@ -181,7 +181,7 @@
                     {{ $surat->nomor_surat }}
                 </td>
                 <td>
-                    <div style="font-size: 9px; color: #333; margin-top: 2px;">
+                    <div style="font-weight: normal; text-align: justify;">
                         {{ $labelJenis[$surat->jenis_surat] ?? $surat->jenis_surat }}
                     </div>
                 </td>
