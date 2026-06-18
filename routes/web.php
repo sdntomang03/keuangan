@@ -271,7 +271,7 @@ Route::middleware(['permission:kelola-anggaran'])->group(function () {
 // =========================================================================
 // ZONA 4: EKSTRAKURIKULER
 // =========================================================================
-Route::middleware(['permission:input-ekskul'])->group(function () {
+Route::middleware(['permission:input-ekskul|kelola-anggaran'])->group(function () {
 
     Route::group(['prefix' => 'ekskul', 'as' => 'ekskul.'], function () {
         Route::get('/index/{belanjaId?}', [EkskulController::class, 'index'])->name('index');
