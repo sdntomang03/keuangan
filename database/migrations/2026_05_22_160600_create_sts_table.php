@@ -19,6 +19,7 @@ return new class extends Migration
             $table->text('uraian');
             $table->double('nominal');
             $table->integer('tw'); // Triwulan
+            $table->unsignedBigInteger('bku_id')->nullable();
             $table->timestamps();
         });
     }

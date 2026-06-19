@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Bku;
-use App\Models\Sekolah;
 use App\Models\Sts;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -24,17 +23,35 @@ class StsController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate(['tanggal' => 'required|date', 'no_bukti' => 'required|string', 'uraian' => 'required|string', 'nominal' => 'required|numeric|min:1']);
+        $request->validate([
+            'tanggal' => 'required|date',
+            'no_bukti' => 'required|string',
+            'uraian' => 'required|string',
+            'nominal' => 'required|numeric|min:1',
+        ]);
         $anggaran = $request->anggaran_data;
 
         try {
             $sts = DB::transaction(function () use ($request, $anggaran) {
-                $sekolah = Sekolah::where('id', auth()->user()->sekolah_id)->first();
-                $sts = Sts::create(array_merge($request->all(), [
-                    'anggaran_id' => $anggaran->id, 'tw' => $sekolah->triwulan_aktif,
-                ]));
+                $sekolah = \App\Models\Sekolah::where('id', auth()->user()->sekolah_id)->first();
 
-                Bku::catat($sts->tanggal, $sts->no_bukti, $sts->uraian, 0, $sts->nominal, null, null, $anggaran->id, null, $sekolah->triwulan_aktif, null, $sts->id);
+                // 1. CATAT KE BKU TERLEBIH DAHULU
+                $bku = \App\Models\Bku::catat(
+                    $request->tanggal,
+                    $request->no_bukti,
+                    $request->uraian,
+                    0,
+                    $request->nominal,
+                    null, null, $anggaran->id, null,
+                    $sekolah->triwulan_aktif
+                );
+
+                // 2. SIMPAN STS DENGAN MENYISIPKAN ID BKU YANG BARU SAJA DIBUAT
+                $sts = Sts::create(array_merge($request->all(), [
+                    'anggaran_id' => $anggaran->id,
+                    'tw' => $sekolah->triwulan_aktif,
+                    'bku_id' => $bku->id,
+                ]));
 
                 return $sts;
             });
@@ -73,15 +90,21 @@ class StsController extends Controller
 
     public function destroy(Request $request, $id)
     {
+        // Tetap pertahankan validasi anggaran_id ini karena sangat bagus untuk keamanan
         $sts = Sts::where('anggaran_id', $request->anggaran_data->id)->findOrFail($id);
 
         try {
             DB::transaction(function () use ($sts) {
-                DB::table('bkus')->where('sts_id', $sts->id)->delete();
+                // 1. Cek apakah STS ini memiliki bku_id, lalu hapus data BKU-nya
+                if ($sts->bku_id) {
+                    DB::table('bkus')->where('id', $sts->bku_id)->delete();
+                }
+
+                // 2. Hapus data STS
                 $sts->delete();
             });
 
-            return response()->json(['status' => 'success', 'message' => 'Data STS berhasil dihapus.']);
+            return response()->json(['status' => 'success', 'message' => 'Data STS dan catatan BKU berhasil dihapus.']);
         } catch (\Exception $e) {
             return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
         }
