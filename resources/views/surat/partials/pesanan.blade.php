@@ -123,7 +123,7 @@ $is_penggandaan = $surat->is_penggandaan ?? false;
                 <td class="text-center">{{ $loop->iteration }}</td>
 
                 {{-- KONDISI 2: LOGIC MERGE ROW TANGGAL --}}
-                @if($is_parsial && !$is_penggandaan)
+                @if($is_parsial)
                 @php
                 $currentDate = $item->tanggal_kirim ?? '-';
 
