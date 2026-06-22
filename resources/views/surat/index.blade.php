@@ -713,16 +713,19 @@
                                                         <label
                                                             class="text-[10px] font-bold text-gray-400 mb-1 block">Nomor
                                                             BAST/SJ</label>
+
                                                         <input type="text" name="no_bast[]" x-model="bast.no"
-                                                            placeholder="No. BAST dari Toko" required
+                                                            placeholder="No. BAST dari Toko"
+                                                            :required="jenisSurat === 'BAPB'"
                                                             class="w-full text-xs border-none rounded-xl p-3 font-bold focus:ring-1 focus:ring-orange-300">
                                                     </div>
                                                     <div class="col-span-5">
                                                         <label
                                                             class="text-[10px] font-bold text-gray-400 mb-1 block">Tanggal
                                                             BAST</label>
+
                                                         <input type="date" name="tanggal_bast[]" x-model="bast.tgl"
-                                                            required
+                                                            :required="jenisSurat === 'BAPB'"
                                                             class="w-full text-xs border-none rounded-xl p-3 font-bold focus:ring-1 focus:ring-orange-300">
                                                     </div>
                                                     <div class="col-span-2 pb-0.5">
