@@ -107,7 +107,7 @@ $is_penggandaan = $surat->is_penggandaan ?? false;
                 <th style="width: 6%; text-align: center;">No</th>
 
                 {{-- KONDISI 1: JIKA PARSIAL, TAMBAH HEADER TANGGAL --}}
-                @if($is_parsial && !$is_penggandaan)
+                @if($is_parsial )
                 <th style="width: 20%; text-align: center;">Tanggal Kirim</th>
                 @endif
 
@@ -123,7 +123,7 @@ $is_penggandaan = $surat->is_penggandaan ?? false;
                 <td class="text-center">{{ $loop->iteration }}</td>
 
                 {{-- KONDISI 2: LOGIC MERGE ROW TANGGAL --}}
-                @if($is_parsial)
+                @if($is_parsial )
                 @php
                 $currentDate = $item->tanggal_kirim ?? '-';
 
