@@ -187,19 +187,72 @@
             <div class="mt-4">
 
                 {{-- TAB 1: SURAT --}}
+                {{-- TAB 1: SURAT --}}
                 <div x-show="activeTab === 'surat'" x-transition:enter="transition ease-out duration-300"
-                    class="space-y-4">
+                    class="space-y-4" x-data="{
+        selectedSurats: [],
+        selectAll: false,
+        toggleAll() {
+            if (this.selectAll) {
+                // Ambil semua ID surat dalam bentuk array string
+                this.selectedSurats = {{ $belanja->surats->pluck('id')->toJson() }}.map(String);
+            } else {
+                this.selectedSurats = [];
+            }
+        }
+    }">
+
+                    @if($belanja->surats->count() > 0)
+                    {{-- FORM TERSEMBUNYI UNTUK BULK DELETE --}}
+                    <form id="bulk-delete-form" action="{{ route('surat.hapus_banyak') }}" method="POST" class="hidden">
+                        @csrf
+                        {{-- Generate input tersembunyi sesuai checkbox yang dipilih --}}
+                        <template x-for="id in selectedSurats" :key="id">
+                            <input type="hidden" name="surat_ids[]" :value="id">
+                        </template>
+                    </form>
+
+                    {{-- HEADER KONTROL MULTI-SELECT --}}
+                    <div class="flex justify-between items-center mb-4 bg-white p-3 md:px-5 rounded-3xl shadow-sm border transition-all"
+                        :class="selectedSurats.length > 0 ? 'border-red-200 bg-red-50/10' : 'border-gray-100'">
+
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" x-model="selectAll" @change="toggleAll()"
+                                class="w-5 h-5 rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 transition">
+                            <span class="text-xs font-black text-gray-600 uppercase tracking-wider">Pilih Semua
+                                Dokumen</span>
+                        </label>
+
+                        <button type="button" x-show="selectedSurats.length > 0" x-transition
+                            @click="if(confirm('Yakin ingin menghapus ' + selectedSurats.length + ' dokumen surat yang dipilih? Rincian barang di dalamnya juga akan ikut terhapus.')) document.getElementById('bulk-delete-form').submit()"
+                            class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-md transition-all hover:-translate-y-0.5 flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            <span class="hidden md:inline">Hapus Terpilih</span>
+                            <span class="bg-white text-red-600 px-1.5 py-0.5 rounded-md font-black"
+                                x-text="selectedSurats.length"></span>
+                        </button>
+                    </div>
+                    @endif
+
                     @foreach($belanja->surats as $surat)
                     {{-- START LOOP SURAT --}}
                     <div x-data="{ showModalItems: false }" class="mb-4">
 
                         {{-- KARTU SURAT --}}
-                        <div
-                            class="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 transition-shadow hover:shadow-md group flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div class="bg-white p-5 rounded-3xl shadow-sm border transition-all hover:shadow-md group flex flex-col md:flex-row justify-between items-center gap-4"
+                            :class="selectedSurats.includes('{{ $surat->id }}') ? 'border-indigo-400 ring-2 ring-indigo-50 bg-indigo-50/10' : 'border-gray-100'">
 
-                            {{-- Kiri: Ikon & Info --}}
-                            <div class="flex items-center gap-5 w-full md:w-auto">
-                                <div class="relative">
+                            {{-- Kiri: Checkbox, Ikon & Info --}}
+                            <div class="flex items-center gap-4 w-full md:w-auto">
+
+                                {{-- CHECKBOX ITEM --}}
+                                <input type="checkbox" value="{{ $surat->id }}" x-model="selectedSurats"
+                                    class="w-5 h-5 rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 cursor-pointer transition">
+
+                                <div class="relative flex-shrink-0">
                                     <div
                                         class="w-14 h-14 flex items-center justify-center rounded-2xl {{ $surat->is_parsial ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600' }} font-black text-sm">
                                         {{ $surat->jenis_surat }}
@@ -223,9 +276,8 @@
                                 </div>
                             </div>
 
-
                             {{-- Kanan: Tombol Aksi --}}
-                            <div class="flex items-center gap-2">
+                            <div class="flex flex-wrap items-center gap-2 w-full md:w-auto justify-end">
 
                                 {{-- 1. TOMBOL RINCIAN BARANG --}}
                                 <button @click="showModalItems = true" type="button"
@@ -237,6 +289,7 @@
                                     </svg>
                                     <span class="hidden md:inline">Rincian</span>
                                 </button>
+
                                 @if($surat->is_parsial == 1)
                                 <a href="{{ route('surat.cetakParsialPdf', $surat->id) }}" target="_blank"
                                     class="px-3 py-2 bg-orange-50 text-orange-600 rounded-xl hover:bg-orange-100 transition-colors text-xs font-bold flex items-center gap-2"
@@ -249,22 +302,18 @@
                                 </a>
                                 @else
                                 @php
-                                // 1. Mapping Kode Database ke Parameter URL Controller
                                 $mapJenis = [
                                 'PH' => 'permintaan',
                                 'NH' => 'negosiasi',
                                 'SP' => 'pesanan',
                                 'BAPB' => 'pemeriksaan',
                                 ];
-
-                                // 2. Tentukan jenis slug (Default ke 'permintaan' jika tidak ketemu)
                                 $jenisSlug = $mapJenis[$surat->jenis_surat] ?? 'permintaan';
                                 @endphp
                                 <a href="{{ route('surat.cetakSatuanPdf', ['id' => $belanja->id, 'jenis' => $jenisSlug]) }}"
                                     target="_blank"
-                                    class="px-3 py-2 bg-green-50 text-green-600 rounded-xl hover:bg-orange-100 transition-colors text-xs font-bold flex items-center gap-2"
+                                    class="px-3 py-2 bg-green-50 text-green-600 rounded-xl hover:bg-green-100 transition-colors text-xs font-bold flex items-center gap-2"
                                     title="Cetak PDF">
-
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -273,23 +322,19 @@
                                 </a>
                                 @endif
 
-
                                 {{-- Separator Kecil --}}
                                 <div class="h-6 w-px bg-gray-200 mx-1"></div>
 
                                 {{-- 3. TOMBOL SIMPAN & HAPUS (Hidden by Default) --}}
                                 <div
                                     class="flex items-center gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200">
-
-                                    {{-- Form Update --}}
                                     <button type="button" onclick="openEditModal(
-            '{{ route('surat.update', $surat->id) }}',
-            '{{ $surat->tanggal_surat->format('Y-m-d') }}',
-            '{{ $surat->nomor_surat }}',
-            '{{ $surat->jenis_surat }}',
-            '{{ $surat->no_bast }}',
-        )" class="text-blue-600 hover:text-blue-900 ml-2" title="Edit Rincian Surat">
-
+                        '{{ route('surat.update', $surat->id) }}',
+                        '{{ $surat->tanggal_surat->format('Y-m-d') }}',
+                        '{{ $surat->nomor_surat }}',
+                        '{{ $surat->jenis_surat }}',
+                        '{{ $surat->no_bast }}',
+                    )" class="text-blue-600 hover:text-blue-900 ml-2" title="Edit Rincian Surat">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
                                             viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -299,7 +344,6 @@
                                         </svg>
                                     </button>
 
-                                    {{-- Form Hapus --}}
                                     <form action="{{ route('surat.destroy', $surat->id) }}" method="POST"
                                         id="delete-surat-{{ $surat->id }}">
                                         @csrf @method('DELETE')
@@ -312,12 +356,11 @@
                                             </svg>
                                         </button>
                                     </form>
-
                                 </div>
                             </div>
                         </div>
 
-                        {{-- MODAL RINCIAN ITEM (Ditaruh di DALAM Loop) --}}
+                        {{-- MODAL RINCIAN ITEM --}}
                         <div x-show="showModalItems" style="display: none;" class="fixed inset-0 z-50 overflow-y-auto"
                             x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0"
                             x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200"
@@ -335,8 +378,8 @@
                                         <div>
                                             <h3 class="text-sm font-black text-gray-800 uppercase tracking-widest">
                                                 Daftar Barang</h3>
-                                            <p class="text-[10px] text-gray-400 font-bold">Surat:
-                                                {{ $surat->nomor_surat }}</p>
+                                            <p class="text-[10px] text-gray-400 font-bold">Surat: {{ $surat->nomor_surat
+                                                }}</p>
                                         </div>
                                         <button @click="showModalItems = false"
                                             class="text-gray-400 hover:text-gray-600 bg-white p-1 rounded-full shadow-sm hover:shadow-md transition">
@@ -347,34 +390,25 @@
                                         </button>
                                     </div>
                                     <div class="px-6 py-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
-                                        @php
-                                        $items = $surat->is_parsial ? $surat->rincis : $belanja->rincis;
-                                        @endphp
+                                        @php $items = $surat->is_parsial ? $surat->rincis : $belanja->rincis; @endphp
                                         @if($items->count() > 0)
                                         <ul class="space-y-3">
                                             @foreach($items as $item)
                                             <li
                                                 class="flex justify-between items-start gap-3 p-3 rounded-xl border border-gray-100 hover:border-indigo-100 hover:bg-indigo-50/30 transition-colors">
                                                 <div class="flex items-start gap-3">
-                                                    {{-- Dot Indikator --}}
                                                     <div
                                                         class="mt-1.5 w-2 h-2 rounded-full {{ $surat->is_parsial ? 'bg-purple-500' : 'bg-blue-500' }} flex-shrink-0">
                                                     </div>
-
-                                                    {{-- Nama & Spek --}}
                                                     <div>
-                                                        <p class="text-xs font-bold text-gray-700 leading-tight">
-                                                            {{ $item->namakomponen ?? $item->nama_komponen }}
-                                                        </p>
+                                                        <p class="text-xs font-bold text-gray-700 leading-tight">{{
+                                                            $item->namakomponen ?? $item->nama_komponen }}</p>
                                                         @if($item->spek)
-                                                        <p class="text-[10px] text-gray-400 mt-0.5 italic">
-                                                            {{ $item->spek }}
-                                                        </p>
+                                                        <p class="text-[10px] text-gray-400 mt-0.5 italic">{{
+                                                            $item->spek }}</p>
                                                         @endif
                                                     </div>
                                                 </div>
-
-                                                {{-- Badge Volume (YANG DIPERBAIKI) --}}
                                                 <span
                                                     class="bg-white border border-gray-200 text-gray-600 text-[10px] font-black px-2 py-1 rounded-lg shadow-sm whitespace-nowrap">
                                                     {{ $surat->is_parsial ? $item->pivot->volume : $item->volume }} {{
