@@ -590,28 +590,37 @@ class BelanjaController extends Controller
                     'transfer' => $request->transfer,
                 ]);
 
-                // 3. Hapus Rincian & Pajak Lama (Fresh Update)
-                $belanja->rincis()->delete();
+                // 3. Hapus Pajak Lama (Pajak aman untuk di-fresh update)
                 $belanja->pajaks()->delete();
 
-                // 4. Simpan Rincian Baru
+                // 4. Update Rincian Barang Secara Pintar (Pertahankan ID)
                 $persenPpn = DasarPajak::where('nama_pajak', 'PPN')->value('persen') ?? 11;
                 $multiplier = $persenPpn / 100;
+
+                $itemIdsKeep = []; // Array penampung ID barang yang masih ada
 
                 foreach ($request->items as $item) {
                     $subtotalItem = $item['volume'] * $item['harga_satuan'];
                     $brutoDasar = ($request->ppn != 0) ? $subtotalItem * (1 + $multiplier) : $subtotalItem;
 
-                    $belanja->rincis()->create([
-                        'idblrinci' => $item['idblrinci'],
-                        'namakomponen' => $item['namakomponen'],
-                        'spek' => $item['spek'] ?? '-',
-                        'harga_satuan' => $item['harga_satuan'],
-                        'volume' => $item['volume'],
-                        'total_bruto' => $brutoDasar,
-                        'bulan' => \Carbon\Carbon::parse($request->tanggal)->month,
-                    ]);
+                    // updateOrCreate akan mempertahankan ID asli jika idblrinci sama
+                    $rinci = $belanja->rincis()->updateOrCreate(
+                        ['idblrinci' => $item['idblrinci']], // Kunci pencarian
+                        [
+                            'namakomponen' => $item['namakomponen'],
+                            'spek' => $item['spek'] ?? '-',
+                            'harga_satuan' => $item['harga_satuan'],
+                            'volume' => $item['volume'],
+                            'total_bruto' => $brutoDasar,
+                            'bulan' => \Carbon\Carbon::parse($request->tanggal)->month,
+                        ]
+                    );
+
+                    $itemIdsKeep[] = $rinci->id; // Kumpulkan ID yang dipertahankan
                 }
+
+                // Hapus HANYA rincian barang yang tidak ada di input form (jika user menghapus baris)
+                $belanja->rincis()->whereNotIn('id', $itemIdsKeep)->delete();
 
                 // 5. Simpan Pajak Baru
                 if ($request->has('pajaks')) {
