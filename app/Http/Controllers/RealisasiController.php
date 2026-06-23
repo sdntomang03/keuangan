@@ -308,18 +308,18 @@ class RealisasiController extends Controller
         }
 
         // QUERY AGREGASI
-        // Mengelompokkan total belanja per rekanan dan memecahnya ke kolom triwulan
+        // Mengelompokkan total belanja per rekanan dan memecahnya ke kolom triwulan berdasarkan kolom 'tw'
         $dataRekap = Belanja::with('rekanan')
             ->where('anggaran_id', $anggaran->id)
             ->whereNotNull('rekanan_id') // Hanya ambil yang ada rekanannya
             ->select('rekanan_id')
             ->selectRaw('
-    SUM(CASE WHEN MONTH(tanggal) BETWEEN 1 AND 3 THEN (subtotal + ppn) ELSE 0 END) as tw1,
-    SUM(CASE WHEN MONTH(tanggal) BETWEEN 4 AND 6 THEN (subtotal + ppn) ELSE 0 END) as tw2,
-    SUM(CASE WHEN MONTH(tanggal) BETWEEN 7 AND 9 THEN (subtotal + ppn) ELSE 0 END) as tw3,
-    SUM(CASE WHEN MONTH(tanggal) BETWEEN 10 AND 12 THEN (subtotal + ppn) ELSE 0 END) as tw4,
-    SUM(subtotal + ppn) as total_setahun
-')
+                SUM(CASE WHEN tw = 1 THEN (subtotal + ppn) ELSE 0 END) as tw1,
+                SUM(CASE WHEN tw = 2 THEN (subtotal + ppn) ELSE 0 END) as tw2,
+                SUM(CASE WHEN tw = 3 THEN (subtotal + ppn) ELSE 0 END) as tw3,
+                SUM(CASE WHEN tw = 4 THEN (subtotal + ppn) ELSE 0 END) as tw4,
+                SUM(subtotal + ppn) as total_setahun
+            ')
             ->groupBy('rekanan_id')
             ->get();
 
@@ -331,6 +331,7 @@ class RealisasiController extends Controller
             'tw4' => $dataRekap->sum('tw4'),
             'total' => $dataRekap->sum('total_setahun'),
         ];
+
         $user = Auth::user();
         $sekolah = $user->sekolah ?? Sekolah::find($user->sekolah_id);
 
