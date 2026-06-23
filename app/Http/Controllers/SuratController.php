@@ -1764,6 +1764,7 @@ class SuratController extends Controller
             'nama_pekerjaan' => $belanja->uraian,
             'hari_ini' => $tglSurat->translatedFormat('l'),
             'tanggal_terbilang' => $this->terbilangTanggal($tglSurat),
+            'is_parsial' => true,
         ];
 
         // ==========================================
@@ -1832,7 +1833,7 @@ class SuratController extends Controller
             'surat' => $surat,
             'sekolah' => $sekolah,
             'rekanan' => $rekanan,
-            'items' => $items, // Items sudah terfilter sesuai suratnya
+            'items' => $items->values()->all(),
             'kepala_sekolah' => $kepalaSekolah,
             'pengurus_barang' => $pengurusBarang,
             'belanja' => $belanja,
