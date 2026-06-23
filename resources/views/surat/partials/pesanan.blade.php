@@ -180,11 +180,11 @@ $is_penggandaan = $surat->is_penggandaan ?? false;
     </p>
 
     <div style="width: 100%; page-break-inside: avoid;">
-        <p style="text-align: justify; text-indent: 48px; line-height: 1.6; margin-top: 2px;">
+        <p style="text-align: justify; text-indent: 48px; line-height: 1.6; margin-top: 5px;">
             Demikian surat pesanan ini kami sampaikan, atas perhatian dan kerja sama yang baik, kami ucapkan terima
             kasih.
         </p>
-        <div style="margin-top:20px; float: right; width: 350px; text-align: center;">
+        <div style="margin-top:5px; float: right; width: 350px; text-align: center;">
             <p style="margin-bottom: 60px;">Kepala {{ $sekolah->nama_sekolah }}</p>
             <p><b>{{ $kepala_sekolah->nama }}</b><br>NIP. {{ $kepala_sekolah->nip }}</p>
         </div>
