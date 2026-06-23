@@ -180,7 +180,7 @@ $is_penggandaan = $surat->is_penggandaan ?? false;
     </p>
 
     <div style="width: 100%; page-break-inside: avoid;">
-        <p style="text-align: justify; text-indent: 48px; line-height: 1.6; margin-top: 5px;">
+        <p style="text-align: justify; text-indent: 48px; line-height: 1.6; margin-top: 2px;">
             Demikian surat pesanan ini kami sampaikan, atas perhatian dan kerja sama yang baik, kami ucapkan terima
             kasih.
         </p>
