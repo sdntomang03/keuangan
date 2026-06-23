@@ -2061,6 +2061,7 @@ class SuratController extends Controller
             'nama_pekerjaan' => $belanja->uraian,
             'hari_ini' => $tglSurat->translatedFormat('l'),
             'tanggal_terbilang' => $this->terbilangTanggal($tglSurat),
+            'is_parsial' => true,
         ];
 
         // 6. FILTER ITEM BARANG (LOGIKA PARSIAL)
