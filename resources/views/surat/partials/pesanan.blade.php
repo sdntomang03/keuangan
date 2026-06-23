@@ -184,7 +184,7 @@ $is_penggandaan = $surat->is_penggandaan ?? false;
             Demikian surat pesanan ini kami sampaikan, atas perhatian dan kerja sama yang baik, kami ucapkan terima
             kasih.
         </p>
-        <div style="margin-top:5px; float: right; width: 350px; text-align: center;">
+        <div style="margin-top:0px; float: right; width: 350px; text-align: center;">
             <p style="margin-bottom: 60px;">Kepala {{ $sekolah->nama_sekolah }}</p>
             <p><b>{{ $kepala_sekolah->nama }}</b><br>NIP. {{ $kepala_sekolah->nip }}</p>
         </div>
