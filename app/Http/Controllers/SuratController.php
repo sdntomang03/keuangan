@@ -1493,6 +1493,8 @@ class SuratController extends Controller
             'isRemoteEnabled' => true,      // Wajib TRUE agar gambar & font jalan
             'isHtml5ParserEnabled' => true,
         ]);
+        $customPaper = [0, 0, 609.448, 935.433];
+        $pdf->setPaper($customPaper, 'portrait');
 
         // Nama File
         $namaFile = 'Bundel_'.preg_replace('/[^A-Za-z0-9\-]/', '-', $belanja->no_bukti).'.pdf';
@@ -1655,6 +1657,9 @@ class SuratController extends Controller
             'isRemoteEnabled' => true,
             'isHtml5ParserEnabled' => true,
         ]);
+
+        $customPaper = [0, 0, 609.448, 935.433];
+        $pdf->setPaper($customPaper, 'portrait');
 
         // Nama File
         $namaFile = strtoupper($jenis).'_'.preg_replace('/[^A-Za-z0-9\-]/', '-', $belanja->no_bukti).'.pdf';
@@ -1863,6 +1868,8 @@ class SuratController extends Controller
             'isRemoteEnabled' => true,
             'isHtml5ParserEnabled' => true,
         ]);
+        $customPaper = [0, 0, 609.448, 935.433];
+        $pdf->setPaper($customPaper, 'portrait');
 
         $namaFile = strtoupper($jenisView).'_'.preg_replace('/[^A-Za-z0-9\-]/', '-', $suratDipilih->nomor_surat).'.pdf';
 
