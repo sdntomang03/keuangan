@@ -187,34 +187,42 @@
             <div class="mt-4">
 
                 {{-- TAB 1: SURAT --}}
-                {{-- TAB 1: SURAT --}}
                 <div x-show="activeTab === 'surat'" x-transition:enter="transition ease-out duration-300"
                     class="space-y-4" x-data="{
         selectedSurats: [],
         selectAll: false,
         toggleAll() {
             if (this.selectAll) {
-                // Ambil semua ID surat dalam bentuk array string
                 this.selectedSurats = {{ $belanja->surats->pluck('id')->toJson() }}.map(String);
             } else {
                 this.selectedSurats = [];
             }
+        },
+        submitBulkAction(actionUrl, confirmMsg) {
+            // Jika butuh konfirmasi (untuk hapus)
+            if (confirmMsg) {
+                if (!confirm(confirmMsg)) return;
+            }
+
+            // Ubah action form sesuai tombol yang ditekan, lalu submit
+            let form = document.getElementById('bulk-action-form');
+            form.action = actionUrl;
+            form.submit();
         }
     }">
 
                     @if($belanja->surats->count() > 0)
-                    {{-- FORM TERSEMBUNYI UNTUK BULK DELETE --}}
-                    <form id="bulk-delete-form" action="{{ route('surat.hapus_banyak') }}" method="POST" class="hidden">
+                    {{-- FORM TERSEMBUNYI UNTUK AKSI MASSAL --}}
+                    <form id="bulk-action-form" method="POST" class="hidden">
                         @csrf
-                        {{-- Generate input tersembunyi sesuai checkbox yang dipilih --}}
                         <template x-for="id in selectedSurats" :key="id">
                             <input type="hidden" name="surat_ids[]" :value="id">
                         </template>
                     </form>
 
                     {{-- HEADER KONTROL MULTI-SELECT --}}
-                    <div class="flex justify-between items-center mb-4 bg-white p-3 md:px-5 rounded-3xl shadow-sm border transition-all"
-                        :class="selectedSurats.length > 0 ? 'border-red-200 bg-red-50/10' : 'border-gray-100'">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 bg-white p-3 md:px-5 rounded-3xl shadow-sm border transition-all"
+                        :class="selectedSurats.length > 0 ? 'border-indigo-200 bg-indigo-50/10' : 'border-gray-100'">
 
                         <label class="flex items-center gap-3 cursor-pointer">
                             <input type="checkbox" x-model="selectAll" @change="toggleAll()"
@@ -223,17 +231,36 @@
                                 Dokumen</span>
                         </label>
 
-                        <button type="button" x-show="selectedSurats.length > 0" x-transition
-                            @click="if(confirm('Yakin ingin menghapus ' + selectedSurats.length + ' dokumen surat yang dipilih? Rincian barang di dalamnya juga akan ikut terhapus.')) document.getElementById('bulk-delete-form').submit()"
-                            class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-md transition-all hover:-translate-y-0.5 flex items-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                            <span class="hidden md:inline">Hapus Terpilih</span>
-                            <span class="bg-white text-red-600 px-1.5 py-0.5 rounded-md font-black"
-                                x-text="selectedSurats.length"></span>
-                        </button>
+                        {{-- GROUP TOMBOL AKSI MASSAL --}}
+                        <div class="flex items-center gap-2" x-show="selectedSurats.length > 0" x-transition>
+
+                            {{-- Tombol Download ZIP --}}
+                            <button type="button"
+                                @click="submitBulkAction('{{ route('surat.download_banyak') }}', null)"
+                                class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-md transition-all hover:-translate-y-0.5 flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                                <span class="hidden md:inline">Download ZIP</span>
+                            </button>
+
+                            {{-- Tombol Hapus --}}
+                            <button type="button"
+                                @click="submitBulkAction('{{ route('surat.hapus_banyak') }}', 'Yakin ingin menghapus ' + selectedSurats.length + ' dokumen surat yang dipilih?')"
+                                class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-md transition-all hover:-translate-y-0.5 flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                <span class="hidden md:inline">Hapus</span>
+                            </button>
+
+                            {{-- Badge Counter --}}
+                            <span class="bg-gray-800 text-white px-2 py-1 rounded-lg text-xs font-black shadow-sm ml-1"
+                                x-text="selectedSurats.length + ' Dipilih'"></span>
+
+                        </div>
                     </div>
                     @endif
 

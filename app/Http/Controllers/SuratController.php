@@ -2646,4 +2646,49 @@ class SuratController extends Controller
             return back()->with('error', 'Terjadi kesalahan saat menghapus surat: '.$e->getMessage());
         }
     }
+
+    /**
+     * Download banyak surat sekaligus dalam format ZIP (Multi-select)
+     */
+    public function downloadBanyakPdf(Request $request)
+    {
+        // 1. Validasi Input
+        $request->validate([
+            'surat_ids' => 'required|array|min:1',
+            'surat_ids.*' => 'exists:surats,id',
+        ]);
+
+        // 2. Ambil data surat
+        $surats = Surat::whereIn('id', $request->surat_ids)->get();
+
+        if ($surats->isEmpty()) {
+            return back()->with('error', 'Tidak ada dokumen surat valid yang dipilih.');
+        }
+
+        // 3. Siapkan file ZIP
+        $zip = new ZipArchive;
+        $fileName = 'Kumpulan_Surat_SPJ_'.time().'.zip';
+        $zipPath = storage_path('app/public/'.$fileName);
+
+        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
+            foreach ($surats as $surat) {
+                // Generate PDF menggunakan helper yang sudah ada
+                // Helper ini otomatis menyesuaikan format Parsial atau Satuan
+                $pdf = $this->generatePdfContent($surat->id);
+
+                // Buat nama file aman untuk di dalam ZIP
+                $safeNomor = str_replace(['/', '\\'], '-', $surat->nomor_surat);
+                $namaFileDalamZip = strtoupper($surat->jenis_surat).'_'.$safeNomor.'.pdf';
+
+                // Tambahkan PDF ke dalam ZIP
+                $zip->addFromString($namaFileDalamZip, $pdf->output());
+            }
+            $zip->close();
+        } else {
+            return back()->with('error', 'Sistem gagal membuat file ZIP.');
+        }
+
+        // 4. Download file ZIP dan otomatis hapus dari storage setelah terkirim
+        return response()->download($zipPath)->deleteFileAfterSend(true);
+    }
 }
