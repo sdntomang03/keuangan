@@ -1,6 +1,6 @@
 @php
-// Deteksi otomatis via Route
-$is_parsial = request()->routeIs('*.cetakParsialPdf');
+// Deteksi otomatis via data yang dikirim dari Controller (Bukan dari Route)
+$is_parsial = $surat->is_parsial ?? false;
 $is_penggandaan = $surat->is_penggandaan ?? false;
 @endphp
 

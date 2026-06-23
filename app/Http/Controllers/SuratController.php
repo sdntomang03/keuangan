@@ -2107,6 +2107,7 @@ class SuratController extends Controller
                 'qty_terima' => $qty,
                 'qty_tolak' => 0,
                 'qty_sesuai' => $qty,
+                'is_parsial' => true,
             ];
         });
 
@@ -2775,6 +2776,7 @@ class SuratController extends Controller
             'nama_pekerjaan' => $belanja->uraian,
             'hari_ini' => $tglSurat->translatedFormat('l'),
             'tanggal_terbilang' => $this->terbilangTanggal($tglSurat),
+            'is_parsial' => false,
         ];
 
         // Render HTML
