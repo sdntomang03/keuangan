@@ -27,7 +27,7 @@
             <td style="width:150px;">Tanggal</td>
             <td style="width:10px;">:</td>
             {{-- Menggunakan Carbon parse & translatedFormat --}}
-            <td>{{ \Carbon\Carbon::parse($belanja->tanggal)->translatedFormat('d F Y') }}</td>
+            <td>{{ \Carbon\Carbon::parse($surat->tanggal_surat)->translatedFormat('d F Y') }}</td>
         </tr>
         <tr>
             <td style="width:150px;">Nama Pekerjaan</td>
