@@ -108,121 +108,64 @@
             <div
                 class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-2xl border border-gray-200 dark:border-gray-700">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
-                        <thead
-                            class="bg-gray-100 dark:bg-gray-900/50 text-gray-600 dark:text-gray-400 uppercase text-[10px] font-bold tracking-widest">
-                            <tr>
-                                <th class="px-6 py-4 text-left">No</th>
-                                <th class="px-6 py-4 text-left">Tanggal</th>
-                                <th class="px-6 py-4 text-left">Uraian Belanja</th>
-                                <th class="px-6 py-4 text-left">Kode Rekening</th>
-                                <th class="px-6 py-4 text-right">Nilai (Rp)</th>
-                                <th class="px-6 py-4 text-center">Dokumen Surat</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                            @forelse($listBelanja as $belanja)
+                    {{-- 1. Bungkus seluruh area tabel dan tombol dengan Form --}}
+                    <form action="{{ route('surat.hapus_banyak') }}" method="POST" id="form-hapus-banyak">
+                        @csrf
 
-                            <tr class="hover:bg-indigo-50/50 dark:hover:bg-gray-700/50 transition duration-150 group">
-                                <td class="px-6 py-4 whitespace-nowrap text-gray-500 font-mono">{{ $loop->iteration }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-gray-500 font-mono">
-                                    {{ \Carbon\Carbon::parse($belanja->tanggal)->format('d M Y') }}
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="font-bold text-gray-900 dark:text-gray-100">{{ $belanja->uraian }}</div>
-                                    <div class="text-[10px] text-gray-400">Rekanan: {{ $belanja->rekanan->nama_rekanan
-                                        ?? '-' }}
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span
-                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                                        {{ $belanja->korek->singkat ?? '-' }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 text-right font-black text-gray-900 dark:text-gray-100">
-                                    {{ number_format($belanja->subtotal + $belanja->ppn, 0, ',', '.') }}
-                                </td>
-                                <td class="px-6 py-4 text-center">
-                                    @php
-                                    // Ambil data dan ubah ke huruf besar semua agar aman
-                                    $singkatanKorek = strtoupper($belanja->korek->singkat ?? '');
+                        {{-- Tombol Hapus Terpilih (Letakkan di atas tabel) --}}
+                        <div class="mb-4">
+                            <button type="submit"
+                                onclick="return confirm('Yakin ingin menghapus semua surat yang dipilih?')"
+                                class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                    </path>
+                                </svg>
+                                Hapus yang Dipilih
+                            </button>
+                        </div>
 
-                                    // Buat variabel boolean untuk kondisi-kondisi khusus
-                                    $isNarasumber = ($singkatanKorek === 'NARASUMBER');
-                                    $isTanpaSurat = in_array($singkatanKorek, ['INTERNET', 'TELEPON', 'LISTRIK']);
-                                    @endphp
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm">
+                            <thead class="bg-gray-100 dark:bg-gray-900/50">
+                                <tr>
+                                    {{-- 2. Checkbox "Pilih Semua" di Header --}}
+                                    <th class="px-6 py-4 text-left">
+                                        <input type="checkbox" id="check-all"
+                                            class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                    </th>
+                                    <th class="px-6 py-4 text-left">Nomor Surat</th>
+                                    <th class="px-6 py-4 text-left">Tanggal</th>
+                                    <th class="px-6 py-4 text-left">Jenis</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200">
+                                @foreach($listSurat as $surat)
+                                <tr>
+                                    {{-- 3. Checkbox per baris data --}}
+                                    <td class="px-6 py-4">
+                                        <input type="checkbox" name="surat_ids[]" value="{{ $surat->id }}"
+                                            class="check-item rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                    </td>
+                                    <td class="px-6 py-4">{{ $surat->nomor_surat }}</td>
+                                    <td class="px-6 py-4">{{ \Carbon\Carbon::parse($surat->tanggal_surat)->format('d M
+                                        Y') }}</td>
+                                    <td class="px-6 py-4">{{ $surat->jenis_surat }}</td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </form>
 
-                                    @if($isTanpaSurat)
-                                    {{-- KONDISI KHUSUS: Internet, Telepon, Listrik (Tombol Mati / Abu-abu) --}}
-                                    <span
-                                        class="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-200 text-gray-500 border border-gray-300 rounded-md text-xs font-bold cursor-not-allowed shadow-sm">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636">
-                                            </path>
-                                        </svg>
-                                        Tanpa Surat
-                                    </span>
-
-                                    @elseif($isNarasumber)
-                                    {{-- Tombol Khusus Ekskul/Narasumber (Biru) --}}
-                                    <a href="{{ route('ekskul.manage_details', $belanja->id) }}"
-                                        class="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white border border-transparent rounded-md text-xs font-bold transition-all shadow-sm">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
-                                            </path>
-                                        </svg>
-                                        Kelola Ekskul
-                                    </a>
-
-                                    @elseif($belanja->surats->count() > 0)
-                                    {{-- Tombol Surat Sudah Ada (Hijau) --}}
-                                    <a href="{{ route('surat.index', $belanja->id) }}"
-                                        class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white border border-transparent rounded-md text-xs font-bold transition-all shadow-sm">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                                            </path>
-                                        </svg>
-                                        Kelola Surat ({{ $belanja->surats->count() }})
-                                    </a>
-
-                                    @else
-                                    {{-- Tombol Belum Ada Surat (Oranye) --}}
-                                    <a href="{{ route('surat.index', $belanja->id) }}"
-                                        class="inline-flex items-center gap-1 px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white border border-transparent rounded-md text-xs font-bold transition-all shadow-sm">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M12 4v16m8-8H4"></path>
-                                        </svg>
-                                        Belum Ada Surat
-                                    </a>
-                                    @endif
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="5" class="px-6 py-16 text-center bg-white dark:bg-gray-800">
-                                    <svg class="mx-auto h-12 w-12 text-gray-300 mb-3" fill="none" viewBox="0 0 24 24"
-                                        stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
-                                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4">
-                                        </path>
-                                    </svg>
-                                    <p class="text-sm font-bold text-gray-500">Tidak ada data belanja yang ditemukan.
-                                    </p>
-                                    @if(request('kode_rekening'))
-                                    <p class="text-xs text-gray-400 mt-1">Coba pilih kode rekening lain atau reset
-                                        filter.</p>
-                                    @endif
-                                </td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                    {{-- 4. JavaScript untuk fungsi "Pilih Semua" (Letakkan di bawah tabel atau di stack script) --}}
+                    <script>
+                        document.getElementById('check-all').addEventListener('change', function() {
+        let checkboxes = document.querySelectorAll('.check-item');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+    });
+                    </script>
                 </div>
 
                 {{-- PAGINASI --}}

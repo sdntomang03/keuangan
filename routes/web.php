@@ -141,6 +141,7 @@ Route::middleware(['permission:view-anggaran|kelola-anggaran|input-belanja'])->g
     Route::get('/surat/download-semua-parsial/{belanjaId}', [SuratController::class, 'downloadSemuaParsial'])->name('surat.download_semua_parsial');
     Route::get('/surat/rekap-surat', [SuratController::class, 'rekapKeseluruhanTriwulanPdf'])->name('surat.rekap_triwulan');
     Route::get('/surat/daftar', [SuratController::class, 'daftarSurat'])->name('surat.daftar');
+    Route::post('/surat/hapus-banyak', [SuratController::class, 'hapusBanyakSurat'])->name('surat.hapus_banyak');
     Route::get('/surat/talangan-pdf/{talanganId}', [SuratController::class, 'cetakTalanganPdf'])->name('surat.talangan_pdf');
     Route::get('/surat/talangan-npd', [SuratController::class, 'daftarTalanganNpd'])->name('surat.daftar_talangan_npd');
     Route::get('/surat/cover-lpj', [SuratController::class, 'createCoverLpj'])->name('surat.cover_lpj.create');

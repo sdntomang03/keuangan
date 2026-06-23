@@ -2604,4 +2604,46 @@ class SuratController extends Controller
 
         return view('surat.index_seluruh', compact('listSurat', 'triwulanAktif', 'tahunAktif'));
     }
+
+    /**
+     * Menghapus beberapa surat sekaligus (Bulk Delete)
+     */
+    public function hapusBanyakSurat(Request $request)
+    {
+        // 1. Validasi input pastikan array 'surat_ids' dikirim
+        $request->validate([
+            'surat_ids' => 'required|array|min:1',
+            'surat_ids.*' => 'exists:surats,id',
+        ], [
+            'surat_ids.required' => 'Pilih minimal satu surat untuk dihapus.',
+        ]);
+
+        $user = Auth::user();
+
+        // 2. Ambil data surat yang dipilih, pastikan hanya milik sekolah user (Keamanan)
+        $surats = Surat::whereIn('id', $request->surat_ids)
+            ->where('sekolah_id', $user->sekolah_id)
+            ->get();
+
+        if ($surats->isEmpty()) {
+            return back()->with('error', 'Tidak ada dokumen surat valid yang dipilih.');
+        }
+
+        try {
+            // 3. Gunakan DB Transaction agar aman
+            DB::transaction(function () use ($surats) {
+                foreach ($surats as $surat) {
+                    // Hapus relasi pivot (rincian barang) terlebih dahulu jika ada
+                    $surat->rincis()->detach();
+
+                    // Hapus surat induk
+                    $surat->delete();
+                }
+            });
+
+            return back()->with('success', count($surats).' dokumen surat berhasil dihapus.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan saat menghapus surat: '.$e->getMessage());
+        }
+    }
 }
