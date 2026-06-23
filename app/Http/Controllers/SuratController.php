@@ -2658,7 +2658,7 @@ class SuratController extends Controller
             'surat_ids.*' => 'exists:surats,id',
         ]);
 
-        // 2. Ambil data surat
+        // 2. Ambil data surat yang dicentang
         $surats = Surat::whereIn('id', $request->surat_ids)->get();
 
         if ($surats->isEmpty()) {
@@ -2672,15 +2672,22 @@ class SuratController extends Controller
 
         if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
             foreach ($surats as $surat) {
-                // Generate PDF menggunakan helper yang sudah ada
-                // Helper ini otomatis menyesuaikan format Parsial atau Satuan
-                $pdf = $this->generatePdfContent($surat->id);
 
-                // Buat nama file aman untuk di dalam ZIP
+                // --- PENGECEKAN LOGIKA SURAT (NORMAL VS PARSIAL) ---
+                if ($surat->is_parsial) {
+                    // Jika Surat Parsial: Panggil helper generatePdfContent() eksisting
+                    $pdf = $this->generatePdfContent($surat->id);
+                } else {
+                    // Jika Surat Normal: Panggil helper baru
+                    $pdf = $this->generateNormalPdfContent($surat->id);
+                }
+
+                // 4. Buat nama file di dalam ZIP
                 $safeNomor = str_replace(['/', '\\'], '-', $surat->nomor_surat);
-                $namaFileDalamZip = strtoupper($surat->jenis_surat).'_'.$safeNomor.'.pdf';
+                $labelParsial = $surat->is_parsial ? '_PARSIAL' : '';
+                $namaFileDalamZip = strtoupper($surat->jenis_surat).$labelParsial.'_'.$safeNomor.'.pdf';
 
-                // Tambahkan PDF ke dalam ZIP
+                // 5. Masukkan PDF ke ZIP
                 $zip->addFromString($namaFileDalamZip, $pdf->output());
             }
             $zip->close();
@@ -2688,7 +2695,115 @@ class SuratController extends Controller
             return back()->with('error', 'Sistem gagal membuat file ZIP.');
         }
 
-        // 4. Download file ZIP dan otomatis hapus dari storage setelah terkirim
+        // 6. Download ZIP dan bersihkan file sampah dari server
         return response()->download($zipPath)->deleteFileAfterSend(true);
+    }
+
+    /**
+     * Helper Baru: Untuk generate PDF Surat Normal (Logika murni dari cetakSatuanPdf)
+     */
+    private function generateNormalPdfContent($suratId)
+    {
+        Carbon::setLocale('id');
+
+        // Ambil Data Surat & Belanja
+        $suratDipilih = Surat::with([
+            'belanja.rincis.rkas', 'belanja.rekanan', 'belanja.korek', 'belanja.user.sekolah', 'belanja.anggaran',
+        ])->findOrFail($suratId);
+
+        $belanja = $suratDipilih->belanja;
+
+        $sekolah = $belanja->user->sekolah ?? Auth::user()->sekolah;
+        if (! $sekolah) {
+            $sekolah = Sekolah::find(Auth::user()->sekolah_id);
+        }
+        $rekanan = $belanja->rekanan;
+
+        $kepalaSekolah = (object) [
+            'nama' => $sekolah->nama_kepala_sekolah,
+            'nip' => $sekolah->nip_kepala_sekolah,
+        ];
+        $pengurusBarang = (object) [
+            'nama' => $sekolah->nama_pengurus_barang ?? '...................',
+            'nip' => $sekolah->nip_pengurus_barang ?? '-',
+            'jabatan' => 'Pengurus Barang',
+        ];
+
+        // Rincian Barang Surat Normal (Ambil total volume dari tabel rincis)
+        $items = $belanja->rincis->map(function ($item) {
+            return (object) [
+                'nama_barang' => $item->namakomponen,
+                'satuan' => $item->rkas->satuan ?? $item->satuan,
+                'qty' => $item->volume,
+                'harga_satuan' => $item->harga_satuan,
+                'harga_penawaran' => $item->harga_penawaran,
+                'qty_pesan' => $item->volume,
+                'qty_terima' => $item->volume,
+                'qty_tolak' => 0,
+                'qty_sesuai' => $item->volume,
+            ];
+        });
+
+        // Mapping Konfigurasi Surat
+        $configSurat = [
+            'PH' => ['permintaan', 'Permintaan Harga'],
+            'NH' => ['negosiasi', 'Negosiasi Harga'],
+            'SP' => ['pesanan', 'Pesanan Barang'],
+            'BAPB' => ['berita_acara', 'Berita Acara Pemeriksaan'],
+        ];
+
+        $dbKode = $suratDipilih->jenis_surat;
+        $jenisView = $configSurat[$dbKode][0] ?? 'permintaan';
+        $labelSurat = $configSurat[$dbKode][1] ?? 'Dokumen';
+
+        $tglSurat = $suratDipilih->tanggal_surat;
+        if ($dbKode === 'BAPB' && ! $tglSurat) {
+            $tglSurat = $belanja->tanggal_bast ? Carbon::parse($belanja->tanggal_bast) : now();
+        }
+
+        // Susun Object Surat
+        $surat = (object) [
+            'nomor_surat' => $suratDipilih->nomor_surat ?? 'DRAFT',
+            'tanggal_surat' => $tglSurat->format('Y-m-d'),
+            'anggaran' => $belanja->anggaran,
+            'periode' => 'Triwulan '.($belanja->triwulan ?? 1),
+            'kode_rekening' => $belanja->korek->ket ?? '-',
+            'nama_kegiatan' => $belanja->uraian,
+            'perihal' => $labelSurat.' '.$belanja->uraian,
+            'sifat' => $suratDipilih->sifat ?? 'Segera',
+            'lampiran' => $suratDipilih->lampiran ?? '-',
+            'nama_pekerjaan' => $belanja->uraian,
+            'hari_ini' => $tglSurat->translatedFormat('l'),
+            'tanggal_terbilang' => $this->terbilangTanggal($tglSurat),
+        ];
+
+        // Render HTML
+        $contentHtml = view('surat.print_manager', [
+            'jenis_surat' => $jenisView,
+            'surat' => $surat,
+            'sekolah' => $sekolah,
+            'rekanan' => $rekanan,
+            'items' => $items,
+            'kepala_sekolah' => $kepalaSekolah,
+            'pengurus_barang' => $pengurusBarang,
+            'belanja' => $belanja,
+        ])->render();
+
+        // Render PDF (Jangan gunakan return stream, tapi kembalikan object PDF)
+        $fontDir = storage_path('fonts');
+        if (! file_exists($fontDir)) {
+            mkdir($fontDir, 0755, true);
+        }
+
+        $pdf = PDF::loadHTML($contentHtml);
+        $pdf->setOptions([
+            'font_dir' => $fontDir,
+            'font_cache' => $fontDir,
+            'default_font' => 'Arial',
+            'isRemoteEnabled' => true,
+            'isHtml5ParserEnabled' => true,
+        ]);
+
+        return $pdf;
     }
 }
