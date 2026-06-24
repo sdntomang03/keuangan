@@ -859,10 +859,6 @@
                                                                                     <span class="text-gray-800"
                                                                                         x-text="item.volume"></span>
                                                                                     <span
-                                                                                        class="text-gray-300 mx-0.5">/</span>
-                                                                                    <span class="text-emerald-600"
-                                                                                        x-text="item.total_volume_akb !== undefined ? item.total_volume_akb : '-'"></span>
-                                                                                    <span
                                                                                         class="text-[8px] text-gray-400 font-sans ml-0.5">Vol</span>
                                                                                 </div>
                                                                                 <div class="text-[10px] text-gray-700 font-bold"
