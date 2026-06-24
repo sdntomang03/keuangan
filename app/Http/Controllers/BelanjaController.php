@@ -769,6 +769,7 @@ class BelanjaController extends Controller
 
     public function getJson($id)
     {
+        // Rkas tidak wajib di-load lagi jika tidak dipakai di tempat lain, tapi saya biarkan aman
         $belanja = Belanja::with(['rincis', 'rekanan', 'pajaks.masterPajak', 'korek', 'kegiatan', 'rkas'])->find($id);
 
         $sekolah = Sekolah::where('id', auth()->user()->sekolah_id)->first();
@@ -782,36 +783,44 @@ class BelanjaController extends Controller
 
         $belanja->rincis->map(function ($rinci) use ($belanja) {
 
-            // ===================================================================
-            // 1. DATA MASTER SETAHUN PENUH (DARI TABEL RKAS)
-            // ===================================================================
-            $rkas = Rkas::where('idblrinci', $rinci->idblrinci)->first();
-
-            // Masukkan variabel SETAHUN untuk dibaca oleh Alpine.js
-            $rinci->total_volume_setahun = $rkas ? $rkas->volume : 0;
-            $rinci->pagu_setahun = $rkas ? $rkas->totalharga : 0;
-            // *Catatan: pastikan 'volume' dan 'totalharga' adalah nama kolom yang benar di tabel Rkas Anda.
-
-            // ===================================================================
-            // 2. DATA PECAHAN TRIWULAN (DARI TABEL AKB)
-            // ===================================================================
-            $akb = Akb::where('anggaran_id', $belanja->anggaran_id)
+            // 1. Ambil data HANYA dari tabel AKB
+            $akb = \App\Models\Akb::where('anggaran_id', $belanja->anggaran_id)
                 ->where('idblrinci', $rinci->idblrinci)
-                // Sangat disarankan menambah filter TW jika di tabel AKB ada kolomnya, contoh:
-                // ->where('tw', $belanja->tw)
                 ->first();
 
-            // Masukkan variabel TRIWULAN BERJALAN untuk dibaca oleh Alpine.js
+            // 2. DATA KESELURUHAN (1 TAHUN)
+            // Karena di tabel AKB hanya ada 1 kolom 'volume', kita gunakan untuk keduanya
+            $rinci->total_volume_setahun = $akb ? $akb->volume : 0;
+            // Ambil dari kolom totalakb (Atau bisa juga totalrincian tergantung yang Anda simpan)
+            $rinci->pagu_setahun = $akb ? $akb->totalakb : 0;
+
+            // 3. DATA TRIWULAN BERJALAN
             $rinci->total_volume_akb = $akb ? $akb->volume : 0;
 
-            // Logika Pagu Triwulan:
-            // Cek apakah tabel AKB punya kolom nominal uangnya (misal: 'nominal', 'jumlah', dll)
-            // Jika TIDAK ADA, kita kalikan manual: (Volume AKB * Harga Satuan di RKAS)
-            if ($akb && isset($akb->nominal)) {
-                $rinci->pagu_dana = $akb->nominal;
-            } else {
-                $rinci->pagu_dana = $rinci->total_volume_akb * ($rkas ? $rkas->hargasatuan : 0);
+            $pagu_tw = 0;
+            if ($akb) {
+                // Hitung penjumlahan bulan sesuai TW transaksi belanja
+                switch ($belanja->tw) {
+                    case 1:
+                        $pagu_tw = $akb->bulan1 + $akb->bulan2 + $akb->bulan3;
+                        break;
+                    case 2:
+                        $pagu_tw = $akb->bulan4 + $akb->bulan5 + $akb->bulan6;
+                        break;
+                    case 3:
+                        $pagu_tw = $akb->bulan7 + $akb->bulan8 + $akb->bulan9;
+                        break;
+                    case 4:
+                        $pagu_tw = $akb->bulan10 + $akb->bulan11 + $akb->bulan12;
+                        break;
+                    default:
+                        $pagu_tw = $akb->totalakb; // Fallback jika TW tidak valid
+                        break;
+                }
             }
+
+            // Masukkan hasil hitungan TW ke pagu_dana agar dibaca oleh Modal
+            $rinci->pagu_dana = $pagu_tw;
 
             return $rinci;
         });
