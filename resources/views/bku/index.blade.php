@@ -808,7 +808,12 @@
                                                             class="bg-gray-800 text-[9px] font-black uppercase text-white tracking-wider">
                                                             <tr>
                                                                 <th class="px-3 py-2.5 text-left">Komponen</th>
-                                                                <th class="px-3 py-2.5 text-center">Vol/Pagu</th>
+                                                                <th class="px-3 py-2.5 text-center">
+                                                                    Vol & Pagu TW<br>
+                                                                    <span
+                                                                        class="text-[8px] text-gray-400 font-medium normal-case tracking-normal">/
+                                                                        Keseluruhan</span>
+                                                                </th>
                                                                 <th class="px-3 py-2.5 text-right">Harga Satuan</th>
                                                                 <th class="px-3 py-2.5 text-right">Total Bruto</th>
                                                             </tr>
@@ -828,7 +833,9 @@
                                                                         </div>
                                                                     </td>
                                                                     <td class="px-3 py-2.5 text-center">
-                                                                        <div class="font-mono font-bold text-xs">
+                                                                        {{-- Data Triwulan (Bawaan) --}}
+                                                                        <div class="font-mono font-bold text-xs"
+                                                                            title="Realisasi / Anggaran TW">
                                                                             <span class="text-gray-800"
                                                                                 x-text="item.volume"></span>
                                                                             <span class="text-gray-300 mx-0.5">/</span>
@@ -836,11 +843,25 @@
                                                                                 x-text="item.total_volume_akb !== undefined ? item.total_volume_akb : '-'"></span>
                                                                         </div>
 
+                                                                        <div class="text-[10px] text-gray-500 mt-0.5 font-medium"
+                                                                            title="Pagu Triwulan">
+                                                                            Rp <span
+                                                                                x-text="item.pagu_dana !== undefined ? new Intl.NumberFormat('id-ID').format(Math.floor(item.pagu_dana)) : '-'"></span>
+                                                                        </div>
+
+                                                                        {{-- Data Setahun (Tambahan) --}}
                                                                         <div
-                                                                            class="text-[10px] text-gray-500 mt-0.5 font-medium">
-                                                                            Rp <span x-text="item.pagu_dana !== undefined ?
-            new Intl.NumberFormat('id-ID').format(Math.floor(item.pagu_dana)) : '-'">
-                                                                            </span>
+                                                                            class="border-t border-gray-100 mt-1.5 pt-1.5">
+                                                                            <div class="font-mono text-[10px] font-black text-indigo-600"
+                                                                                title="Total Volume Setahun">
+                                                                                Thn: <span
+                                                                                    x-text="item.total_volume_setahun !== undefined ? item.total_volume_setahun : '-'"></span>
+                                                                            </div>
+                                                                            <div class="text-[9px] text-indigo-500 mt-0.5 font-bold"
+                                                                                title="Total Pagu Setahun">
+                                                                                Rp <span
+                                                                                    x-text="item.pagu_setahun !== undefined ? new Intl.NumberFormat('id-ID').format(Math.floor(item.pagu_setahun)) : '-'"></span>
+                                                                            </div>
                                                                         </div>
                                                                     </td>
                                                                     <td class="px-3 py-2.5 text-right">

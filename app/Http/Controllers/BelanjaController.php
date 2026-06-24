@@ -771,7 +771,6 @@ class BelanjaController extends Controller
     {
         $belanja = Belanja::with(['rincis', 'rekanan', 'pajaks.masterPajak', 'korek', 'kegiatan', 'rkas'])->find($id);
 
-        // Ambil data sekolah berdasarkan user yang login
         $sekolah = Sekolah::where('id', auth()->user()->sekolah_id)->first();
 
         if (! $belanja) {
@@ -783,29 +782,40 @@ class BelanjaController extends Controller
 
         $belanja->rincis->map(function ($rinci) use ($belanja) {
 
-            // 1. Cari data AKB yang ID Rinciannya sama dengan barang ini
-            $akb = Akb::where('anggaran_id', $belanja->anggaran_id)
-                ->where('idblrinci', $rinci->idblrinci) // Asumsi di tabel belanja_rincis ada kolom idblrinci
-                ->first();
-
-            // Jika data AKB ditemukan, ambil volumenya. Jika tidak, set 0.
-            $rinci->total_volume_akb = $akb ? $akb->volume : 0;
-
-            // 2. Cari data RKAS untuk mendapatkan total harga / pagu dana
-            // Opsi A: Jika ingin query langsung ke model Rkas (Mirip seperti Akb di atas)
+            // ===================================================================
+            // 1. DATA MASTER SETAHUN PENUH (DARI TABEL RKAS)
+            // ===================================================================
             $rkas = Rkas::where('idblrinci', $rinci->idblrinci)->first();
 
-            // Opsi B: Jika ingin mengambil dari relasi $belanja->rkas yang sudah di-load di awal
-            // $rkas = $belanja->rkas->where('idblrinci', $rinci->idblrinci)->first();
+            // Masukkan variabel SETAHUN untuk dibaca oleh Alpine.js
+            $rinci->total_volume_setahun = $rkas ? $rkas->volume : 0;
+            $rinci->pagu_setahun = $rkas ? $rkas->totalharga : 0;
+            // *Catatan: pastikan 'volume' dan 'totalharga' adalah nama kolom yang benar di tabel Rkas Anda.
 
-            // Masukkan ke dalam properti pagu_dana agar terbaca oleh Alpine.js (item.pagu_dana)
-            // *Catatan: Sesuaikan 'total_harga' dengan nama kolom yang benar di tabel RKAS Anda (misal: 'total', 'jumlah', 'harga_total')
-            $rinci->pagu_dana = $rkas ? $rkas->totalharga : 0;
+            // ===================================================================
+            // 2. DATA PECAHAN TRIWULAN (DARI TABEL AKB)
+            // ===================================================================
+            $akb = Akb::where('anggaran_id', $belanja->anggaran_id)
+                ->where('idblrinci', $rinci->idblrinci)
+                // Sangat disarankan menambah filter TW jika di tabel AKB ada kolomnya, contoh:
+                // ->where('tw', $belanja->tw)
+                ->first();
+
+            // Masukkan variabel TRIWULAN BERJALAN untuk dibaca oleh Alpine.js
+            $rinci->total_volume_akb = $akb ? $akb->volume : 0;
+
+            // Logika Pagu Triwulan:
+            // Cek apakah tabel AKB punya kolom nominal uangnya (misal: 'nominal', 'jumlah', dll)
+            // Jika TIDAK ADA, kita kalikan manual: (Volume AKB * Harga Satuan di RKAS)
+            if ($akb && isset($akb->nominal)) {
+                $rinci->pagu_dana = $akb->nominal;
+            } else {
+                $rinci->pagu_dana = $rinci->total_volume_akb * ($rkas ? $rkas->hargasatuan : 0);
+            }
 
             return $rinci;
         });
 
-        // Gabungkan data ke dalam satu array pembungkus
         return response()->json([
             'belanja' => $belanja,
             'sekolah' => $sekolah,
