@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Akb;
 use App\Models\Anggaran;
 use App\Models\Belanja;
 use App\Models\BelanjaRinci;
@@ -769,9 +768,7 @@ class BelanjaController extends Controller
 
     public function getJson($id)
     {
-        // Rkas tidak wajib di-load lagi jika tidak dipakai di tempat lain, tapi saya biarkan aman
         $belanja = Belanja::with(['rincis', 'rekanan', 'pajaks.masterPajak', 'korek', 'kegiatan', 'rkas'])->find($id);
-
         $sekolah = Sekolah::where('id', auth()->user()->sekolah_id)->first();
 
         if (! $belanja) {
@@ -783,44 +780,32 @@ class BelanjaController extends Controller
 
         $belanja->rincis->map(function ($rinci) use ($belanja) {
 
-            // 1. Ambil data HANYA dari tabel AKB
-            $akb = \App\Models\Akb::where('anggaran_id', $belanja->anggaran_id)
+            // 1. Tentukan rentang bulan berdasarkan Triwulan (TW) belanja berjalan
+            $bulanTw = match ((int) $belanja->tw) {
+                1 => [1, 2, 3],
+                2 => [4, 5, 6],
+                3 => [7, 8, 9],
+                4 => [10, 11, 12],
+                default => []
+            };
+
+            // 2. Ambil seluruh data pecahan bulan dari tabel akb_rincis (Data 1 Tahun)
+            // Pastikan model AkbRinci sudah di-import atau gunakan namespace lengkap
+            $akbRincis = \App\Models\AkbRinci::where('anggaran_id', $belanja->anggaran_id)
                 ->where('idblrinci', $rinci->idblrinci)
-                ->first();
+                ->get();
 
-            // 2. DATA KESELURUHAN (1 TAHUN)
-            // Karena di tabel AKB hanya ada 1 kolom 'volume', kita gunakan untuk keduanya
-            $rinci->total_volume_setahun = $akb ? $akb->volume : 0;
-            // Ambil dari kolom totalakb (Atau bisa juga totalrincian tergantung yang Anda simpan)
-            $rinci->pagu_setahun = $akb ? $akb->totalakb : 0;
+            // 3. HITUNG DATA KESELURUHAN (1 TAHUN)
+            // Langsung jumlahkan seluruh volume dan nominal dari 12 bulan yang ditemukan
+            $rinci->total_volume_setahun = $akbRincis->sum('volume');
+            $rinci->pagu_setahun = $akbRincis->sum('nominal');
 
-            // 3. DATA TRIWULAN BERJALAN
-            $rinci->total_volume_akb = $akb ? $akb->volume : 0;
+            // 4. HITUNG DATA TRIWULAN BERJALAN
+            // Filter koleksi di atas HANYA untuk bulan-bulan yang masuk dalam TW ini
+            $akbTw = $akbRincis->whereIn('bulan', $bulanTw);
 
-            $pagu_tw = 0;
-            if ($akb) {
-                // Hitung penjumlahan bulan sesuai TW transaksi belanja
-                switch ($belanja->tw) {
-                    case 1:
-                        $pagu_tw = $akb->bulan1 + $akb->bulan2 + $akb->bulan3;
-                        break;
-                    case 2:
-                        $pagu_tw = $akb->bulan4 + $akb->bulan5 + $akb->bulan6;
-                        break;
-                    case 3:
-                        $pagu_tw = $akb->bulan7 + $akb->bulan8 + $akb->bulan9;
-                        break;
-                    case 4:
-                        $pagu_tw = $akb->bulan10 + $akb->bulan11 + $akb->bulan12;
-                        break;
-                    default:
-                        $pagu_tw = $akb->totalakb; // Fallback jika TW tidak valid
-                        break;
-                }
-            }
-
-            // Masukkan hasil hitungan TW ke pagu_dana agar dibaca oleh Modal
-            $rinci->pagu_dana = $pagu_tw;
+            $rinci->total_volume_akb = $akbTw->sum('volume');
+            $rinci->pagu_dana = $akbTw->sum('nominal');
 
             return $rinci;
         });
