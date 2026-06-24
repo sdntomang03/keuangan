@@ -859,17 +859,16 @@
                                                                                 {{-- Konten Angka --}}
                                                                                 <div
                                                                                     class="flex justify-between items-center">
+                                                                                    {{-- VOLUME (Sudah dihilangkan
+                                                                                    pembaginya) --}}
                                                                                     <div class="font-mono font-bold text-xs"
-                                                                                        title="Realisasi / Anggaran TW">
+                                                                                        title="Volume Realisasi">
                                                                                         <span class="text-gray-800"
                                                                                             x-text="item.volume"></span>
                                                                                         <span
-                                                                                            class="text-gray-300 mx-0.5">/</span>
-                                                                                        <span class="text-emerald-600"
-                                                                                            x-text="item.total_volume_akb !== undefined ? item.total_volume_akb : '-'"></span>
-                                                                                        <span
                                                                                             class="text-[8px] text-gray-400 font-sans ml-0.5">Vol</span>
                                                                                     </div>
+                                                                                    {{-- PAGU UANG --}}
                                                                                     <div class="text-[10px] text-gray-700 font-bold"
                                                                                         title="Pagu Triwulan">
                                                                                         Rp <span
@@ -902,6 +901,7 @@
                                                                                 {{-- Konten Angka --}}
                                                                                 <div
                                                                                     class="flex justify-between items-center">
+                                                                                    {{-- VOLUME --}}
                                                                                     <div class="font-mono font-bold text-xs"
                                                                                         title="Total Volume Setahun">
                                                                                         <span class="text-indigo-700"
@@ -909,6 +909,7 @@
                                                                                         <span
                                                                                             class="text-[8px] text-gray-400 font-sans ml-0.5">Vol</span>
                                                                                     </div>
+                                                                                    {{-- PAGU UANG --}}
                                                                                     <div class="text-[10px] text-gray-700 font-bold"
                                                                                         title="Total Pagu Setahun">
                                                                                         Rp <span
