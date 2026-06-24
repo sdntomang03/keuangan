@@ -809,10 +809,7 @@
                                                             <tr>
                                                                 <th class="px-3 py-2.5 text-left">Komponen</th>
                                                                 <th class="px-3 py-2.5 text-center">
-                                                                    Vol & Pagu TW<br>
-                                                                    <span
-                                                                        class="text-[8px] text-gray-400 font-medium normal-case tracking-normal">/
-                                                                        Keseluruhan</span>
+                                                                    Anggaran & Realisasi
                                                                 </th>
                                                                 <th class="px-3 py-2.5 text-right">Harga Satuan</th>
                                                                 <th class="px-3 py-2.5 text-right">Total Bruto</th>
@@ -832,66 +829,93 @@
                                                                                 x-text="item.spek ? 'Spek: ' + item.spek : '-'"></span>
                                                                         </div>
                                                                     </td>
-                                                                    <td class="px-3 py-2.5 align-top min-w-[200px]">
+                                                                    <td class="px-3 py-3 align-top min-w-[240px]">
 
-                                                                        {{-- Badge Volume Transaksi --}}
+                                                                        {{-- Badge: Volume Transaksi Ini --}}
                                                                         <div
-                                                                            class="inline-flex items-center gap-2 bg-gray-800 text-gray-300 rounded-lg px-3 py-1.5 mb-3 shadow-sm">
+                                                                            class="inline-flex items-center gap-2 bg-gray-800 text-gray-300 rounded-lg px-3 py-1.5 mb-3">
                                                                             <span x-text="item.volume"
-                                                                                class="text-lg font-mono font-medium text-gray-100"></span>
+                                                                                class="text-base font-mono font-medium text-white"></span>
                                                                             <div class="flex flex-col leading-tight">
                                                                                 <span
-                                                                                    class="text-[10px] uppercase tracking-wide text-gray-400">Volume</span>
+                                                                                    class="text-[9px] uppercase tracking-wide text-gray-400">Volume</span>
                                                                                 <span
-                                                                                    class="text-[10px] uppercase text-gray-500">Transaksi
+                                                                                    class="text-[9px] uppercase text-gray-500">Transaksi
                                                                                     ini</span>
                                                                             </div>
                                                                         </div>
 
-                                                                        {{-- Grid Info TW & Pagu --}}
-                                                                        <div class="grid grid-cols-2 gap-2 mb-2">
-
-                                                                            {{-- Volume TW --}}
+                                                                        {{-- Blok Triwulan Berjalan --}}
+                                                                        <div
+                                                                            class="rounded-lg border border-emerald-200 bg-emerald-50 p-2.5 mb-2">
+                                                                            <p
+                                                                                class="text-[9px] font-black uppercase tracking-wider text-emerald-700 mb-1.5">
+                                                                                Triwulan Berjalan</p>
                                                                             <div
-                                                                                class="bg-emerald-50 border border-emerald-200 rounded-lg p-2.5">
-                                                                                <span
-                                                                                    class="block text-[10px] font-medium uppercase tracking-wide text-emerald-700 mb-1">Volume
-                                                                                    TW ini</span>
-                                                                                <span
-                                                                                    class="text-sm font-mono font-medium text-emerald-900">
+                                                                                class="flex justify-between items-end mb-1.5">
+                                                                                <div>
                                                                                     <span
-                                                                                        x-text="item.total_volume_akb ?? '-'"></span>
+                                                                                        class="text-[9px] text-emerald-600 uppercase">Volume</span>
+                                                                                    <p
+                                                                                        class="text-sm font-mono font-medium text-emerald-900">
+                                                                                        <span
+                                                                                            x-text="item.total_volume_akb ?? '-'"></span>
+                                                                                        <span
+                                                                                            class="text-[9px] font-sans text-emerald-700">
+                                                                                            vol</span>
+                                                                                    </p>
+                                                                                </div>
+                                                                                <div class="text-right">
                                                                                     <span
-                                                                                        class="text-[10px] font-sans">vol</span>
-                                                                                </span>
+                                                                                        class="text-[9px] text-emerald-600 uppercase">Pagu</span>
+                                                                                    <p
+                                                                                        class="text-[11px] font-mono font-medium text-emerald-900">
+                                                                                        Rp <span
+                                                                                            x-text="item.pagu_dana !== undefined ? new Intl.NumberFormat('id-ID').format(Math.floor(item.pagu_dana)) : '-'"></span>
+                                                                                    </p>
+                                                                                </div>
                                                                             </div>
-
-                                                                            {{-- Pagu TW --}}
-                                                                            <div
-                                                                                class="bg-blue-50 border border-blue-200 rounded-lg p-2.5">
-                                                                                <span
-                                                                                    class="block text-[10px] font-medium uppercase tracking-wide text-blue-700 mb-1">Pagu
-                                                                                    TW ini</span>
-                                                                                <span
-                                                                                    class="text-[11px] font-mono font-medium text-blue-900">
-                                                                                    Rp <span
-                                                                                        x-text="item.pagu_dana !== undefined ? new Intl.NumberFormat('id-ID').format(Math.floor(item.pagu_dana)) : '-'"></span>
-                                                                                </span>
+                                                                            {{-- Progress Bar: volume TW vs setahun --}}
+                                                                            <div class="w-full bg-emerald-200 rounded-full h-1.5"
+                                                                                title="Proporsi volume TW terhadap 1 tahun">
+                                                                                <div class="bg-emerald-500 h-1.5 rounded-full transition-all"
+                                                                                    :style="`width: ${item.total_volume_setahun > 0 ? Math.min(100, Math.round((item.total_volume_akb / item.total_volume_setahun) * 100)) : 0}%`">
+                                                                                </div>
                                                                             </div>
-
+                                                                            <p class="text-right text-[9px] text-emerald-600 mt-0.5 font-mono"
+                                                                                x-text="`${item.total_volume_setahun > 0 ? Math.round((item.total_volume_akb / item.total_volume_setahun) * 100) : 0}% dari setahun`">
+                                                                            </p>
                                                                         </div>
 
-                                                                        {{-- Total Pagu Setahun --}}
+                                                                        {{-- Blok 1 Tahun --}}
                                                                         <div
-                                                                            class="flex justify-between items-center bg-violet-50 border border-violet-200 rounded-lg px-3 py-2">
-                                                                            <span
-                                                                                class="text-[10px] font-medium uppercase tracking-wide text-violet-700">Total
-                                                                                pagu 1 tahun</span>
-                                                                            <span
-                                                                                class="text-[11px] font-mono font-medium text-violet-900">
-                                                                                Rp <span
-                                                                                    x-text="item.pagu_setahun !== undefined ? new Intl.NumberFormat('id-ID').format(Math.floor(item.pagu_setahun)) : '-'"></span>
-                                                                            </span>
+                                                                            class="rounded-lg border border-indigo-200 bg-indigo-50 p-2.5">
+                                                                            <p
+                                                                                class="text-[9px] font-black uppercase tracking-wider text-indigo-700 mb-1.5">
+                                                                                Total 1 Tahun</p>
+                                                                            <div class="flex justify-between items-end">
+                                                                                <div>
+                                                                                    <span
+                                                                                        class="text-[9px] text-indigo-600 uppercase">Volume</span>
+                                                                                    <p
+                                                                                        class="text-sm font-mono font-medium text-indigo-900">
+                                                                                        <span
+                                                                                            x-text="item.total_volume_setahun ?? '-'"></span>
+                                                                                        <span
+                                                                                            class="text-[9px] font-sans text-indigo-700">
+                                                                                            vol</span>
+                                                                                    </p>
+                                                                                </div>
+                                                                                <div class="text-right">
+                                                                                    <span
+                                                                                        class="text-[9px] text-indigo-600 uppercase">Pagu</span>
+                                                                                    <p
+                                                                                        class="text-[11px] font-mono font-medium text-indigo-900">
+                                                                                        Rp <span
+                                                                                            x-text="item.pagu_setahun !== undefined ? new Intl.NumberFormat('id-ID').format(Math.floor(item.pagu_setahun)) : '-'"></span>
+                                                                                    </p>
+                                                                                </div>
+                                                                            </div>
                                                                         </div>
 
                                                                     </td>
