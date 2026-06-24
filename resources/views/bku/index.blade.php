@@ -839,9 +839,9 @@
                                                                             <span
                                                                                 class="text-[7px] uppercase text-gray-400 tracking-wide">Vol
                                                                                 Belanja</span>
-                                                                            <p
-                                                                                class="text-[10px] font-mono font-medium text-gray-900 leading-tight">
-                                                                                <span x-text="item.volume"></span>
+                                                                            <p class="leading-tight">
+                                                                                <span x-text="item.volume"
+                                                                                    class="inline-block bg-emerald-600 text-white text-[10px] font-mono font-medium px-1.5 py-0.5 rounded"></span>
                                                                             </p>
                                                                         </div>
 
