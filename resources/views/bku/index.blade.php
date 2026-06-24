@@ -832,35 +832,81 @@
                                                                                 x-text="item.spek ? 'Spek: ' + item.spek : '-'"></span>
                                                                         </div>
                                                                     </td>
-                                                                    <td class="px-3 py-2.5 text-center">
-                                                                        {{-- Data Triwulan (Bawaan) --}}
-                                                                        <div class="font-mono font-bold text-xs"
-                                                                            title="Realisasi / Anggaran TW">
-                                                                            <span class="text-gray-800"
-                                                                                x-text="item.volume"></span>
-                                                                            <span class="text-gray-300 mx-0.5">/</span>
-                                                                            <span class="text-emerald-600"
-                                                                                x-text="item.total_volume_akb !== undefined ? item.total_volume_akb : '-'"></span>
-                                                                        </div>
-
-                                                                        <div class="text-[10px] text-gray-500 mt-0.5 font-medium"
-                                                                            title="Pagu Triwulan">
-                                                                            Rp <span
-                                                                                x-text="item.pagu_dana !== undefined ? new Intl.NumberFormat('id-ID').format(Math.floor(item.pagu_dana)) : '-'"></span>
-                                                                        </div>
-
-                                                                        {{-- Data Setahun (Tambahan) --}}
-                                                                        <div
-                                                                            class="border-t border-gray-100 mt-1.5 pt-1.5">
-                                                                            <div class="font-mono text-[10px] font-black text-indigo-600"
-                                                                                title="Total Volume Setahun">
-                                                                                Thn: <span
-                                                                                    x-text="item.total_volume_setahun !== undefined ? item.total_volume_setahun : '-'"></span>
+                                                                    <td class="px-3 py-2.5 align-top">
+                                                                        {{-- BLOK 1: DATA TRIWULAN BERJALAN --}}
+                                                                        <div class="mb-2">
+                                                                            {{-- Label Header Triwulan --}}
+                                                                            <div
+                                                                                class="text-[8px] font-black uppercase text-emerald-600 tracking-wider flex items-center gap-1 mb-1">
+                                                                                <svg class="w-3 h-3" fill="none"
+                                                                                    stroke="currentColor"
+                                                                                    viewBox="0 0 24 24">
+                                                                                    <path stroke-linecap="round"
+                                                                                        stroke-linejoin="round"
+                                                                                        stroke-width="2"
+                                                                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                                                                    </path>
+                                                                                </svg>
+                                                                                TW Berjalan
                                                                             </div>
-                                                                            <div class="text-[9px] text-indigo-500 mt-0.5 font-bold"
-                                                                                title="Total Pagu Setahun">
-                                                                                Rp <span
-                                                                                    x-text="item.pagu_setahun !== undefined ? new Intl.NumberFormat('id-ID').format(Math.floor(item.pagu_setahun)) : '-'"></span>
+
+                                                                            {{-- Value Triwulan (Kiri: Volume, Kanan:
+                                                                            Pagu) --}}
+                                                                            <div
+                                                                                class="flex justify-between items-center bg-gray-50 border border-gray-100 rounded p-1.5">
+                                                                                <div class="font-mono font-bold text-xs"
+                                                                                    title="Realisasi / Anggaran TW">
+                                                                                    <span class="text-gray-800"
+                                                                                        x-text="item.volume"></span>
+                                                                                    <span
+                                                                                        class="text-gray-300 mx-0.5">/</span>
+                                                                                    <span class="text-emerald-600"
+                                                                                        x-text="item.total_volume_akb !== undefined ? item.total_volume_akb : '-'"></span>
+                                                                                    <span
+                                                                                        class="text-[8px] text-gray-400 font-sans ml-0.5">Vol</span>
+                                                                                </div>
+                                                                                <div class="text-[10px] text-gray-700 font-bold"
+                                                                                    title="Pagu Triwulan">
+                                                                                    Rp <span
+                                                                                        x-text="item.pagu_dana !== undefined ? new Intl.NumberFormat('id-ID').format(Math.floor(item.pagu_dana)) : '-'"></span>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        {{-- BLOK 2: DATA KESELURUHAN (SETAHUN) --}}
+                                                                        <div
+                                                                            class="pt-1.5 border-t border-dashed border-gray-200">
+                                                                            {{-- Label Header Setahun --}}
+                                                                            <div
+                                                                                class="text-[8px] font-black uppercase text-indigo-500 tracking-wider flex items-center gap-1 mb-1">
+                                                                                <svg class="w-3 h-3" fill="none"
+                                                                                    stroke="currentColor"
+                                                                                    viewBox="0 0 24 24">
+                                                                                    <path stroke-linecap="round"
+                                                                                        stroke-linejoin="round"
+                                                                                        stroke-width="2"
+                                                                                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                                                                                    </path>
+                                                                                </svg>
+                                                                                Total 1 Tahun
+                                                                            </div>
+
+                                                                            {{-- Value Setahun (Kiri: Volume, Kanan:
+                                                                            Pagu) --}}
+                                                                            <div
+                                                                                class="flex justify-between items-center bg-indigo-50/50 border border-indigo-50 rounded p-1.5">
+                                                                                <div class="font-mono text-[10px] font-bold text-indigo-700"
+                                                                                    title="Total Volume Setahun">
+                                                                                    <span
+                                                                                        x-text="item.total_volume_setahun !== undefined ? item.total_volume_setahun : '-'"></span>
+                                                                                    <span
+                                                                                        class="text-[8px] text-indigo-400 font-sans ml-0.5">Vol</span>
+                                                                                </div>
+                                                                                <div class="text-[10px] text-indigo-600 font-bold"
+                                                                                    title="Total Pagu Setahun">
+                                                                                    Rp <span
+                                                                                        x-text="item.pagu_setahun !== undefined ? new Intl.NumberFormat('id-ID').format(Math.floor(item.pagu_setahun)) : '-'"></span>
+                                                                                </div>
                                                                             </div>
                                                                         </div>
                                                                     </td>
