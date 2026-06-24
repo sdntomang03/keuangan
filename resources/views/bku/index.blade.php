@@ -835,27 +835,28 @@
                                                                     <td class="px-2 py-2 align-top">
 
                                                                         {{-- Volume Belanja --}}
-                                                                        <div class="mb-2">
+                                                                        <div class="mb-1.5">
                                                                             <span
-                                                                                class="text-[8px] uppercase text-gray-400 tracking-wide">Vol
+                                                                                class="text-[7px] uppercase text-gray-400 tracking-wide">Vol
                                                                                 Belanja</span>
                                                                             <p
-                                                                                class="text-xs font-mono font-medium text-gray-900 leading-tight">
+                                                                                class="text-[10px] font-mono font-medium text-gray-900 leading-tight">
                                                                                 <span x-text="item.volume"></span>
                                                                             </p>
                                                                         </div>
 
-                                                                        <div class="w-full h-px bg-gray-100 mb-2"></div>
+                                                                        <div class="w-full h-px bg-gray-100 mb-1.5">
+                                                                        </div>
 
                                                                         {{-- Volume: TW / Setahun --}}
                                                                         <div class="mb-1">
                                                                             <span
-                                                                                class="text-[8px] uppercase text-gray-400 tracking-wide">Vol</span>
+                                                                                class="text-[7px] uppercase text-gray-400 tracking-wide">Vol</span>
                                                                             <p
-                                                                                class="text-[11px] font-mono font-medium text-gray-800 leading-tight">
+                                                                                class="text-[9px] font-mono font-medium text-gray-800 leading-tight">
                                                                                 <span
                                                                                     x-text="item.total_volume_akb ?? '-'"></span>
-                                                                                <span class="text-gray-400"> / </span>
+                                                                                <span class="text-gray-300"> / </span>
                                                                                 <span
                                                                                     x-text="item.total_volume_setahun ?? '-'"></span>
                                                                             </p>
@@ -864,12 +865,12 @@
                                                                         {{-- Pagu: TW / Setahun --}}
                                                                         <div>
                                                                             <span
-                                                                                class="text-[8px] uppercase text-gray-400 tracking-wide">Pagu</span>
+                                                                                class="text-[7px] uppercase text-gray-400 tracking-wide">Pagu</span>
                                                                             <p
-                                                                                class="text-[10px] font-mono font-medium text-gray-700 leading-tight">
+                                                                                class="text-[9px] font-mono font-medium text-gray-700 leading-tight">
                                                                                 <span
                                                                                     x-text="item.pagu_dana !== undefined ? 'Rp '+new Intl.NumberFormat('id-ID').format(Math.floor(item.pagu_dana)) : '-'"></span>
-                                                                                <span class="text-gray-400"> / </span>
+                                                                                <span class="text-gray-300"> / </span>
                                                                                 <span
                                                                                     x-text="item.pagu_setahun !== undefined ? 'Rp '+new Intl.NumberFormat('id-ID').format(Math.floor(item.pagu_setahun)) : '-'"></span>
                                                                             </p>
