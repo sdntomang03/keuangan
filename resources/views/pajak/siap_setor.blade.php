@@ -89,12 +89,15 @@
                         @csrf
                         <div class="space-y-4">
                             <div>
-                                <label class="block text-[10px] font-black uppercase text-gray-400 mb-1">Tanggal Setor
-                                    (Sesuai Bukti)</label>
-                                <input type="date" name="tanggal_setor" required
+                                <label class="block text-[10px] font-black uppercase text-gray-400 mb-1">
+                                    Tanggal Setor (Sesuai Bukti)
+                                </label>
+                                <input type="date" name="tanggal_setor" id="tanggalSetor" required
                                     class="w-full border-gray-200 rounded-xl focus:ring-orange-500">
                             </div>
                         </div>
+
+
 
                         <div class="mt-8 flex gap-3">
                             <button type="button" @click="openModal = false"
@@ -108,4 +111,20 @@
             </div>
         </div>
     </div>
+    \ <script>
+        document.addEventListener('DOMContentLoaded', function() {
+        // Ambil elemen input
+        const dateInput = document.querySelector('input[name="tanggal_setor"]');
+
+        // Buat objek tanggal hari ini secara lokal
+        const today = new Date();
+        const year = today.getFullYear();
+        // getMonth() dimulai dari 0, jadi ditambah 1. padStart memastikan formatnya 2 digit (misal: 06)
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+
+        // Gabungkan menjadi format YYYY-MM-DD yang diterima oleh input type="date"
+        dateInput.value = `${year}-${month}-${day}`;
+    });
+    </script>
 </x-app-layout>
