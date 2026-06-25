@@ -33,6 +33,37 @@
 
     <div class="py-6">
         <div class="max-w-full mx-auto sm:px-6 lg:px-8">
+
+            {{-- KOTAK FILTER PERIODE (TAMBAHAN BARU) --}}
+            <div
+                class="bg-white shadow-sm rounded-xl border border-gray-200 p-4 mb-4 flex justify-between items-center print:hidden">
+                <div class="flex items-center gap-2">
+                    <div class="p-1.5 bg-indigo-50 rounded-lg">
+                        <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z">
+                            </path>
+                        </svg>
+                    </div>
+                    <span class="text-sm font-black text-gray-700 uppercase tracking-wider">Filter Periode</span>
+                </div>
+
+                {{-- Form Filter Dropdown --}}
+                <form method="GET" action="{{ request()->url() }}"
+                    class="flex items-center w-full md:w-auto mt-2 md:mt-0">
+                    <select name="periode" onchange="this.form.submit()"
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-indigo-500 focus:border-indigo-500 block w-full md:w-56 p-2.5 font-bold shadow-sm cursor-pointer transition-all">
+                        <option value="tahun" {{ $periode=='tahun' ? 'selected' : '' }}>1 Tahun Penuh</option>
+                        <option value="tw1" {{ $periode=='tw1' ? 'selected' : '' }}>Triwulan 1</option>
+                        <option value="tw2" {{ $periode=='tw2' ? 'selected' : '' }}>Triwulan 2</option>
+                        <option value="tw3" {{ $periode=='tw3' ? 'selected' : '' }}>Triwulan 3</option>
+                        <option value="tw4" {{ $periode=='tw4' ? 'selected' : '' }}>Triwulan 4</option>
+                    </select>
+                </form>
+            </div>
+            {{-- AKHIR KOTAK FILTER --}}
+
+            {{-- TABEL DATA BAWAAN --}}
             <div class="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full border-collapse text-[11px] min-w-[1000px]">
