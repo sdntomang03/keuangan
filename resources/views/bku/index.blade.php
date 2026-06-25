@@ -742,8 +742,10 @@
                                                     <template x-for="pjk in data.belanja.pajaks"
                                                         :key="pjk.dasar_pajak_id">
                                                         <div x-data="{
-            teksUraian: `${pjk.is_setor == 1 ? 'Disetor' : 'Diterima'} ${pjk.master_pajak?.nama_pajak || 'Pajak'} atas SPJ ${data.belanja?.uraian || ''} dari ${data.belanja?.rekanan?.nama_rekanan || '-'}`
-         }" class="flex justify-between items-center bg-white p-2.5 rounded-lg border border-red-50 shadow-sm">
+    teksUraian: pjk.is_setor == 1
+        ? `Disetor ${pjk.master_pajak?.nama_pajak || 'Pajak'} atas SPJ ${data.belanja?.uraian || ''}`
+        : `Diterima ${pjk.master_pajak?.nama_pajak || 'Pajak'} atas SPJ ${data.belanja?.uraian || ''} dari ${data.belanja?.rekanan?.nama_rekanan || '-'}`
+ }" class="flex justify-between items-center bg-white p-2.5 rounded-lg border border-red-50 shadow-sm">
 
                                                             <div class="flex flex-col pr-2">
                                                                 <span
