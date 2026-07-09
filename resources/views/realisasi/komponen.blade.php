@@ -40,17 +40,19 @@
                 @endphp
 
                 <div
-                    class="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden print:overflow-visible print:shadow-none print:border-gray-400">
+                    class="bg-white p-4 shadow-sm rounded-xl border border-gray-200 overflow-hidden print:overflow-visible print:shadow-none print:border-gray-400">
                     <p class="text-[10px] text-gray-400 uppercase font-black">Pagu {{ Str::limit($periodeText, 25) }}
                     </p>
                     <p class="text-xl font-black text-gray-800">Rp {{ number_format($grandAnggaran, 0, ',', '.') }}</p>
                 </div>
+
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
                     <p class="text-[10px] text-gray-400 uppercase font-black">Realisasi {{ Str::limit($periodeText, 25)
                         }}</p>
                     <p class="text-xl font-black text-indigo-600">Rp {{ number_format($grandRealisasi, 0, ',', '.') }}
                     </p>
                 </div>
+
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
                     <p class="text-[10px] text-gray-400 uppercase font-black">Sisa Pagu {{ Str::limit($periodeText, 25)
                         }}</p>
