@@ -201,12 +201,12 @@
                                             <span>Harga Satuan</span>
                                             <button type="button" @click="roundAllPricesDown()"
                                                 x-show="items.length > 0" title="Bulatkan semua harga"
-                                                class="bg-green-500 hover:bg-green-400 text-white p-1 rounded transition-all shadow-sm active:rotate-180 duration-300">
+                                                class="bg-green-500 hover:bg-green-400 text-white p-1 rounded transition-all shadow-sm active:scale-90 duration-300">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none"
                                                     viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="3"
-                                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                                        stroke-width="2"
+                                                        d="M2.25 6L9 12.75l4.286-4.286a11.948 11.948 0 014.306 6.43l.776 2.898m0 0l3.182-5.511m-3.182 5.511l-5.511-3.182" />
                                                 </svg>
                                             </button>
                                             <button type="button" @click="syncAllWithHistory()"
@@ -219,6 +219,7 @@
                                                         d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                                 </svg>
                                             </button>
+
 
                                         </div>
                                     </th>
