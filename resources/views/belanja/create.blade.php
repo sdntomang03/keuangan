@@ -571,7 +571,7 @@ async syncAllWithHistory() {
 
         const data = await response.json();
         let updatedCount = 0;
-
+        console.log('Data Riwayat:', data);
         // 3. Loop SEMUA item dan ganti namanya jika data riwayat tersedia
         this.items.forEach(item => {
             if (data[item.idblrinci]) {
