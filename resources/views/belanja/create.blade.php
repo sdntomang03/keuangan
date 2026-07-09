@@ -199,18 +199,6 @@
                                     <th class="px-6 py-4 text-right w-44">
                                         <div class="flex items-center justify-end gap-2">
                                             <span>Harga Satuan</span>
-                                            <button type="button" @click="syncAllWithHistory()"
-                                                x-show="items.length > 0"
-                                                class="text-[10px] bg-indigo-500 hover:bg-indigo-400 text-white px-4 py-1.5 rounded-full font-black transition shadow-lg flex items-center gap-2 uppercase tracking-tighter">
-                                                <svg class="w-3 h-3" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
-                                                    </path>
-                                                </svg>
-                                                Sync Semua Nama Komponen
-                                            </button>
                                             <button type="button" @click="roundAllPricesDown()"
                                                 x-show="items.length > 0" title="Bulatkan semua harga"
                                                 class="bg-green-500 hover:bg-green-400 text-white p-1 rounded transition-all shadow-sm active:rotate-180 duration-300">
@@ -221,6 +209,17 @@
                                                         d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                                 </svg>
                                             </button>
+                                            <button type="button" @click="syncAllWithHistory()"
+                                                x-show="items.length > 0" title="Sync Semua Nama Komponen"
+                                                class="bg-indigo-500 hover:bg-indigo-400 text-white p-1 rounded transition-all shadow-sm active:rotate-180 duration-300">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none"
+                                                    viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="3"
+                                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                                </svg>
+                                            </button>
+
                                         </div>
                                     </th>
                                     <th class="px-6 py-4 text-right w-40">Subtotal</th>
