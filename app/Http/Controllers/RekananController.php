@@ -211,4 +211,25 @@ class RekananController extends Controller
         // Parameter 2: Nama file yang akan terdownload di browser user
         return Excel::download(new RekananExport, $namaFile);
     }
+
+    public function getRekananApi(Request $request)
+    {
+        $sekolahId = Auth::user()->sekolah_id;
+        $search = $request->query('q'); // Menangkap parameter 'q' dari URL
+
+        $query = Rekanan::where('sekolah_id', $sekolahId)
+            ->select('id', 'nama_rekanan'); // Hanya ambil kolom yang dibutuhkan agar respons cepat
+
+        // Jika ada pencarian
+        if ($search) {
+            $query->where('nama_rekanan', 'like', "%{$search}%");
+        }
+
+        // Batasi hasil (misal: 100) agar browser tidak berat jika data mencapai ribuan
+        $rekanans = $query->orderBy('nama_rekanan', 'asc')
+            ->limit(100)
+            ->get();
+
+        return response()->json($rekanans);
+    }
 }

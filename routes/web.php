@@ -240,6 +240,7 @@ Route::middleware(['permission:kelola-anggaran'])->group(function () {
         Route::post('/rekanan/import', [SettingController::class, 'importRekananStore'])->name('rekanan.import.store');
         Route::delete('/rekanan/destroy-all', [RekananController::class, 'destroyAll'])->name('rekanan.destroy_all');
         Route::get('/rekanan/export', [RekananController::class, 'export'])->name('rekanan.export');
+        Route::get('/api/rekanan', [RekananController::class, 'getRekananApi'])->name('api.rekanan');
 
         Route::get('/kegiatan/import', [SettingController::class, 'importKegiatanView'])->name('kegiatan.import');
         Route::get('/kegiatan/template', [SettingController::class, 'downloadTemplateKegiatan'])->name('kegiatan.template');
