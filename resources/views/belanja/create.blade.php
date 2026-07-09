@@ -573,6 +573,7 @@ async syncAllWithHistory() {
         let updatedCount = 0;
         console.log('Data Riwayat:', data);
         // 3. Loop SEMUA item dan ganti namanya jika data riwayat tersedia
+        console.log('Items sebelum update:', this.items);
         this.items.forEach(item => {
             if (data[item.idblrinci]) {
                 item.namakomponen = data[item.idblrinci].namakomponen;
