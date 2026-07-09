@@ -108,7 +108,7 @@ Route::middleware(['permission:view-anggaran|kelola-anggaran|input-belanja'])->g
         Route::get('/get-komponen', [BelanjaController::class, 'getKomponen'])->name('api.komponen');
         Route::get('/get-keterangan', [BelanjaController::class, 'getKeterangan'])->name('get_keterangan');
         Route::get('/rekanan', [RekananController::class, 'getRekananApi'])->name('api.rekanan');
-        Route::post('/api/get-riwayat-komponen', [BelanjaController::class, 'getRiwayatKomponen']);
+        Route::post('/get-riwayat-komponen', [BelanjaController::class, 'getRiwayatKomponen']);
     });
 
     // BKU, STS, PAJAK (Read Only)
