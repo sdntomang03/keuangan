@@ -430,6 +430,8 @@
             selectedIdbl: '{{ old('idbl') }}',
             selectedRekening: '{{ old('kodeakun') }}',
             rekenings: [],
+            selectedKeterangan: '',
+            keterangans: [],
             items: @json(old('items')) || [],
             pajaks: @json(old('pajaks')) || [],
             masterPajaks: @json($listPajak),
