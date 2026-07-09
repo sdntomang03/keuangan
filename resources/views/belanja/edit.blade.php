@@ -81,42 +81,48 @@
                             placeholder="Nomor Bukti" class="w-full rounded-xl border-gray-200" required>
                     </div>
 
-                    <div x-data="{
-        open: false,
-        search: '',
-        selectedId: '{{ old('rekanan_id', $belanja->rekanan_id) }}',
-        selectedName: '{{ $belanja->rekanan->nama_rekanan ?? 'Pilih Rekanan...' }}',
-        rekanans: {{ json_encode($rekanans) }},
-        get filteredRekans() {
-            return this.rekanans.filter(i => i.nama_rekanan.toLowerCase().includes(this.search.toLowerCase()))
-        }
-    }" class="relative">
+                    <div x-data="rekananDropdown({
+                            initialId: '{{ old('rekanan_id', $belanja->rekanan_id) }}',
+                            initialName: '{{ $belanja->rekanan->nama_rekanan ?? 'Pilih Rekanan...' }}'
+                        })" class="relative">
 
                         <label class="text-xs font-bold text-gray-400 uppercase tracking-wider">Penerima / Toko</label>
 
                         <div @click="open = !open"
                             class="cursor-pointer border border-gray-200 rounded-xl p-2 mt-4 bg-white text-sm flex justify-between items-center shadow-sm">
-                            <span x-text="selectedName"></span>
-                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path d="M19 9l-7 7-7-7"></path>
-                            </svg>
+                            <span x-text="selectedName ? selectedName : 'Pilih Rekanan...'"></span>
                             <input type="hidden" name="rekanan_id" :value="selectedId">
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7"></path>
+                            </svg>
                         </div>
 
-                        <div x-show="open" @click.away="open = false"
-                            class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl max-h-60 overflow-y-auto p-2"
-                            style="display: none;"> <input type="text" x-model="search" placeholder="Cari..."
+                        <div x-show="open" @click.away="open = false" x-cloak
+                            class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl max-h-60 overflow-y-auto p-2">
+
+                            <input type="text" x-model="search" @input.debounce.500ms="fetchData()"
+                                placeholder="Cari..."
                                 class="w-full mb-2 border-gray-100 rounded-lg text-sm focus:ring-indigo-500">
-                            <template x-for="r in filteredRekans" :key="r.id">
-                                <div @click="selectedId = r.id; selectedName = r.nama_rekanan; open = false; search = ''"
+
+                            <div x-show="isLoading" class="p-2 text-xs text-blue-500 text-center font-bold">
+                                Mencari data...
+                            </div>
+
+                            <template x-for="r in rekanans" :key="r.id">
+                                <div @click="selectRekanan(r)"
                                     class="p-2 hover:bg-indigo-50 cursor-pointer rounded-lg text-sm">
                                     <span x-text="r.nama_rekanan"></span>
                                 </div>
                             </template>
+
+                            <div x-show="rekanans.length === 0 && !isLoading"
+                                class="p-2 text-xs text-gray-400 text-center">
+                                Tidak ditemukan
+                            </div>
                         </div>
 
                         <div class="mt-4">
-
                             <input type="text" name="rincian" value="{{ old('rincian', $belanja->rincian) }}"
                                 placeholder="Input Rincian (Opsional)"
                                 class="w-full rounded-xl border-gray-200 mt-2 text-sm focus:ring-blue-500 placeholder-gray-400">
@@ -422,5 +428,42 @@ roundAllPricesDown() {
 }
             }
         }
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('rekananDropdown', (config = {}) => ({
+                open: false,
+                search: '',
+                selectedId: config.initialId || '',
+                selectedName: config.initialName || '',
+                rekanans: [],
+                isLoading: false,
+
+                init() {
+                    // Hanya otomatis ambil data jika memang user mau mencari/membuka dropdown
+                    // Hal ini menghemat koneksi di halaman edit karena data rekanan sudah terpilih.
+                },
+
+                async fetchData() {
+                    this.isLoading = true;
+                    try {
+                        const query = encodeURIComponent(this.search);
+                        const response = await fetch(`/api/rekanan?q=${query}`);
+
+                        if (!response.ok) throw new Error('Network response bad');
+                        this.rekanans = await response.json();
+                    } catch (error) {
+                        console.error('Gagal mengambil data rekanan:', error);
+                    } finally {
+                        this.isLoading = false;
+                    }
+                },
+
+                selectRekanan(rekanan) {
+                    this.selectedId = rekanan.id;
+                    this.selectedName = rekanan.nama_rekanan;
+                    this.open = false;
+                    this.search = '';
+                }
+            }));
+        });
     </script>
 </x-app-layout>
