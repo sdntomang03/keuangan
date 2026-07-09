@@ -429,41 +429,41 @@ roundAllPricesDown() {
             }
         }
         document.addEventListener('alpine:init', () => {
-            Alpine.data('rekananDropdown', (config = {}) => ({
-                open: false,
-                search: '',
-                selectedId: config.initialId || '',
-                selectedName: config.initialName || '',
-                rekanans: [],
-                isLoading: false,
+        Alpine.data('rekananDropdown', (config = {}) => ({
+            open: false,
+            search: '',
+            selectedId: config.initialId || '',
+            selectedName: config.initialName || '',
+            rekanans: [],
+            isLoading: false,
 
-                init() {
-                    // Hanya otomatis ambil data jika memang user mau mencari/membuka dropdown
-                    // Hal ini menghemat koneksi di halaman edit karena data rekanan sudah terpilih.
-                },
+            init() {
+                this.fetchData();
+            },
 
-                async fetchData() {
-                    this.isLoading = true;
-                    try {
-                        const query = encodeURIComponent(this.search);
-                        const response = await fetch(`/api/rekanan?q=${query}`);
+            async fetchData() {
+                this.isLoading = true;
+                try {
+                    // Pastikan menggunakan encodeURIComponent untuk keamanan karakter khusus
+                    const query = encodeURIComponent(this.search);
+                    const response = await fetch(`/api/rekanan?q=${query}`);
 
-                        if (!response.ok) throw new Error('Network response bad');
-                        this.rekanans = await response.json();
-                    } catch (error) {
-                        console.error('Gagal mengambil data rekanan:', error);
-                    } finally {
-                        this.isLoading = false;
-                    }
-                },
-
-                selectRekanan(rekanan) {
-                    this.selectedId = rekanan.id;
-                    this.selectedName = rekanan.nama_rekanan;
-                    this.open = false;
-                    this.search = '';
+                    if (!response.ok) throw new Error('Network response bad');
+                    this.rekanans = await response.json();
+                } catch (error) {
+                    console.error('Gagal mengambil data rekanan:', error);
+                } finally {
+                    this.isLoading = false;
                 }
-            }));
-        });
+            },
+
+            selectRekanan(rekanan) {
+                this.selectedId = rekanan.id;
+                this.selectedName = rekanan.nama_rekanan;
+                this.open = false;
+                this.search = '';
+            }
+        }));
+    });
     </script>
 </x-app-layout>
