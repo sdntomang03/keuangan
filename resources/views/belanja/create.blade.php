@@ -577,8 +577,6 @@ async syncAllWithHistory() {
             if (data[item.idblrinci]) {
                 item.namakomponen = data[item.idblrinci].namakomponen;
                 item.harga_satuan = data[item.idblrinci].harga_satuan;
-                // Opsional: jika ingin menyamakan spek juga, tambahkan baris di bawah:
-                // item.spek = data[item.idblrinci].spek || item.spek;
                 updatedCount++;
             }
         });
