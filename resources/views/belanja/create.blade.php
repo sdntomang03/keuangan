@@ -199,7 +199,8 @@
                                     <th class="px-6 py-4 text-right w-44">
                                         <div class="flex items-center justify-end gap-2">
                                             <span>Harga Satuan</span>
-                                            <button type="button" @click="syncWithHistory()" x-show="items.length > 0"
+                                            <button type="button" @click="syncAllWithHistory()"
+                                                x-show="items.length > 0"
                                                 class="text-[10px] bg-indigo-500 hover:bg-indigo-400 text-white px-4 py-1.5 rounded-full font-black transition shadow-lg flex items-center gap-2 uppercase tracking-tighter">
                                                 <svg class="w-3 h-3" fill="none" stroke="currentColor"
                                                     viewBox="0 0 24 24">
@@ -208,7 +209,7 @@
                                                         d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
                                                     </path>
                                                 </svg>
-                                                Cek Riwayat
+                                                Sync Semua Nama Komponen
                                             </button>
                                             <button type="button" @click="roundAllPricesDown()"
                                                 x-show="items.length > 0" title="Bulatkan semua harga"
@@ -548,52 +549,51 @@ calculateRounding(harga) {
     }
 },
 
-async syncWithHistory() {
-                if (this.items.length === 0) return;
+// Fungsi Sinkronisasi Nama Komponen dari Riwayat Terakhir untuk SEMUA item
+async syncAllWithHistory() {
+    if (this.items.length === 0) return;
 
-                // Ambil semua ID Komponen yang sedang terpilih di tabel
-                let idblrincis = this.items.map(item => item.idblrinci);
+    // 1. Ambil semua ID yang tampil di tabel saat ini
+    let idblrincis = this.items.map(item => item.idblrinci);
 
-                try {
-                    // Panggil API Backend
-                    const response = await fetch('/api/get-riwayat-komponen', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        },
-                        body: JSON.stringify({ idblrincis: idblrincis })
-                    });
-
-                    if (!response.ok) throw new Error('Network error');
-
-                    const data = await response.json();
-                    let updatedCount = 0;
-
-                    // Timpa nama komponen di layar jika ada riwayatnya
-                    this.items.forEach(item => {
-                        if (data[item.idblrinci]) {
-                            item.namakomponen = data[item.idblrinci].namakomponen;
-
-                            // (Opsional) Jika spek juga ingin disamakan dengan riwayat terakhir, uncomment baris di bawah:
-                            // if(data[item.idblrinci].spek) item.spek = data[item.idblrinci].spek;
-
-                            updatedCount++;
-                        }
-                    });
-
-                    // Beri notifikasi
-                    if (updatedCount > 0) {
-                        alert(updatedCount + ' komponen berhasil disesuaikan namanya dengan riwayat pembelanjaan terakhir.');
-                    } else {
-                        alert('Belum ada riwayat pembelanjaan untuk komponen-komponen ini.');
-                    }
-
-                } catch (error) {
-                    console.error('Error fetching history:', error);
-                    alert('Gagal mengambil data riwayat.');
-                }
+    try {
+        // 2. Panggil API ke Backend
+        const response = await fetch('/api/get-riwayat-komponen', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
             },
+            body: JSON.stringify({ idblrincis: idblrincis })
+        });
+
+        if (!response.ok) throw new Error('Gagal mengambil data riwayat');
+
+        const data = await response.json();
+        let updatedCount = 0;
+
+        // 3. Loop SEMUA item dan ganti namanya jika data riwayat tersedia
+        this.items.forEach(item => {
+            if (data[item.idblrinci]) {
+                item.namakomponen = data[item.idblrinci].namakomponen;
+                // Opsional: jika ingin menyamakan spek juga, tambahkan baris di bawah:
+                // item.spek = data[item.idblrinci].spek || item.spek;
+                updatedCount++;
+            }
+        });
+
+        // 4. Notifikasi
+        if (updatedCount > 0) {
+            alert(updatedCount + ' komponen berhasil disesuaikan namanya dengan riwayat terakhir.');
+        } else {
+            alert('Tidak ditemukan riwayat pembelanjaan untuk komponen-komponen ini.');
+        }
+
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Terjadi kesalahan saat menyinkronkan data.');
+    }
+},
 
 roundAllPricesDown() {
     if (confirm('Bulatkan semua harga satuan sesuai ketentuan (Ratusan/Ribuan/Lima Puluh Ribuan)?')) {
