@@ -815,4 +815,37 @@ class BelanjaController extends Controller
             'sekolah' => $sekolah,
         ]);
     }
+
+    public function getRiwayatKomponen(Request $request)
+    {
+        $idblrincis = $request->input('idblrincis', []);
+
+        if (empty($idblrincis)) {
+            return response()->json([]);
+        }
+
+        // Cari riwayat di belanja_rincis yang tergabung dengan belanjas
+        // Diurutkan dari tanggal belanja paling baru
+        $riwayat = DB::table('belanja_rincis')
+            ->join('belanjas', 'belanja_rincis.belanja_id', '=', 'belanjas.id')
+            ->whereIn('belanja_rincis.idblrinci', $idblrincis)
+            ->where('belanjas.user_id', auth()->id()) // Pastikan riwayat milik sekolah/user ini sendiri
+            ->orderBy('belanjas.tanggal', 'desc')
+            ->orderBy('belanja_rincis.id', 'desc')
+            ->select('belanja_rincis.idblrinci', 'belanja_rincis.namakomponen', 'belanja_rincis.spek')
+            ->get()
+            ->groupBy('idblrinci');
+
+        $result = [];
+        // Karena sudah diurutkan desc, kita ambil array pertama (terbaru) dari setiap idblrinci
+        foreach ($riwayat as $idblrinci => $items) {
+            $latest = $items->first();
+            $result[$idblrinci] = [
+                'namakomponen' => $latest->namakomponen,
+                'spek' => $latest->spek,
+            ];
+        }
+
+        return response()->json($result);
+    }
 }
