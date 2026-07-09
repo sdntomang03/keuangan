@@ -832,7 +832,7 @@ class BelanjaController extends Controller
             ->where('belanjas.user_id', auth()->id()) // Pastikan riwayat milik sekolah/user ini sendiri
             ->orderBy('belanjas.tanggal', 'desc')
             ->orderBy('belanja_rincis.id', 'desc')
-            ->select('belanja_rincis.idblrinci', 'belanja_rincis.namakomponen', 'belanja_rincis.spek')
+            ->select('belanja_rincis.idblrinci', 'belanja_rincis.namakomponen', 'belanja_rincis.spek', 'belanja_rincis.harga_satuan')
             ->get()
             ->groupBy('idblrinci');
 
