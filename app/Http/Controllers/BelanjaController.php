@@ -843,7 +843,7 @@ class BelanjaController extends Controller
             $result[$idblrinci] = [
                 'namakomponen' => $latest->namakomponen,
                 'spek' => $latest->spek,
-                'harga' => $latest->harga_satuan ?? 0,
+                'harga_satuan' => $latest->harga_satuan ?? 0,
             ];
         }
 
