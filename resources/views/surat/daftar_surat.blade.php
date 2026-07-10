@@ -18,9 +18,9 @@
             {{-- KOTAK FILTER --}}
             <div
                 class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6 overflow-x-auto">
-                {{-- Ubah items-end jadi items-center, dan gap-4 jadi gap-3 agar lebih rapat --}}
+                {{-- Sudah diubah items-center dan gap-3 agar lebih rapat --}}
                 <form action="{{ route('surat.daftar') }}" method="GET"
-                    class="flex flex-row items-center justify-between min-w-max gap-4">
+                    class="flex flex-row items-center justify-between min-w-max gap-3">
 
                     {{-- BAGIAN KIRI: Filter (Label & Select) --}}
                     <div class="flex items-center gap-2">
@@ -58,9 +58,12 @@
                         {{-- Tombol Reset --}}
                         @if(request('kode_rekening') || request('tw') != Auth::user()->sekolah->triwulan_aktif)
                         <a href="{{ route('surat.daftar') }}"
-                            class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-3 py-2 rounded-lg text-sm font-bold shadow-sm transition"
+                            class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-3 py-2 rounded-lg text-sm font-bold shadow-sm transition flex items-center justify-center"
                             title="Reset Filter">
-                            X
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
                         </a>
                         @endif
                     </div>
@@ -71,36 +74,42 @@
                         {{-- Tombol Rekap Surat --}}
                         <a href="{{ route('surat.index_semua') }}" target="_blank"
                             class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition flex items-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
                                 </path>
                             </svg>
                             <span class="hidden sm:inline">Rekap Surat</span>
                         </a>
-                        <a href="{{ route('surat.download_normal_zip', $belanja->id) }}"
-                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow text-sm font-bold flex items-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+                        {{-- Tombol Download Semua (Diperpendek teksnya agar rapi) --}}
+                        <a href="{{ route('surat.download_normal_zip') }}"
+                            onclick="return confirm('Proses ini akan mendownload seluruh surat pada Anggaran dan Triwulan aktif. Membutuhkan waktu 1-3 Menit. Lanjutkan?')"
+                            title="Download Semua PDF Surat (Satu Anggaran)"
+                            class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg shadow text-sm font-bold flex items-center gap-2">
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-3 3m0 0l-3-3m3 3V4"></path>
                             </svg>
-                            Download ZIP Surat
+                            <span class="hidden sm:inline">Download ZIP</span>
                         </a>
 
                         {{-- Tombol Reset Nomor --}}
                         <a href="{{ route('surat.regenerate_all') }}"
                             onclick="return confirm('Apakah Anda yakin ingin mengurutkan ulang semua nomor surat? Tindakan ini tidak dapat dibatalkan.')"
                             class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition flex items-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
                                 </path>
                             </svg>
                             <span class="hidden sm:inline">Reset Nomor</span>
                         </a>
+
+                        {{-- Tombol Talangan-NPD --}}
                         <a href="{{ route('surat.daftar_talangan_npd') }}"
                             class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition flex items-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z">
                                 </path>
