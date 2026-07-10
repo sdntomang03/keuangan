@@ -863,182 +863,44 @@ class SuratController extends Controller
 
     public function cetakSatuanPdf($id, $jenis)
     {
-        Carbon::setLocale('id');
-
-        // ==========================================
-        // 1 - 4. LOGIKA DATA (SAMA PERSIS)
-        // ==========================================
-
-        // 1. DATA BELANJA
-        $belanja = Belanja::with([
-            'rincis.rkas', 'rekanan', 'korek', 'user.sekolah', 'surats', 'anggaran',
-        ])->findOrFail($id);
-
-        // 2. DATA SEKOLAH
-        $sekolah = $belanja->user->sekolah ?? Auth::user()->sekolah;
-        if (! $sekolah) {
-            $sekolah = Sekolah::find(Auth::user()->sekolah_id);
-            if (! $sekolah) {
-                return back()->with('error', 'Data Sekolah tidak ditemukan');
-            }
-        }
-        $rekanan = $belanja->rekanan;
-
-        // 3. PEJABAT
-        $kepalaSekolah = (object) [
-            'nama' => $sekolah->nama_kepala_sekolah,
-            'nip' => $sekolah->nip_kepala_sekolah,
-        ];
-        $pengurusBarang = (object) [
-            'nama' => $sekolah->nama_pengurus_barang ?? '...................',
-            'nip' => $sekolah->nip_pengurus_barang ?? '-',
-            'jabatan' => 'Pengurus Barang',
+        // 1. Mapping URL param ke Kode Surat di Database
+        $mapJenis = [
+            'permintaan' => 'PH',
+            'negosiasi' => 'NH',
+            'pesanan' => 'SP',
+            'berita_acara' => 'BAPB',
+            'pemeriksaan' => 'BAPB', // Alias
         ];
 
-        // 4. ITEM
-        $items = $belanja->rincis->map(function ($item) {
-            return (object) [
-                'nama_barang' => $item->namakomponen,
-                'satuan' => $item->rkas->satuan ?? $item->satuan,
-                'qty' => $item->volume,
-                'harga_satuan' => $item->harga_satuan,
-                'harga_penawaran' => $item->harga_penawaran,
-                'qty_pesan' => $item->volume,
-                'qty_terima' => $item->volume,
-                'qty_tolak' => 0,
-                'qty_sesuai' => $item->volume,
-            ];
-        });
-
-        // ==========================================
-        // 5. MEMILIH JENIS SURAT (ADAPTASI DISINI)
-        // ==========================================
-
-        // Mapping URL param ke Kode Database & Label
-        $configSurat = [
-            'permintaan' => ['PH', 'Permintaan Harga'],
-            'negosiasi' => ['NH', 'Negosiasi Harga'],
-            'pesanan' => ['SP', 'Pesanan Barang'],
-            'berita_acara' => ['BAPB', 'Berita Acara Pemeriksaan'],
-            'pemeriksaan' => ['BAPB', 'Berita Acara Pemeriksaan'], // Alias
-        ];
-
-        if (! isset($configSurat[$jenis])) {
-            abort(404, 'Jenis surat tidak ditemukan');
+        if (! isset($mapJenis[$jenis])) {
+            abort(404, 'Jenis surat tidak valid');
         }
 
-        // Ambil konfigurasi untuk jenis yang dipilih
-        [$kode, $label] = $configSurat[$jenis];
+        $kodeJenis = $mapJenis[$jenis];
 
-        // Helper Pembuat Surat (Dijalankan sekali saja utk jenis ini)
-        $buatSurat = function ($kodeJenis, $jenisLabel) use ($belanja) {
-            $suratDb = $belanja->surats->where('jenis_surat', $kodeJenis)->first();
-            $teks = $belanja->korek->singkat ?? '';
-            $is_penggandaan = \Illuminate\Support\Str::contains(strtolower($teks), [
-                'penggandaan',
-                'fotokopi',
-                'fotocopy',
-                'foto copy',
-                'PENGGANDAAN',
-            ]);
-            $noSurat = 'DRAFT (Belum Generate)';
-            $tglSurat = now();
-            $sifat = 'Segera';
-            $lampiran = '-';
+        // 2. Cari Surat Spesifik di Database berdasarkan Belanja ID dan Jenis Surat
+        $surat = Surat::where('belanja_id', $id)
+            ->where('jenis_surat', $kodeJenis)
+            ->where(function ($q) {
+                // Pastikan yang diambil adalah surat normal (bukan parsial)
+                $q->where('is_parsial', 0)
+                    ->orWhere('is_parsial', false)
+                    ->orWhereNull('is_parsial');
+            })
+            ->first();
 
-            if ($suratDb) {
-                $noSurat = $suratDb->nomor_surat;
-                $tglSurat = $suratDb->tanggal_surat;
-                $sifat = $suratDb->sifat ?? 'Segera';
-                $lampiran = $suratDb->lampiran ?? '-';
-            }
-
-            if ($kodeJenis === 'BAPB') {
-                $tglSurat = $belanja->tanggal_bast
-                    ? Carbon::parse($belanja->tanggal_bast)
-                    : ($suratDb ? $suratDb->tanggal_surat : now());
-            }
-
-            $no_bast = '-';
-            if ($suratDb && ! empty($suratDb->no_bast)) {
-                $no_bast = $suratDb->no_bast;
-            } elseif (! empty($belanja->no_bast)) {
-                $no_bast = $belanja->no_bast;
-            }
-
-            return (object) [
-                'nomor_surat' => $noSurat,
-                'tanggal_surat' => $tglSurat->format('Y-m-d'),
-                'anggaran' => $belanja->anggaran,
-                'periode' => 'Triwulan '.($belanja->triwulan ?? 1),
-                'kode_rekening' => $belanja->korek->ket ?? '-',
-                'nama_kegiatan' => $belanja->uraian,
-                'perihal' => $jenisLabel.' '.$belanja->uraian,
-                'sifat' => $sifat,
-                'lampiran' => $lampiran,
-                'nama_pekerjaan' => $belanja->uraian,
-                'hari_ini' => $tglSurat->translatedFormat('l'),
-                'tanggal_terbilang' => $this->terbilangTanggal($tglSurat),
-                'is_penggandaan' => $is_penggandaan,
-                'no_bast' => $no_bast,
-            ];
-        };
-
-        // Jalankan Helper
-        $surat = $buatSurat($kode, $label);
-
-        // ==========================================
-        // 6. RENDER KONTEN HTML (SATU FILE SAJA)
-        // ==========================================
-
-        // Normalisasi nama view (jika 'pemeriksaan' ubah jadi 'berita_acara')
-        $viewJenis = ($jenis == 'pemeriksaan') ? 'berita_acara' : $jenis;
-
-        // Render View Partial (Konten Bersih)
-        $contentHtml = view('surat.print_manager', [
-            'jenis_surat' => $viewJenis,
-            'surat' => $surat,
-            'sekolah' => $sekolah,
-            'rekanan' => $rekanan,
-            'items' => $items,
-            'kepala_sekolah' => $kepalaSekolah,
-            'pengurus_barang' => $pengurusBarang,
-            'belanja' => $belanja,
-
-        ])->render();
-
-        // ==========================================
-        // 7. WRAPPER PDF (STYLE, FONT, MARGIN)
-        // ==========================================
-
-        $fontDir = storage_path('fonts');
-        if (! file_exists($fontDir)) {
-            mkdir($fontDir, 0755, true);
+        // 3. Jika surat belum ada di database, kembalikan dengan pesan error
+        if (! $surat) {
+            return back()->with('error', 'Dokumen belum tersedia di database. Silakan klik tombol "Generate Surat" terlebih dahulu sebelum mencetak.');
         }
 
-        // Kita bungkus $contentHtml dengan Struktur HTML Lengkap + CSS
-        // Ini PENTING agar font Arial dan Margin F4 terbaca
-        $finalHtml = $contentHtml;
+        // 4. PANGGIL HELPER UTAMA UNTUK GENERATE PDF
+        $pdf = $this->generateNormalPdfContent($surat->id);
 
-        // ==========================================
-        // 8. GENERATE PDF
-        // ==========================================
-
-        $pdf = Pdf::loadHTML($finalHtml);
-
-        $pdf->setOptions([
-            'font_dir' => $fontDir,
-            'font_cache' => $fontDir,
-            'default_font' => 'Arial',
-            'isRemoteEnabled' => true,
-            'isHtml5ParserEnabled' => true,
-        ]);
-
-        $customPaper = [0, 0, 609.448, 935.433];
-        $pdf->setPaper($customPaper, 'portrait');
-
-        // Nama File
-        $namaFile = strtoupper($jenis).'_'.preg_replace('/[^A-Za-z0-9\-]/', '-', $belanja->no_bukti).'.pdf';
+        // 5. Tentukan Nama File dan Tampilkan PDF di Browser (Stream)
+        // Bersihkan karakter garis miring untuk penamaan file
+        $safeNomor = str_replace(['/', '\\'], '-', $surat->nomor_surat ?? 'DRAFT');
+        $namaFile = strtoupper($jenis).'_'.$safeNomor.'.pdf';
 
         return $pdf->stream($namaFile);
     }
