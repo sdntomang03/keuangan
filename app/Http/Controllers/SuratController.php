@@ -2839,7 +2839,7 @@ class SuratController extends Controller
         // 1. Ambil data belanja beserta surat-surat yang BUKAN parsial
         $belanja = Belanja::with(['surats' => function ($q) {
             // Surat normal biasanya is_parsial = false atau null
-            $q->where('is_parsial', false)->orWhereNull('is_parsial');
+            $q->where('is_parsial', 0)->orWhereNull('is_parsial');
         }])->findOrFail($belanjaId);
 
         // 2. Cek apakah ada surat
