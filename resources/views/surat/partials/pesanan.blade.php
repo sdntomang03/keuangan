@@ -40,19 +40,21 @@ $is_penggandaan = $surat->is_penggandaan ?? false;
                 </table>
             </td>
             <td style="width:45%; vertical-align:top; text-align:right;">
-                {{-- Tetap gunakan width 85% untuk mengatur posisinya di kanan --}}
                 <div style="text-align: left; display: inline-block; width: 85%;">
                     <div style="margin-bottom: 20px;">
                         {{ \Carbon\Carbon::parse($surat->tanggal_surat)->translatedFormat('d F Y') }}
                     </div>
-                    <div style="margin-bottom: 5px;">Kepada</div>
 
-                    {{-- Hapus margin-left negatif agar width 100% bekerja maksimal --}}
+                    {{-- margin-left negatif dihapus, lebar diset 100% murni --}}
                     <table style="width: 100%; border-collapse: collapse;">
                         <tbody>
+                            {{-- Kata "Kepada" dimasukkan ke tabel agar sejajar presisi --}}
                             <tr>
-                                {{-- Kembalikan ke 35px agar tidak memakan banyak tempat --}}
-                                <td style="width: 35px; vertical-align: top;">Yth.</td>
+                                <td style="width: 35px;"></td>
+                                <td style="padding-bottom: 5px;">Kepada</td>
+                            </tr>
+                            <tr>
+                                <td style="vertical-align: top;">Yth.</td>
                                 <td style="vertical-align: top;">Direktur {{ $rekanan->nama_rekanan }}</td>
                             </tr>
                             <tr>
@@ -71,8 +73,7 @@ $is_penggandaan = $surat->is_penggandaan ?? false;
                             </tr>
                             <tr>
                                 <td></td>
-                                {{-- Hapus padding-left: 20px agar teks rata dengan alamat di atasnya --}}
-                                <td style="vertical-align: top;">{{ $rekanan->provinsi }}</td>
+                                <td style="vertical-align: top; padding-left: 20px;">{{ $rekanan->provinsi }}</td>
                             </tr>
                         </tbody>
                     </table>
