@@ -38,7 +38,7 @@
                     <table style="width: 100%; border-collapse: collapse; margin-left: -35px;">
                         <tbody>
                             <tr>
-                                <td style="width: 35px; vertical-align: top;">Yth.</td>
+                                <td style="width: 10%; vertical-align: top;">Yth.</td>
                                 <td style="vertical-align: top;">Direktur {{ $rekanan->nama_rekanan }}
                                 </td>
                             </tr>
