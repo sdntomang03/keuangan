@@ -78,6 +78,14 @@
                             </svg>
                             <span class="hidden sm:inline">Rekap Surat</span>
                         </a>
+                        <a href="{{ route('surat.download_normal_zip', $belanja->id) }}"
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow text-sm font-bold flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-3 3m0 0l-3-3m3 3V4"></path>
+                            </svg>
+                            Download ZIP Surat Normal
+                        </a>
 
                         {{-- Tombol Reset Nomor --}}
                         <a href="{{ route('surat.regenerate_all') }}"

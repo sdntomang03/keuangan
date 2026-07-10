@@ -2833,4 +2833,48 @@ class SuratController extends Controller
 
         return $pdf;
     }
+
+    public function downloadSemuaNormalZip($belanjaId)
+    {
+        // 1. Ambil data belanja beserta surat-surat yang BUKAN parsial
+        $belanja = Belanja::with(['surats' => function ($q) {
+            // Surat normal biasanya is_parsial = false atau null
+            $q->where('is_parsial', false)->orWhereNull('is_parsial');
+        }])->findOrFail($belanjaId);
+
+        // 2. Cek apakah ada surat
+        if ($belanja->surats->isEmpty()) {
+            return back()->with('error', 'Tidak ada dokumen surat normal untuk didownload.');
+        }
+
+        // 3. Inisialisasi ZipArchive
+        $zip = new ZipArchive;
+        $fileName = 'Dokumen_Normal_Belanja_'.$belanjaId.'_'.str_replace(['/', '\\'], '-', $belanja->no_bukti).'.zip';
+        $zipPath = storage_path('app/public/'.$fileName);
+
+        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
+
+            // 4. Looping setiap surat untuk dibuatkan PDF dan dimasukkan ke ZIP
+            foreach ($belanja->surats as $surat) {
+                // Panggil helper yang sudah Anda buat sebelumnya untuk surat normal
+                $pdf = $this->generateNormalPdfContent($surat->id);
+
+                // Bersihkan karakter garis miring pada nomor surat agar aman untuk nama file
+                $safeNomor = str_replace(['/', '\\'], '-', $surat->nomor_surat);
+
+                // Format Nama File di dalam ZIP: {belanja_id}_{JENIS}_{nomor_surat}.pdf
+                $namaFileDalamZip = $belanjaId.'_'.strtoupper($surat->jenis_surat).'_'.$safeNomor.'.pdf';
+
+                // Tambahkan PDF ke dalam ZIP
+                $zip->addFromString($namaFileDalamZip, $pdf->output());
+            }
+
+            $zip->close();
+        } else {
+            return back()->with('error', 'Sistem gagal membuat file ZIP.');
+        }
+
+        // 5. Download ZIP dan hapus file sampah (ZIP-nya) dari server setelah terkirim
+        return response()->download($zipPath)->deleteFileAfterSend(true);
+    }
 }
