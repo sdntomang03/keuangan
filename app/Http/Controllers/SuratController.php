@@ -2021,7 +2021,7 @@ class SuratController extends Controller
             'nomor_surat' => $suratDipilih->nomor_surat ?? 'DRAFT',
             'tanggal_surat' => $tglSurat->format('Y-m-d'),
             'anggaran' => $belanja->anggaran,
-            'periode' => 'Triwulan '.($belanja->triwulan ?? 1),
+            'periode' => 'Triwulan '.($belanja->tw),
             'kode_rekening' => $belanja->korek->ket ?? '-',
             'nama_kegiatan' => $belanja->uraian,
             'perihal' => $labelSurat.' '.$belanja->uraian,
