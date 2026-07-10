@@ -39,7 +39,8 @@
                         <tbody>
                             <tr>
                                 <td style="width: 35px; vertical-align: top;">Yth.</td>
-                                <td style="vertical-align: top;"><b>{{ $rekanan->nama_rekanan }}</b></td>
+                                <td style="vertical-align: top;">Direktur {{ $rekanan->nama_rekanan }}</>
+                                </td>
                             </tr>
                             <tr>
 
