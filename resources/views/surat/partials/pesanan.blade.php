@@ -54,13 +54,13 @@ $is_penggandaan = $surat->is_penggandaan ?? false;
                             </tr>
                             <tr>
 
-                                <td></td>
-                                <td style="vertical-align: top;">{{ $rekanan->alamat }} </td>
+                                <td style="width: 10%;"></td>
+                                <td style="width: 90%; vertical-align: top;">{{ $rekanan->alamat }} </td>
                             </tr>
                             @if($rekanan->alamat2)
                             <tr>
-                                <td></td>
-                                <td style="vertical-align: top;">{{ $rekanan->alamat2 }}</td>
+                                <td style="width: 10%;"></td>
+                                <td style="width: 90%; vertical-align: top;">{{ $rekanan->alamat2 }}</td>
                             </tr>
                             @endif
                             <tr>
