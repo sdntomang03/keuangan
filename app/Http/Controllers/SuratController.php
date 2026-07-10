@@ -1084,8 +1084,6 @@ class SuratController extends Controller
             'surats',
             'anggaran',
         ])->findOrFail($id);
-        $is_penggandaan = Str::contains($belanja->korek, ['penggandaan', 'fotocopy', 'cetak', 'duplikasi']);
-        dd($is_penggandaan, $belanja->korek);
         // 2. AMBIL DATA PENDUKUNG
         // Fallback: Jika user pembuat belanja tidak punya sekolah, ambil dari user login
         $sekolah = $belanja->user->sekolah ?? Auth::user()->sekolah;
@@ -1515,7 +1513,8 @@ class SuratController extends Controller
         $belanja = Belanja::with([
             'rincis.rkas', 'rekanan', 'korek', 'user.sekolah', 'surats', 'anggaran',
         ])->findOrFail($id);
-
+        $is_penggandaan = Str::contains($belanja->korek, ['penggandaan', 'fotocopy', 'cetak', 'duplikasi']);
+        dd($is_penggandaan, $belanja->korek);
         // 2. DATA SEKOLAH
         $sekolah = $belanja->user->sekolah ?? Auth::user()->sekolah;
         if (! $sekolah) {
