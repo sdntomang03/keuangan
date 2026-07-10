@@ -154,7 +154,7 @@ Route::middleware(['permission:view-anggaran|kelola-anggaran|input-belanja'])->g
     Route::get('/belanja/export-excel', [SuratController::class, 'exportExcel'])->name('belanja.export_excel');
     Route::get('/belanja/{id}/download-bundel', [SuratController::class, 'downloadBundel'])->name('belanja.downloadBundel');
     Route::get('/cetak/kop', [SuratController::class, 'cetakKopPdf'])->name('cetak.kop');
-    Route::get('/surat/download-normal-zip/{belanjaId}', [\App\Http\Controllers\SuratController::class, 'downloadSemuaNormalZip'])->name('surat.download_normal_zip');
+    Route::get('/surat/download-normal-zip/', [\App\Http\Controllers\SuratController::class, 'downloadSemuaNormalZip'])->name('surat.download_normal_zip');
 
     // Barang, Persediaan & Arkas (Read Only)
     Route::get('/barang', [BarangController::class, 'index'])->name('barang.index');

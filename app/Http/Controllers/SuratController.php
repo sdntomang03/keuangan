@@ -2839,39 +2839,64 @@ class SuratController extends Controller
      */
     public function downloadSemuaNormalZip($belanjaId)
     {
-        // 1. Ambil data belanja beserta surat-surat yang BUKAN parsial
-        $belanja = Belanja::with(['surats' => function ($q) {
-            // PERBAIKAN 1: Bungkus kondisi OR di dalam function (Grouping)
-            // agar terbaca: WHERE belanja_id = X AND (is_parsial = 0 OR is_parsial IS NULL)
-            $q->where(function ($query) {
+        // 1. Perpanjang waktu eksekusi server (KARENA GENERATE BANYAK PDF BUTUH WAKTU LAMA)
+        ini_set('max_execution_time', 300); // 5 Menit
+        ini_set('memory_limit', '512M'); // Amankan memory
+
+        $user = Auth::user();
+        $sekolah = \App\Models\Sekolah::find($user->sekolah_id);
+
+        if (! $sekolah) {
+            return back()->with('error', 'Data sekolah tidak ditemukan.');
+        }
+
+        // 2. Ambil Anggaran Aktif dari Middleware
+        $anggaran = $request->anggaran_data;
+        if (! $anggaran) {
+            return back()->with('error', 'Silakan pilih Anggaran Aktif terlebih dahulu.');
+        }
+
+        // Tentukan Triwulan Aktif
+        $triwulanAktif = ! empty($anggaran->triwulan_aktif) ? $anggaran->triwulan_aktif : $sekolah->triwulan_aktif;
+
+        // 3. Ambil SEMUA surat normal pada anggaran dan triwulan aktif
+        $surats = Surat::where('sekolah_id', $sekolah->id)
+            ->where(function ($query) {
+                // Pastikan HANYA surat normal (bukan parsial/talangan)
                 $query->where('is_parsial', 0)
                     ->orWhere('is_parsial', false)
                     ->orWhereNull('is_parsial');
-            });
-        }])->findOrFail($belanjaId);
+            })
+            // Relasikan ke tabel belanja untuk memastikan anggaran_id dan triwulan cocok
+            ->whereHas('belanja', function ($q) use ($anggaran, $triwulanAktif) {
+                $q->where('anggaran_id', $anggaran->id)
+                    ->where('tw', $triwulanAktif);
+            })
+            // Ambil hanya jenis surat SPJ utama
+            ->whereIn('jenis_surat', ['PH', 'NH', 'SP', 'BAPB'])
+            ->get();
 
-        // 2. Cek apakah ada surat
-        if ($belanja->surats->isEmpty()) {
-            return back()->with('error', 'Tidak ada dokumen surat normal untuk didownload.');
+        if ($surats->isEmpty()) {
+            return back()->with('error', "Tidak ada dokumen surat normal pada {$anggaran->singkatan} Triwulan {$triwulanAktif} yang bisa didownload.");
         }
 
-        // 3. Inisialisasi ZipArchive
+        // 4. Inisialisasi ZipArchive
         $zip = new ZipArchive;
-        $fileName = 'Dokumen_Normal_Belanja_'.$belanjaId.'_'.str_replace(['/', '\\'], '-', $belanja->no_bukti).'.zip';
+        $fileName = 'Arsip_Surat_'.$anggaran->singkatan.'_TW'.$triwulanAktif.'_'.time().'.zip';
         $zipPath = storage_path('app/public/'.$fileName);
 
         if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
 
-            // 4. Looping setiap surat untuk dibuatkan PDF dan dimasukkan ke ZIP
-            foreach ($belanja->surats as $surat) {
+            // 5. Looping setiap surat, generate PDF, dan masukkan ke ZIP
+            foreach ($surats as $surat) {
+                // Generate konten PDF menggunakan helper yang sudah ada
                 $pdf = $this->generateNormalPdfContent($surat->id);
 
                 // Bersihkan karakter garis miring
                 $safeNomor = str_replace(['/', '\\'], '-', $surat->nomor_surat);
 
-                // PERBAIKAN 2: Tambahkan ID Surat ($surat->id) di nama file
-                // untuk memastikan 100% nama file unik dan tidak saling tindih (overwrite) di dalam ZIP
-                $namaFileDalamZip = $belanjaId.'_'.strtoupper($surat->jenis_surat).'_'.$surat->id.'_'.$safeNomor.'.pdf';
+                // Format Nama File di dalam ZIP: {belanja_id}_{JENIS}_{id}_{nomor_surat}.pdf
+                $namaFileDalamZip = $surat->belanja_id.'_'.strtoupper($surat->jenis_surat).'_'.$surat->id.'_'.$safeNomor.'.pdf';
 
                 // Tambahkan PDF ke dalam ZIP
                 $zip->addFromString($namaFileDalamZip, $pdf->output());
@@ -2882,7 +2907,7 @@ class SuratController extends Controller
             return back()->with('error', 'Sistem gagal membuat file ZIP.');
         }
 
-        // 5. Download ZIP dan hapus file sampah dari server setelah terkirim
+        // 6. Download ZIP dan hapus file sampah dari server setelah terkirim
         return response()->download($zipPath)->deleteFileAfterSend(true);
     }
 }
