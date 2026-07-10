@@ -1513,8 +1513,15 @@ class SuratController extends Controller
         $belanja = Belanja::with([
             'rincis.rkas', 'rekanan', 'korek', 'user.sekolah', 'surats', 'anggaran',
         ])->findOrFail($id);
-        $is_penggandaan = $belanja->korek;
-        dd($is_penggandaan->singkat);
+        $teks = $belanja->korek->singkat ?? '';
+
+        // 2. Ubah semua teks ke huruf kecil dan cek apakah mengandung salah satu kata di dalam array
+        $is_penggandaan = \Illuminate\Support\Str::contains(strtolower($teks), [
+            'penggandaan',
+            'fotokopi',
+            'fotocopy',
+            'foto copy',
+        ]);
         // 2. DATA SEKOLAH
         $sekolah = $belanja->user->sekolah ?? Auth::user()->sekolah;
         if (! $sekolah) {
@@ -1606,6 +1613,7 @@ class SuratController extends Controller
                 'nama_pekerjaan' => $belanja->uraian,
                 'hari_ini' => $tglSurat->translatedFormat('l'),
                 'tanggal_terbilang' => $this->terbilangTanggal($tglSurat),
+                'is_penggandaan' => $is_penggandaan,
             ];
         };
 
