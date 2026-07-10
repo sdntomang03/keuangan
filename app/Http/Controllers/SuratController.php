@@ -1084,7 +1084,8 @@ class SuratController extends Controller
             'surats',
             'anggaran',
         ])->findOrFail($id);
-
+        $is_penggandaan = Str::contains($belanja->korek, ['penggandaan', 'fotocopy', 'cetak', 'duplikasi']);
+        dd($is_penggandaan, $belanja->korek);
         // 2. AMBIL DATA PENDUKUNG
         // Fallback: Jika user pembuat belanja tidak punya sekolah, ambil dari user login
         $sekolah = $belanja->user->sekolah ?? Auth::user()->sekolah;
@@ -1752,7 +1753,7 @@ class SuratController extends Controller
                 $tglSurat = $belanja->tanggal_bast ? Carbon::parse($belanja->tanggal_bast) : now();
             }
         }
-        dd($is_penggandaan);
+
         $surat = (object) [
             'nomor_surat' => $suratDipilih->nomor_surat ?? '...',
             'tanggal_surat' => $tglSurat->format('Y-m-d'),
