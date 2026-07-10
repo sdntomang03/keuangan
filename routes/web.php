@@ -134,10 +134,7 @@ Route::middleware(['permission:view-anggaran|kelola-anggaran|input-belanja'])->g
 
     // Surat & Cetak
     Route::get('/surat/manage/{belanjaId}', [SuratController::class, 'index'])->name('surat.index');
-    Route::get('/surat/cetak-sp/{id}', [SuratController::class, 'cetakSpParsial'])->name('surat.cetak_sp');
-    Route::get('/surat/cetak-bapb/{id}', [SuratController::class, 'cetakBapbParsial'])->name('surat.cetak_bapb');
     Route::get('/surat/cetak-satuan/{id}/{jenis}', [SuratController::class, 'cetakSatuan'])->name('surat.cetak_satuan');
-    Route::get('/surat/cetakpdf/{id}', [SuratController::class, 'cetakPdf'])->name('surat.cetakpdf');
     Route::get('/surat/cetaksatuanpdf/{id}/{jenis}', [SuratController::class, 'cetakSatuanPdf'])->name('surat.cetakSatuanPdf');
     Route::get('/surat/cetakparsialpdf/{id}', [SuratController::class, 'cetakParsialPdf'])->name('surat.cetakParsialPdf');
     Route::get('/surat/download-semua-parsial/{belanjaId}', [SuratController::class, 'downloadSemuaParsial'])->name('surat.download_semua_parsial');
@@ -149,7 +146,6 @@ Route::middleware(['permission:view-anggaran|kelola-anggaran|input-belanja'])->g
     Route::get('/surat/talangan-npd', [SuratController::class, 'daftarTalanganNpd'])->name('surat.daftar_talangan_npd');
     Route::get('/surat/cover-lpj', [SuratController::class, 'createCoverLpj'])->name('surat.cover_lpj.create');
     Route::post('/surat/cover-lpj/cetak', [SuratController::class, 'generateCoverPdf'])->name('surat.cover_lpj.generate');
-    Route::get('/belanja/cetak/{id}', [SuratController::class, 'cetakDokumenLengkap'])->name('belanja.print');
     Route::get('/belanja/cetak-foto/{id}', [SuratController::class, 'cetakFotoSpj'])->name('belanja.cetak_foto');
     Route::get('/belanja/export-excel', [SuratController::class, 'exportExcel'])->name('belanja.export_excel');
     Route::get('/belanja/{id}/download-bundel', [SuratController::class, 'downloadBundel'])->name('belanja.downloadBundel');
