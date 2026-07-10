@@ -1613,7 +1613,7 @@ class SuratController extends Controller
                 'nama_pekerjaan' => $belanja->uraian,
                 'hari_ini' => $tglSurat->translatedFormat('l'),
                 'tanggal_terbilang' => $this->terbilangTanggal($tglSurat),
-                'is_penggandaan' => $is_penggandaan,
+
             ];
         };
 
@@ -1637,6 +1637,7 @@ class SuratController extends Controller
             'kepala_sekolah' => $kepalaSekolah,
             'pengurus_barang' => $pengurusBarang,
             'belanja' => $belanja,
+            'is_penggandaan' => $is_penggandaan,
         ])->render();
 
         // ==========================================
