@@ -84,7 +84,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-3 3m0 0l-3-3m3 3V4"></path>
                             </svg>
-                            Download ZIP Surat Normal
+                            Download ZIP Surat
                         </a>
 
                         {{-- Tombol Reset Nomor --}}
