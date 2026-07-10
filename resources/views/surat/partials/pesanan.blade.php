@@ -48,10 +48,12 @@ $is_penggandaan = $surat->is_penggandaan ?? false;
                     <table style="width: 100%; border-collapse: collapse; margin-left: -35px;">
                         <tbody>
                             <tr>
-                                <td style="width: 35px; vertical-align: top;">Yth.</td>
-                                <td style="vertical-align: top;"><b>{{ $rekanan->nama_rekanan }}</b></td>
+                                <td style="width: 10%; vertical-align: top;">Yth.</td>
+                                <td style="vertical-align: top;">Direktur {{ $rekanan->nama_rekanan }}
+                                </td>
                             </tr>
                             <tr>
+
                                 <td></td>
                                 <td style="vertical-align: top;">{{ $rekanan->alamat }} </td>
                             </tr>
@@ -67,8 +69,7 @@ $is_penggandaan = $surat->is_penggandaan ?? false;
                             </tr>
                             <tr>
                                 <td></td>
-                                <td style="vertical-align: top; padding-left: 20px;">{{ $rekanan->provinsi ?? 'Tempat'
-                                    }}</td>
+                                <td style="vertical-align: top; padding-left: 20px;">{{ $rekanan->provinsi }}</td>
                             </tr>
                         </tbody>
                     </table>
