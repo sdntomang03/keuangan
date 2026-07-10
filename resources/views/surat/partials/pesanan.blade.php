@@ -165,7 +165,7 @@ $is_penggandaan = $surat->is_penggandaan ?? false;
 
                         @if($is_penggandaan)
                         <br>
-                        Keterangan: {{ $belanja->rincian }}
+                        Keterangan: {{ $belanja->rincian ?: '-' }}
                         @endif
                     </td>
                     <td class="text-center">{{ number_format($item->qty, 0, ',', '.') }}</td>
