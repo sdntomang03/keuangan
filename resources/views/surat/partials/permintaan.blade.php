@@ -30,7 +30,7 @@
                 </table>
             </td>
             <td style="width:50%; vertical-align:top; text-align:right;">
-                <div style="text-align: left; display: inline-block; width: 85%;">
+                <div style="text-align: left; display: inline-block; width: 100%;">
                     <div style="margin-bottom: 20px;">
                         {{ \Carbon\Carbon::parse($surat->tanggal_surat)->translatedFormat('d F Y') }}
                     </div>
