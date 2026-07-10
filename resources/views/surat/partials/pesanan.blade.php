@@ -40,27 +40,29 @@ $is_penggandaan = $surat->is_penggandaan ?? false;
                 </table>
             </td>
             <td style="width:45%; vertical-align:top; text-align:right;">
+                {{-- Tetap gunakan width 85% untuk mengatur posisinya di kanan --}}
                 <div style="text-align: left; display: inline-block; width: 85%;">
                     <div style="margin-bottom: 20px;">
                         {{ \Carbon\Carbon::parse($surat->tanggal_surat)->translatedFormat('d F Y') }}
                     </div>
                     <div style="margin-bottom: 5px;">Kepada</div>
-                    <table style="width: 100%; border-collapse: collapse; margin-left: -35px;">
+
+                    {{-- Hapus margin-left negatif agar width 100% bekerja maksimal --}}
+                    <table style="width: 100%; border-collapse: collapse;">
                         <tbody>
                             <tr>
-                                <td style="width: 10%; vertical-align: top;">Yth.</td>
-                                <td style="width: 90%; vertical-align: top;">Direktur {{ $rekanan->nama_rekanan }}
-                                </td>
+                                {{-- Kembalikan ke 35px agar tidak memakan banyak tempat --}}
+                                <td style="width: 35px; vertical-align: top;">Yth.</td>
+                                <td style="vertical-align: top;">Direktur {{ $rekanan->nama_rekanan }}</td>
                             </tr>
                             <tr>
-
-                                <td style="width: 10%;"></td>
-                                <td style="width: 90%; vertical-align: top;">{{ $rekanan->alamat }} </td>
+                                <td></td>
+                                <td style="vertical-align: top;">{{ $rekanan->alamat }}</td>
                             </tr>
                             @if($rekanan->alamat2)
                             <tr>
-                                <td style="width: 10%;"></td>
-                                <td style="width: 90%; vertical-align: top;">{{ $rekanan->alamat2 }}</td>
+                                <td></td>
+                                <td style="vertical-align: top;">{{ $rekanan->alamat2 }}</td>
                             </tr>
                             @endif
                             <tr>
@@ -69,7 +71,8 @@ $is_penggandaan = $surat->is_penggandaan ?? false;
                             </tr>
                             <tr>
                                 <td></td>
-                                <td style="vertical-align: top; padding-left: 20px;">{{ $rekanan->provinsi }}</td>
+                                {{-- Hapus padding-left: 20px agar teks rata dengan alamat di atasnya --}}
+                                <td style="vertical-align: top;">{{ $rekanan->provinsi }}</td>
                             </tr>
                         </tbody>
                     </table>
