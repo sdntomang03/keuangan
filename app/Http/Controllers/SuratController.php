@@ -1599,6 +1599,13 @@ class SuratController extends Controller
                     : ($suratDb ? $suratDb->tanggal_surat : now());
             }
 
+            $no_bast = '-';
+            if ($suratDb && ! empty($suratDb->no_bast)) {
+                $no_bast = $suratDb->no_bast;
+            } elseif (! empty($belanja->no_bast)) {
+                $no_bast = $belanja->no_bast;
+            }
+
             return (object) [
                 'nomor_surat' => $noSurat,
                 'tanggal_surat' => $tglSurat->format('Y-m-d'),
@@ -1613,7 +1620,7 @@ class SuratController extends Controller
                 'hari_ini' => $tglSurat->translatedFormat('l'),
                 'tanggal_terbilang' => $this->terbilangTanggal($tglSurat),
                 'is_penggandaan' => $is_penggandaan,
-                'no_bast' => $suratDipilih->no_bast ?? '-',
+                'no_bast' => $no_bast,
             ];
         };
 
@@ -2803,7 +2810,7 @@ class SuratController extends Controller
             'tanggal_terbilang' => $this->terbilangTanggal($tglSurat),
             'is_parsial' => false,
             'is_penggandaan' => $is_penggandaan,
-            'no_bast' => $suratDipilih->no_bast ?? '-',
+            'no_bast' => $suratDipilih->no_bast ?? '',
         ];
 
         // Render HTML
