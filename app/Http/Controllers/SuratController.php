@@ -1613,6 +1613,7 @@ class SuratController extends Controller
                 'hari_ini' => $tglSurat->translatedFormat('l'),
                 'tanggal_terbilang' => $this->terbilangTanggal($tglSurat),
                 'is_penggandaan' => $is_penggandaan,
+                'no_bast' => $suratDipilih->no_bast ?? '-',
             ];
         };
 
@@ -2802,6 +2803,7 @@ class SuratController extends Controller
             'tanggal_terbilang' => $this->terbilangTanggal($tglSurat),
             'is_parsial' => false,
             'is_penggandaan' => $is_penggandaan,
+            'no_bast' => $suratDipilih->no_bast ?? '-',
         ];
 
         // Render HTML
