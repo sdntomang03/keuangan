@@ -2837,7 +2837,7 @@ class SuratController extends Controller
     /**
      * Download semua surat Normal (Bukan Parsial) berdasarkan ID Belanja dalam bentuk ZIP
      */
-    public function downloadSemuaNormalZip($belanjaId)
+    public function downloadSemuaNormalZip()
     {
         // 1. Perpanjang waktu eksekusi server (KARENA GENERATE BANYAK PDF BUTUH WAKTU LAMA)
         ini_set('max_execution_time', 300); // 5 Menit
