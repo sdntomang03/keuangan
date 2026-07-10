@@ -1752,7 +1752,7 @@ class SuratController extends Controller
                 $tglSurat = $belanja->tanggal_bast ? Carbon::parse($belanja->tanggal_bast) : now();
             }
         }
-
+        dd($is_penggandaan);
         $surat = (object) [
             'nomor_surat' => $suratDipilih->nomor_surat ?? '...',
             'tanggal_surat' => $tglSurat->format('Y-m-d'),
