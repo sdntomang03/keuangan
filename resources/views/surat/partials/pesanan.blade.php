@@ -49,7 +49,7 @@ $is_penggandaan = $surat->is_penggandaan ?? false;
                         <tbody>
                             <tr>
                                 <td style="width: 10%; vertical-align: top;">Yth.</td>
-                                <td style="vertical-align: top;">Direktur {{ $rekanan->nama_rekanan }}
+                                <td style="width: 90%; vertical-align: top;">Direktur {{ $rekanan->nama_rekanan }}
                                 </td>
                             </tr>
                             <tr>
