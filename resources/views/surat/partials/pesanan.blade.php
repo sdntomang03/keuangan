@@ -162,7 +162,7 @@ $is_penggandaan = $surat->is_penggandaan ?? false;
 
 
                     <td>{{ $item->nama_barang }}
-                        @if($is_parsial && $is_penggandaan)
+                        @if($is_penggandaan)
                         <br>
                         Keterangan: {{ $belanja->rincian }}
                         @endif
