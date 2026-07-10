@@ -2778,7 +2778,14 @@ class SuratController extends Controller
         if ($dbKode === 'BAPB' && ! $tglSurat) {
             $tglSurat = $belanja->tanggal_bast ? Carbon::parse($belanja->tanggal_bast) : now();
         }
-
+              $teks = $belanja->korek->singkat ?? '';
+            $is_penggandaan = \Illuminate\Support\Str::contains(strtolower($teks), [
+                'penggandaan',
+                'fotokopi',
+                'fotocopy',
+                'foto copy',
+                'PENGGANDAAN',
+            ]);
         // Susun Object Surat
         $surat = (object) [
             'nomor_surat' => $suratDipilih->nomor_surat ?? 'DRAFT',
@@ -2794,6 +2801,7 @@ class SuratController extends Controller
             'hari_ini' => $tglSurat->translatedFormat('l'),
             'tanggal_terbilang' => $this->terbilangTanggal($tglSurat),
             'is_parsial' => false,
+            'is_penggandaan' => $is_penggandaan,
         ];
 
         // Render HTML
