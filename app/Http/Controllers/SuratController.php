@@ -1521,8 +1521,8 @@ class SuratController extends Controller
             'fotokopi',
             'fotocopy',
             'foto copy',
+            'PENGGANDAAN',
         ]);
-        dd($is_penggandaan);
         // 2. DATA SEKOLAH
         $sekolah = $belanja->user->sekolah ?? Auth::user()->sekolah;
         if (! $sekolah) {
