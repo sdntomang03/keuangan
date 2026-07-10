@@ -10,7 +10,7 @@ $is_penggandaan = $surat->is_penggandaan ?? false;
     {{-- BAGIAN HEADER / METADATA SURAT --}}
     <tbody>
         <tr>
-            <td style="width:50%; vertical-align:top;">
+            <td style="width:55%; vertical-align:top;">
                 <table style="width:100%; border-collapse:collapse;">
                     <tbody>
                         <tr>
@@ -39,7 +39,7 @@ $is_penggandaan = $surat->is_penggandaan ?? false;
                     </tbody>
                 </table>
             </td>
-            <td style="width:50%; vertical-align:top; text-align:right;">
+            <td style="width:45%; vertical-align:top; text-align:right;">
                 <div style="text-align: left; display: inline-block; width: 85%;">
                     <div style="margin-bottom: 20px;">
                         {{ \Carbon\Carbon::parse($surat->tanggal_surat)->translatedFormat('d F Y') }}
