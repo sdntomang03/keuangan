@@ -162,6 +162,7 @@ $is_penggandaan = $surat->is_penggandaan ?? false;
 
 
                     <td>{{ $item->nama_barang }}
+                        @dd($is_penggandaan)
                         @if($is_penggandaan)
                         <br>
                         Keterangan: {{ $belanja->rincian }}
