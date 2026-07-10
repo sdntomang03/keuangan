@@ -176,7 +176,7 @@
             <td>{{ $item->nama_barang }}</td>
             {{-- Asumsi controller mengirim qty_pesan, qty_terima, dll --}}
             <td class="text-center">{{ $item->qty_pesan ?? $item->qty }}</td>
-            <td class="text-center">{{ $item->satuan }}</td>
+            <td class="text-center">{{ str_replace('/', ' / ', $item->satuan) }}</td>
             <td class="text-center">{{ $item->qty_terima ?? $item->qty }}</td>
             <td class="text-center">{{ $item->qty_tolak ?? '-' }}</td>
             <td class="text-center">{{ $item->qty_sesuai ?? $item->qty }}</td>
