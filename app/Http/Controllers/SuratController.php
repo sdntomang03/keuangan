@@ -1513,16 +1513,7 @@ class SuratController extends Controller
         $belanja = Belanja::with([
             'rincis.rkas', 'rekanan', 'korek', 'user.sekolah', 'surats', 'anggaran',
         ])->findOrFail($id);
-        $teks = $belanja->korek->singkat ?? '';
 
-        // 2. Ubah semua teks ke huruf kecil dan cek apakah mengandung salah satu kata di dalam array
-        $is_penggandaan = \Illuminate\Support\Str::contains(strtolower($teks), [
-            'penggandaan',
-            'fotokopi',
-            'fotocopy',
-            'foto copy',
-            'PENGGANDAAN',
-        ]);
         // 2. DATA SEKOLAH
         $sekolah = $belanja->user->sekolah ?? Auth::user()->sekolah;
         if (! $sekolah) {
@@ -1582,7 +1573,14 @@ class SuratController extends Controller
         // Helper Pembuat Surat (Dijalankan sekali saja utk jenis ini)
         $buatSurat = function ($kodeJenis, $jenisLabel) use ($belanja) {
             $suratDb = $belanja->surats->where('jenis_surat', $kodeJenis)->first();
-
+            $teks = $belanja->korek->singkat ?? '';
+            $is_penggandaan = \Illuminate\Support\Str::contains(strtolower($teks), [
+                'penggandaan',
+                'fotokopi',
+                'fotocopy',
+                'foto copy',
+                'PENGGANDAAN',
+            ]);
             $noSurat = 'DRAFT (Belum Generate)';
             $tglSurat = now();
             $sifat = 'Segera';
@@ -1614,7 +1612,7 @@ class SuratController extends Controller
                 'nama_pekerjaan' => $belanja->uraian,
                 'hari_ini' => $tglSurat->translatedFormat('l'),
                 'tanggal_terbilang' => $this->terbilangTanggal($tglSurat),
-
+                'is_penggandaan' => $is_penggandaan,
             ];
         };
 
@@ -1638,7 +1636,7 @@ class SuratController extends Controller
             'kepala_sekolah' => $kepalaSekolah,
             'pengurus_barang' => $pengurusBarang,
             'belanja' => $belanja,
-            'is_penggandaan' => $is_penggandaan,
+
         ])->render();
 
         // ==========================================
