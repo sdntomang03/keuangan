@@ -1514,7 +1514,7 @@ class SuratController extends Controller
             'rincis.rkas', 'rekanan', 'korek', 'user.sekolah', 'surats', 'anggaran',
         ])->findOrFail($id);
         $is_penggandaan = $belanja->korek;
-        dd($is_penggandaan);
+        dd($is_penggandaan->singkat);
         // 2. DATA SEKOLAH
         $sekolah = $belanja->user->sekolah ?? Auth::user()->sekolah;
         if (! $sekolah) {
