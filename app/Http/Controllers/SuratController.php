@@ -1513,7 +1513,7 @@ class SuratController extends Controller
         $belanja = Belanja::with([
             'rincis.rkas', 'rekanan', 'korek', 'user.sekolah', 'surats', 'anggaran',
         ])->findOrFail($id);
-        $is_penggandaan = Str::contains($belanja->korek->singkat, ['penggandaan', 'fotocopy', 'cetak', 'duplikasi']);
+        $is_penggandaan = $belanja->korek;
         dd($is_penggandaan);
         // 2. DATA SEKOLAH
         $sekolah = $belanja->user->sekolah ?? Auth::user()->sekolah;
