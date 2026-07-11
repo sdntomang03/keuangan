@@ -62,11 +62,11 @@
                             @endif
                             <tr>
                                 <td></td>
-                                <td style="vertical-align: top; padding-top: 5px;">di</td>
+                                <td style="vertical-align: top; padding-top: 5px;padding-left: 10px">di</td>
                             </tr>
                             <tr>
                                 <td></td>
-                                <td style="vertical-align: top; padding-left: 20px;">{{ $rekanan->provinsi }}</td>
+                                <td style="vertical-align: top; padding-left: 30px;">{{ $rekanan->provinsi }}</td>
                             </tr>
                         </tbody>
                     </table>
