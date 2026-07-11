@@ -38,8 +38,8 @@
                         <tbody>
                             {{-- Kata "Kepada" dimasukkan ke tabel agar sejajar presisi --}}
                             <tr>
-                                <td style="width: 32px;"></td>
-                                <td style="padding-bottom: 30px;padding-left: 40px;">{{
+                                <td style="width: 30px;"></td>
+                                <td style="padding-bottom: 20px;padding-left: 40px;">{{
                                     \Carbon\Carbon::parse($surat->tanggal_surat)->translatedFormat('d F Y') }}</td>
                             </tr>
                             <tr>
