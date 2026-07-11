@@ -49,9 +49,8 @@ $is_penggandaan = $surat->is_penggandaan ?? false;
                             {{-- Kata "Kepada" dimasukkan ke tabel agar sejajar presisi --}}
                             <tr>
                                 <td style="width: 32px;"></td>
-                                <td>{{
-                                    \Carbon\Carbon::parse($surat->tanggal_surat)->translatedFormat('d F Y') }} <br><br>
-                                </td>
+                                <td style="padding-bottom: 30px;">{{
+                                    \Carbon\Carbon::parse($surat->tanggal_surat)->translatedFormat('d F Y') }}</td>
                             </tr>
                             <tr>
                                 <td></td>
