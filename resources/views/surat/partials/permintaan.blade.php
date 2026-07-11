@@ -34,18 +34,22 @@
                     <div style="margin-bottom: 20px;">
                         {{ \Carbon\Carbon::parse($surat->tanggal_surat)->translatedFormat('d F Y') }}
                     </div>
-                    <div style="margin-bottom: 5px;">Kepada</div>
-                    <table style="width: 100%; border-collapse: collapse; margin-left: -35px;">
+
+                    {{-- margin-left negatif dihapus, lebar diset 100% murni --}}
+                    <table style="width: 100%; border-collapse: collapse;">
                         <tbody>
+                            {{-- Kata "Kepada" dimasukkan ke tabel agar sejajar presisi --}}
                             <tr>
-                                <td style="width: 10%; vertical-align: top;">Yth.</td>
-                                <td style="vertical-align: top;">Direktur {{ $rekanan->nama_rekanan }}
-                                </td>
+                                <td style="width: 35px;"></td>
+                                <td style="padding-bottom: 5px;">Kepada</td>
                             </tr>
                             <tr>
-
+                                <td style="vertical-align: top;">Yth.</td>
+                                <td style="vertical-align: top;">Direktur {{ $rekanan->nama_rekanan }}</td>
+                            </tr>
+                            <tr>
                                 <td></td>
-                                <td style="vertical-align: top;">{{ $rekanan->alamat }} </td>
+                                <td style="vertical-align: top;">{{ $rekanan->alamat }}</td>
                             </tr>
                             @if($rekanan->alamat2)
                             <tr>
