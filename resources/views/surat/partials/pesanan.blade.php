@@ -49,12 +49,12 @@ $is_penggandaan = $surat->is_penggandaan ?? false;
                             {{-- Kata "Kepada" dimasukkan ke tabel agar sejajar presisi --}}
                             <tr>
                                 <td style="width: 32px;"></td>
-                                <td style="padding-bottom: 30px;">{{
+                                <td style="padding-bottom: 30px;padding-left: 40px;">{{
                                     \Carbon\Carbon::parse($surat->tanggal_surat)->translatedFormat('d F Y') }}</td>
                             </tr>
                             <tr>
                                 <td></td>
-                                <td style="padding-bottom: 2px;">Kepada</td>
+                                <td style="padding-bottom: 2px;padding-left: 40px;">Kepada</td>
                             </tr>
                             <tr>
                                 <td style="vertical-align: top;">Yth.</td>
@@ -76,7 +76,7 @@ $is_penggandaan = $surat->is_penggandaan ?? false;
                             </tr>
                             <tr>
                                 <td></td>
-                                <td style="vertical-align: top; padding-left: 20px;">{{ $rekanan->provinsi }}</td>
+                                <td style="vertical-align: top; padding-left: 40px;">{{ $rekanan->provinsi }}</td>
                             </tr>
                         </tbody>
                     </table>
