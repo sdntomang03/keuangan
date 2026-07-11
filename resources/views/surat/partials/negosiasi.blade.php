@@ -31,17 +31,20 @@
             </td>
             <td style="width:50%; vertical-align:top; text-align:right;">
                 <div style="text-align: left; display: inline-block; width: 85%;">
-                    <div style="margin-bottom: 20px;">
-                        {{ \Carbon\Carbon::parse($surat->tanggal_surat)->translatedFormat('d F Y') }}
-                    </div>
+
 
                     {{-- margin-left negatif dihapus, lebar diset 100% murni --}}
                     <table style="width: 100%; border-collapse: collapse;">
                         <tbody>
                             {{-- Kata "Kepada" dimasukkan ke tabel agar sejajar presisi --}}
                             <tr>
-                                <td style="width: 35px;"></td>
-                                <td style="padding-bottom: 5px;">Kepada</td>
+                                <td style="width: 32px;"></td>
+                                <td style="padding-bottom: 30px;">{{
+                                    \Carbon\Carbon::parse($surat->tanggal_surat)->translatedFormat('d F Y') }}</td>
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td style="padding-bottom: 2px;">Kepada</td>
                             </tr>
                             <tr>
                                 <td style="vertical-align: top;">Yth.</td>

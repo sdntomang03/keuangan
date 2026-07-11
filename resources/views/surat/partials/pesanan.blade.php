@@ -54,7 +54,7 @@ $is_penggandaan = $surat->is_penggandaan ?? false;
                             </tr>
                             <tr>
                                 <td></td>
-                                <td style="padding-bottom: 5px;">Kepada</td>
+                                <td style="padding-bottom: 2px;">Kepada</td>
                             </tr>
                             <tr>
                                 <td style="vertical-align: top;">Yth.</td>
