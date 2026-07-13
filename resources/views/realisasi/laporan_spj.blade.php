@@ -43,7 +43,7 @@
                                 @foreach($pajakUnik as $pajak)
                                 <th
                                     class="px-4 py-3 border-b dark:border-slate-700 text-right text-rose-600 dark:text-rose-400">
-                                    Potongan {{ $pajak }}</th>
+                                    {{ $pajak }}</th>
                                 @endforeach
 
                                 <th
