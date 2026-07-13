@@ -213,7 +213,7 @@
                                             </a>
 
                                             @if($belanja->status == 'posted')
-                                            <a href="{{ route('surat.cetakpdf', $belanja->id) }}" title="Cetak PDF"
+                                            <a href="{{ route('surat.index', $belanja->id) }}" title="Cetak Surat"
                                                 class="text-gray-400 hover:text-blue-600 transition-colors"
                                                 target="_blank">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
