@@ -79,10 +79,13 @@
                     <!-- Switcher Anggaran (Sembunyi di HP, Pindah ke Sidebar kalau di HP) -->
                     @if(isset($anggaranAktif) && $anggaranAktif)
                     <div
-                        class="hidden sm:flex items-center bg-gray-50 dark:bg-gray-900 rounded-lg p-1 shadow-inner border border-gray-200 dark:border-gray-700">
-                        <span class="text-[10px] font-bold uppercase px-3 text-gray-400 dark:text-gray-500">
+                        class="hidden sm:flex items-center bg-gray-50 dark:bg-gray-900 rounded-lg p-1 shadow-inner border border-gray-200 dark:border-gray-700 space-x-2">
+                        <span
+                            class="text-[10px] font-bold uppercase px-2 text-gray-400 dark:text-gray-500 border-r border-gray-300 dark:border-gray-600">
                             {{ $anggaranAktif->tahun }}
                         </span>
+
+                        {{-- Tombol Switch BOS/BOP --}}
                         @can('kelola-sekolah')
                         <div class="flex space-x-1">
                             @foreach(['bos', 'bop'] as $item)
@@ -102,6 +105,21 @@
                             @endforeach
                         </div>
                         @endcan
+
+                        {{-- Dropdown Triwulan (BARU) --}}
+                        <div class="border-l border-gray-300 dark:border-gray-600 pl-2">
+                            <form method="GET" action="{{ route('dashboard') }}" x-data x-ref="twForm">
+                                <select name="tw" @change="$refs.twForm.submit()"
+                                    class="text-[11px] font-extrabold rounded-md border-transparent bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-1.5 pl-3 pr-8 hover:bg-gray-100 transition-colors cursor-pointer">
+                                    <option value="tahun" {{ request('tw')=='tahun' ? 'selected' : '' }}>FULL TAHUN
+                                    </option>
+                                    <option value="1" {{ request('tw')=='1' ? 'selected' : '' }}>TRIWULAN 1</option>
+                                    <option value="2" {{ request('tw')=='2' ? 'selected' : '' }}>TRIWULAN 2</option>
+                                    <option value="3" {{ request('tw')=='3' ? 'selected' : '' }}>TRIWULAN 3</option>
+                                    <option value="4" {{ request('tw')=='4' ? 'selected' : '' }}>TRIWULAN 4</option>
+                                </select>
+                            </form>
+                        </div>
                     </div>
                     @endif
 
