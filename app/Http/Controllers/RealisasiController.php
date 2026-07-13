@@ -590,11 +590,14 @@ class RealisasiController extends Controller
         $sekolah = Sekolah::find(auth()->user()->sekolah_id);
         $data = $this->siapkanDataSpj($anggaran, $sekolah);
 
-        // Menambahkan flag agar View tahu sedang dirender sebagai PDF (untuk styling khusus print)
         $data['isPdf'] = true;
 
+        // Mendefinisikan Ukuran F4 / Folio (210mm x 330mm) dalam satuan Point
+        $kertasF4 = [0, 0, 595.28, 935.43];
+
+        // Render PDF menggunakan kertas F4 kustom dengan orientasi lanskap
         $pdf = Pdf::loadView('realisasi.laporan_spj_pdf', $data)
-            ->setPaper('A4', 'landscape'); // Menggunakan orientasi Lanskap karena kolom bisa banyak
+            ->setPaper($kertasF4, 'landscape');
 
         $fileName = 'Laporan_SPJ_'.strtoupper($anggaran->singkatan).'_TW'.$sekolah->triwulan_aktif.'.pdf';
 
