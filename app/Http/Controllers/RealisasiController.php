@@ -11,6 +11,7 @@ use App\Models\DasarPajak;
 use App\Models\Rekanan;
 use App\Models\Rkas;
 use App\Models\Sekolah;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -492,5 +493,111 @@ class RealisasiController extends Controller
         $namaFile = 'Realisasi_Komponen_'.str_replace([' ', ','], ['_', ''], $periodeText).'_'.date('Ymd_His').'.xlsx';
 
         return Excel::download(new RealisasiKomponenExport($dataRkas, $anggaran, $sekolah, $periodeText), $namaFile);
+    }
+
+    private function siapkanDataSpj($anggaran, $sekolah)
+    {
+        $dataBelanja = Belanja::with(['rekanan', 'pajaks.masterPajak'])
+            ->where('anggaran_id', $anggaran->id)
+            ->where('tw', $sekolah->triwulan_aktif)
+            ->orderBy('tanggal', 'asc')
+            ->orderBy('no_bukti', 'asc')
+            ->get();
+
+        // 1. Ekstrak nama pajak unik
+        $pajakUnik = [];
+        foreach ($dataBelanja as $belanja) {
+            foreach ($belanja->pajaks as $pajak) {
+                $namaPajak = $pajak->masterPajak->nama_pajak ?? 'Pajak Lainnya';
+                if (! in_array($namaPajak, $pajakUnik)) {
+                    $pajakUnik[] = $namaPajak;
+                }
+            }
+        }
+        sort($pajakUnik);
+
+        // 2. Mapping Data dan Hitung Total
+        $mappedData = [];
+        $totals = [
+            'bruto' => 0,
+            'pajak' => array_fill_keys($pajakUnik, 0),
+            'netto' => 0,
+        ];
+
+        foreach ($dataBelanja as $belanja) {
+            $bruto = $belanja->subtotal + $belanja->ppn;
+            $rowPajak = [];
+            $totalPotongan = 0;
+
+            foreach ($pajakUnik as $namaPajak) {
+                $nominal = 0;
+                foreach ($belanja->pajaks as $pajak) {
+                    $pajakCurrent = $pajak->masterPajak->nama_pajak ?? 'Pajak Lainnya';
+                    if ($pajakCurrent === $namaPajak) {
+                        $nominal += $pajak->nominal;
+                    }
+                }
+                $rowPajak[$namaPajak] = $nominal;
+                $totals['pajak'][$namaPajak] += $nominal;
+                $totalPotongan += $nominal;
+            }
+
+            $netto = $bruto - $totalPotongan;
+
+            $totals['bruto'] += $bruto;
+            $totals['netto'] += $netto;
+
+            $mappedData[] = [
+                'tanggal' => $belanja->tanggal,
+                'no_bukti' => $belanja->no_bukti,
+                'rekanan' => $belanja->rekanan->nama_rekanan ?? '-',
+                'uraian' => $belanja->uraian ?? '-',
+                'bruto' => $bruto,
+                'pajak' => $rowPajak,
+                'netto' => $netto,
+            ];
+        }
+
+        return compact('mappedData', 'pajakUnik', 'totals', 'anggaran', 'sekolah');
+    }
+
+    /**
+     * Menampilkan ke Halaman View (HTML)
+     */
+    public function viewLaporanSpj(Request $request)
+    {
+        $anggaran = $request->anggaran_data ?? Auth::user()->sekolah->anggaranAktif;
+        if (! $anggaran) {
+            return back()->with('error', 'Data anggaran tidak ditemukan.');
+        }
+
+        $sekolah = Sekolah::find(auth()->user()->sekolah_id);
+        $data = $this->siapkanDataSpj($anggaran, $sekolah);
+
+        return view('realisasi.laporan_spj', $data);
+    }
+
+    /**
+     * Generate dan Download PDF
+     */
+    public function pdfLaporanSpj(Request $request)
+    {
+        $anggaran = $request->anggaran_data ?? Auth::user()->sekolah->anggaranAktif;
+        if (! $anggaran) {
+            return back()->with('error', 'Data anggaran tidak ditemukan.');
+        }
+
+        $sekolah = Sekolah::find(auth()->user()->sekolah_id);
+        $data = $this->siapkanDataSpj($anggaran, $sekolah);
+
+        // Menambahkan flag agar View tahu sedang dirender sebagai PDF (untuk styling khusus print)
+        $data['isPdf'] = true;
+
+        $pdf = Pdf::loadView('realisasi.laporan_spj_pdf', $data)
+            ->setPaper('A4', 'landscape'); // Menggunakan orientasi Lanskap karena kolom bisa banyak
+
+        $fileName = 'Laporan_SPJ_'.strtoupper($anggaran->singkatan).'_TW'.$sekolah->triwulan_aktif.'.pdf';
+
+        return $pdf->download($fileName);
     }
 }

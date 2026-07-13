@@ -123,6 +123,8 @@ Route::middleware(['permission:view-anggaran|kelola-anggaran|input-belanja'])->g
     Route::get('/realisasi/korek', [RealisasiController::class, 'korek'])->name('realisasi.korek');
     Route::get('/realisasi/jenis-belanja', [RealisasiController::class, 'jenisBelanja'])->name('realisasi.jenis-belanja');
     Route::get('/realisasi/komponen/export', [RealisasiController::class, 'exportKomponen'])->name('realisasi.komponen.export');
+    Route::get('/realisasi/laporan-spj', [RealisasiController::class, 'viewLaporanSpj'])->name('realisasi.spj.view');
+    Route::get('/realisasi/laporan-spj/pdf', [RealisasiController::class, 'pdfLaporanSpj'])->name('realisasi.spj.pdf');
     Route::get('/rekap/export', [RealisasiController::class, 'exportExcel'])->name('belanja.export');
     Route::get('/rekap/rekanan', [RealisasiController::class, 'rekapPerRekanan'])->name('realisasi.rekanan');
     Route::get('/rekap-rekanan/export-semua', [RealisasiController::class, 'exportSemuaRekanan'])->name('rekap-rekanan.export-semua');
