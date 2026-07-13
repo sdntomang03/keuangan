@@ -117,10 +117,10 @@
                                 <select name="tw" @change="$refs.twForm.submit()"
                                     class="text-[11px] font-extrabold rounded-md border-transparent bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-1.5 pl-3 pr-8 hover:bg-gray-100 transition-colors cursor-pointer">
 
-                                    <option value="1" {{ $twAktifDB==1 ? 'selected' : '' }}>TRIWULAN 1</option>
-                                    <option value="2" {{ $twAktifDB==2 ? 'selected' : '' }}>TRIWULAN 2</option>
-                                    <option value="3" {{ $twAktifDB==3 ? 'selected' : '' }}>TRIWULAN 3</option>
-                                    <option value="4" {{ $twAktifDB==4 ? 'selected' : '' }}>TRIWULAN 4</option>
+                                    <option value="1" {{ $twAktifDB==1 ? 'selected' : '' }}>TW 1</option>
+                                    <option value="2" {{ $twAktifDB==2 ? 'selected' : '' }}>TW 2</option>
+                                    <option value="3" {{ $twAktifDB==3 ? 'selected' : '' }}>TW 3</option>
+                                    <option value="4" {{ $twAktifDB==4 ? 'selected' : '' }}>TW 4</option>
                                 </select>
                             </form>
                         </div>
