@@ -58,7 +58,7 @@
 <body>
 
     <div class="header">
-        <h3>LAPORAN SURAT PERTANGGUNGJAWABAN (SPJ) DAN RINCIAN PAJAK</h3>
+        <h3>REKAP BELANJA REALISASI</h3>
         <h4>{{ $sekolah->nama_sekolah }}</h4>
         <p>Anggaran: {{ strtoupper($anggaran->singkatan) }} Tahun {{ $anggaran->tahun }} | Triwulan: {{
             $sekolah->triwulan_aktif }}</p>
