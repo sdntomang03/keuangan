@@ -47,6 +47,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::post('/anggaran/switch', [DashboardController::class, 'switch'])->name('anggaran.switch');
     Route::get('/cetak-cover', [CetakController::class, 'cetakCover'])->name('cetak.cover');
+    Route::post('/anggaran/switch-tw', [DashboardController::class, 'switchTw'])->name('anggaran.switch-tw');
 });
 
 // =========================================================================

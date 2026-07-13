@@ -189,4 +189,24 @@ class DashboardController extends Controller
 
         return back()->with('success', "Berhasil beralih ke {$target->singkatan} {$target->tahun}");
     }
+
+    public function switchTw(Request $request)
+    {
+        $request->validate([
+            'tw' => 'required|in:1,2,3,4,tahun',
+        ]);
+
+        // Ambil relasi sekolah dari user yang sedang login
+        $sekolah = auth()->user()->sekolah;
+
+        if ($sekolah) {
+            // Karena triwulan_aktif bertipe integer, kita ubah 'tahun' menjadi 0
+            $tw = $request->tw === 'tahun' ? 0 : (int) $request->tw;
+
+            $sekolah->triwulan_aktif = $tw;
+            $sekolah->save();
+        }
+
+        return back()->with('success', 'Periode Triwulan berhasil diubah.');
+    }
 }

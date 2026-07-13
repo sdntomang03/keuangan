@@ -108,15 +108,19 @@
 
                         {{-- Dropdown Triwulan (BARU) --}}
                         <div class="border-l border-gray-300 dark:border-gray-600 pl-2">
-                            <form method="GET" action="{{ route('dashboard') }}" x-data x-ref="twForm">
+                            <form method="POST" action="{{ route('anggaran.switch-tw') }}" x-data x-ref="twForm">
+                                @csrf
+                                @php
+                                // Cek nilai triwulan aktif di database (default 0 jika tidak ada)
+                                $twAktifDB = auth()->user()->sekolah->triwulan_aktif ?? 0;
+                                @endphp
                                 <select name="tw" @change="$refs.twForm.submit()"
                                     class="text-[11px] font-extrabold rounded-md border-transparent bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-1.5 pl-3 pr-8 hover:bg-gray-100 transition-colors cursor-pointer">
-                                    <option value="tahun" {{ request('tw')=='tahun' ? 'selected' : '' }}>FULL TAHUN
-                                    </option>
-                                    <option value="1" {{ request('tw')=='1' ? 'selected' : '' }}>TRIWULAN 1</option>
-                                    <option value="2" {{ request('tw')=='2' ? 'selected' : '' }}>TRIWULAN 2</option>
-                                    <option value="3" {{ request('tw')=='3' ? 'selected' : '' }}>TRIWULAN 3</option>
-                                    <option value="4" {{ request('tw')=='4' ? 'selected' : '' }}>TRIWULAN 4</option>
+
+                                    <option value="1" {{ $twAktifDB==1 ? 'selected' : '' }}>TRIWULAN 1</option>
+                                    <option value="2" {{ $twAktifDB==2 ? 'selected' : '' }}>TRIWULAN 2</option>
+                                    <option value="3" {{ $twAktifDB==3 ? 'selected' : '' }}>TRIWULAN 3</option>
+                                    <option value="4" {{ $twAktifDB==4 ? 'selected' : '' }}>TRIWULAN 4</option>
                                 </select>
                             </form>
                         </div>
