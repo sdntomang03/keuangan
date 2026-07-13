@@ -75,7 +75,7 @@
                 <th width="12%">Nilai SPJ (Bruto)</th>
 
                 @foreach($pajakUnik as $pajak)
-                <th width="9%">Potongan<br>{{ $pajak }}</th>
+                <th width="9%">{{ $pajak }}</th>
                 @endforeach
 
                 <th width="12%">Nilai Bersih<br>(Netto)</th>
