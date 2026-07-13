@@ -49,8 +49,34 @@
             text-align: right;
         }
 
+        /* Mencegah teks turun ke bawah (memaksa ke samping) */
         .text-nowrap {
             white-space: nowrap;
+        }
+
+        /* Pengaturan Lebar Kolom Tetap (Fixed Width) */
+        .col-no {
+            width: 20px;
+        }
+
+        .col-tgl {
+            width: 55px;
+        }
+
+        .col-bukti {
+            width: 80px;
+        }
+
+        .col-rekanan {
+            width: 110px;
+        }
+
+        .col-uang {
+            width: 75px;
+        }
+
+        .col-pajak {
+            width: 70px;
         }
     </style>
 </head>
@@ -58,7 +84,7 @@
 <body>
 
     <div class="header">
-        <h3>REKAP BELANJA REALISASI</h3>
+        <h3>LAPORAN SURAT PERTANGGUNGJAWABAN (SPJ) DAN RINCIAN PAJAK</h3>
         <h4>{{ $sekolah->nama_sekolah }}</h4>
         <p>Anggaran: {{ strtoupper($anggaran->singkatan) }} Tahun {{ $anggaran->tahun }} | Triwulan: {{
             $sekolah->triwulan_aktif }}</p>
@@ -67,36 +93,44 @@
     <table>
         <thead>
             <tr>
-                <th width="3%">No</th>
-                <th width="8%">Tanggal</th>
-                <th width="10%">No Bukti</th>
-                <th width="15%">Rekanan</th>
+                <th class="col-no">No</th>
+                <th class="col-tgl">Tanggal</th>
+                <th class="col-bukti">No Bukti</th>
+                <th class="col-rekanan">Rekanan</th>
+
+                {{-- Kolom Uraian sengaja TIDAK DIBERI CLASS WIDTH agar otomatis mengambil sisa ruang kertas
+                seluas-luasnya --}}
                 <th>Uraian</th>
-                <th width="12%">Nilai SPJ (Bruto)</th>
+
+                <th class="col-uang">Nilai SPJ<br>(Bruto)</th>
 
                 @foreach($pajakUnik as $pajak)
-                <th width="9%">{{ $pajak }}</th>
+                <th class="col-pajak">Potongan<br>{{ $pajak }}</th>
                 @endforeach
 
-                <th width="12%">Nilai Bersih<br>(Netto)</th>
+                <th class="col-uang">Nilai Bersih<br>(Netto)</th>
             </tr>
         </thead>
         <tbody>
             @forelse($mappedData as $index => $row)
             <tr>
                 <td class="text-center">{{ $index + 1 }}</td>
-                <td class="text-center">{{ \Carbon\Carbon::parse($row['tanggal'])->format('d/m/Y') }}</td>
+                <td class="text-center text-nowrap">{{ \Carbon\Carbon::parse($row['tanggal'])->format('d/m/Y') }}</td>
                 <td class="text-nowrap">{{ $row['no_bukti'] ?? '-' }}</td>
                 <td>{{ $row['rekanan'] }}</td>
+
+                {{-- Uraian akan turun ke bawah secara natural jika teksnya sangat panjang --}}
                 <td>{{ $row['uraian'] }}</td>
-                <td class="text-right">{{ number_format($row['bruto'], 0, ',', '.') }}</td>
+
+                {{-- Tambahkan text-nowrap pada angka agar format uang "Rp xxx.xxx" tidak terpisah/turun ke bawah --}}
+                <td class="text-right text-nowrap">{{ number_format($row['bruto'], 0, ',', '.') }}</td>
 
                 @foreach($pajakUnik as $pajak)
-                <td class="text-right">{{ $row['pajak'][$pajak] > 0 ? number_format($row['pajak'][$pajak], 0, ',', '.')
-                    : '-' }}</td>
+                <td class="text-right text-nowrap">{{ $row['pajak'][$pajak] > 0 ? number_format($row['pajak'][$pajak],
+                    0, ',', '.') : '-' }}</td>
                 @endforeach
 
-                <td class="text-right">{{ number_format($row['netto'], 0, ',', '.') }}</td>
+                <td class="text-right text-nowrap">{{ number_format($row['netto'], 0, ',', '.') }}</td>
             </tr>
             @empty
             <tr>
@@ -107,16 +141,16 @@
         <tfoot>
             <tr>
                 <td colspan="5" class="text-right" style="font-weight: bold;">GRAND TOTAL</td>
-                <td class="text-right" style="font-weight: bold;">{{ number_format($totals['bruto'], 0, ',', '.') }}
-                </td>
+                <td class="text-right text-nowrap" style="font-weight: bold;">{{ number_format($totals['bruto'], 0, ',',
+                    '.') }}</td>
 
                 @foreach($pajakUnik as $pajak)
-                <td class="text-right" style="font-weight: bold;">{{ number_format($totals['pajak'][$pajak], 0, ',',
-                    '.') }}</td>
+                <td class="text-right text-nowrap" style="font-weight: bold;">{{ number_format($totals['pajak'][$pajak],
+                    0, ',', '.') }}</td>
                 @endforeach
 
-                <td class="text-right" style="font-weight: bold;">{{ number_format($totals['netto'], 0, ',', '.') }}
-                </td>
+                <td class="text-right text-nowrap" style="font-weight: bold;">{{ number_format($totals['netto'], 0, ',',
+                    '.') }}</td>
             </tr>
         </tfoot>
     </table>
