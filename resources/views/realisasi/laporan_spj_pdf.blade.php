@@ -116,7 +116,10 @@
             <tr>
                 <td class="text-center">{{ $index + 1 }}</td>
                 <td class="text-center text-nowrap">{{ \Carbon\Carbon::parse($row['tanggal'])->format('d/m/Y') }}</td>
-                <td class="text-nowrap">{{ $row['no_bukti'] ?? '-' }}</td>
+                <td class="text-nowrap">
+                    <strong>{{ $row['no_bukti'] ?? '-' }}</strong><br>
+                    <span style="font-size: 8px; color: #555; text-transform: uppercase;">{{ $row['korek'] }}</span>
+                </td>
                 <td>{{ $row['rekanan'] }}</td>
 
                 {{-- Uraian akan turun ke bawah secara natural jika teksnya sangat panjang --}}

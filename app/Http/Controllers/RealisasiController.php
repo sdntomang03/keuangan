@@ -497,14 +497,14 @@ class RealisasiController extends Controller
 
     private function siapkanDataSpj($anggaran, $sekolah)
     {
-        $dataBelanja = Belanja::with(['rekanan', 'pajaks.masterPajak'])
+        // 1. Tambahkan 'rincis.rkas.korek' ke dalam with()
+        $dataBelanja = Belanja::with(['rekanan', 'pajaks.masterPajak', 'rincis.rkas.korek'])
             ->where('anggaran_id', $anggaran->id)
             ->where('tw', $sekolah->triwulan_aktif)
             ->orderBy('tanggal', 'asc')
             ->orderBy('no_bukti', 'asc')
             ->get();
 
-        // 1. Ekstrak nama pajak unik
         $pajakUnik = [];
         foreach ($dataBelanja as $belanja) {
             foreach ($belanja->pajaks as $pajak) {
@@ -516,7 +516,6 @@ class RealisasiController extends Controller
         }
         sort($pajakUnik);
 
-        // 2. Mapping Data dan Hitung Total
         $mappedData = [];
         $totals = [
             'bruto' => 0,
@@ -543,13 +542,19 @@ class RealisasiController extends Controller
             }
 
             $netto = $bruto - $totalPotongan;
-
             $totals['bruto'] += $bruto;
             $totals['netto'] += $netto;
+
+            // 2. Ambil nama korek/jenis belanja dari rincian pertama
+            $jenisKorek = '-';
+            if ($belanja->rincis->isNotEmpty() && $belanja->rincis->first()->rkas && $belanja->rincis->first()->rkas->korek) {
+                $jenisKorek = $belanja->rincis->first()->rkas->korek->singkat ?? '-';
+            }
 
             $mappedData[] = [
                 'tanggal' => $belanja->tanggal,
                 'no_bukti' => $belanja->no_bukti,
+                'korek' => $jenisKorek, // Masukkan variabel korek ke sini
                 'rekanan' => $belanja->rekanan->nama_rekanan ?? '-',
                 'uraian' => $belanja->uraian ?? '-',
                 'bruto' => $bruto,
