@@ -176,10 +176,12 @@
                 if (!response.ok) {
                     throw new Error("Terjadi kesalahan jaringan atau server (Error " + response.status + ")");
                 }
+
                 return response.json();
             })
             .then(result => {
                 if (result.status === 'success' && result.data.length > 0) {
+                    console.log('Data RKAS berhasil dimuat:', result.data);
                     let rows = '';
                     result.data.forEach((item, index) => {
                         // Cek apakah relasi kegiatan ada
