@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Api\ApiJsonController;
 use App\Http\Controllers\Api\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -33,3 +34,4 @@ Route::middleware('auth:sanctum')->group(function () {
     // Rute Users dari langkah sebelumnya (sekarang terlindungi)
     Route::get('/users', [UserController::class, 'index']);
 });
+Route::get('/rkas-realisasi', [ApiJsonController::class, 'getRkasRealisasi'])->name('api.rkas.realisasi');
