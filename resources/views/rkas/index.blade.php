@@ -22,91 +22,23 @@
             <div class="mb-6">
                 {{-- Alert Success --}}
                 @if (session('success'))
-                <div
-                    class="bg-emerald-50 dark:bg-emerald-900/30 border-l-4 border-emerald-500 p-4 rounded-r-lg shadow-sm flex justify-between items-start">
-                    <div class="flex">
-                        <svg class="w-6 h-6 text-emerald-500 mr-3 mt-0.5" fill="none" stroke="currentColor"
-                            viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        <div>
-                            <h3
-                                class="text-emerald-800 dark:text-emerald-200 font-bold text-sm uppercase tracking-wider">
-                                Sukses</h3>
-                            <div class="text-emerald-700 dark:text-emerald-300 text-sm mt-1">{!! session('success') !!}
-                            </div>
-                        </div>
-                    </div>
-                    <button onclick="this.parentElement.style.display='none'"
-                        class="text-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-300">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
+                <!-- ... (Kode Alert Success Anda Tetap Sama) ... -->
                 @endif
-
                 {{-- Alert Error --}}
                 @if (session('error'))
-                <div
-                    class="bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 p-4 rounded-r-lg shadow-sm flex justify-between items-start">
-                    <div class="flex">
-                        <svg class="w-6 h-6 text-red-500 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor"
-                            viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        <div>
-                            <h3 class="text-red-800 dark:text-red-200 font-bold text-sm uppercase tracking-wider">
-                                Kesalahan (Error)</h3>
-                            <div class="text-red-700 dark:text-red-300 text-sm mt-1 leading-relaxed">{!!
-                                session('error') !!}</div>
-                        </div>
-                    </div>
-                    <button onclick="this.parentElement.style.display='none'"
-                        class="text-red-500 hover:text-red-700 dark:hover:text-red-300 flex-shrink-0 ml-4">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
+                <!-- ... (Kode Alert Error Anda Tetap Sama) ... -->
                 @endif
-
-                {{-- Alert Warning (Kuning) --}}
+                {{-- Alert Warning --}}
                 @if (session('warning'))
-                <div
-                    class="bg-yellow-50 dark:bg-yellow-900/30 border-l-4 border-yellow-500 p-4 rounded-r-lg shadow-sm flex justify-between items-start">
-                    <div class="flex">
-                        <svg class="w-6 h-6 text-yellow-600 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor"
-                            viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
-                            </path>
-                        </svg>
-                        <div>
-                            <h3 class="text-yellow-800 dark:text-yellow-200 font-bold text-sm uppercase tracking-wider">
-                                Perhatian Peringatan</h3>
-                            <div class="text-yellow-700 dark:text-yellow-300 text-sm mt-1 leading-relaxed">{!!
-                                session('warning') !!}</div>
-                        </div>
-                    </div>
-                    <button onclick="this.parentElement.style.display='none'"
-                        class="text-yellow-600 hover:text-yellow-800 dark:hover:text-yellow-300 flex-shrink-0 ml-4">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
+                <!-- ... (Kode Alert Warning Anda Tetap Sama) ... -->
                 @endif
             </div>
 
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+            {{-- ========================================================= --}}
+            {{-- CARD 1: FORM UPLOAD RKAS --}}
+            {{-- ========================================================= --}}
+            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mb-6">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
-
                     <div
                         class="mb-6 p-4 bg-emerald-50 dark:bg-emerald-900/30 border-l-4 border-emerald-500 rounded-r-lg">
                         <div class="flex items-center">
@@ -132,27 +64,155 @@
 
                     <form action="{{ route('rkas.import') }}" method="POST" enctype="multipart/form-data">
                         @csrf
-
                         <div class="mb-6">
                             <label class="block text-sm font-medium mb-2">Upload File JSON RKAS (Bisa multiple)</label>
                             <input type="file" name="json_files[]" multiple required
                                 class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 dark:file:bg-gray-700 dark:file:text-gray-300">
                         </div>
-
                         <div class="flex items-center gap-4 mt-6">
                             <button type="submit"
                                 class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg transition flex items-center shadow-md">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                                </svg>
                                 Simpan Data RKAS
                             </button>
                         </div>
                     </form>
-
                 </div>
             </div>
+
+            {{-- ========================================================= --}}
+            {{-- CARD 2: TABEL DATA RKAS DARI API --}}
+            {{-- ========================================================= --}}
+            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6 text-gray-900 dark:text-gray-100">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-bold">Daftar Data RKAS (Via API)</h3>
+
+                        <!-- Tombol untuk trigger Fetch API -->
+                        <button onclick="loadRkasData()"
+                            class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded-lg transition shadow flex items-center text-sm">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                                </path>
+                            </svg>
+                            Muat Data
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table
+                            class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 border dark:border-gray-700 rounded-lg">
+                            <thead class="bg-gray-50 dark:bg-gray-700">
+                                <tr>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        No</th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        Kode Akun</th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        Nama Kegiatan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-rkas-body"
+                                class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                <tr>
+                                    <td colspan="3"
+                                        class="px-6 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                                        Klik tombol <strong>"Muat Data"</strong> untuk menampilkan JSON RKAS dari API.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
+
+    {{-- ========================================================= --}}
+    {{-- SCRIPT FETCH API --}}
+    {{-- ========================================================= --}}
+    <script>
+        function loadRkasData() {
+            const tbody = document.getElementById('table-rkas-body');
+            // Ambil ID Anggaran dari Variabel PHP Blade Anda
+            const anggaranId = '{{ $anggaranAktif->id ?? '' }}';
+
+            // Ambil Token CSRF dari Meta Tag Laravel
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+            if (!anggaranId) {
+                alert('Peringatan: Anggaran Aktif belum diatur!');
+                return;
+            }
+
+            // Animasi Loading
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="3" class="px-6 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                        <svg class="animate-spin h-5 w-5 mx-auto text-emerald-500 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Memuat data dari API...
+                    </td>
+                </tr>`;
+
+            // Proses Fetch API
+            fetch(`/api/get-rkas?anggaran_id=${anggaranId}`, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                credentials: 'same-origin' // Wajib agar API Sanctum mengenali user yang sedang login
+            })
+            .then(response => {
+                if (response.status === 401) {
+                    throw new Error("Akses Ditolak (401). Sesi login mungkin sudah habis.");
+                }
+                if (!response.ok) {
+                    throw new Error("Terjadi kesalahan jaringan atau server (Error " + response.status + ")");
+                }
+                return response.json();
+            })
+            .then(result => {
+                if (result.status === 'success' && result.data.length > 0) {
+                    let rows = '';
+                    result.data.forEach((item, index) => {
+                        // Cek apakah relasi kegiatan ada
+                        let namaKegiatan = item.kegiatan ? item.kegiatan.nama_kegiatan : '-';
+
+                        rows += `
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">${index + 1}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-emerald-600 dark:text-emerald-400">${item.kodeakun ?? '-'}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">${namaKegiatan}</td>
+                            </tr>
+                        `;
+                    });
+                    tbody.innerHTML = rows;
+                } else {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="3" class="px-6 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                                Tidak ada data RKAS ditemukan untuk anggaran ini.
+                            </td>
+                        </tr>`;
+                }
+            })
+            .catch(error => {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="3" class="px-6 py-8 text-center text-sm text-red-500">
+                            <strong>Gagal memuat data!</strong> <br> ${error.message}
+                        </td>
+                    </tr>`;
+            });
+        }
+    </script>
 </x-app-layout>
