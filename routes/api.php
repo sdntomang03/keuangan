@@ -6,10 +6,6 @@ use App\Http\Controllers\Api\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
-
 Route::get('/halo', function () {
     return response()->json([
         'status' => 'sukses',
@@ -20,18 +16,16 @@ Route::get('/halo', function () {
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
-// --- RUTE TERLINDUNGI (Wajib bawa token Sanctum) ---
+// --- RUTE TERLINDUNGI (Wajib login / bawa token Sanctum) ---
 Route::middleware('auth:sanctum')->group(function () {
 
-    // Ambil data user yang sedang login
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
 
-    // Logout
     Route::post('/logout', [AuthController::class, 'logout']);
-
-    // Rute Users dari langkah sebelumnya (sekarang terlindungi)
     Route::get('/users', [UserController::class, 'index']);
+
+    // PINDAHKAN ROUTE INI KE DALAM GRUP
+    Route::get('get-rkas', [ApiJsonController::class, 'getRkas'])->name('api.getRkas');
 });
-Route::get('get-rkas', [ApiJsonController::class, 'getRkas'])->name('api.getRkas');
