@@ -191,7 +191,7 @@
                             <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">${index + 1}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-emerald-600 dark:text-emerald-400">${item.kodeakun ?? '-'}</td>
-                                <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">${namaKegiatan}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">${namaKomponen}</td>
                             </tr>
                         `;
                     });
