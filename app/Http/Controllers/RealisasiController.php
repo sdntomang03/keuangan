@@ -554,7 +554,7 @@ class RealisasiController extends Controller
             $mappedData[] = [
                 'tanggal' => $belanja->tanggal,
                 'no_bukti' => $belanja->no_bukti,
-                'korek' => $jenisKorek, // Masukkan variabel korek ke sini
+                'korek' => $jenisKorek,
                 'rekanan' => $belanja->rekanan->nama_rekanan ?? '-',
                 'uraian' => $belanja->uraian ?? '-',
                 'bruto' => $bruto,
@@ -562,6 +562,10 @@ class RealisasiController extends Controller
                 'netto' => $netto,
             ];
         }
+        $mappedData = collect($mappedData)->sortBy([
+            ['korek', 'asc'],      // Urutan 1: Berdasarkan Nama/Singkatan Korek
+            ['tanggal', 'asc'],    // Urutan 2: Berdasarkan Tanggal
+        ])->values()->all();       // .values()->all() mengembalikan index array kembali ke angka berurutan (0, 1, 2, dst)
 
         return compact('mappedData', 'pajakUnik', 'totals', 'anggaran', 'sekolah');
     }
