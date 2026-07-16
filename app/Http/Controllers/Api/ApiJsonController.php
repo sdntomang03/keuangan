@@ -24,7 +24,7 @@ class ApiJsonController extends Controller
         $dataRkas = Rkas::with(['kegiatan', 'korek', 'akbRincis'])
             ->where('anggaran_id', $anggaranId)
             ->whereNotNull('koefisien')         // Memastikan koefisien tidak bernilai NULL
-            ->where('koefisien', '!=', '')      // Memastikan koefisien bukan string kosong ("")
+            ->where('totalharga', '>', 0)      // Memastikan totalharga bukan string kosong ("")
             ->get();
 
         // Mengembalikan format JSON
