@@ -160,17 +160,15 @@
                         Memuat data dari API...
                     </td>
                 </tr>`;
-
-            // Proses Fetch API
-            fetch(`/api/get-rkas?anggaran_id=${anggaranId}`, {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken
-                },
-                credentials: 'same-origin' // Wajib agar API Sanctum mengenali user yang sedang login
-            })
+    fetch(`/json/get-rkas?anggaran_id=${anggaranId}`, {
+    method: 'GET',
+    headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': csrfToken,
+        'X-Requested-With': 'XMLHttpRequest' // Tambahkan ini
+    }
+})
             .then(response => {
                 if (response.status === 401) {
                     throw new Error("Akses Ditolak (401). Sesi login mungkin sudah habis.");
