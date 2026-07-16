@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('talangans', function (Blueprint $table) {
             $table->id();
             // Identitas Surat (Menghubungkan baris-baris tagihan yang sama)
-            $table->string('surat_id')->index();
+            $table->foreignId('surat_id')->constrained('surats')->onDelete('cascade');
 
             $table->unsignedBigInteger('anggaran_id');
             $table->integer('triwulan');

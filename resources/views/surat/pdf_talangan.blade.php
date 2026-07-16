@@ -153,7 +153,7 @@
     </table>
 
     <p style="text-align: justify;">
-        karena kondisi tersebut diatas maka biaya tagihan atas pemakaian tersebut telah kami tangguhkan/ditalangi oleh:
+        karena kondisi tersebut di atas maka biaya tagihan atas pemakaian tersebut telah kami tangguhkan/ditalangi oleh:
     </p>
 
     <table class="info-table">

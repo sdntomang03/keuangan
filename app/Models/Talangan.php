@@ -31,4 +31,19 @@ class Talangan extends Model
     {
         return $this->belongsTo(Surat::class, 'surat_id');
     }
+
+    protected static function booted()
+    {
+        // Event ini dipicu SETELAH sebuah record Talangan berhasil dihapus
+        static::deleted(function ($talangan) {
+
+            // Cek apakah masih ada sisa rincian talangan lain yang menggunakan surat_id yang sama
+            $sisaTalangan = self::where('surat_id', $talangan->surat_id)->count();
+
+            // Jika rincian talangan sudah habis (0), maka hapus juga Surat induknya
+            if ($sisaTalangan === 0) {
+                \App\Models\Surat::find($talangan->surat_id)?->delete();
+            }
+        });
+    }
 }
