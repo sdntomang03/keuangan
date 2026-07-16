@@ -35,6 +35,7 @@
                                 <th class="px-4 py-3 border-b dark:border-slate-700 text-center">No</th>
                                 <th class="px-4 py-3 border-b dark:border-slate-700">Tanggal</th>
                                 <th class="px-4 py-3 border-b dark:border-slate-700">No Bukti</th>
+                                <th class="px-4 py-3 border-b dark:border-slate-700">Korek</th>
                                 <th class="px-4 py-3 border-b dark:border-slate-700">Rekanan</th>
                                 <th class="px-4 py-3 border-b dark:border-slate-700">Uraian</th>
                                 <th class="px-4 py-3 border-b dark:border-slate-700 text-right">Nilai SPJ (Bruto)</th>
@@ -57,12 +58,11 @@
                                 <td class="px-4 py-3 text-center">{{ $index + 1 }}</td>
                                 <td class="px-4 py-3">{{ \Carbon\Carbon::parse($row['tanggal'])->format('d/m/Y') }}</td>
                                 <td class="px-4 py-3">
-                                    <span
-                                        class="block font-mono text-xs font-bold text-slate-800 dark:text-slate-200">{{
-                                        $row['no_bukti'] ?? '-' }}</span>
-                                    <span class="block text-[10px] text-slate-500 mt-1 uppercase">{{ $row['korek']
-                                        }}</span>
+                                    {{
+                                    $row['no_bukti'] ?? '-' }}
+
                                 </td>
+                                <td class="px-4 py-3 font-semibold">{{ $row['korek'] }}</td>
                                 <td class="px-4 py-3 font-semibold">{{ $row['rekanan'] }}</td>
                                 <td class="px-4 py-3 whitespace-normal min-w-[200px]">{{ $row['uraian'] }}</td>
                                 <td class="px-4 py-3 text-right font-bold">Rp {{ number_format($row['bruto'], 0, ',',
