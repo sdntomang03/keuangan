@@ -185,9 +185,7 @@
                     let rows = '';
                     result.data.forEach((item, index) => {
                         // Cek apakah relasi kegiatan ada
-                        let namaKegiatan = item.kegiatan
-    ? (item.kegiatan.nama ?? item.kegiatan.uraian ?? item.keterangan)
-    : item.keterangan;
+                        let namaKomponen = item.namakomponen;
 
                         rows += `
                             <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
