@@ -130,8 +130,10 @@
                             <tr class="hover:bg-gray-50">
                                 <td class="px-6 py-4">
                                     <div class="font-bold text-indigo-900">{{ $dataSurat->nomor_surat ?? 'N/A' }}</div>
-                                    <div class="text-[10px] text-gray-400">{{ $dataSurat->tanggal_surat ?
-                                        \Carbon\Carbon::parse($dataSurat->tanggal_surat)->format('d/m/Y') : '-' }}</div>
+                                    <div class="text-[10px] text-gray-400">
+                                        {{ optional($dataSurat)->tanggal_surat ?
+                                        \Carbon\Carbon::parse($dataSurat->tanggal_surat)->format('d/m/Y') : '-' }}
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4">{{ $grupTalangan->first()->korek->ket ?? '-' }}</td>
                                 <td class="px-6 py-4 italic text-gray-500">{{ $teksBulan ?: '-' }}</td>
