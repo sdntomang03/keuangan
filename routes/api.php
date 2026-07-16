@@ -34,4 +34,4 @@ Route::middleware('auth:sanctum')->group(function () {
     // Rute Users dari langkah sebelumnya (sekarang terlindungi)
     Route::get('/users', [UserController::class, 'index']);
 });
-Route::get('/rkas-realisasi', [ApiJsonController::class, 'getRkasRealisasi'])->name('api.rkas.realisasi');
+Route::get('/rkas-realisasi', [ApiJsonController::class, 'getRkas'])->name('api.getRkas');
