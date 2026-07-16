@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Api\ApiJsonController;
 use App\Http\Controllers\Api\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -27,5 +26,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/users', [UserController::class, 'index']);
 
     // PINDAHKAN ROUTE INI KE DALAM GRUP
-    Route::get('get-rkas', [ApiJsonController::class, 'getRkas'])->name('api.getRkas');
+
 });
