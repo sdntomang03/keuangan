@@ -109,10 +109,14 @@
                                         No</th>
                                     <th
                                         class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                        Kode Akun</th>
+                                        Korek</th>
                                     <th
                                         class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                        Nama Kegiatan</th>
+                                        Nama Komponen</th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        Qty</th>
+
                                 </tr>
                             </thead>
                             <tbody id="table-rkas-body"
@@ -192,6 +196,7 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">${index + 1}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-emerald-600 dark:text-emerald-400">${item.kodeakun ?? '-'}</td>
                                 <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">${namaKomponen}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">${item.koefisien}</td>
                             </tr>
                         `;
                     });
