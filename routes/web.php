@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\RkasCleanupController;
 use App\Http\Controllers\Admin\SekolahController as AdminSekolahController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\AkbController;
+use App\Http\Controllers\Api\ApiJsonController;
 use App\Http\Controllers\ArkasController;
 use App\Http\Controllers\BarangController;
 use App\Http\Controllers\BelanjaController;
@@ -341,4 +342,5 @@ Route::middleware(['auth', 'role:admin'])->prefix('setting')->group(function () 
     Route::post('/import-kegiatan', [SettingController::class, 'storeImportKegiatanJson'])->name('setting.kegiatan.store_import');
 });
 
+Route::get('/rkas-realisasi', [ApiJsonController::class, 'getRkasRealisasi'])->name('api.rkas.realisasi');
 require __DIR__.'/auth.php';
