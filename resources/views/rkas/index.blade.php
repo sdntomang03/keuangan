@@ -38,6 +38,7 @@
             {{-- CARD 1: FORM UPLOAD RKAS --}}
             {{-- ========================================================= --}}
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mb-6">
+                <!-- ... (Kode Card Form Upload Anda Tetap Sama) ... -->
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <div
                         class="mb-6 p-4 bg-emerald-50 dark:bg-emerald-900/30 border-l-4 border-emerald-500 rounded-r-lg">
@@ -105,24 +106,35 @@
                             <thead class="bg-gray-50 dark:bg-gray-700">
                                 <tr>
                                     <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         No</th>
                                     <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         Korek</th>
                                     <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         Nama Komponen</th>
                                     <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                        Qty</th>
-
+                                        class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        Qty/Vol</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        Satuan</th>
+                                    <th
+                                        class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        Harga Satuan</th>
+                                    <th
+                                        class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        Pajak</th>
+                                    <th
+                                        class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        Total Pagu</th>
                                 </tr>
                             </thead>
                             <tbody id="table-rkas-body"
                                 class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                                 <tr>
-                                    <td colspan="3"
+                                    <td colspan="8"
                                         class="px-6 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
                                         Klik tombol <strong>"Muat Data"</strong> untuk menampilkan JSON RKAS dari API.
                                     </td>
@@ -140,12 +152,15 @@
     {{-- SCRIPT FETCH API --}}
     {{-- ========================================================= --}}
     <script>
+        // Fungsi untuk format angka ke Rupiah
+        const formatRupiah = (angka) => {
+            if (!angka) return '0';
+            return new Intl.NumberFormat('id-ID', { minimumFractionDigits: 0 }).format(angka);
+        };
+
         function loadRkasData() {
             const tbody = document.getElementById('table-rkas-body');
-            // Ambil ID Anggaran dari Variabel PHP Blade Anda
             const anggaranId = '{{ $anggaranAktif->id ?? '' }}';
-
-            // Ambil Token CSRF dari Meta Tag Laravel
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
             if (!anggaranId) {
@@ -156,7 +171,7 @@
             // Animasi Loading
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="3" class="px-6 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                    <td colspan="8" class="px-6 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
                         <svg class="animate-spin h-5 w-5 mx-auto text-emerald-500 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -164,15 +179,16 @@
                         Memuat data dari API...
                     </td>
                 </tr>`;
-    fetch(`/json/get-rkas?anggaran_id=${anggaranId}`, {
-    method: 'GET',
-    headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': csrfToken,
-        'X-Requested-With': 'XMLHttpRequest' // Tambahkan ini
-    }
-})
+
+            fetch(`/json/get-rkas?anggaran_id=${anggaranId}`, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
             .then(response => {
                 if (response.status === 401) {
                     throw new Error("Akses Ditolak (401). Sesi login mungkin sudah habis.");
@@ -180,23 +196,30 @@
                 if (!response.ok) {
                     throw new Error("Terjadi kesalahan jaringan atau server (Error " + response.status + ")");
                 }
-
                 return response.json();
             })
             .then(result => {
                 if (result.status === 'success' && result.data.length > 0) {
                     console.log('Data RKAS berhasil dimuat:', result.data);
                     let rows = '';
+
                     result.data.forEach((item, index) => {
-                        // Cek apakah relasi kegiatan ada
-                        let namaKomponen = item.namakomponen;
+                        let namaKomponen = item.namakomponen ?? '-';
+                        let korekSingkat = item.korek ? item.korek.singkat : '-';
+
+                        // Ekstrak angka koefisien jika formatnya string (misal: "5 Unit")
+                        let qty = parseFloat(item.koefisien) || 0;
 
                         rows += `
                             <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">${index + 1}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-emerald-600 dark:text-emerald-400">${item.korek.singkat ?? '-'}</td>
-                                <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">${namaKomponen}</td>
-                                <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">${item.koefisien}</td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">${index + 1}</td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-emerald-600 dark:text-emerald-400">${korekSingkat}</td>
+                                <td class="px-4 py-4 text-sm text-gray-900 dark:text-gray-100 max-w-xs truncate" title="${namaKomponen}">${namaKomponen}</td>
+                                <td class="px-4 py-4 text-right whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">${qty}</td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">${item.satuan ?? '-'}</td>
+                                <td class="px-4 py-4 text-right whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">${formatRupiah(item.hargasatuan)}</td>
+                                <td class="px-4 py-4 text-right whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">${formatRupiah(item.totalpajak)}</td>
+                                <td class="px-4 py-4 text-right whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-gray-100">${formatRupiah(item.totalharga)}</td>
                             </tr>
                         `;
                     });
@@ -204,7 +227,7 @@
                 } else {
                     tbody.innerHTML = `
                         <tr>
-                            <td colspan="3" class="px-6 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                            <td colspan="8" class="px-6 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
                                 Tidak ada data RKAS ditemukan untuk anggaran ini.
                             </td>
                         </tr>`;
@@ -213,7 +236,7 @@
             .catch(error => {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="3" class="px-6 py-8 text-center text-sm text-red-500">
+                        <td colspan="8" class="px-6 py-8 text-center text-sm text-red-500">
                             <strong>Gagal memuat data!</strong> <br> ${error.message}
                         </td>
                     </tr>`;
