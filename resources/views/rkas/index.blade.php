@@ -181,11 +181,13 @@
             })
             .then(result => {
                 if (result.status === 'success' && result.data.length > 0) {
-                    console.log('Data RKAS berhasil dimuat:', result.data);
+
                     let rows = '';
                     result.data.forEach((item, index) => {
                         // Cek apakah relasi kegiatan ada
-                        let namaKegiatan = item.kegiatan ? item.kegiatan.nama_kegiatan : '-';
+                        let namaKegiatan = item.kegiatan
+    ? (item.kegiatan.nama ?? item.kegiatan.uraian ?? item.keterangan)
+    : item.keterangan;
 
                         rows += `
                             <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
