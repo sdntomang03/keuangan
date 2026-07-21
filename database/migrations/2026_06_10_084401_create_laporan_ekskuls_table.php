@@ -13,7 +13,7 @@ return new class extends Migration
 
             // Relasi ke tabel induk ekskuls
             $table->foreignId('ekskul_id')->constrained('ekskuls')->cascadeOnDelete();
-
+            $table->foreignId('belanja_id')->constrained('belanjas')->cascadeOnDelete();
             $table->date('tanggal_kegiatan');
             $table->string('materi'); // Materi latihan
             $table->text('catatan')->nullable();

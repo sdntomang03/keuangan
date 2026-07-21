@@ -380,6 +380,7 @@ class EkskulController extends Controller
             // Simpan ke Database
             SpjEkskulDetail::create([
                 'spj_ekskul_id' => $spj->id,
+                'belanja_id' => $spj->belanja_id,
                 'tanggal_kegiatan' => $request->tanggal_kegiatan,
                 'materi' => $request->materi,
                 'foto_kegiatan' => $pathFoto,
@@ -756,6 +757,7 @@ class EkskulController extends Controller
                         // Simpan ke Database dengan tanggalFull
                         SpjEkskulDetail::create([
                             'spj_ekskul_id' => $spj->id,
+                            'belanja_id' => $spj->belanja_id,
                             'tanggal_kegiatan' => $tanggalFull,
                             'materi' => $materiText,
                             'foto_kegiatan' => $pathFoto,
@@ -928,6 +930,7 @@ class EkskulController extends Controller
                         // Simpan ke Database
                         SpjEkskulDetail::create([
                             'spj_ekskul_id' => $spj->id,
+                            'belanja_id' => $spj->belanja_id,
                             'tanggal_kegiatan' => $tanggalFull,
                             'materi' => $materiText, // Diambil langsung dari JSON
                             'foto_kegiatan' => $pathFoto,
