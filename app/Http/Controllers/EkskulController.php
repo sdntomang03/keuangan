@@ -862,15 +862,18 @@ class EkskulController extends Controller
         return view('ekskul.create_sederhana', compact('spj'));
     }
 
+    /**
+     * 6. PROSES SIMPAN BULK (Form Dinamis JSON Tanpa Signature & Foto Opsional)
+     */
     public function store_sederhana(Request $request)
     {
-        // 1. Validasi Input (Hapus baris validasi signature)
+        // 1. Validasi Input (Ubah foto_kegiatan menjadi nullable)
         $request->validate([
             'spj_ekskul_id' => 'required',
             'materi_json' => 'required|json', // Validasi Materi Tetap JSON
             'tanggals' => 'required|array',
-            'foto_kegiatan' => 'required|array',
-            'foto_kegiatan.*' => 'image|max:5120',
+            'foto_kegiatan' => 'nullable|array', // <--- UBAH INI JADI NULLABLE
+            'foto_kegiatan.*' => 'nullable|image|max:5120', // <--- TAMBAHKAN NULLABLE
             'jam_global' => 'required|numeric|min:0|max:23',
         ]);
 
@@ -884,17 +887,15 @@ class EkskulController extends Controller
                 return back()->with('error', 'Format materi tidak valid. Pastikan format JSON benar.');
             }
 
-            $files = $request->file('foto_kegiatan');
+            // Gunakan $request->file('foto_kegiatan') atau array kosong jika tidak ada yang diupload
+            $files = $request->file('foto_kegiatan') ?? [];
             $tanggals = $request->tanggals;
             $jamInput = $request->jam_global;
 
             $savedCount = 0;
             $quotaFull = false;
 
-            // Hapus parameter $request dari use() karena tidak lagi mengambil $request->signature
             DB::transaction(function () use ($files, $tanggals, $jamInput, $listMateri, $spj, &$savedCount, &$quotaFull) {
-
-                // (Blok kode simpan tanda tangan dari Canvas sudah dihapus)
 
                 // 2. Looping Data berdasarkan Array Materi
                 foreach ($listMateri as $index => $materiText) {
@@ -904,15 +905,19 @@ class EkskulController extends Controller
                         break;
                     }
 
-                    // Pastikan input tanggal dan file foto pada index ini tersedia
-                    if (isset($tanggals[$index]) && isset($files[$index])) {
+                    // Pastikan input tanggal pada index ini tersedia
+                    if (isset($tanggals[$index])) {
 
                         // Konstruksi Waktu (Menggabungkan tanggal input dengan jam acak)
                         $waktuAcak = sprintf('%02d:%02d:%02d', $jamInput, rand(0, 59), rand(0, 59));
                         $tanggalFull = $tanggals[$index].' '.$waktuAcak;
 
-                        // Watermark Foto
-                        $pathFoto = $this->processWatermark($files[$index], $spj->belanja_id, $tanggalFull, $waktuAcak);
+                        $pathFoto = null;
+
+                        // Jika ada file foto yang diupload pada index ini, proses watermark
+                        if (isset($files[$index])) {
+                            $pathFoto = $this->processWatermark($files[$index], $spj->belanja_id, $tanggalFull, $waktuAcak);
+                        }
 
                         // Simpan ke Database
                         SpjEkskulDetail::create([
@@ -920,7 +925,7 @@ class EkskulController extends Controller
                             'belanja_id' => $spj->belanja_id,
                             'tanggal_kegiatan' => $tanggalFull,
                             'materi' => $materiText, // Diambil langsung dari JSON
-                            'foto_kegiatan' => $pathFoto,
+                            'foto_kegiatan' => $pathFoto, // Bisa berisi null jika tidak ada foto
                         ]);
 
                         $savedCount++;
@@ -936,7 +941,6 @@ class EkskulController extends Controller
                 return back()->with('error', 'Kuota pertemuan sudah penuh!');
             }
 
-            // Update pesan success karena tanda tangan tidak lagi disertakan
             return redirect()->route('ekskul.manage_details', $spj->belanja_id)
                 ->with('success', "Berhasil menyimpan $savedCount kegiatan.");
 
