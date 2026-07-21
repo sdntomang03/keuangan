@@ -41,12 +41,10 @@
                 </div>
             </div>
 
-            <!-- PERUBAHAN ACTION ROUTE DISINI -->
             <form action="{{ route('ekskul.store_sederhana') }}" method="POST" enctype="multipart/form-data"
                 id="bulkForm">
                 @csrf
                 <input type="hidden" name="spj_ekskul_id" value="{{ $spj->id }}">
-                <input type="hidden" name="signature" id="signatureInput">
 
                 {{-- Global Setting --}}
                 <div class="hidden">
@@ -117,21 +115,9 @@
                             </div>
                         </div>
 
-                        {{-- Area Tanda Tangan & Submit --}}
+                        {{-- Area Submit --}}
                         <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100" id="areaSubmit"
                             style="display: none;">
-                            <h4 class="font-bold text-gray-800 mb-2">Tanda Tangan Pelatih</h4>
-                            <p class="text-xs text-gray-500 mb-4">Wajib ditandatangani sebelum menyimpan data.</p>
-
-                            <div
-                                class="border-2 border-dashed border-gray-300 bg-gray-50 rounded-lg relative w-full overflow-hidden flex justify-center mb-6">
-                                <canvas id="signaturePad" width="400" height="150"
-                                    class="cursor-crosshair bg-white w-full max-w-md mx-auto border-x"></canvas>
-                                <button type="button" onclick="clearSignature()"
-                                    class="absolute top-2 right-2 bg-red-100 text-red-600 hover:bg-red-200 text-[10px] px-2 py-1 rounded font-bold">
-                                    Hapus TTD
-                                </button>
-                            </div>
 
                             <button type="submit" id="btnSubmit"
                                 class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 px-4 rounded-lg shadow-md transition-all text-lg flex justify-center items-center gap-2">
@@ -201,53 +187,12 @@
                     container.appendChild(tr);
                 });
 
-                // Tampilkan tombol submit & canvas tanda tangan
+                // Tampilkan tombol submit
                 areaSubmit.style.display = 'block';
 
             } catch (e) {
                 alert("Gagal memproses JSON!\nPastikan format benar (contoh: [\"Materi 1\", \"Materi 2\"]).\nError: " + e.message);
             }
         }
-
-        // === LOGIKA SIGNATURE PAD ===
-        const canvas = document.getElementById('signaturePad');
-        const ctx = canvas.getContext('2d');
-        let drawing = false;
-
-        function getPos(e) {
-            const rect = canvas.getBoundingClientRect();
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            return { x: clientX - rect.left, y: clientY - rect.top };
-        }
-
-        const startDrawing = (e) => { e.preventDefault(); drawing = true; const pos = getPos(e); ctx.beginPath(); ctx.moveTo(pos.x, pos.y); }
-        const stopDrawing = () => { drawing = false; ctx.beginPath(); }
-        const draw = (e) => {
-            if (!drawing) return;
-            e.preventDefault();
-            const pos = getPos(e);
-            ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.strokeStyle = '#0f172a';
-            ctx.lineTo(pos.x, pos.y); ctx.stroke();
-        }
-
-        canvas.addEventListener('mousedown', startDrawing); canvas.addEventListener('mouseup', stopDrawing); canvas.addEventListener('mousemove', draw);
-        canvas.addEventListener('touchstart', startDrawing); canvas.addEventListener('touchend', stopDrawing); canvas.addEventListener('touchmove', draw);
-
-        function clearSignature() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
-
-        // === INTERCEPT SUBMIT UNTUK VALIDASI CANVAS ===
-        document.getElementById('bulkForm').addEventListener('submit', function(e) {
-            const blank = document.createElement('canvas');
-            blank.width = canvas.width; blank.height = canvas.height;
-
-            if (canvas.toDataURL() === blank.toDataURL()) {
-                e.preventDefault();
-                alert('Tanda tangan pelatih wajib diisi!');
-            } else {
-                // Simpan base64 ke input hidden
-                document.getElementById('signatureInput').value = canvas.toDataURL('image/png');
-            }
-        });
     </script>
 </x-app-layout>
