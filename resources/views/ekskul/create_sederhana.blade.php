@@ -181,7 +181,7 @@
                             <input type="date" name="tanggals[]" required class="w-full text-sm border-gray-300 rounded-lg focus:ring-indigo-500 py-1.5 shadow-sm">
                         </td>
                         <td class="p-3">
-                            <input type="file" name="foto_kegiatan[]" accept="image/*" required class="w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer">
+                            <input type="file" name="foto_kegiatan[]" accept="image/*" class="w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer">
                         </td>
                     `;
                     container.appendChild(tr);
