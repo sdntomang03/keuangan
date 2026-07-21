@@ -300,6 +300,8 @@ Route::middleware(['permission:input-ekskul|kelola-anggaran'])->group(function (
         Route::put('/detail/{id}', [EkskulController::class, 'updateDetail'])->name('update_detail');
         Route::get('/bulk-create/{id}', [EkskulController::class, 'create_bulk'])->name('create_bulk');
         Route::post('/bulk-store', [EkskulController::class, 'store_detail_bulk'])->name('store_detail_bulk');
+        Route::get('/sederhana-create/{id}', [EkskulController::class, 'create_sederhana'])->name('create_sederhana');
+        Route::post('/sederhana-store', [EkskulController::class, 'store_sederhana'])->name('store_sederhana');
     });
 
     Route::get('/ekskul-laporan', [EkskulLaporanController::class, 'index'])->name('ekskul.laporan.index');

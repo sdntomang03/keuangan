@@ -840,4 +840,112 @@ class EkskulController extends Controller
             return back()->with('error', 'Gagal update: '.$e->getMessage())->withInput();
         }
     }
+
+    public function create_sederhana($id)
+    {
+        // Ambil Data SPJ Ekskul
+        $spj = SpjEkskul::with(['belanja', 'rekanan', 'ekskul'])->findOrFail($id);
+
+        return view('ekskul.create_sederhana', compact('spj'));
+    }
+
+    /**
+     * 6. PROSES SIMPAN BULK (Form Dinamis JSON + Signature)
+     */
+    public function store_sederhana(Request $request)
+    {
+        // 1. Validasi Input
+        $request->validate([
+            'spj_ekskul_id' => 'required',
+            'materi_json' => 'required|json', // Validasi Materi Tetap JSON
+            'tanggals' => 'required|array',
+            'foto_kegiatan' => 'required|array',
+            'foto_kegiatan.*' => 'image|max:5120',
+            'jam_global' => 'required|numeric|min:0|max:23',
+            'signature' => 'required|string', // Validasi Tanda Tangan dari Canvas
+        ]);
+
+        try {
+            $spj = SpjEkskul::findOrFail($request->spj_ekskul_id);
+
+            // Parse JSON materi menjadi array PHP
+            $listMateri = json_decode($request->materi_json, true);
+
+            if (! is_array($listMateri)) {
+                return back()->with('error', 'Format materi tidak valid. Pastikan format JSON benar.');
+            }
+
+            $files = $request->file('foto_kegiatan');
+            $tanggals = $request->tanggals;
+            $jamInput = $request->jam_global;
+
+            $savedCount = 0;
+            $quotaFull = false;
+
+            DB::transaction(function () use ($files, $tanggals, $jamInput, $listMateri, $spj, $request, &$savedCount, &$quotaFull) {
+
+                // 2. Simpan Tanda Tangan dari Canvas
+                $signaturePath = null;
+                if ($request->signature) {
+                    $signatureData = explode(',', $request->signature)[1]; // Buang prefix 'data:image/png;base64,'
+                    $signatureName = 'spj/ttd_pelatih/TTD_'.time().'_'.$spj->id.'.png';
+
+                    if (! Storage::disk('public')->exists('spj/ttd_pelatih')) {
+                        Storage::disk('public')->makeDirectory('spj/ttd_pelatih');
+                    }
+                    Storage::disk('public')->put($signatureName, base64_decode($signatureData));
+
+                    // Path tanda tangan ini bisa Anda simpan ke tabel terkait
+                    // Contoh jika Anda punya kolom 'tanda_tangan' di tabel SpjEkskul:
+                    // $spj->update(['tanda_tangan' => $signatureName]);
+
+                    $signaturePath = $signatureName;
+                }
+
+                // 3. Looping Data berdasarkan Array Materi
+                foreach ($listMateri as $index => $materiText) {
+                    // Cek Kuota
+                    if ($spj->details()->count() >= $spj->jumlah_pertemuan) {
+                        $quotaFull = true;
+                        break;
+                    }
+
+                    // Pastikan input tanggal dan file foto pada index ini tersedia
+                    if (isset($tanggals[$index]) && isset($files[$index])) {
+
+                        // Konstruksi Waktu (Menggabungkan tanggal input dengan jam acak)
+                        $waktuAcak = sprintf('%02d:%02d:%02d', $jamInput, rand(0, 59), rand(0, 59));
+                        $tanggalFull = $tanggals[$index].' '.$waktuAcak;
+
+                        // Watermark Foto
+                        $pathFoto = $this->processWatermark($files[$index], $spj->belanja_id, $tanggalFull, $waktuAcak);
+
+                        // Simpan ke Database
+                        SpjEkskulDetail::create([
+                            'spj_ekskul_id' => $spj->id,
+                            'tanggal_kegiatan' => $tanggalFull,
+                            'materi' => $materiText, // Diambil langsung dari JSON
+                            'foto_kegiatan' => $pathFoto,
+                        ]);
+
+                        $savedCount++;
+                    }
+                }
+            });
+
+            // Feedback Message
+            if ($quotaFull && $savedCount > 0) {
+                return redirect()->route('ekskul.manage_details', $spj->belanja_id)
+                    ->with('warning', "Berhasil menyimpan $savedCount data. Sisanya dilewati karena kuota SPJ penuh.");
+            } elseif ($quotaFull && $savedCount == 0) {
+                return back()->with('error', 'Kuota pertemuan sudah penuh!');
+            }
+
+            return redirect()->route('ekskul.manage_details', $spj->belanja_id)
+                ->with('success', "Berhasil menyimpan $savedCount kegiatan beserta Tanda Tangan.");
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan: '.$e->getMessage())->withInput();
+        }
+    }
 }
