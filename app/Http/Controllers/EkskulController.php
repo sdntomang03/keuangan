@@ -850,11 +850,14 @@ class EkskulController extends Controller
         }
     }
 
-    public function create_sederhana($id)
+    public function create_sederhana($belanjaId)
     {
-        // Ambil Data SPJ Ekskul
-        $spj = SpjEkskul::with(['belanja', 'rekanan', 'ekskul'])->findOrFail($id);
-        dd($spj);
+        // Ambil Data SPJ Ekskul berdasarkan belanja_id
+        $spj = SpjEkskul::with(['belanja', 'rekanan', 'ekskul'])
+            ->where('belanja_id', $belanjaId)
+            ->firstOrFail();
+
+        // dd($spj); // Anda bisa menghapus atau membiarkan baris ini untuk keperluan pengecekan
 
         return view('ekskul.create_sederhana', compact('spj'));
     }
