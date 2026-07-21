@@ -313,7 +313,13 @@
     </div>
 
     {{-- HALAMAN 2: LAMPIRAN FOTO (Akan otomatis di-page-break berkat class .page) --}}
-    @if($spj->details->count() > 0)
+    {{-- HALAMAN 2: LAMPIRAN FOTO (Akan otomatis di-page-break berkat class .page) --}}
+    @php
+    // Cek apakah ada minimal 1 pertemuan yang memiliki foto
+    $hasPhotos = $spj->details->whereNotNull('foto_kegiatan')->count() > 0;
+    @endphp
+
+    @if($hasPhotos)
     <div class="page">
         <div class="title-section">
             <h2>LAMPIRAN DOKUMENTASI <br> {{ $spj->ekskul->nama }}</h2>
@@ -321,15 +327,11 @@
 
         <div class="photo-grid">
             @foreach($spj->details as $index => $detail)
+            {{-- Hanya dirender jika foto kegiatan tersedia --}}
+            @if($detail->foto_kegiatan)
             <div class="photo-item">
-                @if($detail->foto_kegiatan)
                 <img src="{{ asset('storage/' . $detail->foto_kegiatan) }}" alt="Foto Pertemuan {{ $index + 1 }}">
-                @else
-                <div
-                    style="height: 200px; display: flex; align-items: center; justify-content: center; background: #e2e8f0; color: #94a3b8; font-style: italic; margin-bottom: 10px;">
-                    Tidak ada foto
-                </div>
-                @endif
+
                 <div class="photo-caption">
                     Pertemuan Ke-{{ $index + 1 }}<br>
                     <span style="font-size: 8.5pt; color: #64748b; font-weight: normal;">
@@ -337,6 +339,7 @@
                     </span>
                 </div>
             </div>
+            @endif
             @endforeach
         </div>
     </div>
