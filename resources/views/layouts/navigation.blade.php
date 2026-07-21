@@ -155,7 +155,7 @@
 
                     <a href="{{ route('ekskul.index') }}"
                         class="block px-3 py-2.5 text-sm font-bold rounded-lg transition-colors {{ request()->routeIs('ekskul.index') ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700' }}">
-                        Kelola Kelompok
+                        Kelola Ekskul
                     </a>
 
                     <a href="{{ route('ekskul.ref.index') }}"
