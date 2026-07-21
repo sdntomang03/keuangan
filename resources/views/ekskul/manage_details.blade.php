@@ -34,7 +34,7 @@
                 --}}
                 <div class="h-6 border-l border-gray-300 mx-1 hidden sm:block"></div>
 
-                <a href="{{ route('ekskul.create_bulk', $spj->id) }}"
+                <a href="{{ route('ekskul.create_bulk', $spj->belanja_id) }}"
                     class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-md shadow-sm transition ease-in-out duration-150">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

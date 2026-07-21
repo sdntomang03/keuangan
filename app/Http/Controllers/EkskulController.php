@@ -688,10 +688,12 @@ class EkskulController extends Controller
         return back()->with('success', 'Ekskul dihapus.');
     }
 
-    public function create_bulk($id)
+    public function create_bulk($belanjaId)
     {
-        // Ambil Data SPJ Ekskul
-        $spj = SpjEkskul::with(['belanja', 'rekanan', 'ekskul'])->findOrFail($id);
+        // Ambil Data SPJ Ekskul berdasarkan belanja_id
+        $spj = SpjEkskul::with(['belanja', 'rekanan', 'ekskul'])
+            ->where('belanja_id', $belanjaId)
+            ->firstOrFail();
 
         return view('ekskul.bulk_create', compact('spj'));
     }
