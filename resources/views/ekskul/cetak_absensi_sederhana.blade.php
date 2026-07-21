@@ -321,15 +321,20 @@
     @if($photos->count() > 0)
     {{-- Bagi kumpulan foto menjadi kelompok dengan maksimal 2 foto per halaman --}}
     @foreach($photos->chunk(2) as $chunk)
-    <div class="page">
-        <div class="title-section">
+    <div class="page" style="display: flex; flex-direction: column;">
+        <div class="title-section" style="margin-bottom: 15px;">
             <h2>LAMPIRAN DOKUMENTASI <br> {{ $spj->ekskul->nama }}</h2>
         </div>
 
-        <div class="photo-grid">
+        {{-- Wadah Vertikal Atas - Bawah --}}
+        <div style="display: flex; flex-direction: column; gap: 30px; flex-grow: 1;">
             @foreach($chunk as $index => $detail)
-            <div class="photo-item">
-                <img src="{{ asset('storage/' . $detail->foto_kegiatan) }}" alt="Foto Kegiatan">
+            <div
+                style="border: 2px solid #cbd5e1; border-radius: 8px; padding: 15px; text-align: center; background: #f8fafc; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; page-break-inside: avoid;">
+
+                <img src="{{ asset('storage/' . $detail->foto_kegiatan) }}" alt="Foto Kegiatan"
+                    style="width: 100%; height: 400px; object-fit: contain; background: #e2e8f0; border-radius: 6px;">
+
             </div>
             @endforeach
         </div>
