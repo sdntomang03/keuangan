@@ -845,7 +845,6 @@ class EkskulController extends Controller
     {
         // Ambil Data SPJ Ekskul
         $spj = SpjEkskul::with(['belanja', 'rekanan', 'ekskul'])->findOrFail($id);
-        dd($spj); // Debugging: Tampilkan data SPJ Ekskul sebelum render view
 
         return view('ekskul.create_sederhana', compact('spj'));
     }
