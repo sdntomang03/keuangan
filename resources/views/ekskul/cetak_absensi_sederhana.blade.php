@@ -312,31 +312,29 @@
         </div>
     </div>
 
-    {{-- HALAMAN 2: LAMPIRAN FOTO (Akan otomatis di-page-break berkat class .page) --}}
-    {{-- HALAMAN 2: LAMPIRAN FOTO (Akan otomatis di-page-break berkat class .page) --}}
+    {{-- HALAMAN 2 & SETERUSNYA: LAMPIRAN FOTO --}}
     @php
-    // Cek apakah ada minimal 1 pertemuan yang memiliki foto
-    $hasPhotos = $spj->details->whereNotNull('foto_kegiatan')->count() > 0;
+    // Saring hanya detail yang memiliki foto
+    $photos = $spj->details->whereNotNull('foto_kegiatan');
     @endphp
 
-    @if($hasPhotos)
+    @if($photos->count() > 0)
+    {{-- Bagi kumpulan foto menjadi kelompok dengan maksimal 2 foto per halaman --}}
+    @foreach($photos->chunk(2) as $chunk)
     <div class="page">
         <div class="title-section">
             <h2>LAMPIRAN DOKUMENTASI <br> {{ $spj->ekskul->nama }}</h2>
         </div>
 
         <div class="photo-grid">
-            @foreach($spj->details as $index => $detail)
-            {{-- Hanya dirender jika foto kegiatan tersedia --}}
-            @if($detail->foto_kegiatan)
+            @foreach($chunk as $index => $detail)
             <div class="photo-item">
-                <img src="{{ asset('storage/' . $detail->foto_kegiatan) }}" alt="Foto Pertemuan {{ $index + 1 }}">
-
+                <img src="{{ asset('storage/' . $detail->foto_kegiatan) }}" alt="Foto Kegiatan">
             </div>
-            @endif
             @endforeach
         </div>
     </div>
+    @endforeach
     @endif
 
 </body>
