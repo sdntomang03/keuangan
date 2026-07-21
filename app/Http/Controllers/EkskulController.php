@@ -865,9 +865,12 @@ class EkskulController extends Controller
     /**
      * 6. PROSES SIMPAN BULK (Form Dinamis JSON + Signature)
      */
+    /**
+     * 6. PROSES SIMPAN BULK (Form Dinamis JSON Tanpa Signature)
+     */
     public function store_sederhana(Request $request)
     {
-        // 1. Validasi Input
+        // 1. Validasi Input (Hapus baris validasi signature)
         $request->validate([
             'spj_ekskul_id' => 'required',
             'materi_json' => 'required|json', // Validasi Materi Tetap JSON
@@ -875,7 +878,6 @@ class EkskulController extends Controller
             'foto_kegiatan' => 'required|array',
             'foto_kegiatan.*' => 'image|max:5120',
             'jam_global' => 'required|numeric|min:0|max:23',
-            'signature' => 'required|string', // Validasi Tanda Tangan dari Canvas
         ]);
 
         try {
@@ -895,27 +897,12 @@ class EkskulController extends Controller
             $savedCount = 0;
             $quotaFull = false;
 
-            DB::transaction(function () use ($files, $tanggals, $jamInput, $listMateri, $spj, $request, &$savedCount, &$quotaFull) {
+            // Hapus parameter $request dari use() karena tidak lagi mengambil $request->signature
+            DB::transaction(function () use ($files, $tanggals, $jamInput, $listMateri, $spj, &$savedCount, &$quotaFull) {
 
-                // 2. Simpan Tanda Tangan dari Canvas
-                $signaturePath = null;
-                if ($request->signature) {
-                    $signatureData = explode(',', $request->signature)[1]; // Buang prefix 'data:image/png;base64,'
-                    $signatureName = 'spj/ttd_pelatih/TTD_'.time().'_'.$spj->id.'.png';
+                // (Blok kode simpan tanda tangan dari Canvas sudah dihapus)
 
-                    if (! Storage::disk('public')->exists('spj/ttd_pelatih')) {
-                        Storage::disk('public')->makeDirectory('spj/ttd_pelatih');
-                    }
-                    Storage::disk('public')->put($signatureName, base64_decode($signatureData));
-
-                    // Path tanda tangan ini bisa Anda simpan ke tabel terkait
-                    // Contoh jika Anda punya kolom 'tanda_tangan' di tabel SpjEkskul:
-                    // $spj->update(['tanda_tangan' => $signatureName]);
-
-                    $signaturePath = $signatureName;
-                }
-
-                // 3. Looping Data berdasarkan Array Materi
+                // 2. Looping Data berdasarkan Array Materi
                 foreach ($listMateri as $index => $materiText) {
                     // Cek Kuota
                     if ($spj->details()->count() >= $spj->jumlah_pertemuan) {
@@ -955,8 +942,9 @@ class EkskulController extends Controller
                 return back()->with('error', 'Kuota pertemuan sudah penuh!');
             }
 
+            // Update pesan success karena tanda tangan tidak lagi disertakan
             return redirect()->route('ekskul.manage_details', $spj->belanja_id)
-                ->with('success', "Berhasil menyimpan $savedCount kegiatan beserta Tanda Tangan.");
+                ->with('success', "Berhasil menyimpan $savedCount kegiatan.");
 
         } catch (\Exception $e) {
             return back()->with('error', 'Terjadi kesalahan: '.$e->getMessage())->withInput();
