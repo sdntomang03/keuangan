@@ -339,32 +339,12 @@ class EkskulController extends Controller
 
     public function manageDetails($belanjaId)
     {
-        // 1. Ambil data sekolah & triwulan aktif
-        $sekolah = Sekolah::find(auth()->user()->sekolah_id);
-        $twAktif = (int) filter_var($sekolah->triwulan_aktif, FILTER_SANITIZE_NUMBER_INT);
-
-        // 2. Tentukan range bulan berdasarkan triwulan aktif
-        $bulanRange = match ($twAktif) {
-            1 => [1, 2, 3],
-            2 => [4, 5, 6],
-            3 => [7, 8, 9],
-            4 => [10, 11, 12],
-            default => range(1, 12)
-        };
-
-        // 3. Ambil Data SPJ Ekskul dan batasi relasi 'details' sesuai bulan triwulan aktif
-        $spj = SpjEkskul::with(['belanja', 'rekanan', 'details' => function ($query) use ($bulanRange) {
-            // Filter tanggal kegiatan agar hanya tampil di bulan triwulan aktif
-            $query->where(function ($q) use ($bulanRange) {
-                foreach ($bulanRange as $bulan) {
-                    $q->orWhereMonth('tanggal_kegiatan', $bulan);
-                }
-            });
-        }])
+        // Ambil Data SPJ Ekskul berdasarkan Belanja ID
+        $spj = SpjEkskul::with(['belanja', 'rekanan', 'details'])
             ->where('belanja_id', $belanjaId)
             ->firstOrFail();
 
-        // 4. Hitung progres input (otomatis hanya menghitung yang tampil di triwulan aktif)
+        // Hitung progres input
         $sudahInput = $spj->details->count();
         $targetPertemuan = $spj->jumlah_pertemuan; // Sesuai Volume saat input Belanja
 
