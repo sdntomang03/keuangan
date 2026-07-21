@@ -332,12 +332,6 @@
             <div class="photo-item">
                 <img src="{{ asset('storage/' . $detail->foto_kegiatan) }}" alt="Foto Pertemuan {{ $index + 1 }}">
 
-                <div class="photo-caption">
-                    Pertemuan Ke-{{ $index + 1 }}<br>
-                    <span style="font-size: 8.5pt; color: #64748b; font-weight: normal;">
-                        {{ \Carbon\Carbon::parse($detail->tanggal_kegiatan)->locale('id')->translatedFormat('d M Y') }}
-                    </span>
-                </div>
             </div>
             @endif
             @endforeach
