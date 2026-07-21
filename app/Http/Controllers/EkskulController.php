@@ -854,6 +854,7 @@ class EkskulController extends Controller
     {
         // Ambil Data SPJ Ekskul
         $spj = SpjEkskul::with(['belanja', 'rekanan', 'ekskul'])->findOrFail($id);
+        dd($spj);
 
         return view('ekskul.create_sederhana', compact('spj'));
     }
