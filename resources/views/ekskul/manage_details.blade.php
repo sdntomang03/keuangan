@@ -183,10 +183,15 @@
                                             {!! $detail->materi !!}
                                         </td>
                                         <td class="px-4 py-3 text-center">
+                                            @if($detail->foto_kegiatan)
                                             <a href="{{ asset('storage/'.$detail->foto_kegiatan) }}" target="_blank">
                                                 <img src="{{ asset('storage/'.$detail->foto_kegiatan) }}"
-                                                    class="h-10 w-10 object-cover rounded border hover:scale-150 transition-transform cursor-pointer mx-auto">
+                                                    class="h-10 w-10 object-cover rounded border hover:scale-150 transition-transform cursor-pointer mx-auto"
+                                                    alt="Foto Kegiatan">
                                             </a>
+                                            @else
+                                            <span class="text-xs italic text-gray-400">-</span>
+                                            @endif
                                         </td>
                                         <td class="px-4 py-3 text-right">
                                             <div class="flex justify-end gap-2">
