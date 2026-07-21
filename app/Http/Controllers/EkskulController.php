@@ -484,12 +484,17 @@ class EkskulController extends Controller
         if (! $anggaran) {
             return back()->with('error', 'Silakan pilih Anggaran Aktif di Pengaturan terlebih dahulu.');
         }
-        $sekolahId = auth()->user()->sekolah_id;
 
-        // Ambil Belanja yang memiliki relasi ke spj_ekskul
+        // 1. Ambil data sekolah & angka triwulan aktif
+        $sekolahId = auth()->user()->sekolah_id;
+        $sekolah = Sekolah::find($sekolahId);
+        $twAktif = (int) filter_var($sekolah->triwulan_aktif, FILTER_SANITIZE_NUMBER_INT);
+
+        // 2. Ambil Belanja yang memiliki relasi ke spj_ekskul
         // Ini memfilter agar yang tampil HANYA belanja Ekskul, bukan ATK/Lainnya
         $belanjas = Belanja::with(['rekanan', 'spjEkskul'])
             ->where('anggaran_id', $anggaran->id)
+            ->where('tw', $twAktif) // Membatasi transaksi sesuai Triwulan Aktif
             ->whereHas('spjEkskul') // Hanya ambil yang punya data SPJ Ekskul
             ->orderBy('tanggal', 'desc')
             ->orderBy('no_bukti', 'desc')
