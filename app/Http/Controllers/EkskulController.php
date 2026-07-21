@@ -862,12 +862,6 @@ class EkskulController extends Controller
         return view('ekskul.create_sederhana', compact('spj'));
     }
 
-    /**
-     * 6. PROSES SIMPAN BULK (Form Dinamis JSON + Signature)
-     */
-    /**
-     * 6. PROSES SIMPAN BULK (Form Dinamis JSON Tanpa Signature)
-     */
     public function store_sederhana(Request $request)
     {
         // 1. Validasi Input (Hapus baris validasi signature)
