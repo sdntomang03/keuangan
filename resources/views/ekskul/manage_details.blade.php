@@ -7,7 +7,6 @@
 
             <div class="flex items-center gap-2">
                 {{-- Tombol Cetak Kwitansi --}}
-                {{-- Ganti 'ekskul.cetak_kwitansi' dengan nama route asli Anda --}}
                 <a href="{{ route('ekskul.cetak', $spj->id) }}" target="_blank"
                     class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-md shadow-sm transition ease-in-out duration-150">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -19,7 +18,6 @@
                 </a>
 
                 {{-- Tombol Cetak Dokumentasi --}}
-                {{-- Ganti 'ekskul.cetak_dokumentasi' dengan nama route asli Anda --}}
                 <a href="{{ route('ekskul.cetak_absensi', $spj->id) }}" target="_blank"
                     class="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-bold rounded-md shadow-sm transition ease-in-out duration-150">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -30,10 +28,10 @@
                     Cetak Dokumentasi
                 </a>
 
-                {{-- Tombol Bulk Upload (Saran: Taruh garis pemisah vertikal tipis jika ingin dipisah secara visual)
-                --}}
+                {{-- Garis Pemisah --}}
                 <div class="h-6 border-l border-gray-300 mx-1 hidden sm:block"></div>
 
+                {{-- Tombol Bulk Upload --}}
                 <a href="{{ route('ekskul.create_bulk', $spj->belanja_id) }}"
                     class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-md shadow-sm transition ease-in-out duration-150">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -43,6 +41,17 @@
                     Mode Bulk Upload
                 </a>
 
+                {{-- Tombol Laporan Simple --}}
+                <a href="{{ route('ekskul.create_sederhana', $spj->belanja_id) }}"
+                    class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-md shadow-sm transition ease-in-out duration-150">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                    Laporan Simple
+                </a>
+
+                {{-- Tombol Kembali --}}
                 <a href="{{ route('ekskul.index') }}"
                     class="inline-flex items-center px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-bold rounded-md transition ease-in-out duration-150">
                     &larr; Kembali
