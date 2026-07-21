@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             // Menghubungkan foto ke baris laporan pertemuan spesifik
             $table->foreignId('laporan_ekskul_id')->constrained('laporan_ekskuls')->cascadeOnDelete();
-            $table->string('path_foto');
+            $table->string('path_foto')->nullable();
             $table->timestamps();
         });
     }

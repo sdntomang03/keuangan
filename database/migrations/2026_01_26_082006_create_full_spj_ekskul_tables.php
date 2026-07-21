@@ -47,7 +47,7 @@ return new class extends Migration
             $table->foreignId('spj_ekskul_id')->constrained('spj_ekskul')->onDelete('cascade');
             $table->string('materi');
             $table->date('tanggal_kegiatan'); // Tgl: 2026-01-12
-            $table->string('foto_kegiatan');  // Path: spj/foto/xyz.jpg
+            $table->string('foto_kegiatan')->nullable();  // Path: spj/foto/xyz.jpg
 
             $table->timestamps();
         });
