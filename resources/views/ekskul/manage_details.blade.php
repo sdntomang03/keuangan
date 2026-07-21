@@ -5,7 +5,7 @@
                 {{ __('Kelola Jurnal Kegiatan') }}
             </h2>
 
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2">
                 {{-- Tombol Cetak Kwitansi --}}
                 <a href="{{ route('ekskul.cetak', $spj->id) }}" target="_blank"
                     class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-md shadow-sm transition ease-in-out duration-150">
@@ -28,8 +28,19 @@
                     Cetak Dokumentasi
                 </a>
 
+                {{-- Tombol Cetak Absensi Sederhana (BARU) --}}
+                <a href="{{ route('ekskul.cetak_absensi_sederhana', $spj->id) }}" target="_blank"
+                    class="inline-flex items-center px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold rounded-md shadow-sm transition ease-in-out duration-150">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        </path>
+                    </svg>
+                    Cetak Absensi Sederhana
+                </a>
+
                 {{-- Garis Pemisah --}}
-                <div class="h-6 border-l border-gray-300 mx-1 hidden sm:block"></div>
+                <div class="h-6 border-l border-gray-300 mx-1 hidden xl:block"></div>
 
                 {{-- Tombol Bulk Upload --}}
                 <a href="{{ route('ekskul.create_bulk', $spj->belanja_id) }}"
