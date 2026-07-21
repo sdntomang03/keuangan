@@ -948,4 +948,21 @@ class EkskulController extends Controller
             return back()->with('error', 'Terjadi kesalahan: '.$e->getMessage())->withInput();
         }
     }
+
+    /**
+     * CETAK ABSENSI SEDERHANA (Tabel + TTD + Lampiran Foto)
+     */
+    public function cetakAbsensiSederhana($id)
+    {
+        // Ambil Data SPJ, urutkan detail pertemuannya berdasarkan tanggal
+        $spj = SpjEkskul::with(['rekanan', 'ekskul', 'belanja'])
+            ->with(['details' => function ($query) {
+                $query->orderBy('tanggal_kegiatan', 'asc');
+            }])
+            ->findOrFail($id);
+
+        $sekolah = Sekolah::find(auth()->user()->sekolah_id);
+
+        return view('ekskul.cetak_absensi_sederhana', compact('spj', 'sekolah'));
+    }
 }
