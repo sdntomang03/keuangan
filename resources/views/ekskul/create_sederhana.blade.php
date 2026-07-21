@@ -41,7 +41,8 @@
                 </div>
             </div>
 
-            <form action="{{ route('ekskul.store_detail_bulk') }}" method="POST" enctype="multipart/form-data"
+            <!-- PERUBAHAN ACTION ROUTE DISINI -->
+            <form action="{{ route('ekskul.store_sederhana') }}" method="POST" enctype="multipart/form-data"
                 id="bulkForm">
                 @csrf
                 <input type="hidden" name="spj_ekskul_id" value="{{ $spj->id }}">
