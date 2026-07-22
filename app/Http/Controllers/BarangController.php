@@ -158,29 +158,84 @@ class BarangController extends Controller
         }
     }
 
-    // Halaman Pencarian Komponen
+    // Halaman Pencarian Komponen (Mendukung Server-Side DataTables)
     public function CariKomponen(Request $request)
     {
-        $query = Komponen::with('korek');
+        // 1. Jika Request adalah AJAX (Dari DataTables)
+        if ($request->ajax()) {
+            $query = Komponen::query(); // Hapus with('korek') jika tidak ditampilkan untuk menghemat query
 
-        // Filter berdasarkan Kode Rekening
-        if ($request->filled('kode_rekening')) {
-            $query->where('kode_rekening', $request->kode_rekening);
+            // Filter Berdasarkan Dropdown Kode Rekening
+            if ($request->filled('kode_rekening')) {
+                $query->where('kode_rekening', $request->kode_rekening);
+            }
+
+            // Hitung Total Data sebelum pencarian (Wajib untuk DataTables)
+            $recordsTotal = $query->count();
+
+            // Filter Pencarian dari Search Box DataTables
+            $searchValue = $request->input('search.value');
+            if ($searchValue) {
+                $query->where(function ($q) use ($searchValue) {
+                    $q->where('namakomponen', 'like', '%'.$searchValue.'%')
+                        ->orWhere('spek', 'like', '%'.$searchValue.'%')
+                        ->orWhere('kode_rekening', 'like', '%'.$searchValue.'%');
+                });
+            }
+
+            // Hitung Total Data setelah filter pencarian
+            $recordsFiltered = $query->count();
+
+            // Fitur Pengurutan (Sorting) dari klik Header Tabel
+            $orderColumnIndex = $request->input('order.0.column');
+            $orderDirection = $request->input('order.0.dir', 'asc');
+            // Pastikan urutan array ini sama persis dengan urutan <th> di HTML
+            $columns = ['kode_rekening', 'namakomponen', 'spek', 'satuan', 'harga', 'tahun'];
+
+            if (! is_null($orderColumnIndex) && isset($columns[$orderColumnIndex])) {
+                $query->orderBy($columns[$orderColumnIndex], $orderDirection);
+            } else {
+                $query->orderBy('id', 'desc'); // Default urutan jika tidak diklik
+            }
+
+            // Fitur Pagination (Paging limit & offset)
+            $start = $request->input('start', 0);
+            $length = $request->input('length', 25);
+            if ($length > 0) {
+                $query->offset($start)->limit($length);
+            }
+
+            // Ambil Data
+            $data = $query->get();
+
+            // Format Data Array untuk dikembalikan sebagai JSON
+            $formattedData = [];
+            foreach ($data as $item) {
+                $formattedData[] = [
+                    'kode_rekening' => $item->kode_rekening,
+                    'namakomponen' => $item->namakomponen,
+                    'spek' => $item->spek,
+                    // Kita bisa menyisipkan tag HTML langsung dari Controller
+                    'satuan' => '<span class="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-medium">'.$item->satuan.'</span>',
+                    'harga' => 'Rp '.number_format($item->harga, 0, ',', '.'),
+                    'tahun' => $item->tahun,
+                ];
+            }
+
+            // Return JSON sesuai standar format DataTables
+            return response()->json([
+                'draw' => intval($request->input('draw')),
+                'recordsTotal' => $recordsTotal,
+                'recordsFiltered' => $recordsFiltered,
+                'data' => $formattedData,
+            ]);
         }
 
-        // Pencarian berdasarkan Nama atau Spek
-        if ($request->filled('search')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('namakomponen', 'like', '%'.$request->search.'%')
-                    ->orWhere('spek', 'like', '%'.$request->search.'%');
-            });
-        }
-
-        // Paging agar ringan
-        $komponens = $query->get();
+        // 2. Jika Request Biasa (Load Halaman Pertama Kali)
         $koreks = Korek::orderBy('kode', 'asc')->get();
 
-        return view('komponen.index', compact('komponens', 'koreks'));
+        // Perhatikan kita tidak lagi me-load $komponens di sini karena akan di-load via AJAX
+        return view('komponen.index', compact('koreks'));
     }
 
     // Halaman Form Import
