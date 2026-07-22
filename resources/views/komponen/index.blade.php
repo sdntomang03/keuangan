@@ -54,16 +54,14 @@
 
             {{-- Table --}}
             <div class="p-6 overflow-x-auto">
-                {{-- Tambahkan table-fixed agar lebar kolom konsisten --}}
                 <table id="tabel-komponen" class="w-full text-left border-collapse table-fixed">
                     <thead>
                         <tr class="bg-blue-600 text-white text-sm uppercase tracking-wider">
-                            {{-- Atur lebar secara proporsional dengan persentase --}}
-
+                            {{-- Class w-[x%] tetap disimpan sebagai fallback --}}
                             <th class="px-4 py-3 font-semibold w-[15%]">Kode Rekening</th>
                             <th class="px-4 py-3 font-semibold w-[22%]">Nama Komponen</th>
-                            <th class="px-4 py-3 font-semibold w-[33%]">Spesifikasi</th>
-                            <th class="px-4 py-3 font-semibold w-[10%]">Satuan</th>
+                            <th class="px-4 py-3 font-semibold w-[35%]">Spesifikasi</th>
+                            <th class="px-4 py-3 font-semibold w-[8%]">Satuan</th>
                             <th class="px-4 py-3 font-semibold text-right w-[12%]">Harga</th>
                             <th class="px-4 py-3 rounded-tr-lg font-semibold text-center w-[8%]">Tahun</th>
                         </tr>
@@ -71,12 +69,12 @@
                     <tbody class="bg-white divide-y divide-gray-200">
                         @foreach($komponens as $komp)
                         <tr class="hover:bg-blue-50 transition-colors duration-150">
-
                             <td class="px-4 py-3 text-sm text-gray-600 break-words">{{ $komp->kode_rekening }}</td>
 
-                            {{-- break-words dan whitespace-normal akan memaksa teks panjang turun ke bawah --}}
                             <td class="px-4 py-3 text-sm text-gray-900 break-words whitespace-normal">{{
                                 $komp->namakomponen }}</td>
+
+                            {{-- Kolom spesifikasi dengan format teks penuh --}}
                             <td class="px-4 py-3 text-sm text-gray-500 break-words whitespace-normal">{{ $komp->spek }}
                             </td>
 
@@ -110,7 +108,15 @@
                 "pageLength": 25,
                 "ordering": true,
                 "responsive": true,
-                "autoWidth": false, // WAJIB: Mencegah DataTables mengabaikan lebar tabel Tailwind Anda
+                "autoWidth": false, // Mematikan autoWidth bawaan
+                "columnDefs": [ // MEMAKSA lebar setiap kolom dari sisi DataTables
+                    { "width": "15%", "targets": 0 }, // Kode Rekening
+                    { "width": "22%", "targets": 1 }, // Nama Komponen
+                    { "width": "35%", "targets": 2 }, // Spesifikasi (Paling Lebar)
+                    { "width": "8%",  "targets": 3 }, // Satuan (Kecil)
+                    { "width": "12%", "targets": 4 }, // Harga
+                    { "width": "8%",  "targets": 5 }  // Tahun
+                ],
                 "dom": '<"flex flex-col sm:flex-row justify-between items-center mb-4"lf>rt<"flex flex-col sm:flex-row justify-between items-center mt-4"ip>'
             });
         });
