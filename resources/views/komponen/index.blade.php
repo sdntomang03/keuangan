@@ -59,10 +59,10 @@
                     <thead>
                         <tr class="bg-blue-600 text-white text-sm uppercase tracking-wider">
                             {{-- Atur lebar secara proporsional dengan persentase --}}
-                            <th class="px-4 py-3 rounded-tl-lg font-semibold text-center w-[8%]">ID</th>
+
                             <th class="px-4 py-3 font-semibold w-[15%]">Kode Rekening</th>
                             <th class="px-4 py-3 font-semibold w-[22%]">Nama Komponen</th>
-                            <th class="px-4 py-3 font-semibold w-[25%]">Spesifikasi</th>
+                            <th class="px-4 py-3 font-semibold w-[33%]">Spesifikasi</th>
                             <th class="px-4 py-3 font-semibold w-[10%]">Satuan</th>
                             <th class="px-4 py-3 font-semibold text-right w-[12%]">Harga</th>
                             <th class="px-4 py-3 rounded-tr-lg font-semibold text-center w-[8%]">Tahun</th>
@@ -71,8 +71,7 @@
                     <tbody class="bg-white divide-y divide-gray-200">
                         @foreach($komponens as $komp)
                         <tr class="hover:bg-blue-50 transition-colors duration-150">
-                            <td class="px-4 py-3 text-sm text-center text-gray-900 font-medium">{{ $komp->idkomponen }}
-                            </td>
+
                             <td class="px-4 py-3 text-sm text-gray-600 break-words">{{ $komp->kode_rekening }}</td>
 
                             {{-- break-words dan whitespace-normal akan memaksa teks panjang turun ke bawah --}}
