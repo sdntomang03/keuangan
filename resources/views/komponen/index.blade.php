@@ -54,16 +54,18 @@
 
             {{-- Table --}}
             <div class="p-6 overflow-x-auto">
-                <table id="tabel-komponen" class="w-full text-left border-collapse">
+                {{-- Tambahkan table-fixed agar lebar kolom konsisten --}}
+                <table id="tabel-komponen" class="w-full text-left border-collapse table-fixed">
                     <thead>
                         <tr class="bg-blue-600 text-white text-sm uppercase tracking-wider">
-                            <th class="px-4 py-3 rounded-tl-lg font-semibold text-center w-20">ID</th>
-                            <th class="px-4 py-3 font-semibold w-40">Kode Rekening</th>
-                            <th class="px-4 py-3 font-semibold">Nama Komponen</th>
-                            <th class="px-4 py-3 font-semibold">Spesifikasi</th>
-                            <th class="px-4 py-3 font-semibold w-24">Satuan</th>
-                            <th class="px-4 py-3 font-semibold text-right w-32">Harga</th>
-                            <th class="px-4 py-3 rounded-tr-lg font-semibold text-center w-20">Tahun</th>
+                            {{-- Atur lebar secara proporsional dengan persentase --}}
+                            <th class="px-4 py-3 rounded-tl-lg font-semibold text-center w-[8%]">ID</th>
+                            <th class="px-4 py-3 font-semibold w-[15%]">Kode Rekening</th>
+                            <th class="px-4 py-3 font-semibold w-[22%]">Nama Komponen</th>
+                            <th class="px-4 py-3 font-semibold w-[25%]">Spesifikasi</th>
+                            <th class="px-4 py-3 font-semibold w-[10%]">Satuan</th>
+                            <th class="px-4 py-3 font-semibold text-right w-[12%]">Harga</th>
+                            <th class="px-4 py-3 rounded-tr-lg font-semibold text-center w-[8%]">Tahun</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
@@ -71,9 +73,14 @@
                         <tr class="hover:bg-blue-50 transition-colors duration-150">
                             <td class="px-4 py-3 text-sm text-center text-gray-900 font-medium">{{ $komp->idkomponen }}
                             </td>
-                            <td class="px-4 py-3 text-sm text-gray-600">{{ $komp->kode_rekening }}</td>
-                            <td class="px-4 py-3 text-sm text-gray-900">{{ $komp->namakomponen }}</td>
-                            <td class="px-4 py-3 text-sm text-gray-500">{{ $komp->spek }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-600 break-words">{{ $komp->kode_rekening }}</td>
+
+                            {{-- break-words dan whitespace-normal akan memaksa teks panjang turun ke bawah --}}
+                            <td class="px-4 py-3 text-sm text-gray-900 break-words whitespace-normal">{{
+                                $komp->namakomponen }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-500 break-words whitespace-normal">{{ $komp->spek }}
+                            </td>
+
                             <td class="px-4 py-3 text-sm text-gray-600">
                                 <span class="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-medium">{{
                                     $komp->satuan }}</span>
@@ -104,6 +111,7 @@
                 "pageLength": 25,
                 "ordering": true,
                 "responsive": true,
+                "autoWidth": false, // WAJIB: Mencegah DataTables mengabaikan lebar tabel Tailwind Anda
                 "dom": '<"flex flex-col sm:flex-row justify-between items-center mb-4"lf>rt<"flex flex-col sm:flex-row justify-between items-center mt-4"ip>'
             });
         });
