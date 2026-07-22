@@ -8,7 +8,7 @@
             <h3 class="page-title text-primary"><i class="fa fa-upload"></i>&nbsp; Import JSON Komponen</h3>
         </div>
         <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 text-right">
-            <a href="{{ route('komponen.index') }}" class="btn btn-outline btn-info waves-effect waves-light m-t-5">
+            <a href="{{ route('komponenrkas.index') }}" class="btn btn-outline btn-info waves-effect waves-light m-t-5">
                 <i class="ti-back-left m-r-5"></i> <span>Kembali ke Daftar</span>
             </a>
         </div>
@@ -33,8 +33,8 @@
                 </div>
                 @endif
 
-                <form class="form-horizontal form-material" action="{{ route('komponen.storeImport') }}" method="POST"
-                    enctype="multipart/form-data">
+                <form class="form-horizontal form-material" action="{{ route('komponenrkas.storeImport') }}"
+                    method="POST" enctype="multipart/form-data">
                     @csrf
 
                     <div class="form-group m-t-20">
@@ -71,7 +71,7 @@
 
                     <div class="form-group text-right m-t-40 m-b-0">
                         <div class="col-xs-12">
-                            <a href="{{ route('komponen.index') }}"
+                            <a href="{{ route('komponenrkas.index') }}"
                                 class="btn btn-default waves-effect waves-light m-r-10">Batal</a>
                             <button class="btn btn-info text-uppercase waves-effect waves-light" type="submit">
                                 <i class="fa fa-save"></i> Simpan Import
