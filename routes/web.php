@@ -158,6 +158,9 @@ Route::middleware(['permission:view-anggaran|kelola-anggaran|input-belanja'])->g
 
     // Barang, Persediaan & Arkas (Read Only)
     Route::get('/barang', [BarangController::class, 'index'])->name('barang.index');
+    Route::get('/komponenrkas', [BarangController::class, 'CariKomponen'])->name('komponenrkas.index');
+    Route::get('/komponenrkas/import', [BarangController::class, 'createImport'])->name('komponenrkas.import');
+    Route::post('/komponenrkas/import', [BarangController::class, 'storeImport'])->name('komponenrkas.storeImport');
     Route::get('/api/barang/search', [BarangController::class, 'search'])->name('api.barang.search');
     Route::get('/persediaan', [PersediaanController::class, 'index'])->name('persediaan.index');
     Route::get('/arkas', [ArkasController::class, 'index'])->name('arkas.index');

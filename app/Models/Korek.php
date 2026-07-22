@@ -19,4 +19,9 @@ class Korek extends Model
         // Pastikan 'korek_id' adalah nama kolom foreign key di tabel komponen_manuals
         return $this->hasMany(KomponenManual::class, 'korek_id');
     }
+
+    public function komponens()
+    {
+        return $this->hasMany(Komponen::class, 'kode_rekening', 'kode');
+    }
 }

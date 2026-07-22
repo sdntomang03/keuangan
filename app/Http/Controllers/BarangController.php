@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Imports\BarangImport;
 use App\Models\Barang;
+use App\Models\Komponen;
+use App\Models\Korek;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -154,5 +156,87 @@ class BarangController extends Controller
 
             return back()->with('error', 'Terjadi kesalahan sistem saat mencoba mengosongkan data.');
         }
+    }
+
+    // Halaman Pencarian Komponen
+    public function CariKomponen(Request $request)
+    {
+        $query = Komponen::with('korek');
+
+        // Filter berdasarkan Kode Rekening
+        if ($request->filled('kode_rekening')) {
+            $query->where('kode_rekening', $request->kode_rekening);
+        }
+
+        // Pencarian berdasarkan Nama atau Spek
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('namakomponen', 'like', '%'.$request->search.'%')
+                    ->orWhere('spek', 'like', '%'.$request->search.'%');
+            });
+        }
+
+        // Paging agar ringan
+        $komponens = $query->paginate(20)->withQueryString();
+        $koreks = Korek::orderBy('kode', 'asc')->get();
+
+        return view('komponen.index', compact('komponens', 'koreks'));
+    }
+
+    // Halaman Form Import
+    public function createImport()
+    {
+        $koreks = Korek::orderBy('kode', 'asc')->get();
+
+        return view('komponen.import', compact('koreks'));
+    }
+
+    // Proses Import JSON
+    public function storeImport(Request $request)
+    {
+        $request->validate([
+            'json_files' => 'required',
+            'json_files.*' => 'mimes:json,txt',
+            'tahun' => 'required|digits:4',
+        ]);
+
+        $count = 0;
+
+        foreach ($request->file('json_files') as $file) {
+            // Ambil data JSON dari file
+            $jsonContent = file_get_contents($file->getRealPath());
+            $data = json_decode($jsonContent, true);
+
+            // Coba ambil kode rekening dari nama file (Format: 5.1.02...._Nama.json)
+            $filename = $file->getClientOriginalName();
+            preg_match('/^[0-9\.]+/', $filename, $matches);
+            $kodeRekeningFile = $matches[0] ?? null;
+
+            // Gunakan kode dari nama file, ATAU dari input form jika tidak terdeteksi
+            $kodeRekening = $kodeRekeningFile ?: $request->kode_rekening;
+
+            // Pastikan format JSON sesuai (memiliki array 'data')
+            if (isset($data['data']) && is_array($data['data'])) { // [cite: 2]
+                foreach ($data['data'] as $item) { // [cite: 2]
+                    // Gunakan updateOrCreate untuk menghindari data ganda
+                    Komponen::updateOrCreate(
+                        [
+                            'idkomponen' => $item['idkomponen'], // [cite: 2]
+                            'tahun' => $request->tahun,
+                        ],
+                        [
+                            'kode_rekening' => $kodeRekening,
+                            'namakomponen' => $item['namakomponen'], // [cite: 2]
+                            'spek' => $item['spek'], // [cite: 2]
+                            'satuan' => $item['satuan'], // [cite: 2]
+                            'harga' => $item['harga'], // [cite: 2]
+                        ]
+                    );
+                    $count++;
+                }
+            }
+        }
+
+        return redirect()->route('komponen.index')->with('success', "$count komponen berhasil di-import!");
     }
 }
