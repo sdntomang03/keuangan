@@ -177,7 +177,7 @@ class BarangController extends Controller
         }
 
         // Paging agar ringan
-        $komponens = $query->paginate(20)->withQueryString();
+        $komponens = $query->get();
         $koreks = Korek::orderBy('kode', 'asc')->get();
 
         return view('komponen.index', compact('komponens', 'koreks'));

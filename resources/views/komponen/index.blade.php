@@ -1,4 +1,7 @@
 <x-app-layout>
+    {{-- Tambahkan CSS DataTables --}}
+    <link href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap.min.css" rel="stylesheet">
+
     <div class="container-fluid">
         {{-- Page Title --}}
         <div class="row bg-title">
@@ -25,14 +28,14 @@
             <div class="col-md-12 col-lg-12 col-sm-12 col-xs-12">
                 <div class="white-box border-top-lg border-top-blue">
 
-                    {{-- Form Filter & Pencarian --}}
+                    {{-- Form Filter Kode Rekening (Server-side) --}}
                     <div class="row m-b-20 p-b-20 b-b">
                         <form action="{{ route('komponenrkas.index') }}" method="GET" id="form-pencarian">
-                            <div class="col-md-4">
-                                <label class="font-bold">Kode Rekening</label>
+                            <div class="col-md-6">
+                                <label class="font-bold">Filter berdasarkan Kode Rekening</label>
                                 <select name="kode_rekening" class="form-control select2"
                                     onchange="document.getElementById('form-pencarian').submit();">
-                                    <option value="">-- Semua Rekening --</option>
+                                    <option value="">-- Tampilkan Semua Rekening --</option>
                                     @foreach($koreks as $korek)
                                     <option value="{{ $korek->kode }}" {{ request('kode_rekening')==$korek->kode ?
                                         'selected' : '' }}>
@@ -41,23 +44,12 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-md-6">
-                                <label class="font-bold">Pencarian Kata Kunci</label>
-                                <input type="text" name="search" class="form-control"
-                                    placeholder="Cari Nama Komponen atau Spesifikasi..."
-                                    value="{{ request('search') }}">
-                            </div>
-                            <div class="col-md-2">
-                                <label>&nbsp;</label>
-                                <button type="submit" class="btn btn-info btn-block waves-effect waves-light"><i
-                                        class="fa fa-search"></i> Cari</button>
-                            </div>
                         </form>
                     </div>
 
-                    {{-- Tabel Data --}}
+                    {{-- Tabel Data dengan DataTables --}}
                     <div class="table-responsive">
-                        <table class="table table-hover table-striped m-t-10">
+                        <table id="tabel-komponen" class="table table-hover table-striped m-t-10 w-100">
                             <thead>
                                 <tr class="bg-blue-600">
                                     <th class="text-white text-center" width="80">ID</th>
@@ -70,7 +62,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($komponens as $komp)
+                                @foreach($komponens as $komp)
                                 <tr>
                                     <td class="text-center">{{ $komp->idkomponen }}</td>
                                     <td>{{ $komp->kode_rekening }}</td>
@@ -80,28 +72,32 @@
                                     <td class="text-right">{{ number_format($komp->harga, 0, ',', '.') }}</td>
                                     <td class="text-center">{{ $komp->tahun }}</td>
                                 </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="7" class="text-center" style="padding: 20px;">
-                                        <i class="fa fa-folder-open-o fa-3x text-muted m-b-10"></i><br>
-                                        <span class="text-muted">Data komponen belum tersedia atau tidak
-                                            ditemukan.</span>
-                                    </td>
-                                </tr>
-                                @endforelse
+                                @endforeach
                             </tbody>
                         </table>
-                    </div>
-
-                    {{-- Pagination --}}
-                    <div class="row m-t-20">
-                        <div class="col-md-12 text-right">
-                            {{ $komponens->links() }}
-                        </div>
                     </div>
 
                 </div>
             </div>
         </div>
     </div>
+
+    {{-- Tambahkan jQuery dan JS DataTables --}}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap.min.js"></script>
+
+    {{-- Inisialisasi DataTables --}}
+    <script>
+        $(document).ready(function() {
+            $('#tabel-komponen').DataTable({
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.11.5/i18n/id.json" // Terjemahan bahasa Indonesia
+                },
+                "pageLength": 25, // Jumlah data per halaman secara default
+                "ordering": true, // Mengaktifkan fitur pengurutan klik di header
+                "responsive": true
+            });
+        });
+    </script>
 </x-app-layout>
