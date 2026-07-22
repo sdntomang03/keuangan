@@ -237,6 +237,6 @@ class BarangController extends Controller
             }
         }
 
-        return redirect()->route('komponen.index')->with('success', "$count komponen berhasil di-import!");
+        return redirect()->route('komponenrkas.index')->with('success', "$count komponen berhasil di-import!");
     }
 }
