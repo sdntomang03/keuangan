@@ -61,11 +61,32 @@ class RkasImportService
                     $barisFisik = $rowNum + 1;
                     $namaKompLog = $item['namakomponen'] ?? 'Komponen Tanpa Nama';
 
-                    // Cek ketersediaan idblrinci (wajib)
-                    $hasIdblrinci = array_key_exists('idblrinci', $item) && ! empty($item['idblrinci']);
-                    if (! $hasIdblrinci) {
-                        continue;
+                    // 1. Buat dua versi ID
+                    $legacyId = $jenisAnggaran.$item['idblrinci'];                 // Format Lama (Versi 1)
+                    $uniqueId = $jenisAnggaran.$item['idblrinci'].$anggaran->id; // Format Baru
+
+                    // 2. AUTO-MIGRATION DATABASE (Induk & Anak)
+                    // Cek apakah di database masih ada data yang tertinggal pakai format lama
+                    $cekLegacy = Rkas::where('idblrinci', $legacyId)
+                        ->where('anggaran_id', $anggaran->id)
+                        ->first();
+
+                    if ($cekLegacy) {
+                        // LANGKAH A: Update ID di tabel anak (belanja_rincis) agar referensi tidak hilang.
+                        // Catatan: Jika nama kolom pengikat di tabel belanja_rincis BUKAN 'idblrinci',
+                        // silakan ganti 'idblrinci' di sebelah kiri dengan nama kolom yang benar (misal: 'rkas_idblrinci').
+                        $cekLegacy->belanjaRincis()->update([
+                            'idblrinci' => $uniqueId,
+                        ]);
+
+                        // LANGKAH B: Setelah anak aman, baru update ID di tabel induk (rkas).
+                        $cekLegacy->update([
+                            'idblrinci' => $uniqueId,
+                        ]);
                     }
+
+                    // 3. Daftarkan ID baru untuk diproses agar lolos dari Aturan Emas 2
+                    $processedIds[] = $uniqueId;
 
                     $uniqueId = $jenisAnggaran.$item['idblrinci'].$anggaran->id;
                     $processedIds[] = $uniqueId;

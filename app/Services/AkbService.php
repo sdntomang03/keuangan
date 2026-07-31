@@ -16,9 +16,11 @@ class AkbService
      */
     public function importData($files, $anggaran, $settingId)
     {
+        // 1. PERBAIKAN: Definisikan $mapAnggaran agar tidak error
+        $mapAnggaran = ['bos' => 10, 'bop' => 20];
 
         $singkatan = strtolower($anggaran->singkatan);
-        $jenisAnggaran = $mapAnggaran[$singkatan] ?? 30; // Default 30 jika tidak terdaftar
+        $jenisAnggaran = $mapAnggaran[$singkatan] ?? 30; // Sekarang aman digunakan[cite: 2]
 
         $count = 0;
 
@@ -27,10 +29,28 @@ class AkbService
             $items = $content['data'] ?? [];
 
             foreach ($items as $item) {
+                // 2. AUTO-MIGRATION AKB
+                $legacyId = $jenisAnggaran.$item['idblrinci'];                 // Format Lama
+                $uniqueId = $jenisAnggaran.$item['idblrinci'].$anggaran->id; // Format Baru
+
+                $cekLegacy = Akb::where('idblrinci', $legacyId)
+                    ->where('anggaran_id', $anggaran->id)
+                    ->first();
+
+                if ($cekLegacy) {
+                    // Update ID di tabel Akb agar sinkron kembali dengan RKAS
+                    $cekLegacy->update(['idblrinci' => $uniqueId]);
+
+                    // Update juga tabel anak (AkbRinci) untuk menjaga konsistensi data historis
+                    AkbRinci::where('akb_id', $cekLegacy->id)
+                        ->update(['idblrinci' => $uniqueId]);
+                }
+
+                // 3. PROSES SIMPAN SEPERTI BIASA
                 Akb::updateOrCreate(
                     [
-                        // KUNCI PENCARIAN
-                        'idblrinci' => $jenisAnggaran.$item['idblrinci'].$anggaran->id,
+                        // Gunakan ID Baru untuk pencarian/penyimpanan[cite: 2]
+                        'idblrinci' => $uniqueId,
                     ],
                     [
                         'idakun' => $item['idakun'] ?? null,
@@ -58,7 +78,7 @@ class AkbService
                         'anggaran_id' => $anggaran->id,
                         'setting_id' => $settingId,
                         'created_at' => now(),
-                        'updated' => now(),
+                        'updated_at' => now(),
                     ]
                 );
                 $count++;
