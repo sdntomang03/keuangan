@@ -367,10 +367,7 @@
                 style="border: 2px solid #cbd5e1; border-radius: 8px; padding: 15px; text-align: center; background: #f8fafc !important; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; page-break-inside: avoid;">
                 <img src="{{ asset('storage/' . $detail->foto_kegiatan) }}" alt="Foto Kegiatan"
                     style="width: 100%; max-height: 400px; object-fit: contain; background: #e2e8f0 !important; border-radius: 6px;">
-                <div style="margin-top: 10px; font-weight: 600; color: var(--text-muted); font-size: 11pt;">
-                    Kegiatan Tanggal: {{
-                    \Carbon\Carbon::parse($detail->tanggal_kegiatan)->locale('id')->translatedFormat('d F Y') }}
-                </div>
+
             </div>
             @endforeach
         </div>
@@ -383,9 +380,7 @@
                 style="border: 2px solid #cbd5e1; border-radius: 8px; padding: 10px; text-align: center; background: #f8fafc !important; display: flex; flex-direction: column; align-items: center; justify-content: center; page-break-inside: avoid;">
                 <img src="{{ asset('storage/' . $detail->foto_kegiatan) }}" alt="Foto Kegiatan"
                     style="width: 100%; max-height: 380px; object-fit: contain; background: #e2e8f0 !important; border-radius: 6px;">
-                <div style="margin-top: 10px; font-weight: 600; color: var(--text-muted); font-size: 10pt;">
-                    {{ \Carbon\Carbon::parse($detail->tanggal_kegiatan)->locale('id')->translatedFormat('d F Y') }}
-                </div>
+
             </div>
             @endforeach
         </div>
