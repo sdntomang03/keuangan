@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex justify-between items-center">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
             <div>
                 <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
                     {{ __('Daftar SPJ Honor Ekstrakurikuler') }}
@@ -9,10 +9,51 @@
                     Anggaran Aktif: <span class="font-bold text-indigo-600">{{ $anggaran->nama_anggaran }}</span>
                 </p>
             </div>
-            <a href="{{ route('ekskul.create') }}"
-                class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded shadow transition">
-                + Input Honor Baru
-            </a>
+
+            {{-- Kumpulan Tombol --}}
+            <div class="flex flex-wrap items-center gap-2">
+                {{-- Tombol Cetak Semua Kwitansi --}}
+                <a href="{{ route('ekskul.cetak_semua') }}" target="_blank"
+                    class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 px-3 rounded-lg border border-gray-300 shadow-sm transition text-xs flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z">
+                        </path>
+                    </svg>
+                    Semua Kwitansi
+                </a>
+
+                {{-- Tombol Cetak Semua Laporan (Absensi) --}}
+                <a href="{{ route('ekskul.cetak_absensi_semua') }}" target="_blank"
+                    class="bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold py-2 px-3 rounded-lg border border-blue-200 shadow-sm transition text-xs flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4">
+                        </path>
+                    </svg>
+                    Semua Laporan
+                </a>
+
+                {{-- Tombol Cetak Semua Laporan Sederhana --}}
+                <a href="{{ route('ekskul.cetak_absensi_sederhana_semua') }}" target="_blank"
+                    class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold py-2 px-3 rounded-lg border border-emerald-200 shadow-sm transition text-xs flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        </path>
+                    </svg>
+                    Semua Laporan Sederhana
+                </a>
+
+                {{-- Pembatas --}}
+                <div class="w-px h-8 bg-gray-300 mx-1"></div>
+
+                {{-- Tombol Input Baru --}}
+                <a href="{{ route('ekskul.create') }}"
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg shadow transition text-sm flex items-center gap-1">
+                    + Input Honor Baru
+                </a>
+            </div>
         </div>
     </x-slot>
 

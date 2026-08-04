@@ -305,7 +305,10 @@ Route::middleware(['permission:input-ekskul|kelola-anggaran'])->group(function (
         Route::post('/bulk-store', [EkskulController::class, 'store_detail_bulk'])->name('store_detail_bulk');
         Route::get('/laporan-simple/{belanjaId}', [EkskulController::class, 'create_sederhana'])->name('create_sederhana');
         Route::post('/sederhana-store', [EkskulController::class, 'store_sederhana'])->name('store_sederhana');
-        Route::get('/ekskul/{id}/cetak-absensi-sederhana', [EkskulController::class, 'cetakAbsensiSederhana'])->name('cetak_absensi_sederhana');
+        Route::get('/{id}/cetak-absensi-sederhana', [EkskulController::class, 'cetakAbsensiSederhana'])->name('cetak_absensi_sederhana');
+        Route::get('/cetak-semua-kwitansi', [EkskulController::class, 'cetakSemua'])->name('cetak_semua');
+        Route::get('/cetak-semua-laporan', [EkskulController::class, 'cetakAbsensiSemua'])->name('cetak_absensi_semua');
+        Route::get('/cetak-semua-laporan-sederhana', [EkskulController::class, 'cetakAbsensiSederhanaSemua'])->name('cetak_absensi_sederhana_semua');
     });
 
     Route::get('/ekskul-laporan', [EkskulLaporanController::class, 'index'])->name('ekskul.laporan.index');
