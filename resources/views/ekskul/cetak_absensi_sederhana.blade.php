@@ -190,11 +190,6 @@
 
         /* PRINT CONFIGURATION */
         @media print {
-            body {
-                background: none;
-                padding: 0;
-                margin: 0;
-            }
 
             .no-print {
                 display: none !important;
@@ -215,17 +210,6 @@
                 border-radius: 0;
                 box-shadow: none;
                 page-break-after: always;
-            }
-
-            .title-section h2 {
-                background: var(--primary) !important;
-                color: white !important;
-            }
-
-            .rekap-table th {
-                background-color: var(--primary) !important;
-                color: white !important;
-                -webkit-print-color-adjust: exact;
             }
         }
     </style>
