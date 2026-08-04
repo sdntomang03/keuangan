@@ -294,7 +294,7 @@
             }
 
             // Membangun Prompt untuk Gemini AI
-            const prompt = `Bertindaklah sebagai instruktur ekstrakurikuler sekolah.
+            const prompt = `Bertindaklah sebagai instruktur ekstrakurikuler sekolah dasar.
 Buatkan kurikulum/materi untuk kegiatan ekstrakurikuler "${ekskulName}" pada Triwulan ke-${triwulanKe} selama${jumlahPertemuan} pertemuan.
 
 PANDUAN TINGKAT KESULITAN:
