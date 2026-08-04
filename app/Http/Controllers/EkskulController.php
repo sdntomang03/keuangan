@@ -965,44 +965,4 @@ class EkskulController extends Controller
 
         return view('ekskul.cetak_absensi_sederhana', compact('spj', 'sekolah'));
     }
-
-    /**
-     * CETAK SEMUA ABSENSI & DOKUMENTASI (Lengkap)
-     */
-    public function cetakAbsensiSemua()
-    {
-        // 1. Ambil SEMUA data SPJ Ekskul untuk sekolah user saat ini
-        $spjs = SpjEkskul::with(['rekanan', 'ekskul', 'belanja'])
-            ->with(['details' => function ($query) {
-                $query->orderBy('tanggal_kegiatan', 'asc');
-            }])
-            ->whereHas('belanja.anggaran', function ($query) {
-                $query->where('sekolah_id', auth()->user()->sekolah_id);
-            })
-            ->get();
-
-        $sekolah = Sekolah::find(auth()->user()->sekolah_id);
-
-        return view('ekskul.cetak_absensi_massal', compact('spjs', 'sekolah'));
-    }
-
-    /**
-     * CETAK SEMUA ABSENSI & DOKUMENTASI (Sederhana)
-     */
-    public function cetakAbsensiSederhanaSemua()
-    {
-        // 1. Ambil SEMUA data SPJ Ekskul untuk sekolah user saat ini
-        $spjs = SpjEkskul::with(['rekanan', 'ekskul', 'belanja'])
-            ->with(['details' => function ($query) {
-                $query->orderBy('tanggal_kegiatan', 'asc');
-            }])
-            ->whereHas('belanja.anggaran', function ($query) {
-                $query->where('sekolah_id', auth()->user()->sekolah_id);
-            })
-            ->get();
-
-        $sekolah = Sekolah::find(auth()->user()->sekolah_id);
-
-        return view('ekskul.cetak_absensi_sederhana_massal', compact('spjs', 'sekolah'));
-    }
 }
