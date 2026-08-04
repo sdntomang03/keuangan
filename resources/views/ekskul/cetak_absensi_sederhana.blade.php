@@ -210,6 +210,8 @@
                 height: auto;
                 min-height: 330mm;
                 border-top: 8px solid var(--primary) !important;
+                background: var(--bg-page);
+                box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
                 padding: 15mm;
                 margin: 0;
                 border-radius: 0;
