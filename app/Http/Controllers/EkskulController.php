@@ -967,24 +967,6 @@ class EkskulController extends Controller
     }
 
     /**
-     * CETAK KWITANSI MASSAL
-     */
-    public function cetakSemua()
-    {
-        // 1. Ambil SEMUA data SPJ Ekskul sekolah user login melalui relasi anggaran
-        $spjs = SpjEkskul::with(['belanja.korek', 'belanja.anggaran', 'rekanan', 'ekskul'])
-            ->whereHas('belanja.anggaran', function ($query) {
-                $query->where('sekolah_id', auth()->user()->sekolah_id);
-            })
-            ->get();
-
-        // 2. Data Sekolah
-        $sekolah = Sekolah::with('Sudin')->find(auth()->user()->sekolah_id);
-
-        return view('ekskul.cetak_kwitansi_massal', compact('spjs', 'sekolah'));
-    }
-
-    /**
      * CETAK SEMUA ABSENSI & DOKUMENTASI (Lengkap)
      */
     public function cetakAbsensiSemua()
