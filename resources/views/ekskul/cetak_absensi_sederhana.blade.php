@@ -13,7 +13,7 @@
         rel="stylesheet">
 
     <style>
-        /* BASE STYLES & VARIABLES (Diadaptasi dari Desain Sebelumnya) */
+        /* BASE STYLES & VARIABLES */
         :root {
             --primary: #1e3a8a;
             --primary-light: #3b82f6;
@@ -35,10 +35,48 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        .btn-print {
+        /* FLOATING CONTROLS */
+        .floating-controls {
             position: fixed;
             bottom: 30px;
             right: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 15px;
+            z-index: 100;
+        }
+
+        .layout-toggles {
+            background: white;
+            padding: 5px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            gap: 5px;
+            border: 1px solid var(--border-color);
+        }
+
+        .layout-toggles a {
+            padding: 8px 16px;
+            text-decoration: none;
+            font-size: 10pt;
+            font-weight: 600;
+            color: var(--text-muted);
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .layout-toggles a:hover {
+            background: #f1f5f9;
+        }
+
+        .layout-toggles a.active {
+            background: var(--primary-light);
+            color: white;
+        }
+
+        .btn-print {
             background: linear-gradient(135deg, var(--primary-light), var(--primary));
             color: white;
             padding: 12px 24px;
@@ -48,12 +86,17 @@
             font-weight: 600;
             box-shadow: 0 10px 20px rgba(37, 99, 235, 0.4);
             cursor: pointer;
-            z-index: 100;
             display: flex;
             align-items: center;
             gap: 10px;
+            transition: transform 0.2s;
         }
 
+        .btn-print:active {
+            transform: scale(0.95);
+        }
+
+        /* PAGE & LAYOUT STYLES */
         .page {
             width: 215mm;
             min-height: 330mm;
@@ -156,40 +199,13 @@
             color: var(--text-muted);
         }
 
-        /* Gaya Khusus Grid Foto */
-        .photo-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .photo-item {
-            border: 2px solid var(--border-color);
-            border-radius: 8px;
-            padding: 10px;
-            text-align: center;
-            background: #f8fafc;
-            page-break-inside: avoid;
-        }
-
-        .photo-item img {
-            width: 100%;
-            height: 200px;
-            object-fit: contain;
-            border-radius: 4px;
-            margin-bottom: 10px;
-            background: #e2e8f0;
-        }
-
-        .photo-caption {
-            font-size: 10pt;
-            font-weight: 600;
-            color: var(--primary);
-        }
-
         /* PRINT CONFIGURATION */
         @media print {
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
             body {
                 background: none;
                 padding: 0;
@@ -210,8 +226,8 @@
                 height: auto;
                 min-height: 330mm;
                 border-top: 8px solid var(--primary) !important;
-                background: var(--bg-page);
-                box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+                background: var(--bg-page) !important;
+                box-shadow: none;
                 padding: 15mm;
                 margin: 0;
                 border-radius: 0;
@@ -219,14 +235,17 @@
             }
 
             .title-section h2 {
-                background: var(--primary) !important;
+                background: linear-gradient(135deg, var(--primary), #2a4365) !important;
                 color: white !important;
             }
 
             .rekap-table th {
                 background-color: var(--primary) !important;
                 color: white !important;
-                -webkit-print-color-adjust: exact;
+            }
+
+            .info-table {
+                background-color: #f8fafc !important;
             }
         }
     </style>
@@ -234,14 +253,28 @@
 
 <body>
 
-    <button onclick="window.print()" class="btn-print no-print">
-        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z">
-            </path>
-        </svg>
-        Cetak Dokumen
-    </button>
+    @php
+    // Ambil pengaturan layout dari URL, default ke 2 foto jika tidak ada parameter
+    $layoutMode = request('layout', 2);
+    // Pastikan nilainya hanya 2 atau 4
+    $layoutMode = in_array($layoutMode, [2, 4]) ? $layoutMode : 2;
+    @endphp
+
+    {{-- KONTROL MENGAMBANG UNTUK CETAK & PILIH LAYOUT --}}
+    <div class="floating-controls no-print">
+        <div class="layout-toggles">
+            <a href="?layout=2" class="{{ $layoutMode == 2 ? 'active' : '' }}">2 Foto / Lembar</a>
+            <a href="?layout=4" class="{{ $layoutMode == 4 ? 'active' : '' }}">4 Foto / Lembar</a>
+        </div>
+        <button onclick="window.print()" class="btn-print">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z">
+                </path>
+            </svg>
+            Cetak Dokumen
+        </button>
+    </div>
 
     {{-- HALAMAN 1: TABEL ABSENSI & MATERI --}}
     <div class="page">
@@ -283,7 +316,7 @@
                         \Carbon\Carbon::parse($detail->tanggal_kegiatan)->locale('id')->translatedFormat('l, d F Y') }}
                     </td>
                     <td>{!! strip_tags($detail->materi) !!}</td>
-                    <td></td> {{-- Kolom TTD Kosong untuk ditandatangani manual --}}
+                    <td></td> {{-- Kolom TTD Kosong --}}
                 </tr>
                 @empty
                 <tr>
@@ -315,30 +348,48 @@
 
     {{-- HALAMAN 2 & SETERUSNYA: LAMPIRAN FOTO --}}
     @php
-    // Saring hanya detail yang memiliki foto
     $photos = $spj->details->whereNotNull('foto_kegiatan');
     @endphp
 
     @if($photos->count() > 0)
-    {{-- Bagi kumpulan foto menjadi kelompok dengan maksimal 2 foto per halaman --}}
-    @foreach($photos->chunk(2) as $chunk)
+    {{-- Pembagian Array foto berdasarkan layout (2 atau 4) --}}
+    @foreach($photos->chunk($layoutMode) as $chunk)
     <div class="page" style="display: flex; flex-direction: column;">
         <div class="title-section" style="margin-bottom: 15px;">
             <h2>LAMPIRAN DOKUMENTASI <br> {{ $spj->ekskul->nama }}</h2>
         </div>
 
-        {{-- Wadah Vertikal Atas - Bawah --}}
+        @if($layoutMode == 2)
+        {{-- LAYOUT 2 FOTO PER HALAMAN (Atas & Bawah) --}}
         <div style="display: flex; flex-direction: column; gap: 30px; flex-grow: 1;">
-            @foreach($chunk as $index => $detail)
+            @foreach($chunk as $detail)
             <div
-                style="border: 2px solid #cbd5e1; border-radius: 8px; padding: 15px; text-align: center; background: #f8fafc; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; page-break-inside: avoid;">
-
+                style="border: 2px solid #cbd5e1; border-radius: 8px; padding: 15px; text-align: center; background: #f8fafc !important; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; page-break-inside: avoid;">
                 <img src="{{ asset('storage/' . $detail->foto_kegiatan) }}" alt="Foto Kegiatan"
-                    style="width: 100%; height: 400px; object-fit: contain; background: #e2e8f0; border-radius: 6px;">
-
+                    style="width: 100%; max-height: 400px; object-fit: contain; background: #e2e8f0 !important; border-radius: 6px;">
+                <div style="margin-top: 10px; font-weight: 600; color: var(--text-muted); font-size: 11pt;">
+                    Kegiatan Tanggal: {{
+                    \Carbon\Carbon::parse($detail->tanggal_kegiatan)->locale('id')->translatedFormat('d F Y') }}
+                </div>
             </div>
             @endforeach
         </div>
+        @else
+        {{-- LAYOUT 4 FOTO PER HALAMAN (Grid 2x2) --}}
+        <div
+            style="display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 20px; flex-grow: 1;">
+            @foreach($chunk as $detail)
+            <div
+                style="border: 2px solid #cbd5e1; border-radius: 8px; padding: 10px; text-align: center; background: #f8fafc !important; display: flex; flex-direction: column; align-items: center; justify-content: center; page-break-inside: avoid;">
+                <img src="{{ asset('storage/' . $detail->foto_kegiatan) }}" alt="Foto Kegiatan"
+                    style="width: 100%; max-height: 380px; object-fit: contain; background: #e2e8f0 !important; border-radius: 6px;">
+                <div style="margin-top: 10px; font-weight: 600; color: var(--text-muted); font-size: 10pt;">
+                    {{ \Carbon\Carbon::parse($detail->tanggal_kegiatan)->locale('id')->translatedFormat('d F Y') }}
+                </div>
+            </div>
+            @endforeach
+        </div>
+        @endif
     </div>
     @endforeach
     @endif
