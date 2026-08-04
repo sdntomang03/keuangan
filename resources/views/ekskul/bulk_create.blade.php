@@ -31,7 +31,8 @@
                 <div class="flex gap-8 z-10 bg-gray-50 px-6 py-3 rounded-lg border border-gray-100">
                     <div class="text-center">
                         <span class="block text-xs font-bold text-gray-400 uppercase tracking-wider">Kuota</span>
-                        <span class="text-lg font-bold text-indigo-600">{{ $spj->jumlah_pertemuan }}</span>
+                        <span class="text-lg font-bold text-indigo-600" id="totalPertemuan">{{ $spj->jumlah_pertemuan
+                            }}</span>
                     </div>
                     <div class="w-px h-10 bg-gray-200"></div>
                     <div class="text-center">
@@ -50,6 +51,32 @@
                     {{-- KOLOM KIRI: INPUT (STICKY) --}}
                     <div class="lg:col-span-1 lg:sticky lg:top-6 space-y-6">
 
+                        {{-- PANEL AI GENERATOR --}}
+                        <div
+                            class="bg-gradient-to-br from-indigo-50 to-white p-5 rounded-xl shadow-sm border border-indigo-100">
+                            <div class="flex items-center gap-2 mb-3">
+                                <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                </svg>
+                                <h4 class="font-bold text-indigo-900 text-sm">AI Materi Generator</h4>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="block text-[10px] font-bold text-indigo-400 uppercase mb-1">API Key
+                                    Gemini</label>
+                                <input type="password" id="apiKey" value="{{ env('GEMINI_API_KEY', '') }}"
+                                    placeholder="Masukkan API Key..."
+                                    class="w-full text-xs font-mono bg-white border-indigo-200 rounded focus:ring-indigo-500 focus:border-indigo-500 shadow-sm px-2 py-1.5">
+                            </div>
+
+                            <button type="button" onclick="generateMateriAI()" id="btnAi"
+                                class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-3 rounded shadow transition-all text-xs flex justify-center items-center gap-2">
+                                <span>✨ Generate <span id="kuotaAi">{{ $spj->jumlah_pertemuan }}</span> Materi</span>
+                            </button>
+                        </div>
+
                         <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                             <h4 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
                                 <span
@@ -61,32 +88,26 @@
                             <div class="mb-5">
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">List Materi (JSON)</label>
 
-                                {{-- CONTOH FORMAT JSON --}}
                                 <div
                                     class="text-xs text-slate-600 mb-2 bg-slate-50 p-3 rounded-lg border border-slate-200">
                                     <p class="mb-1 font-medium">Contoh penulisan yang benar:</p>
                                     <code
                                         class="block font-mono text-indigo-600 bg-white p-2 rounded border border-slate-100 shadow-sm mt-1">
-            ["Latihan Fisik", "Latihan Teknik Passing", "Game Internal"]
-        </code>
-                                    <p class="mt-1 text-[10px] text-slate-400">
-                                        *Pastikan menggunakan tanda kurung siku <strong>[ ]</strong> dan tanda kutip dua
-                                        <strong>" "</strong>.
-                                    </p>
+                                        ["Latihan Fisik", "Latihan Teknik Passing", "Game Internal"]
+                                    </code>
                                 </div>
 
                                 <div class="relative">
                                     <textarea name="materi_json" id="jsonArea" rows="6"
                                         class="w-full text-xs font-mono bg-slate-50 border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm p-3 leading-relaxed"
                                         placeholder='["Materi 1", "Materi 2", "Materi 3"]' required></textarea>
-
                                 </div>
                                 @error('materi_json')
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                                 @enderror
                             </div>
 
-                            {{-- 2. Input Jam (GLOBAL) - PERUBAHAN DISINI --}}
+                            {{-- 2. Input Jam (GLOBAL) --}}
                             <div class="mb-5">
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">Jam Kegiatan (Berlaku
                                     Semua)</label>
@@ -177,7 +198,7 @@
         </div>
     </div>
 
-    {{-- JAVASCRIPT --}}
+    {{-- JAVASCRIPT UMUM (Preview Gambar) --}}
     <script>
         const fileInput = document.getElementById('fileInput');
         const previewContainer = document.getElementById('previewContainer');
@@ -194,7 +215,6 @@
             if (files.length === 0) {
                 btnSubmit.disabled = true;
                 fileCountBadge.classList.add('hidden');
-                // Restore placeholder code...
                 previewContainer.innerHTML = `<div class="col-span-1 md:col-span-2 flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50"><h5 class="font-medium text-slate-600">Belum ada foto dipilih</h5></div>`;
                 return;
             }
@@ -212,7 +232,6 @@
                     const card = document.createElement('div');
                     card.className = "group bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col";
 
-                    // HTML CARD (Hanya Tanggal, Jam dihapus)
                     card.innerHTML = `
                         <div class="relative h-48 w-full bg-gray-100 border-b border-gray-100">
                             <img src="${e.target.result}" class="w-full h-full object-contain p-2">
@@ -220,14 +239,12 @@
                                 #${index + 1}
                             </div>
                         </div>
-
                         <div class="p-4 bg-white flex-grow flex flex-col gap-3">
                             <div>
                                 <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1">Tanggal</label>
                                 <input type="date" name="tanggals[]" required
                                     class="w-full text-sm font-semibold text-gray-700 bg-gray-50 border-gray-300 rounded-lg px-2 py-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
                             </div>
-
                             <div class="mt-auto pt-3 border-t border-gray-100">
                                 <p class="text-[10px] text-gray-400 mb-1 uppercase font-bold">Materi Kegiatan</p>
                                 <div class="text-xs text-indigo-700 bg-indigo-50 px-2 py-1.5 rounded border border-indigo-100 font-medium truncate">
@@ -239,9 +256,84 @@
 
                     previewContainer.appendChild(card);
                 }
-
                 reader.readAsDataURL(file);
             });
         });
+    </script>
+
+    {{-- JAVASCRIPT AI GENERATOR --}}
+    <script>
+        async function generateMateriAI() {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const ekskulName = "{{ $spj->ekskul->nama }}";
+            const jumlahPertemuan = {{ $spj->jumlah_pertemuan }};
+            const jsonArea = document.getElementById('jsonArea');
+            const btnAi = document.getElementById('btnAi');
+
+            if (!apiKey) {
+                alert("Silakan masukkan Gemini API Key terlebih dahulu di kolom yang tersedia!");
+                return;
+            }
+
+            // Membangun Prompt untuk Gemini AI
+            const prompt = `Bertindaklah sebagai instruktur ekstrakurikuler sekolah.
+Buatkan kurikulum/materi untuk kegiatan ekstrakurikuler "${ekskulName}" selama ${jumlahPertemuan} pertemuan.
+Materi harus disusun secara bertahap dan logis dari pertemuan pertama hingga terakhir.
+
+ATURAN MUTLAK:
+1. Output HARUS murni berformat JSON Array of Strings.
+2. Panjang array harus pas ${jumlahPertemuan} item.
+3. TIDAK BOLEH ADA teks pengantar, penutup, atau tanda blok kode markdown seperti \`\`\`json.
+4. Cukup langsung berikan output arraynya.
+
+Contoh format yang valid:
+["Pengenalan Dasar", "Latihan Inti 1", "Latihan Lanjutan"]`;
+
+            // State Loading
+            btnAi.disabled = true;
+            btnAi.innerHTML = `
+                <svg class="w-4 h-4 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Menghubungi AI...</span>
+            `;
+
+            try {
+                // Fetch API Gemini
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-goog-api-key': apiKey },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }],
+                        generationConfig: { temperature: 0.7 }
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error?.message || "Terjadi kesalahan pada koneksi API.");
+                }
+
+                let aiResult = data.candidates[0].content.parts[0].text;
+
+                // Membersihkan markdown ```json jika AI membandel
+                aiResult = aiResult.replace(/```json/gi, '').replace(/```/g, '').trim();
+
+                // Validasi bahwa respons benar-benar JSON valid
+                JSON.parse(aiResult);
+
+                // Memasukkan hasil ke textarea
+                jsonArea.value = aiResult;
+
+            } catch (error) {
+                alert("Gagal meng-generate materi: \n" + error.message + "\n\nPastikan API Key benar dan koneksi stabil.");
+            } finally {
+                // Restore State Button
+                btnAi.disabled = false;
+                btnAi.innerHTML = `✨ Generate <span id="kuotaAi">${jumlahPertemuan}</span> Materi`;
+            }
+        }
     </script>
 </x-app-layout>
