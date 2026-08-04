@@ -71,7 +71,19 @@
                                     class="w-full text-xs font-mono bg-white border-indigo-200 rounded focus:ring-indigo-500 focus:border-indigo-500 shadow-sm px-2 py-1.5">
                             </div>
 
-                            <button type="button" onclick="generateMateriAI()" id="btnAi"
+                            <div class="mb-4">
+                                <label class="block text-[10px] font-bold text-indigo-400 uppercase mb-1">Pilih
+                                    Triwulan</label>
+                                <select id="triwulanKe"
+                                    class="w-full text-xs bg-white border-indigo-200 rounded focus:ring-indigo-500 focus:border-indigo-500 shadow-sm px-2 py-1.5 cursor-pointer">
+                                    <option value="1">Triwulan 1 (Materi Dasar)</option>
+                                    <option value="2">Triwulan 2 (Materi Lanjutan)</option>
+                                    <option value="3">Triwulan 3 (Materi Lanjutan)</option>
+                                    <option value="4">Triwulan 4 (Materi Mahir)</option>
+                                </select>
+                            </div>
+
+                            <button type="button" onclick="generateMateriAI()" id="btnAiPanel"
                                 class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-3 rounded shadow transition-all text-xs flex justify-center items-center gap-2">
                                 <span>✨ Generate <span id="kuotaAi">{{ $spj->jumlah_pertemuan }}</span> Materi</span>
                             </button>
@@ -88,19 +100,6 @@
                             <div class="mb-5">
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">List Materi (JSON)</label>
 
-                                {{-- Input API Key Gemini --}}
-                                <div class="mb-2 flex items-center gap-2">
-                                    <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4v-4l5.659-5.659A6 6 0 1121 9z">
-                                        </path>
-                                    </svg>
-                                    <input type="password" id="apiKey" value="{{ env('GEMINI_API_KEY', '') }}"
-                                        placeholder="Masukkan Gemini API Key..."
-                                        class="text-[10px] bg-slate-50 border-gray-200 rounded px-2 py-1 w-full focus:ring-indigo-500 shadow-sm">
-                                </div>
-
                                 {{-- Textarea + Tombol Floating AI --}}
                                 <div class="relative group">
                                     <textarea name="materi_json" id="jsonArea" rows="6"
@@ -112,7 +111,7 @@
                                         <span class="text-[10px] text-gray-500 font-bold px-1">Generate <span
                                                 class="text-indigo-600">{{ $spj->jumlah_pertemuan }}</span> materi
                                             otomatis</span>
-                                        <button type="button" onclick="generateMateriAI()" id="btnAi"
+                                        <button type="button" onclick="generateMateriAI()" id="btnAiInline"
                                             class="bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-bold py-1.5 px-3 rounded shadow transition-all flex items-center gap-1">
                                             ✨ Generate AI
                                         </button>
@@ -282,10 +281,12 @@
     <script>
         async function generateMateriAI() {
             const apiKey = document.getElementById('apiKey').value.trim();
+            const triwulanKe = document.getElementById('triwulanKe').value; // Ambil value triwulan
             const ekskulName = "{{ $spj->ekskul->nama }}";
             const jumlahPertemuan = {{ $spj->jumlah_pertemuan }};
             const jsonArea = document.getElementById('jsonArea');
-            const btnAi = document.getElementById('btnAi');
+            const btnAiPanel = document.getElementById('btnAiPanel');
+            const btnAiInline = document.getElementById('btnAiInline');
 
             if (!apiKey) {
                 alert("Silakan masukkan Gemini API Key terlebih dahulu di kolom yang tersedia!");
@@ -294,8 +295,13 @@
 
             // Membangun Prompt untuk Gemini AI
             const prompt = `Bertindaklah sebagai instruktur ekstrakurikuler sekolah.
-Buatkan kurikulum/materi untuk kegiatan ekstrakurikuler "${ekskulName}" selama ${jumlahPertemuan} pertemuan.
-Materi harus disusun secara bertahap dan logis dari pertemuan pertama hingga terakhir.
+Buatkan kurikulum/materi untuk kegiatan ekstrakurikuler "${ekskulName}" pada Triwulan ke-${triwulanKe} selama${jumlahPertemuan} pertemuan.
+
+PANDUAN TINGKAT KESULITAN:
+- Jika ini Triwulan 1, mulai dari pengenalan dan teknik dasar.
+- Jika ini Triwulan 2 atau seterusnya, berikan materi lanjutan (menengah/mahir). JANGAN mengulang materi dasar dari awal. Asumsikan siswa sudah lulus materi di triwulan sebelumnya.
+
+Materi harus disusun secara bertahap dan logis dari pertemuan pertama hingga terakhir khusus untuk triwulan ini saja.
 
 ATURAN MUTLAK:
 1. Output HARUS murni berformat JSON Array of Strings.
@@ -304,17 +310,21 @@ ATURAN MUTLAK:
 4. Cukup langsung berikan output arraynya.
 
 Contoh format yang valid:
-["Pengenalan Dasar", "Latihan Inti 1", "Latihan Lanjutan"]`;
+["Materi 1", "Materi 2", "Materi 3"]`;
 
-            // State Loading
-            btnAi.disabled = true;
-            btnAi.innerHTML = `
-                <svg class="w-4 h-4 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            // State Loading pada kedua tombol
+            const loadingHtml = `
+                <svg class="w-4 h-4 animate-spin text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                <span>Menghubungi AI...</span>
+                <span>Loading...</span>
             `;
+
+            btnAiPanel.disabled = true;
+            btnAiInline.disabled = true;
+            btnAiPanel.innerHTML = loadingHtml;
+            btnAiInline.innerHTML = loadingHtml;
 
             try {
                 // Fetch API Gemini
@@ -348,73 +358,11 @@ Contoh format yang valid:
                 alert("Gagal meng-generate materi: \n" + error.message + "\n\nPastikan API Key benar dan koneksi stabil.");
             } finally {
                 // Restore State Button
-                btnAi.disabled = false;
-                btnAi.innerHTML = `✨ Generate <span id="kuotaAi">${jumlahPertemuan}</span> Materi`;
+                btnAiPanel.disabled = false;
+                btnAiInline.disabled = false;
+                btnAiPanel.innerHTML = `<span>✨ Generate <span id="kuotaAi">${jumlahPertemuan}</span> Materi</span>`;
+                btnAiInline.innerHTML = `✨ Generate AI`;
             }
         }
-    </script>
-    <script>
-        async function generateMateriAI() {
-        const apiKey = document.getElementById('apiKey').value.trim();
-        const ekskulName = "{{ $spj->ekskul->nama }}";
-        const jumlahPertemuan = {{ $spj->jumlah_pertemuan }};
-        const jsonArea = document.getElementById('jsonArea');
-        const btnAi = document.getElementById('btnAi');
-
-        if (!apiKey) {
-            alert("Silakan masukkan Gemini API Key terlebih dahulu di atas kotak materi!");
-            return;
-        }
-
-        const prompt = `Bertindaklah sebagai instruktur ekstrakurikuler sekolah.
-Buatkan kurikulum/materi untuk kegiatan ekstrakurikuler "${ekskulName}" selama ${jumlahPertemuan} pertemuan.
-Materi harus disusun secara bertahap dan logis dari pertemuan pertama hingga terakhir.
-ANDUAN TINGKAT KESULITAN:
-- Jika ini Triwulan 1, mulai dari pengenalan dan teknik dasar.
-- Jika ini Triwulan 2 atau seterusnya, berikan materi lanjutan (menengah/mahir). JANGAN mengulang materi dasar dari awal. Asumsikan siswa sudah lulus materi di triwulan sebelumnya.
-ATURAN MUTLAK:
-1. Output HARUS murni berformat JSON Array of Strings.
-2. Panjang array harus pas ${jumlahPertemuan} item.
-3. TIDAK BOLEH ADA teks pengantar, penutup, atau tanda blok kode markdown seperti \`\`\`json.
-4. Cukup langsung berikan output arraynya.
-
-Contoh format yang valid:
-["Pengenalan Dasar", "Latihan Inti 1", "Latihan Lanjutan"]`;
-
-        btnAi.disabled = true;
-        btnAi.innerHTML = `
-            <svg class="w-3 h-3 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg> Menunggu AI...
-        `;
-
-        try {
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-goog-api-key': apiKey },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: { temperature: 0.7 }
-                })
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) throw new Error(data.error?.message || "Error koneksi API.");
-
-            let aiResult = data.candidates[0].content.parts[0].text;
-            aiResult = aiResult.replace(/```json/gi, '').replace(/```/g, '').trim();
-
-            JSON.parse(aiResult); // Cek apakah format JSON valid
-            jsonArea.value = aiResult;
-
-        } catch (error) {
-            alert("Gagal meng-generate materi: \n" + error.message);
-        } finally {
-            btnAi.disabled = false;
-            btnAi.innerHTML = `✨ Generate AI`;
-        }
-    }
     </script>
 </x-app-layout>
