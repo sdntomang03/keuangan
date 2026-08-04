@@ -366,9 +366,14 @@ Contoh format yang valid:
             return;
         }
 
-        const prompt = `Bertindaklah sebagai instruktur ekstrakurikuler sekolah.
-Buatkan kurikulum/materi untuk kegiatan ekstrakurikuler "${ekskulName}" selama ${jumlahPertemuan} pertemuan.
-Materi harus disusun secara bertahap dan logis dari pertemuan pertama hingga terakhir.
+const prompt = `Bertindaklah sebagai instruktur ekstrakurikuler sekolah.
+Buatkan kurikulum/materi untuk kegiatan ekstrakurikuler "${ekskulName}" pada Triwulan ke-${triwulanKe} selama ${jumlahPertemuan} pertemuan.
+
+PANDUAN TINGKAT KESULITAN:
+- Jika ini Triwulan 1, mulai dari pengenalan dan teknik dasar.
+- Jika ini Triwulan 2 atau seterusnya, berikan materi lanjutan (menengah/mahir). JANGAN mengulang materi dasar dari awal. Asumsikan siswa sudah lulus materi di triwulan sebelumnya.
+
+Materi harus disusun secara bertahap dan logis dari pertemuan pertama hingga terakhir khusus untuk triwulan ini saja.
 
 ATURAN MUTLAK:
 1. Output HARUS murni berformat JSON Array of Strings.
@@ -377,7 +382,7 @@ ATURAN MUTLAK:
 4. Cukup langsung berikan output arraynya.
 
 Contoh format yang valid:
-["Pengenalan Dasar", "Latihan Inti 1", "Latihan Lanjutan"]`;
+["Materi Lanjutan 1", "Materi Lanjutan 2", "Evaluasi Praktik Lanjutan"]`;
 
         btnAi.disabled = true;
         btnAi.innerHTML = `
