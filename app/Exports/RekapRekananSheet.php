@@ -53,7 +53,7 @@ class RekapRekananSheet implements FromCollection, WithColumnWidths, WithCustomS
         // Heading diletakkan di baris ke-6 secara manual via registerEvents
         // atau biarkan headings() mengembalikan baris ke-6 saja.
         return [
-            ['NO', 'TANGGAL', 'NO. BUKTI', 'KEGIATAN', 'KODE REKENING', 'NILAI SPJ (Rp)', 'PPN (Rp)', 'PPH (Rp)', 'NETTO (Rp)'],
+            ['NO', 'TANGGAL', 'NO. BUKTI', 'URAIAN', 'KODE REKENING', 'NILAI SPJ (Rp)', 'PPN (Rp)', 'PPH (Rp)', 'NETTO (Rp)'],
         ];
     }
 
@@ -77,7 +77,7 @@ class RekapRekananSheet implements FromCollection, WithColumnWidths, WithCustomS
             $this->rowNumber,
             Carbon::parse($belanja->tanggal)->translatedFormat('d F Y'),
             $belanja->no_bukti,
-            $kegiatan,
+            $belanja->uraian,
             $kodeRekening,
             $bruto,
             $belanja->ppn,
