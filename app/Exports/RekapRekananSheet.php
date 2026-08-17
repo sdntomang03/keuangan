@@ -70,8 +70,14 @@ class RekapRekananSheet implements FromCollection, WithColumnWidths, WithCustomS
         })->unique()->implode("\n");
 
         $totalPph = $belanja->pajaks->where('masterPajak.nama_pajak', '!=', 'PPN')->sum('nominal');
-        $bruto = $belanja->subtotal + $belanja->ppn;
-        $netto = $belanja->subtotal - $totalPph;
+       $bruto = $belanja->subtotal + $belanja->ppn;
+
+        // Menentukan baris Excel yang sedang diproses.
+        // Karena header ada di A7, maka data pertama ada di baris 8.
+        $currentRow = $this->rowNumber + 7;
+
+        // Membuat formula Excel (Kolom I = Kolom F - Kolom G - Kolom H)
+        $formulaNetto = "=F{$currentRow}-G{$currentRow}-H{$currentRow}";
 
         return [
             $this->rowNumber,
@@ -82,7 +88,7 @@ class RekapRekananSheet implements FromCollection, WithColumnWidths, WithCustomS
             $bruto,
             $belanja->ppn,
             $totalPph,
-            $netto,
+            $formulaNetto,
         ];
     }
 
