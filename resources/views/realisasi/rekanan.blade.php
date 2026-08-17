@@ -9,14 +9,20 @@
             {{-- Kumpulan Tombol Aksi --}}
             <div class="flex items-center gap-3 w-full md:w-auto">
 
-                {{-- Tombol Export Semua --}}
-                <a href="{{ route('rekap-rekanan.export-semua') }}"
+                {{-- Tambahkan Dropdown Pilihan TW --}}
+                <select id="tw-filter"
+                    class="border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 font-semibold text-gray-700 py-2">
+                    <option value="semua">Semua TW</option>
+                    <option value="1">TW I</option>
+                    <option value="2">TW II</option>
+                    <option value="3">TW III</option>
+                    <option value="4">TW IV</option>
+                </select>
+
+                {{-- Tombol Export Semua (Tambahkan ID id="export-semua-btn") --}}
+                <a href="{{ route('rekap-rekanan.export-semua') }}" id="export-semua-btn"
                     class="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-all active:scale-95 w-full md:w-auto">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4">
-                        </path>
-                    </svg>
+                    <!-- (SVG biarkan sama) -->
                     <span>Export Semua</span>
                 </a>
 
@@ -131,8 +137,9 @@
                                 {{-- TOMBOL DOWNLOAD (HILANG SAAT PRINT) --}}
                                 <td class="border border-gray-300 px-2 py-2 text-center print:hidden">
                                     <a href="{{ route('rekap.rekanan.export_detail', $row->rekanan_id) }}"
+                                        data-url="{{ route('rekap.rekanan.export_detail', $row->rekanan_id) }}"
                                         target="_blank" title="Download Rincian Excel"
-                                        class="inline-flex items-center justify-center bg-green-100 hover:bg-green-200 text-green-700 border border-green-300 rounded p-1.5 transition shadow-sm">
+                                        class="export-detail-btn inline-flex items-center justify-center bg-green-100 hover:bg-green-200 text-green-700 border border-green-300 rounded p-1.5 transition shadow-sm">
                                         {{-- Icon Download / Excel --}}
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -237,4 +244,30 @@
             }
         }
     </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const twFilter = document.getElementById('tw-filter');
+            const exportSemuaBtn = document.getElementById('export-semua-btn');
+            const exportDetailBtns = document.querySelectorAll('.export-detail-btn');
+
+            // Simpan URL base Export Semua dari blade
+            const baseSemuaUrl = "{{ route('rekap-rekanan.export-semua') }}";
+
+            twFilter.addEventListener('change', function () {
+                const tw = this.value;
+
+                // Update URL Export Semua
+                exportSemuaBtn.href = baseSemuaUrl + "?tw=" + tw;
+
+                // Update URL Export Detail per Rekanan
+                exportDetailBtns.forEach(btn => {
+                    const baseUrl = btn.getAttribute('data-url');
+                    btn.href = baseUrl + "?tw=" + tw;
+                });
+            });
+
+            // Trigger perubahan pertama kali saat halaman dimuat
+            twFilter.dispatchEvent(new Event('change'));
+        });
+    </script>
 </x-app-layout>

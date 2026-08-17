@@ -341,10 +341,11 @@ class RealisasiController extends Controller
 
     public function exportDetailRekanan(Request $request, $id)
     {
-        // 1. Ambil Data Anggaran & Sekolah
+        // 1. Ambil Data Anggaran
         $anggaran = $request->anggaran_data ?? Auth::user()->sekolah->anggaranAktif;
-        $sekolah = Sekolah::find(auth()->user()->sekolah_id);
-        $rekanan = Rekanan::findOrFail($id);
+
+        // AMBIL PARAMETER TW DARI REQUEST
+        $tw = $request->query('tw', 'semua');
 
         // 2. Ambil Data Rekanan
         $rekanan = Rekanan::findOrFail($id);
@@ -354,44 +355,53 @@ class RealisasiController extends Controller
             'rekanan',
             'rincis.rkas.kegiatan',
             'rincis.rkas.korek',
-            'pajaks.masterPajak', // Load pajak juga
+            'pajaks.masterPajak',
         ])
             ->where('anggaran_id', $anggaran->id)
-            ->where('tw', $sekolah->triwulan_aktif)
             ->where('rekanan_id', $id)
+            ->when($tw !== 'semua', function ($q) use ($tw) {
+                return $q->where('tw', $tw); // Filter tw jika bukan 'semua'
+            })
             ->orderBy('tanggal', 'asc')
             ->orderBy('no_bukti', 'asc')
             ->get();
 
         if ($dataBelanja->isEmpty()) {
-            return back()->with('error', 'Tidak ada data transaksi.');
+            return back()->with('error', 'Tidak ada data transaksi pada pilihan TW ini.');
         }
 
         // 4. Download Excel (Panggil Class Multiple Sheet)
         $cleanName = preg_replace('/[^A-Za-z0-9]/', '_', $rekanan->nama_rekanan);
-        $fileName = 'URK_Belanja_'.strtoupper($cleanName).'.xlsx';
+        $twText = $tw === 'semua' ? 'SEMUA_TW' : 'TW_' . $tw;
+        $fileName = 'URK_Belanja_'.strtoupper($cleanName).'_' . $twText . '.xlsx';
 
         return Excel::download(new RekananMultipleSheetExport($dataBelanja, $rekanan), $fileName);
     }
 
     public function exportSemuaRekanan(Request $request)
     {
-        // 1. Ambil Data Anggaran & Sekolah
+        // 1. Ambil Data Anggaran
         $anggaran = $request->anggaran_data ?? Auth::user()->sekolah->anggaranAktif;
-        $sekolah = Sekolah::find(auth()->user()->sekolah_id);
+
+        // AMBIL PARAMETER TW DARI REQUEST
+        $tw = $request->query('tw', 'semua');
 
         // 2. AMBIL SEMUA REKANAN BESERTA TRANSAKSINYA
-        $daftarRekanan = Rekanan::whereHas('belanjas', function ($q) use ($anggaran, $sekolah) {
-            $q->where('anggaran_id', $anggaran->id)
-                ->where('tw', $sekolah->triwulan_aktif);
+        $daftarRekanan = Rekanan::whereHas('belanjas', function ($q) use ($anggaran, $tw) {
+            $q->where('anggaran_id', $anggaran->id);
+            if ($tw !== 'semua') {
+                $q->where('tw', $tw);
+            }
         })
-            ->with(['belanjas' => function ($q) use ($anggaran, $sekolah) {
-                $q->where('anggaran_id', $anggaran->id)
-                    ->where('tw', $sekolah->triwulan_aktif)
-                    ->with([
+            ->with(['belanjas' => function ($q) use ($anggaran, $tw) {
+                $q->where('anggaran_id', $anggaran->id);
+                if ($tw !== 'semua') {
+                    $q->where('tw', $tw);
+                }
+                $q->with([
                         'rekanan',
-                        'korek', // Dibutuhkan untuk penamaan judul SingleBelanjaSheet
-                        'surats.rincis.rkas', // Dibutuhkan untuk daftar surat BAPB
+                        'korek',
+                        'surats.rincis.rkas',
                         'rincis.rkas.kegiatan',
                         'rincis.rkas.korek',
                         'pajaks.masterPajak',
@@ -402,11 +412,12 @@ class RealisasiController extends Controller
             ->get();
 
         if ($daftarRekanan->isEmpty()) {
-            return back()->with('error', 'Tidak ada data transaksi di triwulan ini.');
+            return back()->with('error', 'Tidak ada data transaksi pada pilihan TW ini.');
         }
 
         // 3. Download Excel Menggunakan Class Baru
-        $fileName = 'SELURUH_URK_REKANAN_TW_'.$sekolah->triwulan_aktif.'.xlsx';
+        $twText = $tw === 'semua' ? 'SEMUA_TW' : 'TW_' . $tw;
+        $fileName = 'SELURUH_URK_REKANAN_' . $twText . '.xlsx';
 
         return Excel::download(new SemuaRekananExport($daftarRekanan), $fileName);
     }
