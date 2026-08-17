@@ -71,7 +71,7 @@ class RekapRekananSheet implements FromCollection, WithColumnWidths, WithCustomS
 
         $totalPph = $belanja->pajaks->where('masterPajak.nama_pajak', '!=', 'PPN')->sum('nominal');
         $bruto = $belanja->subtotal + $belanja->ppn;
-        $netto = $bruto - $totalPph;
+        $netto = $belanja->subtotal - $totalPph;
 
         return [
             $this->rowNumber,
