@@ -652,12 +652,14 @@ class EkskulController extends Controller
         $request->validate([
             'nama' => 'required|string|max:255',
             'rekanan_id' => 'nullable|exists:rekanans,id', // Validasi ke tabel rekanans
+            'waktu' => 'required', // Tambahan validasi waktu
         ]);
 
         RefEkskul::create([
             'sekolah_id' => auth()->user()->sekolah_id,
             'nama' => $request->nama,
             'rekanan_id' => $request->rekanan_id,
+            'waktu' => $request->waktu, // Tambahan insert waktu
         ]);
 
         return back()->with('success', 'Ekskul berhasil ditambahkan.');
@@ -668,6 +670,7 @@ class EkskulController extends Controller
         $request->validate([
             'nama' => 'required|string|max:255',
             'rekanan_id' => 'nullable|exists:rekanans,id',
+            'waktu' => 'required', // Tambahan validasi waktu
         ]);
 
         $ekskul = RefEkskul::where('sekolah_id', auth()->user()->sekolah_id)->findOrFail($id);
@@ -675,6 +678,7 @@ class EkskulController extends Controller
         $ekskul->update([
             'nama' => $request->nama,
             'rekanan_id' => $request->rekanan_id,
+            'waktu' => $request->waktu, // Tambahan update waktu
         ]);
 
         return back()->with('success', 'Data Ekskul diperbarui.');

@@ -12,6 +12,7 @@
         formAction: '',
         dataNama: '',
         dataPelatih: '',
+        dataWaktu: '', // Tambahan Waktu: inisialisasi state waktu
         modalTitle: ''
     }">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
@@ -52,6 +53,7 @@
                 formAction = '{{ route('ekskul.ref.store') }}';
                 dataNama = '';
                 dataPelatih = '';
+                dataWaktu = '15:00'; // Tambahan Waktu: default value form create
                 modalTitle = 'Tambah Ekskul Baru';
             " class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center transition-colors">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20"
@@ -80,6 +82,9 @@
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Nama Ekskul</th>
                                 <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Waktu</th> {{-- Tambahan Waktu: Header Tabel --}}
+                                <th
                                     class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Aksi</th>
                             </tr>
@@ -105,6 +110,12 @@
                                     class="px-6 py-4 whitespace-nowrap font-medium text-sm text-gray-900 dark:text-white">
                                     {{ $item->nama }}
                                 </td>
+
+                                {{-- Tambahan Waktu: Isi Tabel --}}
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                    {{ $item->waktu ? \Carbon\Carbon::parse($item->waktu)->format('H:i') : '-' }} WIB
+                                </td>
+
                                 <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                                     <div class="flex justify-center gap-3">
                                         {{-- Tombol Edit --}}
@@ -114,6 +125,7 @@
                                             formAction = '{{ route('ekskul.ref.update', $item->id) }}';
                                             dataNama = '{{ addslashes($item->nama) }}';
                                             dataPelatih = '{{ $item->rekanan_id }}';
+                                            dataWaktu = '{{ $item->waktu ? \Carbon\Carbon::parse($item->waktu)->format('H:i') : '15:00' }}'; // Tambahan Waktu: value untuk modal edit
                                             modalTitle = 'Edit Data Ekskul';
                                         " class="text-amber-500 hover:text-amber-700">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20"
@@ -142,7 +154,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="4" class="px-6 py-4 text-center text-gray-500">Belum ada data ekskul.</td>
+                                <td colspan="5" class="px-6 py-4 text-center text-gray-500">Belum ada data ekskul.</td>
                             </tr>
                             @endforelse
                         </tbody>
@@ -185,6 +197,15 @@
                                 <input type="text" name="nama" x-model="dataNama"
                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                                     required placeholder="Contoh: Futsal, Pramuka">
+                            </div>
+
+                            {{-- Input Waktu Ekskul (Tambahan Baru) --}}
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Waktu
+                                    Pelaksanaan</label>
+                                <input type="time" name="waktu" x-model="dataWaktu"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                    required>
                             </div>
 
                             {{-- Dropdown Pelatih --}}

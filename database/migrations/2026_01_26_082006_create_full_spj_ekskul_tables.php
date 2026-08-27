@@ -14,6 +14,7 @@ return new class extends Migration
             $table->string('nama'); // Contoh: Pramuka, Futsal
             $table->integer('rekanan_id')->nullable(); // Contoh: Pramuka, Futsal
             $table->integer('sekolah_id')->nullable(); // Contoh: Pramuka, Futsal
+            $table->time('waktu')->default('13:00:00');
             $table->timestamps();
         });
 
