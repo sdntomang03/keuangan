@@ -49,8 +49,9 @@
                 {{-- Global Setting --}}
                 <div class="hidden">
                     {{-- Default Jam Kegiatan agar Controller tetap berjalan --}}
+                    {{-- Mengubah $spj->ref_ekskul menjadi $spj->ekskul --}}
                     <input type="number" name="jam_global"
-                        value="{{ $spj->ref_ekskul->waktu ? \Carbon\Carbon::parse($spj->ref_ekskul->waktu)->format('H') : 13 }}">
+                        value="{{ $spj->ekskul && $spj->ekskul->waktu ? \Carbon\Carbon::parse($spj->ekskul->waktu)->format('H') : '14' }}">
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
