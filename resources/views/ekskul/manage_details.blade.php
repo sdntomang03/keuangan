@@ -71,6 +71,11 @@
         </div>
     </x-slot>
 
+    {{-- Ambil Default Jam dari Master Ekskul --}}
+    @php
+    $defaultJam = $spj->ekskul && $spj->ekskul->waktu ? \Carbon\Carbon::parse($spj->ekskul->waktu)->format('H') : '14';
+    @endphp
+
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
@@ -140,7 +145,8 @@
                             <div class="mb-4">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Jam Kegiatan (WIB)</label>
                                 <div class="relative">
-                                    <input type="number" name="jam_kegiatan" min="0" max="23" value="14"
+                                    {{-- Value mengambil dari variabel $defaultJam --}}
+                                    <input type="number" name="jam_kegiatan" min="0" max="23" value="{{ $defaultJam }}"
                                         class="w-full text-sm bg-gray-50 border border-gray-300 rounded-lg p-2 focus:ring-indigo-500 focus:border-indigo-500"
                                         placeholder="Contoh: 14" required>
                                     <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
@@ -287,11 +293,12 @@
 
                         {{-- Jam --}}
                         <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Jam Kegiatan (Input Ulang jika
-                                ganti Foto)</label>
-                            <input type="number" name="jam_kegiatan" min="0" max="23"
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Jam Kegiatan (Otomatis dari
+                                Master)</label>
+                            {{-- Value default mengambil dari variabel $defaultJam --}}
+                            <input type="number" name="jam_kegiatan" min="0" max="23" value="{{ $defaultJam }}"
                                 class="w-full text-sm bg-gray-50 border border-gray-300 rounded-lg p-2"
-                                placeholder="Kosongkan jika tidak mengganti foto">
+                                placeholder="Ganti jika perlu">
                         </div>
 
                         {{-- Materi (CKEditor) --}}
