@@ -306,6 +306,7 @@ Route::middleware(['permission:input-ekskul|kelola-anggaran'])->group(function (
         Route::get('/laporan-simple/{belanjaId}', [EkskulController::class, 'create_sederhana'])->name('create_sederhana');
         Route::post('/sederhana-store', [EkskulController::class, 'store_sederhana'])->name('store_sederhana');
         Route::get('/ekskul/{id}/cetak-absensi-sederhana', [EkskulController::class, 'cetakAbsensiSederhana'])->name('cetak_absensi_sederhana');
+        Route::post('/ekskul/update-foto-bulk', [EkskulController::class, 'updateFotoBulk'])->name('update_foto_bulk');
     });
 
     Route::get('/ekskul-laporan', [EkskulLaporanController::class, 'index'])->name('ekskul.laporan.index');

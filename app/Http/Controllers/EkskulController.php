@@ -969,4 +969,74 @@ class EkskulController extends Controller
 
         return view('ekskul.cetak_absensi_sederhana', compact('spj', 'sekolah'));
     }
+
+    /**
+     * GANTI SEMUA FOTO SERENTAK (BULK UPDATE FOTO)
+     * Opsional: Bisa ubah jam manual atau menggunakan waktu bawaan database
+     */
+    public function updateFotoBulk(Request $request)
+    {
+        $request->validate([
+            'spj_ekskul_id' => 'required',
+            'foto_kegiatan_bulk' => 'required|array',
+            'foto_kegiatan_bulk.*' => 'image|max:5120',
+            'jam_kegiatan_bulk' => 'nullable|numeric|min:0|max:23', // Validasi input jam manual
+        ]);
+
+        try {
+            // Ambil SPJ beserta details-nya, urutkan berdasarkan tanggal ASC
+            $spj = SpjEkskul::with(['details' => function ($q) {
+                $q->orderBy('tanggal_kegiatan', 'asc');
+            }])->findOrFail($request->spj_ekskul_id);
+
+            $files = $request->file('foto_kegiatan_bulk');
+            $details = $spj->details;
+            $updatedCount = 0;
+
+            DB::transaction(function () use ($request, $files, $details, $spj, &$updatedCount) {
+                foreach ($files as $index => $file) {
+                    // Cek apakah indeks foto sesuai dengan indeks detail pertemuan yang ada
+                    if (isset($details[$index])) {
+                        $detail = $details[$index];
+
+                        // 1. Hapus foto lama secara fisik (jika ada)
+                        if ($detail->foto_kegiatan && Storage::disk('public')->exists($detail->foto_kegiatan)) {
+                            Storage::disk('public')->delete($detail->foto_kegiatan);
+                        }
+
+                        // 2. Ambil tanggal asli
+                        $carbonDate = \Carbon\Carbon::parse($detail->tanggal_kegiatan);
+                        $tanggalAsli = $carbonDate->format('Y-m-d');
+
+                        // 3. Tentukan Waktu (Jam)
+                        if ($request->filled('jam_kegiatan_bulk')) {
+                            // Jika user mengisi jam manual, gunakan jam tersebut + menit/detik acak
+                            $jamInput = $request->jam_kegiatan_bulk;
+                            $waktuAcak = sprintf('%02d:%02d:%02d', $jamInput, rand(0, 59), rand(0, 59));
+                        } else {
+                            // Jika kosong, gunakan waktu dari database
+                            $waktuAcak = $carbonDate->format('H:i:s');
+                        }
+
+                        $tanggalFull = $tanggalAsli.' '.$waktuAcak;
+
+                        // 4. Proses Watermark
+                        $pathFoto = $this->processWatermark($file, $spj->belanja_id, $tanggalFull, $waktuAcak);
+
+                        // 5. Update Database
+                        $detail->tanggal_kegiatan = $tanggalFull; // Simpan waktu yang baru (jika berubah)
+                        $detail->foto_kegiatan = $pathFoto;
+                        $detail->save();
+
+                        $updatedCount++;
+                    }
+                }
+            });
+
+            return back()->with('success', "Berhasil mengganti $updatedCount foto kegiatan secara serentak.");
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal ganti foto serentak: '.$e->getMessage());
+        }
+    }
 }
