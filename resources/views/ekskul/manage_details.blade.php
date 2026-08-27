@@ -293,11 +293,22 @@
                     <input type="hidden" name="spj_ekskul_id" value="{{ $spj->id }}">
 
                     <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+
+                        {{-- Input Jam Manual --}}
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Jam Kegiatan (0-23)</label>
+                            <input type="number" name="jam_kegiatan_bulk" min="0" max="23"
+                                class="w-full text-sm bg-gray-50 border border-gray-300 rounded-lg p-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                placeholder="Contoh: 14. Kosongkan jika ingin menggunakan waktu lama">
+                            <p class="text-xs text-gray-500 mt-1">*Jika diisi, semua foto akan menggunakan jam baru.
+                                Jika kosong, sistem menggunakan waktu asli database.</p>
+                        </div>
+
+                        {{-- Input Foto Bulk --}}
                         <div class="mb-4">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Upload File (Pilih Beberapa
                                 Foto)</label>
 
-                            {{-- Input multiple untuk banyak foto sekaligus --}}
                             <input type="file" name="foto_kegiatan_bulk[]" multiple accept="image/*"
                                 class="w-full text-sm bg-indigo-50 border border-indigo-200 rounded-lg p-3 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 cursor-pointer"
                                 required>
@@ -305,9 +316,7 @@
                             <div class="mt-3 bg-blue-50 p-3 rounded text-xs text-blue-700 text-justify leading-relaxed">
                                 <strong>Info:</strong> Silakan block/pilih foto sebanyak <b>{{ $spj->details->count()
                                     }}</b> file sekaligus di perangkat Anda.<br><br>
-                                Sistem akan otomatis mendistribusikan foto tersebut dan menimpa foto lama, serta
-                                membubuhkan <strong>Watermark menggunakan waktu & tanggal</strong> yang sudah ada di
-                                database.
+                                Sistem akan otomatis mendistribusikan foto tersebut dan menimpa foto lama.
                             </div>
                         </div>
                     </div>
