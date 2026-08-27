@@ -299,7 +299,7 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">Jam Kegiatan (0-23)</label>
                             <input type="number" name="jam_kegiatan_bulk" min="0" max="23"
                                 class="w-full text-sm bg-gray-50 border border-gray-300 rounded-lg p-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                placeholder="Contoh: 14. Kosongkan jika ingin menggunakan waktu lama">
+                                value="{{ $defaultJam }}" placeholder="Contoh: 14">
                             <p class="text-xs text-gray-500 mt-1">*Jika diisi, semua foto akan menggunakan jam baru.
                                 Jika kosong, sistem menggunakan waktu asli database.</p>
                         </div>
