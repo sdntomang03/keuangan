@@ -204,12 +204,13 @@ class NpdController extends Controller
             default => []
         };
 
-        // 1. AMBIL DATA DROPDOWN (Ambil nomor NPD yang unik di triwulan ini)
+        // 1. AMBIL DATA DROPDOWN (Sekarang mengambil surat_id dan nomor_npd)
         $listNomorNpd = Npd::where('sekolah_id', $sekolahId)
             ->where('triwulan', $triwulanAktif)
-            ->select('nomor_npd')
+            ->whereNotNull('surat_id') // Hanya ambil data yang sudah memiliki relasi surat_id
+            ->select('surat_id', 'nomor_npd')
             ->distinct()
-            ->pluck('nomor_npd');
+            ->get(); // Menggunakan get() karena kita mengambil 2 kolom
 
         // 2. Inisialisasi Query Dasar
         $query = Npd::with(['kegiatan', 'korek'])
@@ -218,11 +219,11 @@ class NpdController extends Controller
                 $q->whereIn(DB::raw('MONTH(tanggal)'), $bulanArray);
             }], DB::raw('subtotal + ppn'));
 
-        // 3. Terapkan Filter (Hanya berdasarkan dropdown nomor_npd)
-        if ($request->filled('nomor_npd')) {
-            $query->where('nomor_npd', $request->nomor_npd);
+        // 3. Terapkan Filter (BERDASARKAN SURAT_ID)
+        if ($request->filled('surat_id')) {
+            $query->where('surat_id', $request->surat_id);
         } else {
-            // Default: Hanya tampilkan Triwulan Aktif
+            // Default: Tampilkan semua di Triwulan Aktif
             $query->where('triwulan', $triwulanAktif);
         }
 
@@ -235,7 +236,6 @@ class NpdController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        // Pastikan variabel $listNomorNpd ikut dikirim ke view menggunakan compact
         return view('npd.index', compact('listNpd', 'triwulanAktif', 'totalPengajuan', 'listNomorNpd'));
     }
 
@@ -308,7 +308,7 @@ class NpdController extends Controller
     {
         $user = auth()->user();
         $sekolah = $user->sekolah;
-        $triwulanAktif = $user->sekolah->triwulan_aktif;
+        $triwulanAktif = $sekolah->triwulan_aktif;
 
         // Filter bulan berdasarkan triwulan
         $bulanArray = match ($triwulanAktif) {
@@ -319,29 +319,36 @@ class NpdController extends Controller
             default => []
         };
 
-        // Inisialisasi Query Export
-        $query = Npd::with(['kegiatan', 'korek'])
+        // 1. Inisialisasi Query Dasar
+        $query = \App\Models\Npd::with(['kegiatan', 'korek'])
             ->where('sekolah_id', $sekolah->id)
             ->where('triwulan', $triwulanAktif)
             ->withSum(['belanjas as realisasi_nota' => function ($q) use ($bulanArray) {
-                $q->whereIn(DB::raw('MONTH(tanggal)'), $bulanArray);
-            }], DB::raw('subtotal + ppn'));
+                $q->whereIn(\Illuminate\Support\Facades\DB::raw('MONTH(tanggal)'), $bulanArray);
+            }], \Illuminate\Support\Facades\DB::raw('subtotal + ppn'));
 
-        // CEK FILTER: Terapkan filter jika dropdown nomor_npd dipilih
-        if ($request->filled('nomor_npd')) {
-            $query->where('nomor_npd', $request->nomor_npd);
+        // 2. Terapkan Filter surat_id jika ada
+        if ($request->filled('surat_id')) {
+            $query->where('surat_id', $request->surat_id);
         }
 
-        // Eksekusi data (tanpa paginate)
+        // 3. Eksekusi Query
         $listNpd = $query->orderBy('tanggal', 'desc')->get();
 
-        // Buat nama file dinamis sesuai filter
-        $filterName = $request->filled('nomor_npd') ? str_replace('/', '_', $request->nomor_npd) : 'SEMUA';
+        // 4. Cari Nomor Surat untuk Judul Excel dan Nama File
+        $nomorNpdDifilter = null;
+        if ($request->filled('surat_id')) {
+            $surat = \App\Models\Surat::find($request->surat_id);
+            $nomorNpdDifilter = $surat ? $surat->nomor_surat : null;
+        }
+
+        // 5. Buat Nama File Dinamis
+        $filterName = $nomorNpdDifilter ? str_replace('/', '_', $nomorNpdDifilter) : 'SEMUA';
         $fileName = "NPD_{$sekolah->nama_sekolah}_TW_{$triwulanAktif}_{$filterName}_".date('Ymd_His').'.xlsx';
 
-        // Kirim data tambahan ($request->nomor_npd) ke Constructor Export
+        // 6. Return Download Excel
         return \Maatwebsite\Excel\Facades\Excel::download(
-            new \App\Exports\NpdExport($listNpd, $triwulanAktif, $sekolah->nama_sekolah, $request->nomor_npd),
+            new \App\Exports\NpdExport($listNpd, $triwulanAktif, $sekolah->nama_sekolah, $nomorNpdDifilter),
             $fileName
         );
     }

@@ -86,22 +86,25 @@
 
 
             {{-- FORM FILTER PENCARIAN DROPDOWN --}}
+            {{-- FORM FILTER PENCARIAN DROPDOWN (Berdasarkan surat_id) --}}
             <div class="mb-6 bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
                 <form action="{{ route('npd.index') }}" method="GET" class="flex flex-col md:flex-row gap-4 items-end">
 
                     <div class="w-full md:w-1/2">
-                        <label for="nomor_npd"
+                        <label for="surat_id"
                             class="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-1">
                             Pilih Nomor NPD / Surat
                         </label>
-                        <select name="nomor_npd" id="nomor_npd"
+                        {{-- Name diubah menjadi surat_id --}}
+                        <select name="surat_id" id="surat_id"
                             class="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg shadow-sm sm:text-sm font-semibold text-gray-800">
                             <option value="">-- Tampilkan Semua di Triwulan {{ $triwulanAktif }} --</option>
 
-                            {{-- Looping daftar nomor dari controller --}}
-                            @foreach($listNomorNpd as $nomor)
-                            <option value="{{ $nomor }}" {{ request('nomor_npd')==$nomor ? 'selected' : '' }}>
-                                {{ $nomor }}
+                            {{-- Looping menggunakan object $data dari controller --}}
+                            @foreach($listNomorNpd as $data)
+                            <option value="{{ $data->surat_id }}" {{ request('surat_id')==$data->surat_id ? 'selected' :
+                                '' }}>
+                                {{ $data->nomor_npd }}
                             </option>
                             @endforeach
                         </select>
@@ -118,7 +121,8 @@
                             Filter
                         </button>
 
-                        @if(request('nomor_npd'))
+                        {{-- Tombol reset muncul jika parameter surat_id ada di URL --}}
+                        @if(request('surat_id'))
                         <a href="{{ route('npd.index') }}"
                             class="inline-flex justify-center items-center px-4 py-2 bg-white border border-gray-300 rounded-lg font-bold text-xs text-gray-700 uppercase tracking-widest hover:bg-gray-50 transition">
                             Reset
