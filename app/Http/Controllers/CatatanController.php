@@ -28,8 +28,9 @@ class CatatanController extends Controller
         $twAktif = (int) filter_var($sekolah->triwulan_aktif, FILTER_SANITIZE_NUMBER_INT);
         $filterTw = $request->get('tw', $twAktif);
 
-        // Ambil data catatan berdasarkan anggaran dan triwulan terpilih
+        // Ambil data catatan berdasarkan anggaran, triwulan terpilih, dan user yang sedang login
         $catatans = Catatan::where('anggaran_id', $anggaran->id)
+            ->where('user_id', auth()->id()) // <-- TAMBAHKAN FILTER INI
             ->when($filterTw !== 'semua', fn ($q) => $q->where('tw', $filterTw))
             ->latest()
             ->get();
