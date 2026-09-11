@@ -206,6 +206,9 @@
                     <a href="{{ route('sts.index') }}"
                         class="block py-1.5 text-sm {{ request()->routeIs('sts.*') ? 'text-indigo-600 font-bold' : 'text-gray-500 hover:text-indigo-500' }}">Surat
                         Tanda Setoran (STS)</a>
+                    <a href="{{ route('realisasi.spj.view') }}"
+                        class="block py-1.5 text-sm {{ request()->routeIs('realisasi.spj.view') ? 'text-indigo-600 font-bold' : 'text-gray-500 hover:text-indigo-500' }}">Rekap
+                        Belanja</a>
                 </div>
             </div>
 
@@ -229,9 +232,7 @@
                 </button>
                 <div x-show="open" x-transition.opacity.duration.200ms style="display: none;"
                     class="pl-11 pr-2 py-1 space-y-1">
-                    <a href="{{ route('realisasi.spj.view') }}"
-                        class="block py-1.5 text-sm {{ request()->routeIs('realisasi.spj.view') ? 'text-indigo-600 font-bold' : 'text-gray-500 hover:text-indigo-500' }}">Rekap
-                        Belanja</a>
+
                     <a href="{{ route('surat.daftar') }}"
                         class="block py-1.5 text-sm {{ request()->routeIs('surat.daftar') ? 'text-indigo-600 font-bold' : 'text-gray-500 hover:text-indigo-500' }}">Persuratan
                         SPJ</a>
@@ -312,45 +313,54 @@
             {{-- ZONA SUPER ADMIN --}}
             {{-- ======================================================= --}}
             @role('admin')
-            <div class="mt-6 border-t border-red-100 dark:border-red-900/30 pt-4"
-                x-data="{ open: {{ request()->routeIs('admin.*', 'setting.kegiatan.importjson') ? 'true' : 'false' }} }">
-                <p class="px-3 text-[10px] font-black tracking-wider text-red-400 uppercase mb-2">Admin Area</p>
-                <button @click="open = !open"
-                    class="flex items-center justify-between w-full px-3 py-2.5 text-sm font-bold text-red-700 bg-red-50 rounded-lg hover:bg-red-100 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20 transition-colors">
-                    <div class="flex items-center">
-                        <svg class="w-5 h-5 mr-3 text-red-500 dark:text-red-400" fill="none" stroke="currentColor"
-                            viewBox="0 0 24 24">
+            <div class="mt-6 border-t border-red-100 dark:border-red-900/30 pt-5">
+
+                <p class="px-4 text-[10px] font-black tracking-wider text-red-400 uppercase mb-3">Admin Area</p>
+
+                {{-- Daftar Menu Langsung --}}
+                <div class="px-2 space-y-1">
+                    @php
+                    $adminMenus = [
+                    ['route' => 'admin.sekolah.index', 'label' => 'Kelola Sekolah', 'icon' => 'M19 21V5a2 2 0 00-2-2H7a2
+                    2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011
+                    1v5m-4 0h4'],
+                    ['route' => 'admin.users.index', 'label' => 'Kelola Users', 'icon' => 'M12 4.354a4 4 0 110 5.292M15
+                    21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z'],
+                    ['route' => 'admin.korek.index', 'label' => 'Kode Rekening', 'icon' => 'M7 7h.01M7 3h5c.512 0
+                    1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0
+                    014-4z'],
+                    ['route' => 'setting.kegiatan.importjson', 'label' => 'Import JSON', 'icon' => 'M4 16v1a3 3 0 003
+                    3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4'],
+                    ['route' => 'admin.anggaran.index', 'label' => 'Generate Anggaran', 'icon' => 'M9 7h6m0 10v-3m-3
+                    3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0
+                    00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z'],
+                    ['route' => 'admin.dasar-pajak.index', 'label' => 'Master Pajak', 'icon' => 'M9
+                    14l6-6m-5.5.5h.01m4.9 4.9h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2zM10
+                    8.5a.5.5 0 11-1 0 .5.5 0 011 0zm5 5a.5.5 0 11-1 0 .5.5 0 011 0z'],
+                    ['route' => 'admin.rkas.cleanup', 'label' => 'Hapus Anggaran', 'icon' => 'M19 7l-.867 12.142A2 2 0
+                    0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4
+                    7h16'],
+                    ];
+                    @endphp
+
+                    @foreach($adminMenus as $menu)
+                    <a href="{{ route($menu['route']) }}"
+                        class="relative flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 group
+                      {{ request()->routeIs($menu['route'])
+                         ? 'text-red-700 bg-red-50 dark:text-red-400 dark:bg-red-500/20 font-bold shadow-sm'
+                         : 'text-gray-600 hover:text-red-600 hover:bg-red-50 dark:text-gray-400 dark:hover:text-red-400 dark:hover:bg-red-500/10' }}">
+
+                        {{-- Ikon Menu --}}
+                        <svg class="w-5 h-5 {{ request()->routeIs($menu['route']) ? 'text-red-600 dark:text-red-400' : 'text-gray-400 group-hover:text-red-500' }} transition-colors"
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
-                            </path>
+                                d="{{ $menu['icon'] }}"></path>
                         </svg>
-                        Super Admin
-                    </div>
-                    <svg :class="{'rotate-180': open}" class="w-4 h-4 transition-transform duration-200" fill="none"
-                        stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                    </svg>
-                </button>
-                <div x-show="open" x-transition.opacity.duration.200ms style="display: none;"
-                    class="pl-11 pr-2 py-1 space-y-1">
-                    <a href="{{ route('admin.sekolah.index') }}"
-                        class="block py-1.5 text-sm text-gray-500 hover:text-red-600 dark:hover:text-red-400">Kelola
-                        Sekolah</a>
-                    <a href="{{ route('admin.rkas.cleanup') }}"
-                        class="block py-1.5 text-sm text-gray-500 hover:text-red-600 dark:hover:text-red-400">Hapus
-                        Anggaran</a>
-                    <a href="{{ route('admin.users.index') }}"
-                        class="block py-1.5 text-sm text-gray-500 hover:text-red-600 dark:hover:text-red-400">Kelola
-                        Users</a>
-                    <a href="{{ route('admin.korek.index') }}"
-                        class="block py-1.5 text-sm text-gray-500 hover:text-red-600 dark:hover:text-red-400">Kode
-                        Rekening</a>
-                    <a href="{{ route('setting.kegiatan.importjson') }}"
-                        class="block py-1.5 text-sm text-gray-500 hover:text-red-600 dark:hover:text-red-400">Import
-                        JSON</a>
-                    <a href="{{ route('admin.anggaran.index') }}"
-                        class="block py-1.5 text-sm text-gray-500 hover:text-red-600 dark:hover:text-red-400">Generate
-                        Anggaran</a>
+
+                        {{ $menu['label'] }}
+                    </a>
+                    @endforeach
+
                 </div>
             </div>
             @endrole

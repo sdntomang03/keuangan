@@ -145,8 +145,12 @@
                             Kegiatan (Terkunci)</label>
                         <div
                             class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm font-semibold text-gray-600">
-                            {{ $kegiatan->namagiat }}</div>
+                            {{ $kegiatan->namagiat }}
+                        </div>
+                        {{-- TAMBAHKAN HIDDEN INPUT INI --}}
+                        <input type="hidden" name="idbl" value="{{ $belanja->idbl }}">
                     </div>
+
                     <div class="flex-1">
                         <label class="text-[11px] font-bold text-gray-400 uppercase block mb-2 tracking-widest">2. Kode
                             Rekening (Terkunci)</label>
@@ -155,6 +159,8 @@
                             <span class="text-blue-600 font-bold mr-2">{{ $belanja->kode_rekening }}</span> {{
                             $belanja->korek->ket ?? '' }}
                         </div>
+                        {{-- TAMBAHKAN HIDDEN INPUT INI --}}
+                        <input type="hidden" name="kodeakun" value="{{ $belanja->kodeakun }}">
                     </div>
                 </div>
 
@@ -260,14 +266,17 @@
                             <template x-for="(pajak, pIndex) in pajaks" :key="pIndex">
                                 <div
                                     class="flex gap-3 mb-3 items-center bg-gray-50 p-3 rounded-xl border border-gray-100">
-                                    <select x-model="pajak.id_master" @change="calculateTotal()"
+                                    <select x-model="pajaks[pIndex].id_master" @change="calculateTotal()"
                                         :name="'pajaks[' + pIndex + '][id_master]'"
                                         class="flex-1 rounded-xl border-gray-200 text-sm">
                                         <option value="">-- Pilih Jenis Pajak --</option>
-                                        <template x-for="master in masterPajaks" :key="master.id">
-                                            <option :value="master.id"
-                                                x-text="master.nama_pajak + ' (' + master.persen + '%)'"></option>
-                                        </template>
+
+                                        {{-- Ganti <template x-for> menjadi @foreach milik Blade --}}
+                                            @foreach($listPajak as $master)
+                                            <option value="{{ $master->id }}">
+                                                {{ $master->nama_pajak }} ({{ $master->persen }}%)
+                                            </option>
+                                            @endforeach
                                     </select>
                                     <div class="w-32 text-sm font-bold text-orange-700 text-right"
                                         x-text="formatRupiah(pajak.nominal)"></div>

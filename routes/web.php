@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AnggaranController;
+use App\Http\Controllers\Admin\DasarPajakController;
 use App\Http\Controllers\Admin\KorekController;
 use App\Http\Controllers\Admin\RkasCleanupController;
 use App\Http\Controllers\Admin\SekolahController as AdminSekolahController;
@@ -337,7 +338,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
     Route::post('korek/import-update', [KorekController::class, 'importKorekUpdate'])->name('korek.import_update');
     Route::patch('korek/{korek}/update-jenis-belanja', [KorekController::class, 'updateJenisBelanjaAjax'])->name('korek.update_jenis_belanja');
     Route::post('korek/bulk-update-jenis', [KorekController::class, 'bulkUpdateJenisBelanja'])->name('korek.bulk_update_jenis');
-
+    Route::resource('dasar-pajak', DasarPajakController::class)->except(['show', 'create', 'edit']);
     // Cleanup
     Route::get('/rkas/cleanup', [RkasCleanupController::class, 'index'])->name('rkas.cleanup');
     Route::get('/api/anggaran-by-sekolah/{sekolahId}', [RkasCleanupController::class, 'getAnggaranBySekolah']);
