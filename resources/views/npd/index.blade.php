@@ -82,35 +82,41 @@
             </div>
             @endif
 
-            {{-- FORM FILTER PENCARIAN --}}
+
+            {{-- FORM FILTER PENCARIAN DROPDOWN --}}
             <div class="mb-6 bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
                 <form action="{{ route('npd.index') }}" method="GET" class="flex flex-col md:flex-row gap-4 items-end">
 
-                    <div class="w-full md:w-1/3">
+                    <div class="w-full md:w-1/2">
                         <label for="nomor_npd"
-                            class="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-1">Cari Nomor
-                            Surat / NPD</label>
-                        <input type="text" name="nomor_npd" id="nomor_npd" value="{{ request('nomor_npd') }}"
-                            placeholder="Contoh: 001/NPD/2026"
-                            class="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg shadow-sm sm:text-sm">
-                    </div>
+                            class="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-1">
+                            Pilih Nomor NPD / Surat
+                        </label>
+                        <select name="nomor_npd" id="nomor_npd"
+                            class="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg shadow-sm sm:text-sm font-semibold text-gray-800">
+                            <option value="">-- Tampilkan Semua di Triwulan {{ $triwulanAktif }} --</option>
 
-                    <div class="w-full md:w-1/4">
-                        <label for="surat_id"
-                            class="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-1">Atau ID
-                            Surat</label>
-                        <input type="number" name="surat_id" id="surat_id" value="{{ request('surat_id') }}"
-                            placeholder="Contoh ID: 5"
-                            class="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg shadow-sm sm:text-sm">
+                            {{-- Looping daftar nomor dari controller --}}
+                            @foreach($listNomorNpd as $nomor)
+                            <option value="{{ $nomor }}" {{ request('nomor_npd')==$nomor ? 'selected' : '' }}>
+                                {{ $nomor }}
+                            </option>
+                            @endforeach
+                        </select>
                     </div>
 
                     <div class="flex gap-2 w-full md:w-auto">
                         <button type="submit"
                             class="inline-flex justify-center items-center px-4 py-2 bg-gray-800 border border-transparent rounded-lg font-bold text-xs text-white uppercase tracking-widest hover:bg-gray-700 active:bg-gray-900 transition">
-                            Cari Filter
+                            <svg class="w-4 h-4 me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z">
+                                </path>
+                            </svg>
+                            Filter
                         </button>
 
-                        @if(request('nomor_npd') || request('surat_id'))
+                        @if(request('nomor_npd'))
                         <a href="{{ route('npd.index') }}"
                             class="inline-flex justify-center items-center px-4 py-2 bg-white border border-gray-300 rounded-lg font-bold text-xs text-gray-700 uppercase tracking-widest hover:bg-gray-50 transition">
                             Reset

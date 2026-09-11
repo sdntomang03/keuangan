@@ -206,33 +206,39 @@ class NpdController extends Controller
             default => []
         };
 
-        // 1. Inisialisasi Query Dasar
+        // 1. AMBIL DATA DROPDOWN (Ambil nomor NPD yang unik di triwulan ini)
+        $listNomorNpd = Npd::where('sekolah_id', $sekolahId)
+            ->where('triwulan', $triwulanAktif)
+            ->select('nomor_npd')
+            ->distinct()
+            ->pluck('nomor_npd');
+
+        // 2. Inisialisasi Query Dasar
         $query = Npd::with(['kegiatan', 'korek'])
             ->where('sekolah_id', $sekolahId)
             ->withSum(['belanjas as realisasi_nota' => function ($q) use ($bulanArray) {
                 $q->whereIn(DB::raw('MONTH(tanggal)'), $bulanArray);
             }], DB::raw('subtotal + ppn'));
 
-        // 2. Terapkan Filter (Berdasarkan surat_id ATAU nomor_npd)
-        if ($request->filled('surat_id')) {
-            $query->where('surat_id', $request->surat_id);
-        } elseif ($request->filled('nomor_npd')) {
-            $query->where('nomor_npd', 'like', '%'.$request->nomor_npd.'%');
+        // 3. Terapkan Filter (Hanya berdasarkan dropdown nomor_npd)
+        if ($request->filled('nomor_npd')) {
+            $query->where('nomor_npd', $request->nomor_npd);
         } else {
-            // Default: Hanya tampilkan Triwulan Aktif jika tidak ada filter pencarian
+            // Default: Hanya tampilkan Triwulan Aktif
             $query->where('triwulan', $triwulanAktif);
         }
 
-        // 3. Hitung Total Pengajuan (Gunakan clone agar query aslinya tidak tereksekusi habis)
+        // 4. Hitung Total Pengajuan
         $totalPengajuan = (clone $query)->sum('nilai_npd');
 
-        // 4. Eksekusi Paginate dan Bawa Query String untuk tombol Next/Prev halaman
+        // 5. Eksekusi Paginate
         $listNpd = $query->orderBy('tanggal', 'desc')
             ->orderBy('nomor_npd', 'desc')
             ->paginate(20)
             ->withQueryString();
 
-        return view('npd.index', compact('listNpd', 'triwulanAktif', 'totalPengajuan'));
+        // Pastikan variabel $listNomorNpd ikut dikirim ke view menggunakan compact
+        return view('npd.index', compact('listNpd', 'triwulanAktif', 'totalPengajuan', 'listNomorNpd'));
     }
 
     public function storeSurat(Request $request)
