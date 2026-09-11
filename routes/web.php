@@ -12,6 +12,7 @@ use App\Http\Controllers\ArkasController;
 use App\Http\Controllers\BarangController;
 use App\Http\Controllers\BelanjaController;
 use App\Http\Controllers\BkuController;
+use App\Http\Controllers\CatatanController;
 use App\Http\Controllers\CetakController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EkskulController;
@@ -50,6 +51,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/anggaran/switch', [DashboardController::class, 'switch'])->name('anggaran.switch');
     Route::get('/cetak-cover', [CetakController::class, 'cetakCover'])->name('cetak.cover');
     Route::post('/anggaran/switch-tw', [DashboardController::class, 'switchTw'])->name('anggaran.switch-tw');
+    Route::resource('catatan', CatatanController::class)->only(['index', 'store', 'destroy']);
+    Route::patch('catatan/{catatan}/toggle-tl', [CatatanController::class, 'toggleTl'])->name('catatan.toggle-tl');
 });
 
 // =========================================================================

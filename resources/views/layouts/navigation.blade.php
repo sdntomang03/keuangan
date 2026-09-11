@@ -270,6 +270,23 @@
                     </div>
                     Perencanaan Manual
                 </a>
+                <a href="{{ route('catatan.index') }}"
+                    class="flex items-center px-3 py-2.5 text-sm font-bold rounded-lg border transition-all duration-300 {{ request()->routeIs('catatan.*') ? 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-sm' : 'border-gray-200 text-gray-700 hover:border-indigo-300 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800' }}">
+                    <div class="relative flex items-center justify-center mr-3">
+                        <svg class="w-5 h-5 {{ request()->routeIs('catatan.*') ? 'text-indigo-600' : 'text-gray-400' }}"
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                            </path>
+                        </svg>
+                        @if(request()->routeIs('catatan.*'))
+                        <span class="absolute -top-1 -right-1 flex h-2 w-2"><span
+                                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span><span
+                                class="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span></span>
+                        @endif
+                    </div>
+                    Catatan
+                </a>
             </div>
             @endcanany
 
