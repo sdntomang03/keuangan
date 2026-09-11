@@ -191,7 +191,7 @@ class NpdController extends Controller
         }
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->user();
         $sekolahId = $user->sekolah_id;
@@ -206,20 +206,31 @@ class NpdController extends Controller
             default => []
         };
 
-        $listNpd = Npd::with(['kegiatan', 'korek'])
+        // 1. Inisialisasi Query Dasar
+        $query = Npd::with(['kegiatan', 'korek'])
             ->where('sekolah_id', $sekolahId)
-            ->where('triwulan', $triwulanAktif)
-    // Gunakan DB::raw untuk menjumlahkan subtotal dan ppn
             ->withSum(['belanjas as realisasi_nota' => function ($q) use ($bulanArray) {
                 $q->whereIn(DB::raw('MONTH(tanggal)'), $bulanArray);
-            }], DB::raw('subtotal + ppn')) // <--- Perubahan di sini
-            ->orderBy('tanggal', 'desc')
-            ->orderBy('nomor_npd', 'desc')
-            ->paginate(20);
+            }], DB::raw('subtotal + ppn'));
 
-        $totalPengajuan = Npd::where('sekolah_id', $sekolahId)
-            ->where('triwulan', $triwulanAktif)
-            ->sum('nilai_npd');
+        // 2. Terapkan Filter (Berdasarkan surat_id ATAU nomor_npd)
+        if ($request->filled('surat_id')) {
+            $query->where('surat_id', $request->surat_id);
+        } elseif ($request->filled('nomor_npd')) {
+            $query->where('nomor_npd', 'like', '%'.$request->nomor_npd.'%');
+        } else {
+            // Default: Hanya tampilkan Triwulan Aktif jika tidak ada filter pencarian
+            $query->where('triwulan', $triwulanAktif);
+        }
+
+        // 3. Hitung Total Pengajuan (Gunakan clone agar query aslinya tidak tereksekusi habis)
+        $totalPengajuan = (clone $query)->sum('nilai_npd');
+
+        // 4. Eksekusi Paginate dan Bawa Query String untuk tombol Next/Prev halaman
+        $listNpd = $query->orderBy('tanggal', 'desc')
+            ->orderBy('nomor_npd', 'desc')
+            ->paginate(20)
+            ->withQueryString();
 
         return view('npd.index', compact('listNpd', 'triwulanAktif', 'totalPengajuan'));
     }

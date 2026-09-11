@@ -7,8 +7,15 @@
                         d="M9 17v-2m3 2v-4m3 2v-6m-9-9H7c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V7l-5-5z">
                     </path>
                 </svg>
-                Monitoring Penarikan Dana — <span class="text-indigo-600 font-black">Triwulan {{ $triwulanAktif
-                    }}</span>
+                Monitoring Penarikan Dana —
+                <span class="text-indigo-600 font-black">
+                    {{-- Dinamis Text Header Tergantung Sedang Difilter atau Tidak --}}
+                    @if(request('nomor_npd') || request('surat_id'))
+                    Hasil Pencarian
+                    @else
+                    Triwulan {{ $triwulanAktif }}
+                    @endif
+                </span>
             </h2>
             <div class="flex items-center gap-2">
                 <a href="{{ route('npd.create') }}"
@@ -18,8 +25,9 @@
                     </svg>
                     Tambah NPD
                 </a>
-                {{-- Tombol Hapus: Hanya muncul jika ada data pengajuan di Triwulan ini --}}
-                @if($totalPengajuan > 0)
+
+                {{-- Sembunyikan tombol Hapus jika sedang memfilter data menggunakan pencarian --}}
+                @if($totalPengajuan > 0 && !request('nomor_npd') && !request('surat_id'))
                 <form action="{{ route('npd.destroy_triwulan') }}" method="POST"
                     onsubmit="return confirm('⚠️ PERINGATAN!\n\nApakah Anda yakin ingin menghapus seluruh data pengajuan NPD di Triwulan {{ $triwulanAktif }} ini?\n\nData yang sudah dihapus tidak dapat dikembalikan.');">
                     @csrf
@@ -36,7 +44,6 @@
                 </form>
                 @endif
 
-                {{-- Tombol Export Excel --}}
                 @if($totalPengajuan > 0)
                 <a href="{{ route('npd.export') }}"
                     class="inline-flex items-center px-4 py-2 bg-emerald-600 border border-transparent rounded-lg font-bold text-xs text-white uppercase tracking-widest hover:bg-emerald-700 shadow-md transition duration-150">
@@ -66,22 +73,64 @@
                     </svg>
                     {{ session('success') }}
                 </div>
-                <button @click="show = false" class="text-gray-400 hover:text-gray-600"><svg class="w-4 h-4" fill="none"
-                        stroke="currentColor" viewBox="0 0 24 24">
-                        <path d="M6 18L18 6M6 6l12 12"></path>
-                    </svg></button>
+                <button @click="show = false" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
             </div>
             @endif
+
+            {{-- FORM FILTER PENCARIAN --}}
+            <div class="mb-6 bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
+                <form action="{{ route('npd.index') }}" method="GET" class="flex flex-col md:flex-row gap-4 items-end">
+
+                    <div class="w-full md:w-1/3">
+                        <label for="nomor_npd"
+                            class="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-1">Cari Nomor
+                            Surat / NPD</label>
+                        <input type="text" name="nomor_npd" id="nomor_npd" value="{{ request('nomor_npd') }}"
+                            placeholder="Contoh: 001/NPD/2026"
+                            class="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg shadow-sm sm:text-sm">
+                    </div>
+
+                    <div class="w-full md:w-1/4">
+                        <label for="surat_id"
+                            class="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-1">Atau ID
+                            Surat</label>
+                        <input type="number" name="surat_id" id="surat_id" value="{{ request('surat_id') }}"
+                            placeholder="Contoh ID: 5"
+                            class="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg shadow-sm sm:text-sm">
+                    </div>
+
+                    <div class="flex gap-2 w-full md:w-auto">
+                        <button type="submit"
+                            class="inline-flex justify-center items-center px-4 py-2 bg-gray-800 border border-transparent rounded-lg font-bold text-xs text-white uppercase tracking-widest hover:bg-gray-700 active:bg-gray-900 transition">
+                            Cari Filter
+                        </button>
+
+                        @if(request('nomor_npd') || request('surat_id'))
+                        <a href="{{ route('npd.index') }}"
+                            class="inline-flex justify-center items-center px-4 py-2 bg-white border border-gray-300 rounded-lg font-bold text-xs text-gray-700 uppercase tracking-widest hover:bg-gray-50 transition">
+                            Reset
+                        </a>
+                        @endif
+                    </div>
+                </form>
+            </div>
 
             {{-- Stat Cards --}}
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 <div class="bg-indigo-700 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
                     <div class="relative z-10">
-                        <p class="text-xs font-bold opacity-80 uppercase tracking-widest">Total Dana Ditarik (NPD)</p>
+                        <p class="text-xs font-bold opacity-80 uppercase tracking-widest">
+                            @if(request('nomor_npd') || request('surat_id')) Total Dana Difilter @else Total Dana
+                            Ditarik (NPD) @endif
+                        </p>
                         <p class="text-3xl font-black mt-1">Rp {{ number_format($totalPengajuan, 0, ',', '.') }}</p>
                     </div>
                 </div>
-                {{-- Placeholder untuk card tambahan (misal realisasi belanja total) --}}
             </div>
 
             {{-- Main Table --}}
@@ -111,16 +160,10 @@
                                         $npd->tanggal->format('d/m/Y') }}</div>
                                 </td>
                                 <td class="px-6 py-4 text-left font-bold text-gray-900 border-l border-gray-50">
-
                                     {{ $npd->kegiatan->namagiat ?? '-' }}
-
-
                                 </td>
                                 <td class="px-6 py-4 text-left font-bold text-gray-900 border-l border-gray-50">
-
-
                                     {{ $npd->korek->ket ?? '' }}
-
                                 </td>
                                 <td class="px-6 py-4 text-right font-bold text-gray-900 border-l border-gray-50">
                                     {{ number_format($npd->nilai_npd, 0, ',', '.') }}
@@ -150,7 +193,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="5" class="px-6 py-24 text-center text-gray-400 bg-white">
+                                <td colspan="6" class="px-6 py-24 text-center text-gray-400 bg-white">
                                     <div class="flex flex-col items-center">
                                         <div class="p-4 bg-gray-50 rounded-full mb-4">
                                             <svg class="w-12 h-12 text-gray-200" fill="none" stroke="currentColor"
@@ -160,8 +203,13 @@
                                                 </path>
                                             </svg>
                                         </div>
-                                        <p class="font-bold text-gray-300 uppercase tracking-widest text-xs italic">Data
-                                            pengajuan NPD belum tersedia untuk triwulan ini.</p>
+                                        <p class="font-bold text-gray-400 uppercase tracking-widest text-xs italic">
+                                            @if(request('nomor_npd') || request('surat_id'))
+                                            Tidak ada data NPD yang cocok dengan pencarian Anda.
+                                            @else
+                                            Data pengajuan NPD belum tersedia untuk triwulan ini.
+                                            @endif
+                                        </p>
                                     </div>
                                 </td>
                             </tr>
@@ -188,6 +236,7 @@
                 </div>
 
                 <div class="px-6 py-4 bg-white border-t border-gray-100">
+                    {{-- Pagination dengan Query String agar filter tidak hilang saat ganti halaman --}}
                     {{ $listNpd->links() }}
                 </div>
             </div>
@@ -198,6 +247,5 @@
             </div>
         </div>
     </div>
-
 
 </x-app-layout>
