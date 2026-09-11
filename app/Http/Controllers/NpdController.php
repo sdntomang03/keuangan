@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Exports\NpdExport;
 use App\Models\Npd;
 use App\Models\Rkas;
 use App\Models\Sekolah;
@@ -10,7 +9,6 @@ use App\Models\Surat;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Maatwebsite\Excel\Facades\Excel;
 
 class NpdController extends Controller
 {
@@ -306,7 +304,7 @@ class NpdController extends Controller
         }
     }
 
-    public function exportExcel()
+    public function exportExcel(Request $request)
     {
         $user = auth()->user();
         $sekolah = $user->sekolah;
@@ -321,20 +319,29 @@ class NpdController extends Controller
             default => []
         };
 
-        $listNpd = Npd::with(['kegiatan', 'korek'])
+        // Inisialisasi Query Export
+        $query = Npd::with(['kegiatan', 'korek'])
             ->where('sekolah_id', $sekolah->id)
             ->where('triwulan', $triwulanAktif)
             ->withSum(['belanjas as realisasi_nota' => function ($q) use ($bulanArray) {
                 $q->whereIn(DB::raw('MONTH(tanggal)'), $bulanArray);
-            }], DB::raw('subtotal + ppn'))
-            ->orderBy('tanggal', 'desc')
-            ->get();
+            }], DB::raw('subtotal + ppn'));
 
-        $fileName = "NPD_{$sekolah->nama_sekolah}_TW_{$triwulanAktif}_".date('Ymd_His').'.xlsx';
+        // CEK FILTER: Terapkan filter jika dropdown nomor_npd dipilih
+        if ($request->filled('nomor_npd')) {
+            $query->where('nomor_npd', $request->nomor_npd);
+        }
 
-        // Kirim data tambahan ke Constructor Export
-        return Excel::download(
-            new NpdExport($listNpd, $triwulanAktif, $sekolah->nama_sekolah),
+        // Eksekusi data (tanpa paginate)
+        $listNpd = $query->orderBy('tanggal', 'desc')->get();
+
+        // Buat nama file dinamis sesuai filter
+        $filterName = $request->filled('nomor_npd') ? str_replace('/', '_', $request->nomor_npd) : 'SEMUA';
+        $fileName = "NPD_{$sekolah->nama_sekolah}_TW_{$triwulanAktif}_{$filterName}_".date('Ymd_His').'.xlsx';
+
+        // Kirim data tambahan ($request->nomor_npd) ke Constructor Export
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\NpdExport($listNpd, $triwulanAktif, $sekolah->nama_sekolah, $request->nomor_npd),
             $fileName
         );
     }

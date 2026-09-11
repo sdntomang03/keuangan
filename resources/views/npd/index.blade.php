@@ -44,8 +44,10 @@
                 </form>
                 @endif
 
+                {{-- Tombol Export Excel --}}
                 @if($totalPengajuan > 0)
-                <a href="{{ route('npd.export') }}"
+                {{-- Gunakan request()->query() agar semua parameter filter ikut terbawa ke route export --}}
+                <a href="{{ route('npd.export', request()->query()) }}"
                     class="inline-flex items-center px-4 py-2 bg-emerald-600 border border-transparent rounded-lg font-bold text-xs text-white uppercase tracking-widest hover:bg-emerald-700 shadow-md transition duration-150">
                     <svg class="w-4 h-4 me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

@@ -11,7 +11,6 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-// PERHATIKAN: Saya menghapus "WithHeadings" karena kita akan membuat header secara manual
 class NpdExport implements FromArray, ShouldAutoSize, WithColumnFormatting, WithStyles
 {
     protected $listNpd;
@@ -20,27 +19,35 @@ class NpdExport implements FromArray, ShouldAutoSize, WithColumnFormatting, With
 
     protected $namaSekolah;
 
-    public function __construct($listNpd, $triwulan, $namaSekolah)
+    protected $nomorNpd; // Tambahkan properti ini
+
+    // Update Constructor
+    public function __construct($listNpd, $triwulan, $namaSekolah, $nomorNpd = null)
     {
         $this->listNpd = $listNpd;
         $this->triwulan = $triwulan;
         $this->namaSekolah = $namaSekolah;
+        $this->nomorNpd = $nomorNpd;
     }
 
     public function array(): array
     {
         $rows = [];
 
-        // Baris 1: Judul Utama
+        // Baris 1: Judul Utama[cite: 5]
         $rows[] = ['LAPORAN MONITORING PENARIKAN DANA (NPD)', '', '', '', '', '', '', ''];
 
-        // Baris 2: Sub Judul
-        $rows[] = [strtoupper($this->namaSekolah).' - TRIWULAN '.$this->triwulan, '', '', '', '', '', '', ''];
+        // Baris 2: Sub Judul (Beri Keterangan Jika Difilter)
+        $subJudul = strtoupper($this->namaSekolah).' - TRIWULAN '.$this->triwulan;
+        if ($this->nomorNpd) {
+            $subJudul .= ' (FILTER NOMOR: '.$this->nomorNpd.')';
+        }
+        $rows[] = [$subJudul, '', '', '', '', '', '', ''];
 
-        // Baris 3: Pemisah Kosong
+        // Baris 3: Pemisah Kosong[cite: 5]
         $rows[] = ['', '', '', '', '', '', '', ''];
 
-        // Baris 4: Header Tabel
+        // Baris 4: Header Tabel[cite: 5]
         $rows[] = [
             'Nomor NPD',
             'Tanggal',
@@ -52,14 +59,13 @@ class NpdExport implements FromArray, ShouldAutoSize, WithColumnFormatting, With
             'Status',
         ];
 
-        // Baris 5: Data Mulai dari Sini
+        // Baris 5: Data Mulai dari Sini[cite: 5]
         $currentRow = 5;
 
         foreach ($this->listNpd as $npd) {
             $pagu = (float) ($npd->nilai_npd ?? 0);
             $realisasi = (float) ($npd->realisasi_nota ?? 0);
 
-            // Rumus sekarang dijamin tidak akan bergeser nilainya
             $formulaSisa = "=E{$currentRow}-F{$currentRow}";
             $formulaStatus = "=IF(G{$currentRow}>0,\"STS\",\"Sesuai\")";
 
@@ -79,7 +85,7 @@ class NpdExport implements FromArray, ShouldAutoSize, WithColumnFormatting, With
 
         $lastDataRow = $currentRow - 1;
 
-        // Baris Total Keseluruhan (Jika datanya ada)
+        // Baris Total Keseluruhan (Jika datanya ada)[cite: 5]
         if ($lastDataRow >= 5) {
             $rows[] = [
                 '', '', '', 'TOTAL KESELURUHAN',
@@ -95,7 +101,6 @@ class NpdExport implements FromArray, ShouldAutoSize, WithColumnFormatting, With
 
     public function columnFormats(): array
     {
-        // Format Accounting
         $formatRupiah = '_("Rp"* #,##0_);_("Rp"* -#,##0_);_("Rp"* 0_);_(@_)';
 
         return [
@@ -107,26 +112,21 @@ class NpdExport implements FromArray, ShouldAutoSize, WithColumnFormatting, With
 
     public function styles(Worksheet $sheet)
     {
-        // Total keseluruhan baris (Data + 4 baris awal + 1 baris total)
         $lastRow = count($this->listNpd) + 5;
 
-        // 1. Merge sel untuk Judul (Baris 1 dan 2)
         $sheet->mergeCells('A1:H1');
         $sheet->mergeCells('A2:H2');
 
-        // Style Judul Utama
         $sheet->getStyle('A1')->applyFromArray([
             'font' => ['bold' => true, 'size' => 16],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
         ]);
 
-        // Style Sub-Judul
         $sheet->getStyle('A2')->applyFromArray([
             'font' => ['bold' => true, 'size' => 12],
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
         ]);
 
-        // 2. Style Header Tabel (Baris 4)
         $sheet->getStyle('A4:H4')->applyFromArray([
             'font' => ['bold' => true, 'color' => ['argb' => 'FFFFFFFF']],
             'fill' => [
@@ -139,7 +139,6 @@ class NpdExport implements FromArray, ShouldAutoSize, WithColumnFormatting, With
             ],
         ]);
 
-        // 3. Style Border (Mulai dari baris 4 sampai bawah)
         $sheet->getStyle('A4:H'.$lastRow)->applyFromArray([
             'borders' => [
                 'allBorders' => [
@@ -149,7 +148,6 @@ class NpdExport implements FromArray, ShouldAutoSize, WithColumnFormatting, With
             ],
         ]);
 
-        // 4. Style Baris Total Keseluruhan (Paling Bawah)
         $sheet->getStyle('A'.$lastRow.':H'.$lastRow)->applyFromArray([
             'font' => ['bold' => true],
             'fill' => [
@@ -158,7 +156,6 @@ class NpdExport implements FromArray, ShouldAutoSize, WithColumnFormatting, With
             ],
         ]);
 
-        // Perataan Khusus (Tengah & Kanan)
         $sheet->getStyle('D'.$lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
 
         if ($lastRow > 4) {
