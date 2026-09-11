@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('npds', function (Blueprint $table) {
             $table->id();
             $table->foreignId('sekolah_id')->constrained('sekolahs')->onDelete('cascade');
+            $table->foreignId('surat_id')->nullable()->after('sekolah_id')->constrained('surats')->onDelete('cascade');
             $table->string('nomor_npd');
             $table->date('tanggal');
 

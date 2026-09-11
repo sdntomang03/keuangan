@@ -164,6 +164,7 @@ class NpdController extends Controller
 
                 Npd::create([
                     'sekolah_id' => $sekolahId,
+                    'surat_id' => $suratNpd->id,
                     'nomor_npd' => $suratNpd->nomor_surat, // <-- Integrasi dengan Nomor Surat Induk
                     'tanggal' => $request->tanggal,
                     'triwulan' => $triwulanAktif,
