@@ -8,16 +8,16 @@
     <div class="py-12 bg-gray-50" x-data="{
         // State untuk Modal Tambah (jika ada)
         openModal: false,
-
+    
         // State untuk Modal Edit
         openEditModal: false,
         editData: { id: '', tanggal: '', no_bukti: '', uraian: '', nominal: '' },
-
+    
         // State untuk Modal DETAIL (Preview Emerald)
         open: false,
         loading: false,
         data: null,
-
+    
         // FUNGSI COPY TEXT (Support HTTP & HTTPS)
         copyText(text) {
             if (navigator.clipboard && window.isSecureContext) {
@@ -38,7 +38,7 @@
                 });
             }
         },
-
+    
         // Fungsi Fetch untuk EDIT (Modal Biru)
         async fetchEdit(id) {
             try {
@@ -50,7 +50,7 @@
                 alert('Gagal mengambil data transaksi.');
             }
         },
-
+    
         // Fungsi Fetch untuk DETAIL (Modal Emerald)
         fetchDetail(id) {
             this.loading = true;
@@ -113,7 +113,7 @@
                             </svg>
                         </button>
                     </div>
-                    @if($errors->any())
+                    @if ($errors->any())
                     <ul class="mt-2 ml-7 list-disc list-inside text-xs font-semibold uppercase tracking-tighter">
                         @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -137,7 +137,8 @@
                                 onchange="this.form.submit()">
 
                                 {{-- Value kosong untuk Semua Triwulan --}}
-                                <option value="" {{ $filterTw=='' ? 'selected' : '' }}>-- Semua Triwulan --</option>
+                                <option value="" {{ $filterTw=='' ? 'selected' : '' }}>-- Semua Triwulan --
+                                </option>
 
                                 {{-- Opsi Triwulan --}}
                                 <option value="1" {{ $filterTw=='1' ? 'selected' : '' }}>Triwulan 1</option>
@@ -188,26 +189,7 @@
                             </thead>
                             <tbody class="divide-y divide-gray-100">
 
-                                {{-- ========================================================== --}}
-                                {{-- BARIS SALDO AWAL (Hanya muncul jika filter TW > 1) --}}
-                                {{-- ========================================================== --}}
-                                @if(request('tw') && request('tw') > 1 && isset($saldoAwal))
-                                <tr class="bg-gray-100/80 font-bold text-gray-600">
-                                    <td class="px-6 py-4 text-center">-</td>
-                                    <td class="px-6 py-4 text-center">-</td>
-                                    <td class="px-6 py-4 text-center">-</td>
-                                    <td class="px-6 py-4 uppercase italic tracking-wide">
-                                        Saldo S.D. Triwulan {{ request('tw') - 1 }}
-                                    </td>
-                                    <td class="px-6 py-4 text-right text-gray-400">-</td>
-                                    <td class="px-6 py-4 text-right text-gray-400">-</td>
-                                    <td class="px-6 py-4 text-right font-black text-gray-800 bg-blue-50/50">
-                                        {{ number_format($saldoAwal, 0, ',', '.') }}
-                                    </td>
-                                    <td class="px-6 py-4 bg-blue-50/50"></td>
-                                </tr>
-                                @endif
-                                {{-- ========================================================== --}}
+
 
                                 @forelse($bkus->reverse() as $item)
 
@@ -226,12 +208,11 @@
                                         <div class="flex flex-col">
                                             <div @click="expanded = !expanded"
                                                 class="flex items-center cursor-pointer group">
-                                                <span
-                                                    :class="expanded ? 'text-blue-600 font-bold' : 'text-gray-700 font-medium'"
-                                                    class="transition-all italic">
+                                                <span :class="expanded ? 'text-blue-600 font-bold' :
+                                                            'text-gray-700 font-medium'" class="transition-all italic">
                                                     {{ $item->uraian }}
                                                 </span>
-                                                @if($item->belanja)
+                                                @if ($item->belanja)
                                                 <svg class="w-4 h-4 ml-2 text-gray-400 transition-transform duration-300"
                                                     :class="expanded ? 'rotate-180' : ''" fill="none"
                                                     stroke="currentColor" viewBox="0 0 24 24">
@@ -242,7 +223,7 @@
                                             </div>
 
                                             {{-- Detail Collapse Belanja --}}
-                                            @if($item->belanja)
+                                            @if ($item->belanja)
                                             <div x-show="expanded" x-cloak
                                                 class="mt-3 overflow-hidden transition-all duration-300">
                                                 <div
@@ -253,7 +234,8 @@
                                                             Kegiatan</span>
                                                         <span
                                                             class="text-[11px] font-bold text-gray-800 block uppercase mt-1">
-                                                            {{ $item->belanja->kegiatan->namagiat ?? '⚠️ Data Tidak
+                                                            {{ $item->belanja->kegiatan->namagiat ??
+                                                            '⚠️ Data Tidak
                                                             Ditemukan' }}
                                                         </span>
                                                     </div>
@@ -267,15 +249,16 @@
                                                                 }}
                                                             </span>
 
-                                                            @if(isset($item->belanja->rekanan))
+                                                            @if (isset($item->belanja->rekanan))
                                                             <div class="flex flex-col mt-1 space-y-0.5">
                                                                 <div class="flex items-center gap-1">
                                                                     <span
                                                                         class="text-[8px] font-bold text-gray-400 uppercase">Rek:</span>
                                                                     <span class="text-[9px] text-gray-600 font-medium">
-                                                                        {{ $item->belanja->rekanan->nama_bank ?? '' }} |
-                                                                        {{
-                                                                        $item->belanja->rekanan->no_rekening ?? '-' }}
+                                                                        {{ $item->belanja->rekanan->nama_bank ?? '' }}
+                                                                        |
+                                                                        {{ $item->belanja->rekanan->no_rekening ?? '-'
+                                                                        }}
                                                                     </span>
                                                                 </div>
                                                                 <div class="flex items-center gap-1">
@@ -306,7 +289,7 @@
                                     </td>
                                     <td class="px-6 py-4 text-center bg-gray-50/50">
                                         <div class="flex items-center justify-center gap-2">
-                                            @if($item->belanja_id)
+                                            @if ($item->belanja_id)
                                             <div class="flex items-center gap-2">
                                                 <button type="button"
                                                     @click="$dispatch('open-modal-detail', { id: {{ $item->belanja_id }} })"
@@ -339,7 +322,7 @@
                                                     </button>
                                                 </form>
 
-                                                @if($item->pajak_id)
+                                                @if ($item->pajak_id)
                                                 <form action="{{ route('pajak.hapus_setor', $item->pajak_id) }}"
                                                     method="POST" class="inline">
                                                     @csrf
@@ -396,7 +379,7 @@
                                 @empty
                                 <tr>
                                     <td colspan="8" class="px-6 py-10 text-center text-gray-400 italic">
-                                        @if(isset($saldoAwal) && $saldoAwal > 0)
+                                        @if (isset($saldoAwal) && $saldoAwal > 0)
                                         Belum ada transaksi di triwulan ini.
                                         @else
                                         Belum ada data transaksi.
@@ -404,6 +387,26 @@
                                     </td>
                                 </tr>
                                 @endforelse
+                                {{-- ========================================================== --}}
+                                {{-- BARIS SALDO AWAL (Hanya muncul jika filter TW > 1) --}}
+                                {{-- ========================================================== --}}
+                                @if (request('tw') && request('tw') > 1 && isset($saldoAwal))
+                                <tr class="bg-gray-100/80 font-bold text-gray-600">
+                                    <td class="px-6 py-4 text-center">-</td>
+                                    <td class="px-6 py-4 text-center">-</td>
+                                    <td class="px-6 py-4 text-center">-</td>
+                                    <td class="px-6 py-4 uppercase italic tracking-wide">
+                                        Saldo S.D. Triwulan {{ request('tw') - 1 }}
+                                    </td>
+                                    <td class="px-6 py-4 text-right text-gray-400">-</td>
+                                    <td class="px-6 py-4 text-right text-gray-400">-</td>
+                                    <td class="px-6 py-4 text-right font-black text-gray-800 bg-blue-50/50">
+                                        {{ number_format($saldoAwal, 0, ',', '.') }}
+                                    </td>
+                                    <td class="px-6 py-4 bg-blue-50/50"></td>
+                                </tr>
+                                @endif
+                                {{-- ========================================================== --}}
                             </tbody>
                         </table>
                     </div>
@@ -742,10 +745,11 @@
                                                     <template x-for="pjk in data.belanja.pajaks"
                                                         :key="pjk.dasar_pajak_id">
                                                         <div x-data="{
-    teksUraian: pjk.is_setor == 1
-        ? `Disetor ${pjk.master_pajak?.nama_pajak || 'Pajak'} atas SPJ ${data.belanja?.uraian || ''}`
-        : `Diterima ${pjk.master_pajak?.nama_pajak || 'Pajak'} atas SPJ ${data.belanja?.uraian || ''} dari ${data.belanja?.rekanan?.nama_rekanan || '-'}`
- }" class="flex justify-between items-center bg-white p-2.5 rounded-lg border border-red-50 shadow-sm">
+                                                            teksUraian: pjk.is_setor == 1 ?
+                                                                `Disetor ${pjk.master_pajak?.nama_pajak || 'Pajak'} atas SPJ ${data.belanja?.uraian || ''}` :
+                                                                `Diterima ${pjk.master_pajak?.nama_pajak || 'Pajak'} atas SPJ ${data.belanja?.uraian || ''} dari ${data.belanja?.rekanan?.nama_rekanan || '-'}`
+                                                        }"
+                                                            class="flex justify-between items-center bg-white p-2.5 rounded-lg border border-red-50 shadow-sm">
 
                                                             <div class="flex flex-col pr-2">
                                                                 <span
@@ -763,7 +767,8 @@
         copied = true;
         setTimeout(() => copied = false, 2000)
     " class="relative flex items-center justify-center p-1 rounded-md transition-all duration-200 shrink-0 group"
-                                                                        :class="copied ? 'bg-green-50 text-green-600' : 'bg-gray-50 text-gray-400 hover:bg-blue-50 hover:text-blue-500'">
+                                                                        :class="copied ? 'bg-green-50 text-green-600' :
+                                                                            'bg-gray-50 text-gray-400 hover:bg-blue-50 hover:text-blue-500'">
 
                                                                         <svg x-show="!copied"
                                                                             xmlns="http://www.w3.org/2000/svg"
