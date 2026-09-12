@@ -189,26 +189,7 @@
                             </thead>
                             <tbody class="divide-y divide-gray-100">
 
-                                {{-- ========================================================== --}}
-                                {{-- BARIS SALDO AWAL (Hanya muncul jika filter TW > 1) --}}
-                                {{-- ========================================================== --}}
-                                @if (request('tw') && request('tw') > 1 && isset($saldoAwal))
-                                <tr class="bg-gray-100/80 font-bold text-gray-600">
-                                    <td class="px-6 py-4 text-center">-</td>
-                                    <td class="px-6 py-4 text-center">-</td>
-                                    <td class="px-6 py-4 text-center">-</td>
-                                    <td class="px-6 py-4 uppercase italic tracking-wide">
-                                        Saldo S.D. Triwulan {{ request('tw') - 1 }}
-                                    </td>
-                                    <td class="px-6 py-4 text-right text-gray-400">-</td>
-                                    <td class="px-6 py-4 text-right text-gray-400">-</td>
-                                    <td class="px-6 py-4 text-right font-black text-gray-800 bg-blue-50/50">
-                                        {{ number_format($saldoAwal, 0, ',', '.') }}
-                                    </td>
-                                    <td class="px-6 py-4 bg-blue-50/50"></td>
-                                </tr>
-                                @endif
-                                {{-- ========================================================== --}}
+
 
                                 @forelse($bkus->reverse() as $item)
 
@@ -406,6 +387,26 @@
                                     </td>
                                 </tr>
                                 @endforelse
+                                {{-- ========================================================== --}}
+                                {{-- BARIS SALDO AWAL (Hanya muncul jika filter TW > 1) --}}
+                                {{-- ========================================================== --}}
+                                @if (request('tw') && request('tw') > 1 && isset($saldoAwal))
+                                <tr class="bg-gray-100/80 font-bold text-gray-600">
+                                    <td class="px-6 py-4 text-center">-</td>
+                                    <td class="px-6 py-4 text-center">-</td>
+                                    <td class="px-6 py-4 text-center">-</td>
+                                    <td class="px-6 py-4 uppercase italic tracking-wide">
+                                        Saldo S.D. Triwulan {{ request('tw') - 1 }}
+                                    </td>
+                                    <td class="px-6 py-4 text-right text-gray-400">-</td>
+                                    <td class="px-6 py-4 text-right text-gray-400">-</td>
+                                    <td class="px-6 py-4 text-right font-black text-gray-800 bg-blue-50/50">
+                                        {{ number_format($saldoAwal, 0, ',', '.') }}
+                                    </td>
+                                    <td class="px-6 py-4 bg-blue-50/50"></td>
+                                </tr>
+                                @endif
+                                {{-- ========================================================== --}}
                             </tbody>
                         </table>
                     </div>
