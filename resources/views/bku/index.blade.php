@@ -390,7 +390,7 @@
                                 {{-- ========================================================== --}}
                                 {{-- BARIS SALDO AWAL (Hanya muncul jika filter TW > 1) --}}
                                 {{-- ========================================================== --}}
-                                @if (request('tw') && request('tw') > 1 && isset($saldoAwal))
+                                @if (isset($saldoAwal))
                                 <tr class="bg-gray-100/80 font-bold text-gray-600">
                                     <td colspan="4" class="px-6 py-4 uppercase italic tracking-wide text-right pr-6">
                                         Saldo Triwulan {{ request('tw') - 1 }}
