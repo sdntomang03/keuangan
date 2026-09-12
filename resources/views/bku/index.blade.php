@@ -229,15 +229,20 @@
                                 @endforelse
 
                                 {{-- ========================================================== --}}
-                                {{-- BARIS SALDO AWAL (Dipindah ke Paling Bawah) --}}
+                                {{-- BARIS SALDO AWAL (Berdasarkan Triwulan Aktif Database) --}}
                                 {{-- ========================================================== --}}
-                                @if(request('tw') && request('tw') > 1 && isset($saldoAwal))
+                                @php
+                                // Ambil angka triwulan aktif dari database (Misal: "Triwulan 2" jadi 2)
+                                $twAktif = (int) filter_var($sekolah->triwulan_aktif, FILTER_SANITIZE_NUMBER_INT);
+                                @endphp
+
+                                @if($twAktif > 1 && isset($saldoAwal))
                                 <tr class="bg-gray-100/80 font-bold text-gray-600 border-t-2 border-gray-300">
                                     <td class="px-6 py-4 text-center">-</td>
                                     <td class="px-6 py-4 text-center">-</td>
                                     <td class="px-6 py-4 text-center">-</td>
                                     <td class="px-6 py-4 uppercase italic tracking-wide">
-                                        Saldo S.D. Triwulan {{ request('tw') - 1 }}
+                                        Saldo S.D. Triwulan {{ $twAktif - 1 }}
                                     </td>
                                     <td class="px-6 py-4 text-right text-gray-400">-</td>
                                     <td class="px-6 py-4 text-right text-gray-400">-</td>
@@ -247,6 +252,7 @@
                                     <td class="px-6 py-4 bg-blue-50/50"></td>
                                 </tr>
                                 @endif
+                                {{-- ========================================================== --}}
                                 {{-- ========================================================== --}}
 
                             </tbody>
