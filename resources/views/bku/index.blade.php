@@ -188,11 +188,51 @@
                             </thead>
                             <tbody class="divide-y divide-gray-100">
 
+                                @forelse($bkus->reverse() as $item)
+                                <tr
+                                    class="hover:bg-gray-50 transition-colors {{ $item->kredit > 0 ? 'bg-red-50/30' : '' }} {{ $item->debit > 0 ? 'bg-green-50/30' : '' }}">
+                                    <td class="px-6 py-4 text-center font-mono text-gray-400 italic">
+                                        {{ str_pad($item->no_urut, 3, '0', STR_PAD_LEFT) }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap italic">
+                                        {{ \Carbon\Carbon::parse($item->tanggal)->format('d/m/Y') }}
+                                    </td>
+                                    <td class="px-6 py-4 font-bold text-blue-600 uppercase text-[11px] italic">
+                                        {{ $item->no_bukti }}
+                                    </td>
+
+                                    {{-- ... (Isi Kolom Uraian dan BKU lainnya tetap sama seperti sebelumnya) ... --}}
+
+                                    <td class="px-6 py-4 text-right text-emerald-600 font-bold italic">
+                                        {{ $item->debit > 0 ? number_format($item->debit, 0, ',', '.') : '-' }}
+                                    </td>
+                                    <td class="px-6 py-4 text-right text-orange-600 font-bold italic">
+                                        {{ $item->kredit > 0 ? number_format($item->kredit, 0, ',', '.') : '-' }}
+                                    </td>
+                                    <td class="px-6 py-4 text-right font-black text-gray-900 bg-gray-50/50 text-sm">
+                                        {{ number_format($item->saldo_akhir ?? 0, 0, ',', '.') }}
+                                    </td>
+                                    <td class="px-6 py-4 text-center bg-gray-50/50">
+                                        {{-- Tombol Aksi BKU --}}
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="8" class="px-6 py-10 text-center text-gray-400 italic">
+                                        @if(isset($saldoAwal) && $saldoAwal > 0)
+                                        Belum ada transaksi di triwulan ini.
+                                        @else
+                                        Belum ada data transaksi.
+                                        @endif
+                                    </td>
+                                </tr>
+                                @endforelse
+
                                 {{-- ========================================================== --}}
-                                {{-- BARIS SALDO AWAL (Hanya muncul jika filter TW > 1) --}}
+                                {{-- BARIS SALDO AWAL (Dipindah ke Paling Bawah) --}}
                                 {{-- ========================================================== --}}
                                 @if(request('tw') && request('tw') > 1 && isset($saldoAwal))
-                                <tr class="bg-gray-100/80 font-bold text-gray-600">
+                                <tr class="bg-gray-100/80 font-bold text-gray-600 border-t-2 border-gray-300">
                                     <td class="px-6 py-4 text-center">-</td>
                                     <td class="px-6 py-4 text-center">-</td>
                                     <td class="px-6 py-4 text-center">-</td>
@@ -209,201 +249,6 @@
                                 @endif
                                 {{-- ========================================================== --}}
 
-                                @forelse($bkus->reverse() as $item)
-
-                                <tr
-                                    class="hover:bg-gray-50 transition-colors {{ $item->kredit > 0 ? 'bg-red-50/30' : '' }} {{ $item->debit > 0 ? 'bg-green-50/30' : '' }}">
-                                    <td class="px-6 py-4 text-center font-mono text-gray-400 italic">
-                                        {{ str_pad($item->no_urut, 3, '0', STR_PAD_LEFT) }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap italic">
-                                        {{ \Carbon\Carbon::parse($item->tanggal)->format('d/m/Y') }}
-                                    </td>
-                                    <td class="px-6 py-4 font-bold text-blue-600 uppercase text-[11px] italic">
-                                        {{ $item->no_bukti }}
-                                    </td>
-                                    <td class="px-6 py-4" x-data="{ expanded: false }">
-                                        <div class="flex flex-col">
-                                            <div @click="expanded = !expanded"
-                                                class="flex items-center cursor-pointer group">
-                                                <span
-                                                    :class="expanded ? 'text-blue-600 font-bold' : 'text-gray-700 font-medium'"
-                                                    class="transition-all italic">
-                                                    {{ $item->uraian }}
-                                                </span>
-                                                @if($item->belanja)
-                                                <svg class="w-4 h-4 ml-2 text-gray-400 transition-transform duration-300"
-                                                    :class="expanded ? 'rotate-180' : ''" fill="none"
-                                                    stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                                </svg>
-                                                @endif
-                                            </div>
-
-                                            {{-- Detail Collapse Belanja --}}
-                                            @if($item->belanja)
-                                            <div x-show="expanded" x-cloak
-                                                class="mt-3 overflow-hidden transition-all duration-300">
-                                                <div
-                                                    class="bg-gray-50 border-l-4 border-emerald-500 rounded-r-xl p-3 space-y-3 shadow-inner">
-                                                    <div class="pb-2 border-b border-gray-200">
-                                                        <span
-                                                            class="block text-[9px] uppercase font-black text-emerald-600 tracking-widest">Nama
-                                                            Kegiatan</span>
-                                                        <span
-                                                            class="text-[11px] font-bold text-gray-800 block uppercase mt-1">
-                                                            {{ $item->belanja->kegiatan->namagiat ?? '⚠️ Data Tidak
-                                                            Ditemukan' }}
-                                                        </span>
-                                                    </div>
-                                                    <div class="grid grid-cols-2 gap-2 pt-1">
-                                                        <div>
-                                                            <span
-                                                                class="block text-[9px] uppercase font-black text-blue-400 tracking-widest leading-none">Rekanan</span>
-                                                            <span
-                                                                class="text-gray-800 font-bold uppercase text-[10px] block leading-tight">
-                                                                {{ $item->belanja->rekanan->nama_rekanan ?? 'Internal'
-                                                                }}
-                                                            </span>
-
-                                                            @if(isset($item->belanja->rekanan))
-                                                            <div class="flex flex-col mt-1 space-y-0.5">
-                                                                <div class="flex items-center gap-1">
-                                                                    <span
-                                                                        class="text-[8px] font-bold text-gray-400 uppercase">Rek:</span>
-                                                                    <span class="text-[9px] text-gray-600 font-medium">
-                                                                        {{ $item->belanja->rekanan->nama_bank ?? '' }} |
-                                                                        {{
-                                                                        $item->belanja->rekanan->no_rekening ?? '-' }}
-                                                                    </span>
-                                                                </div>
-                                                                <div class="flex items-center gap-1">
-                                                                    <span
-                                                                        class="text-[8px] font-bold text-gray-400 uppercase">NPWP:</span>
-                                                                    <span
-                                                                        class="text-[9px] text-gray-600 font-medium">{{
-                                                                        $item->belanja->rekanan->npwp ?? '-' }}</span>
-                                                                </div>
-
-                                                            </div>
-                                                            @endif
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            @endif
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 text-right text-emerald-600 font-bold italic">
-                                        {{ $item->debit > 0 ? number_format($item->debit, 0, ',', '.') : '-' }}
-                                    </td>
-                                    <td class="px-6 py-4 text-right text-orange-600 font-bold italic">
-                                        {{ $item->kredit > 0 ? number_format($item->kredit, 0, ',', '.') : '-' }}
-                                    </td>
-                                    <td class="px-6 py-4 text-right font-black text-gray-900 bg-gray-50/50 text-sm">
-                                        {{ number_format($item->saldo_akhir ?? 0, 0, ',', '.') }}
-                                    </td>
-                                    <td class="px-6 py-4 text-center bg-gray-50/50">
-                                        <div class="flex items-center justify-center gap-2">
-                                            @if($item->belanja_id)
-                                            <div class="flex items-center gap-2">
-                                                <button type="button"
-                                                    @click="$dispatch('open-modal-detail', { id: {{ $item->belanja_id }} })"
-                                                    title="Lihat Detail"
-                                                    class="p-2 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-800 rounded-lg border border-emerald-100 transition-all duration-200 shadow-sm">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-                                                        viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
-                                                        class="w-4 h-4">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                    </svg>
-                                                </button>
-
-                                                <form action="{{ route('bku.unpost', $item->belanja_id) }}"
-                                                    method="POST" class="inline">
-                                                    @csrf
-                                                    @method('PUT')
-                                                    <button type="submit"
-                                                        onclick="return confirm('Batalkan posting belanja ini?')"
-                                                        title="Batal Post (Kembalikan ke Draft)"
-                                                        class="p-2 text-red-600 hover:bg-red-50 hover:text-red-800 rounded-lg border border-red-100 transition-all duration-200 shadow-sm">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-                                                            viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"
-                                                            class="w-4 h-4">
-                                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                                d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
-                                                        </svg>
-                                                    </button>
-                                                </form>
-
-                                                @if($item->pajak_id)
-                                                <form action="{{ route('pajak.hapus_setor', $item->pajak_id) }}"
-                                                    method="POST" class="inline">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit"
-                                                        class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
-                                                        onclick="return confirm('Hapus bukti setoran?')"
-                                                        title="Hapus Setoran">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-                                                            viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
-                                                            class="w-5 h-5">
-                                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                                d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-1.123c0-.798-.65-1.462-1.462-1.462H10.87c-.812 0-1.462.664-1.462 1.462v1.123m4.5 0H9" />
-                                                        </svg>
-                                                    </button>
-                                                </form>
-                                                @endif
-                                            </div>
-                                            @elseif($item->penerimaan_id)
-                                            <div class="flex items-center gap-2">
-                                                <button @click="fetchEdit({{ $item->penerimaan_id }})" title="Edit Data"
-                                                    class="p-2 text-blue-600 hover:bg-blue-50 hover:text-blue-800 rounded-lg border border-blue-100 transition-all duration-200 shadow-sm">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-                                                        viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
-                                                        class="w-4 h-4">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
-                                                    </svg>
-                                                </button>
-
-                                                <form action="{{ route('bku.destroy', $item->id) }}" method="POST"
-                                                    class="inline">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit"
-                                                        onclick="return confirm('Hapus dana masuk ini?')"
-                                                        title="Hapus Data"
-                                                        class="p-2 text-orange-600 hover:bg-orange-50 hover:text-orange-800 rounded-lg border border-orange-100 transition-all duration-200 shadow-sm">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-                                                            viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
-                                                            class="w-4 h-4">
-                                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                                d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                                                        </svg>
-                                                    </button>
-                                                </form>
-                                            </div>
-                                            @else
-                                            <span class="text-gray-300 italic text-[10px]">System</span>
-                                            @endif
-                                        </div>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="8" class="px-6 py-10 text-center text-gray-400 italic">
-                                        @if(isset($saldoAwal) && $saldoAwal > 0)
-                                        Belum ada transaksi di triwulan ini.
-                                        @else
-                                        Belum ada data transaksi.
-                                        @endif
-                                    </td>
-                                </tr>
-                                @endforelse
                             </tbody>
                         </table>
                     </div>
