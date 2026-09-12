@@ -393,7 +393,7 @@
                                 @if (isset($saldoAwal))
                                 <tr class="bg-gray-100/80 font-bold text-gray-600">
                                     <td colspan="4" class="px-6 py-4 uppercase italic tracking-wide text-right pr-6">
-                                        Saldo Triwulan {{ request('tw') - 1 }}
+                                        Saldo
                                     </td>
                                     <td class="px-6 py-4 text-right text-gray-400">-</td>
                                     <td class="px-6 py-4 text-right text-gray-400">-</td>
