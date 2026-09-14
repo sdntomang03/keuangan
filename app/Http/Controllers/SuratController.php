@@ -6,6 +6,7 @@ use App\Models\Anggaran;
 use App\Models\Belanja;
 use App\Models\BelanjaFoto;
 use App\Models\Korek;
+use App\Models\PenomoranSurat;
 use App\Models\Rekanan;
 use App\Models\Sekolah;
 use App\Models\Surat;
@@ -104,20 +105,21 @@ class SuratController extends Controller
      */
     private function urutkanUlangNomorSurat($sekolahId, $tahun, $triwulanAktif)
     {
-        // 1. Ambil data sekolah untuk mendapatkan "nomor_surat" awal pada triwulan aktif
         $sekolah = Sekolah::find($sekolahId);
-
-        // Default jika field kosong
-        $baseNumber = 1;
-
-        if ($sekolah && $sekolah->nomor_surat) {
-            // Ambil angka depan dari field nomor_surat di tabel sekolahs
-            // Contoh isi field: "045" atau "045/UD.02.02"
-            $parts = explode('/', $sekolah->nomor_surat);
-            $baseNumber = (int) $parts[0];
+        if (! $sekolah) {
+            return;
         }
 
-        // 2. Ambil surat hanya di triwulan aktif untuk diurutkan
+        // 1. Ambil data nomor awal yang diinput manual oleh user
+        $penomoran = PenomoranSurat::where('sekolah_id', $sekolahId)
+            ->where('tahun', $tahun)
+            ->where('triwulan', $triwulanAktif)
+            ->first();
+
+        // Jika user belum input, default ke 1
+        $baseNumber = $penomoran ? $penomoran->nomor_awal : 1;
+
+        // 2. Ambil surat untuk diurutkan
         $surats = Surat::where('sekolah_id', $sekolahId)
             ->whereYear('tanggal_surat', $tahun)
             ->where('triwulan', $triwulanAktif)
@@ -125,9 +127,6 @@ class SuratController extends Controller
             ->orderBy('id', 'asc')
             ->get();
 
-        // 3. Tentukan Nomor Urut Mulai
-        // Karena base_number adalah nomor urut surat awal untuk TW ini,
-        // maka nomor urut langsung dimulai dari nilai tersebut (tanpa ditambah 1)
         $noUrut = $baseNumber;
 
         foreach ($surats as $surat) {

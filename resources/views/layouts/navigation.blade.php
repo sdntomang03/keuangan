@@ -233,6 +233,8 @@
                 <div x-show="open" x-transition.opacity.duration.200ms style="display: none;"
                     class="pl-11 pr-2 py-1 space-y-1">
 
+                    <a href="{{ route('penomoran-surat.index') }}"
+                        class="block py-1.5 text-sm {{ request()->routeIs('penomoran-surat.index') ? 'text-indigo-600 font-bold' : 'text-gray-500 hover:text-indigo-500' }}">Penomoran</a>
                     <a href="{{ route('surat.daftar') }}"
                         class="block py-1.5 text-sm {{ request()->routeIs('surat.daftar') ? 'text-indigo-600 font-bold' : 'text-gray-500 hover:text-indigo-500' }}">Persuratan
                         SPJ</a>

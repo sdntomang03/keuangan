@@ -22,6 +22,7 @@ use App\Http\Controllers\KegiatanManualController;
 use App\Http\Controllers\NpdController;
 use App\Http\Controllers\PajakController;
 use App\Http\Controllers\PenerimaanController;
+use App\Http\Controllers\PenomoranSuratController;
 use App\Http\Controllers\PersediaanController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RealisasiController;
@@ -80,6 +81,7 @@ Route::middleware(['permission:input-belanja'])->group(function () {
     Route::post('/surat/talangan/store', [SuratController::class, 'storeTalangan'])->name('surat.talangan.store');
     Route::delete('/surat/talangan/{surat_id}', [SuratController::class, 'destroyTalangan'])->name('surat.talangan.destroy');
     Route::delete('/surat/talangan-npd/{id}', [SuratController::class, 'hapusSurat'])->name('surat.hapus_talangan_npd');
+    Route::resource('penomoran-surat', PenomoranSuratController::class)->only(['index', 'store', 'destroy']);
 });
 
 // =========================================================================
