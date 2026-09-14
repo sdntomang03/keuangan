@@ -52,7 +52,7 @@ class SingleBelanjaSheet implements FromCollection, WithColumnWidths, WithEvents
             ['Tanggal : '.Carbon::parse($this->belanja->tanggal)->translatedFormat('d F Y')],
             ['Rekanan : '.$this->belanja->rekanan->nama_rekanan ?? '-'],
             ['Kode Rekening : '.$this->belanja->korek->ket ?? '-'],
-            [''],
+            ['Keterangan : '.$this->belanja->keterangan ?? '-'],
             ['NO', 'KOMPONEN', 'SPESIFIKASI', 'QTY', 'SATUAN', 'HARGA SATUAN', 'TOTAL HARGA', 'HARGA PENAWARAN'],
         ];
     }
