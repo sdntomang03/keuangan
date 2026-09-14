@@ -53,6 +53,8 @@ class SingleBelanjaSheet implements FromCollection, WithColumnWidths, WithEvents
             ['Rekanan : '.$this->belanja->rekanan->nama_rekanan ?? '-'],
             ['Kode Rekening : '.$this->belanja->korek->ket ?? '-'],
             ['Keterangan : '.$this->belanja->uraian ?? '-'],
+            [], // Jarak Baris 1
+            [], // Jarak Baris 2
             ['NO', 'KOMPONEN', 'SPESIFIKASI', 'QTY', 'SATUAN', 'HARGA SATUAN', 'TOTAL HARGA', 'HARGA PENAWARAN'],
         ];
     }
@@ -60,7 +62,7 @@ class SingleBelanjaSheet implements FromCollection, WithColumnWidths, WithEvents
     public function map($rinci): array
     {
         $this->rowNumber++;
-        $currentContentRow = 7 + $this->rowNumber;
+        $currentContentRow = 9 + $this->rowNumber;
 
         return [
             $this->rowNumber,
@@ -94,7 +96,7 @@ class SingleBelanjaSheet implements FromCollection, WithColumnWidths, WithEvents
                 $sheet = $event->sheet->getDelegate();
 
                 // --- 1. CONFIG BARIS ---
-                $startDataRow = 8;
+                $startDataRow = 10;
                 $countData = $this->belanja->rincis->count();
                 $lastDataRow = $startDataRow + $countData - 1;
                 $currentRow = $lastDataRow + 1;
@@ -211,7 +213,7 @@ class SingleBelanjaSheet implements FromCollection, WithColumnWidths, WithEvents
                 ]);
 
                 // Header Tabel
-                $sheet->getStyle('A7:H7')->applyFromArray([
+                $sheet->getStyle('A9:H9')->applyFromArray([
                     'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
                     'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '333333']],
                     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
@@ -220,7 +222,7 @@ class SingleBelanjaSheet implements FromCollection, WithColumnWidths, WithEvents
                 // Pastikan Anda sudah import class Alignment di paling atas file:
                 // use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
-                $sheet->getStyle("A7:G{$transferRow}")->applyFromArray([
+                $sheet->getStyle("A9:G{$transferRow}")->applyFromArray([
                     // 1. Setting Border (Kode Lama Anda)
                     'borders' => [
                         'allBorders' => ['borderStyle' => Border::BORDER_THIN],
@@ -234,7 +236,7 @@ class SingleBelanjaSheet implements FromCollection, WithColumnWidths, WithEvents
                     ],
                 ]);
 
-                $sheet->getStyle("H7:H{$lastDataRow}")->applyFromArray([
+                $sheet->getStyle("H9:H{$lastDataRow}")->applyFromArray([
                     // 1. Setting Border (Kode Lama Anda)
                     'borders' => [
                         'allBorders' => ['borderStyle' => Border::BORDER_THIN],
@@ -249,7 +251,7 @@ class SingleBelanjaSheet implements FromCollection, WithColumnWidths, WithEvents
                 ]);
 
                 // Format Rupiah & Alignment
-                $sheet->getStyle("F7:G{$transferRow}")->getNumberFormat()->setFormatCode('#,##0');
+                $sheet->getStyle("F9:G{$transferRow}")->getNumberFormat()->setFormatCode('#,##0');
                 $sheet->getStyle("F{$subtotalRow}:F{$transferRow}")->getFont()->setBold(true);
                 $sheet->getStyle("G{$subtotalRow}:G{$transferRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
 
