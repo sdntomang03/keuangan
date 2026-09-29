@@ -305,12 +305,28 @@ class BelanjaController extends Controller
     public function show($id)
     {
         // Mengambil data belanja beserta relasinya
-        $belanja = Belanja::with(['rekanan', 'rincis.rkas', 'pajaks.masterPajak'])->findOrFail($id);
+        $belanja = Belanja::with(['rekanan', 'rincis.rkas', 'pajaks.masterPajak', 'user', 'korek'])
+            ->findOrFail($id);
 
         // Mengambil data kegiatan untuk menampilkan nama kegiatan (opsional jika idbl adalah foreign key)
         $kegiatan = Kegiatan::where('idbl', $belanja->idbl)->first();
+        $sekolah = auth()->user()->sekolah;
+        $persenPpn = (float) (DasarPajak::where('nama_pajak', 'PPN')->value('persen') ?? 11);
+        $bulanTw = $this->getBulanDariTw($belanja->tw);
 
-        return view('belanja.show', compact('belanja', 'kegiatan'));
+        $belanja->rincis->each(function ($rinci) use ($belanja, $bulanTw) {
+            $akbRincis = \App\Models\AkbRinci::where('anggaran_id', $belanja->anggaran_id)
+                ->where('idblrinci', $rinci->idblrinci)
+                ->get();
+            $akbTw = $akbRincis->whereIn('bulan', $bulanTw);
+
+            $rinci->total_volume_setahun = $akbRincis->sum('volume');
+            $rinci->pagu_setahun = $akbRincis->sum('nominal');
+            $rinci->total_volume_akb = $akbTw->sum('volume');
+            $rinci->pagu_dana = $akbTw->sum('nominal');
+        });
+
+        return view('belanja.show', compact('belanja', 'kegiatan', 'sekolah', 'persenPpn'));
     }
 
     public function post($id, Request $request)
