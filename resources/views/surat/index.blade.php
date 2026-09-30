@@ -550,8 +550,9 @@
                                     $suratBapb = $belanja->surats->where('jenis_surat', 'BAPB')->first();
 
                                     // Tentukan default value (format Y-m-d wajib untuk input type="date")
-                                    $defaultTanggal = $suratBapb ? $suratBapb->tanggal_surat->format('Y-m-d') :
-                                    now()->format('Y-m-d');
+                                    $defaultTanggal = $suratBapb
+                                        ? $suratBapb->tanggal_surat->format('Y-m-d')
+                                        : \Carbon\Carbon::parse($belanja->tanggal)->format('Y-m-d');
                                     @endphp
 
                                     <input type="date" name="tanggal_bast_foto"

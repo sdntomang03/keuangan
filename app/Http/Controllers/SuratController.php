@@ -1731,7 +1731,7 @@ class SuratController extends Controller
         $selectedTw = $request->input('tw', $defaultTw);
 
         // 4. Query Utama Belanja
-        $query = \App\Models\Belanja::with(['korek', 'surats', 'rekanan'])
+        $query = \App\Models\Belanja::with(['korek', 'surats', 'rekanan', 'fotos'])
             ->where('anggaran_id', $anggaran->id)
             ->where('tw', $selectedTw);
 
