@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\PaguTriwulanExport;
 use App\Models\Anggaran;
 use App\Models\BelanjaRinci;
 use App\Models\PenyesuaianPagu;
@@ -13,6 +14,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Maatwebsite\Excel\Facades\Excel;
 
 class PenyesuaianPaguController extends Controller
 {
@@ -31,8 +33,16 @@ class PenyesuaianPaguController extends Controller
                 'string',
                 Rule::exists('rkas', 'idbl')->where(fn ($query) => $query->where('anggaran_id', $anggaran->id)),
             ],
+            'keterangan' => [
+                'nullable',
+                'string',
+                Rule::exists('rkas', 'keterangan')->where(fn ($query) => $query
+                    ->where('anggaran_id', $anggaran->id)
+                    ->when($request->input('kegiatan'), fn ($query, $idbl) => $query->where('idbl', $idbl))),
+            ],
         ]);
         $kegiatanDipilih = $request->input('kegiatan');
+        $keteranganDipilih = (string) $request->input('keterangan', '');
         $daftarKegiatan = DB::table('rkas')
             ->leftJoin('kegiatans', 'kegiatans.idbl', '=', 'rkas.idbl')
             ->where('rkas.anggaran_id', $anggaran->id)
@@ -41,9 +51,18 @@ class PenyesuaianPaguController extends Controller
             ->distinct()
             ->orderBy('kegiatans.namagiat')
             ->get();
+        $daftarKeterangan = DB::table('rkas')
+            ->where('anggaran_id', $anggaran->id)
+            ->when($kegiatanDipilih, fn ($query) => $query->where('idbl', $kegiatanDipilih))
+            ->whereNotNull('keterangan')
+            ->where('keterangan', '<>', '')
+            ->distinct()
+            ->orderBy('keterangan')
+            ->pluck('keterangan');
 
         $komponenPerKegiatan = $this->komponenQuery($anggaran->id)
             ->when($kegiatanDipilih, fn ($query) => $query->where('idbl', $kegiatanDipilih))
+            ->when($keteranganDipilih !== '', fn ($query) => $query->where('keterangan', $keteranganDipilih))
             ->get()
             ->filter(fn (Rkas $komponen) => $komponen->pagu_setahun > 0 || $komponen->realisasi_setahun > 0)
             ->each(fn (Rkas $komponen) => $komponen->setAttribute(
@@ -52,7 +71,7 @@ class PenyesuaianPaguController extends Controller
             ))
             ->groupBy(fn (Rkas $komponen) => $komponen->idbl ?: 'tanpa-kegiatan-'.$komponen->id);
 
-        return view('rkas.penyesuaian-pagu', compact('anggaran', 'komponenPerKegiatan', 'daftarKegiatan', 'kegiatanDipilih'));
+        return view('rkas.penyesuaian-pagu', compact('anggaran', 'komponenPerKegiatan', 'daftarKegiatan', 'daftarKeterangan', 'kegiatanDipilih', 'keteranganDipilih'));
     }
 
     public function daftar(Request $request)
@@ -104,10 +123,37 @@ class PenyesuaianPaguController extends Controller
         $request->validate(['tw' => ['nullable', 'integer', 'between:1,4']]);
         $twAktif = auth()->user()->sekolah?->triwulan_aktif;
         $twDipilih = (int) $request->input('tw', in_array($twAktif, [1, 2, 3, 4], true) ? $twAktif : 1);
-        $bulanTw = range(($twDipilih - 1) * 3 + 1, $twDipilih * 3);
+        $data = $this->dataPaguTriwulan($anggaran->id, $twDipilih);
+
+        return view('rkas.penyesuaian-pagu-tw', [
+            'anggaran' => $anggaran,
+            'twAktif' => $twAktif,
+            'twDipilih' => $twDipilih,
+            ...$data,
+        ]);
+    }
+
+    public function exportPaguTriwulan(Request $request)
+    {
+        $anggaran = $request->anggaran_data;
+        if (! $anggaran) {
+            return redirect()->route('sekolah.index')->with('error', 'Silakan tentukan Anggaran Aktif terlebih dahulu.');
+        }
+
+        $request->validate(['tw' => ['required', 'integer', 'between:1,4']]);
+        $tw = (int) $request->input('tw');
+        $data = $this->dataPaguTriwulan($anggaran->id, $tw);
+        $namaFile = sprintf('pagu-tw-%d-hasil-penyesuaian-%s.xlsx', $tw, $anggaran->tahun);
+
+        return Excel::download(new PaguTriwulanExport($data['rekeningRekap']->all(), $data['komponen']->all(), $tw), $namaFile);
+    }
+
+    private function dataPaguTriwulan(int $anggaranId, int $tw): array
+    {
+        $bulanTw = range(($tw - 1) * 3 + 1, $tw * 3);
 
         $penyesuaianTerbaru = PenyesuaianPaguRinci::query()
-            ->whereHas('penyesuaianPagu', fn ($query) => $query->where('anggaran_id', $anggaran->id))
+            ->whereHas('penyesuaianPagu', fn ($query) => $query->where('anggaran_id', $anggaranId))
             ->orderBy('updated_at')
             ->orderBy('id')
             ->get()
@@ -118,24 +164,28 @@ class PenyesuaianPaguController extends Controller
             ->with([
                 'kegiatan',
                 'korek',
-                'akbRincis' => fn ($query) => $query->where('anggaran_id', $anggaran->id),
+                'akbRincis' => fn ($query) => $query->where('anggaran_id', $anggaranId),
             ])
-            ->where('anggaran_id', $anggaran->id)
+            ->where('anggaran_id', $anggaranId)
             ->get()
             ->map(function (Rkas $item) use ($bulanTw, $penyesuaianTerbaru) {
-                $paguDasar = 0.0;
+                $volumeAwal = 0.0;
                 foreach ($item->akbRincis->whereIn('bulan', $bulanTw) as $akbRinci) {
-                    $nominal = (float) $akbRinci->nominal;
-                    $paguDasar += $nominal + ((float) $item->totalpajak > 0 ? $nominal * self::TARIF_PAJAK / 100 : 0);
+                    $volumeAwal += (float) $akbRinci->volume;
                 }
 
-                $penyesuaianBersih = 0.0;
+                $selisihVolume = 0.0;
                 foreach ($bulanTw as $bulan) {
                     $rinciTerbaru = $penyesuaianTerbaru->get($item->idblrinci)?->get($bulan);
                     if ($rinciTerbaru) {
-                        $penyesuaianBersih -= (float) $rinciTerbaru->nominal_selisih + (float) $rinciTerbaru->nominal_ppn;
+                        $selisihVolume += (float) $rinciTerbaru->volume_selisih;
                     }
                 }
+                $volumeSetelah = $volumeAwal - $selisihVolume;
+                $ppnPersen = (float) $item->totalpajak > 0 ? self::TARIF_PAJAK : 0;
+                $hargaSatuan = (float) $item->hargasatuan;
+                $paguDasar = $volumeAwal * $hargaSatuan * (1 + $ppnPersen / 100);
+                $penyesuaianBersih = ($volumeSetelah - $volumeAwal) * $hargaSatuan * (1 + $ppnPersen / 100);
 
                 return [
                     'idbl' => $item->idbl,
@@ -143,14 +193,21 @@ class PenyesuaianPaguController extends Controller
                     'namagiat' => $item->kegiatan?->namagiat ?? 'Kegiatan tidak terdefinisi',
                     'idblrinci' => $item->idblrinci,
                     'komponen' => $item->namakomponen ?: 'Komponen tanpa nama',
+                    'spek' => $item->spek ?? '',
+                    'keterangan' => $item->keterangan ?? '',
+                    'satuan' => $item->satuan ?? '',
+                    'harga_satuan' => $hargaSatuan,
+                    'ppn_persen' => $ppnPersen,
+                    'volume_awal' => round($volumeAwal, 2),
+                    'volume_setelah' => round($volumeSetelah, 2),
                     'kode_rekening' => $item->korek?->kode ?? '-',
                     'akun' => $item->korek?->singkat ?? '-',
                     'pagu_dasar' => round($paguDasar, 2),
                     'penyesuaian' => round($penyesuaianBersih, 2),
-                    'pagu_hasil' => round($paguDasar + $penyesuaianBersih, 2),
+                    'pagu_hasil' => round($volumeSetelah * $hargaSatuan * (1 + $ppnPersen / 100), 2),
                 ];
             })
-            ->filter(fn (array $item) => $item['pagu_dasar'] != 0 || $item['penyesuaian'] != 0)
+            ->filter(fn (array $item) => $item['volume_awal'] != 0 || $item['volume_setelah'] != 0)
             ->sortBy(['kode_rekening', 'komponen'])
             ->values();
 
@@ -165,14 +222,7 @@ class PenyesuaianPaguController extends Controller
             ])
             ->values();
 
-        return view('rkas.penyesuaian-pagu-tw', compact(
-            'anggaran',
-            'bulanTw',
-            'komponen',
-            'rekeningRekap',
-            'twAktif',
-            'twDipilih'
-        ));
+        return compact('bulanTw', 'komponen', 'rekeningRekap');
     }
 
     public function proses(Request $request)
@@ -188,6 +238,13 @@ class PenyesuaianPaguController extends Controller
                 'nullable',
                 'string',
                 Rule::exists('rkas', 'idbl')->where(fn ($query) => $query->where('anggaran_id', $anggaran->id)),
+            ],
+            'keterangan' => [
+                'nullable',
+                'string',
+                Rule::exists('rkas', 'keterangan')->where(fn ($query) => $query
+                    ->where('anggaran_id', $anggaran->id)
+                    ->when($request->input('kegiatan'), fn ($query, $idbl) => $query->where('idbl', $idbl))),
             ],
             'komponen' => ['required', 'array', 'min:1'],
             'komponen.*' => [
@@ -205,10 +262,11 @@ class PenyesuaianPaguController extends Controller
             ->with(['akbRincis' => fn ($query) => $query->where('anggaran_id', $anggaran->id)])
             ->whereIn('id', $request->input('komponen'))
             ->when($request->input('kegiatan'), fn ($query, $idbl) => $query->where('idbl', $idbl))
+            ->when($request->input('keterangan') !== null && $request->input('keterangan') !== '', fn ($query) => $query->where('keterangan', $request->input('keterangan')))
             ->get();
 
         if ($komponen->count() !== count($request->input('komponen'))) {
-            throw ValidationException::withMessages(['komponen' => 'Komponen pilihan tidak sesuai dengan kegiatan yang difilter.']);
+            throw ValidationException::withMessages(['komponen' => 'Komponen pilihan tidak sesuai dengan filter yang digunakan.']);
         }
 
         $realisasiBulanan = $this->getVolumeRealisasiBulanan($anggaran->id, $komponen);
@@ -226,6 +284,7 @@ class PenyesuaianPaguController extends Controller
             'tarifPajak' => self::TARIF_PAJAK,
             'jenis' => $request->input('jenis'),
             'kegiatanDipilih' => $request->input('kegiatan'),
+            'keteranganDipilih' => (string) $request->input('keterangan', ''),
         ]);
     }
 
@@ -243,6 +302,13 @@ class PenyesuaianPaguController extends Controller
                 'string',
                 Rule::exists('rkas', 'idbl')->where(fn ($query) => $query->where('anggaran_id', $anggaran->id)),
             ],
+            'keterangan' => [
+                'nullable',
+                'string',
+                Rule::exists('rkas', 'keterangan')->where(fn ($query) => $query
+                    ->where('anggaran_id', $anggaran->id)
+                    ->when($request->input('kegiatan'), fn ($query, $idbl) => $query->where('idbl', $idbl))),
+            ],
             'komponen' => ['required', 'array', 'min:1'],
             'komponen.*' => [
                 'required',
@@ -259,6 +325,7 @@ class PenyesuaianPaguController extends Controller
             ->with(['akbRincis' => fn ($query) => $query->where('anggaran_id', $anggaran->id)])
             ->where('anggaran_id', $anggaran->id)
             ->whereIn('id', $validated['komponen'])
+            ->when(($validated['keterangan'] ?? '') !== '', fn ($query) => $query->where('keterangan', $validated['keterangan']))
             ->get();
 
         if ($komponen->count() !== count($validated['komponen'])) {
@@ -325,7 +392,7 @@ class PenyesuaianPaguController extends Controller
         }
 
         if ($rincianBerubah === []) {
-            return redirect()->route('rkas.penyesuaian-pagu', array_filter(['kegiatan' => $validated['kegiatan'] ?? null]))
+            return redirect()->route('rkas.penyesuaian-pagu', array_filter(['kegiatan' => $validated['kegiatan'] ?? null, 'keterangan' => $validated['keterangan'] ?? null]))
                 ->with('info', 'Tidak ada perubahan volume. Tidak ada catatan penyesuaian yang disimpan.');
         }
 
@@ -366,11 +433,11 @@ class PenyesuaianPaguController extends Controller
         });
 
         if (! $berhasilDisimpan) {
-            return redirect()->route('rkas.penyesuaian-pagu', array_filter(['kegiatan' => $validated['kegiatan'] ?? null]))
+            return redirect()->route('rkas.penyesuaian-pagu', array_filter(['kegiatan' => $validated['kegiatan'] ?? null, 'keterangan' => $validated['keterangan'] ?? null]))
                 ->with('info', 'Tidak ada perubahan volume. Tidak ada catatan rincian baru yang disimpan.');
         }
 
-        return redirect()->route('rkas.penyesuaian-pagu', array_filter(['kegiatan' => $validated['kegiatan'] ?? null]))
+        return redirect()->route('rkas.penyesuaian-pagu', array_filter(['kegiatan' => $validated['kegiatan'] ?? null, 'keterangan' => $validated['keterangan'] ?? null]))
             ->with('success', 'Perubahan volume berhasil disimpan sebagai catatan. Data RKAS tidak diubah.');
     }
 

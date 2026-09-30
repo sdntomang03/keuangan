@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Exports\PaguTriwulanExport;
 use App\Models\Akb;
 use App\Models\AkbRinci;
 use App\Models\Anggaran;
@@ -16,6 +17,7 @@ use App\Models\Sekolah;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
+use Maatwebsite\Excel\Facades\Excel;
 use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
@@ -61,6 +63,7 @@ class PenyesuaianPaguTest extends TestCase
             'idbl' => $kegiatan->idbl,
             'kodeakun' => $korek->id,
             'namakomponen' => 'Komponen Uji',
+            'keterangan' => 'ATK untuk kelas',
             'satuan' => 'Unit',
             'hargasatuan' => 100,
             'totalharga' => 800,
@@ -86,6 +89,7 @@ class PenyesuaianPaguTest extends TestCase
             'idblrinci' => 'KOMP-2',
             'idbl' => $kegiatan->idbl,
             'namakomponen' => 'Komponen Tanpa PPN',
+            'keterangan' => 'Operasional sekolah',
             'satuan' => 'Unit',
             'hargasatuan' => 100,
             'totalharga' => 400,
@@ -114,6 +118,7 @@ class PenyesuaianPaguTest extends TestCase
             'idblrinci' => 'KOMP-3',
             'idbl' => $kegiatanLain->idbl,
             'namakomponen' => 'Komponen Kegiatan Lain',
+            'keterangan' => 'ATK kegiatan lain',
             'satuan' => 'Paket',
             'hargasatuan' => 250,
             'totalharga' => 250,
@@ -180,6 +185,17 @@ class PenyesuaianPaguTest extends TestCase
             ->assertSee('Komponen Uji')
             ->assertDontSee('Komponen Kegiatan Lain');
 
+        $this->get(route('rkas.penyesuaian-pagu', [
+            'kegiatan' => $kegiatan->idbl,
+            'keterangan' => 'ATK untuk kelas',
+        ]))
+            ->assertOk()
+            ->assertSee('Komponen Uji')
+            ->assertDontSee('Komponen Tanpa PPN')
+            ->assertDontSee('Komponen Kegiatan Lain')
+            ->assertSee('<option value="ATK untuk kelas" selected>', false)
+            ->assertDontSee('ATK kegiatan lain');
+
         $this->post(route('rkas.penyesuaian-pagu.proses'), [
             'jenis' => 'pergeseran',
             'kegiatan' => $kegiatan->idbl,
@@ -195,6 +211,21 @@ class PenyesuaianPaguTest extends TestCase
             ->assertSee('data-tax="0"', false)
             ->assertViewHas('komponen', fn ($items) => $items->firstWhere('id', $rkas->id)->volume_tersisa->get(1) === 3.0
                 && $items->firstWhere('id', $rkas->id)->volume_tersisa->get(2) === 3.0);
+
+        $this->post(route('rkas.penyesuaian-pagu.proses'), [
+            'jenis' => 'pergeseran',
+            'kegiatan' => $kegiatan->idbl,
+            'keterangan' => 'ATK untuk kelas',
+            'komponen' => [$rkas->id, $rkasTanpaPpn->id],
+        ])->assertSessionHasErrors('komponen');
+
+        $this->post(route('rkas.penyesuaian-pagu.proses'), [
+            'jenis' => 'pergeseran',
+            'kegiatan' => $kegiatan->idbl,
+            'keterangan' => 'ATK untuk kelas',
+            'komponen' => [$rkas->id],
+        ])->assertOk()
+            ->assertSee('name="keterangan" value="ATK untuk kelas"', false);
 
         $volume = [
             $rkas->id => array_replace(array_fill(1, 12, 0), [1 => 3, 2 => 3, 7 => 4]),
@@ -335,5 +366,93 @@ class PenyesuaianPaguTest extends TestCase
             ->where('akb_id', $akb->id)
             ->where('bulan', 7)
             ->value('nominal'));
+
+        Excel::fake();
+        $this->get(route('rkas.penyesuaian-pagu.tw.export', ['tw' => 3]))->assertOk();
+        Excel::assertDownloaded('pagu-tw-3-hasil-penyesuaian-2026.xlsx', function ($export) {
+            $sheets = $export->sheets();
+
+            return count($sheets) === 2
+                && $sheets[0]->title() === 'Rekap Pagu per Kode Rekening'
+                && $sheets[0]->headings() === [
+                    'No',
+                    'Kode Rekening',
+                    'Nama Akun',
+                    'Pagu Awal',
+                    'Penyesuaian Bersih',
+                    'Pagu TW Setelah Penyesuaian',
+                ]
+                && $sheets[0]->array()[0] === [
+                    1,
+                    '5.1.1',
+                    'BARANG',
+                    "=SUMIF('Rincian Komponen'!\$D:\$D,B2,'Rincian Komponen'!\$O:\$O)",
+                    "=SUMIF('Rincian Komponen'!\$D:\$D,B2,'Rincian Komponen'!\$P:\$P)",
+                    '=D2+E2',
+                ]
+                && $sheets[1]->title() === 'Rincian Komponen'
+                && $sheets[1]->headings() === [
+                    'No',
+                    'Kode Kegiatan',
+                    'Nama Kegiatan',
+                    'Kode Rekening',
+                    'Nama Akun',
+                    'ID Komponen',
+                    'Nama Komponen',
+                    'Spesifikasi',
+                    'Keterangan',
+                    'Satuan',
+                    'Harga Satuan',
+                    'PPN (%)',
+                    'Volume Sebelum',
+                    'Volume Sesudah',
+                    'Pagu Awal TW',
+                    'Penyesuaian Bersih',
+                    'Pagu TW Hasil Penyesuaian',
+                ]
+                && $sheets[1]->array()[0] === [
+                    1,
+                    '01',
+                    'Kegiatan Uji',
+                    '5.1.1',
+                    'BARANG',
+                    'KOMP-1',
+                    'Komponen Uji',
+                    '',
+                    'ATK untuk kelas',
+                    'Unit',
+                    100.0,
+                    12,
+                    4.0,
+                    0.0,
+                    '=ROUND(M2*K2*(1+L2/100),2)',
+                    '=ROUND((N2-M2)*K2*(1+L2/100),2)',
+                    '=O2+P2',
+                ];
+        });
+
+        $xlsx = Excel::raw(new PaguTriwulanExport(
+            [['kode' => '1.1', 'akun' => 'Uji', 'pagu_dasar' => 100, 'penyesuaian' => -20, 'pagu_hasil' => 80]],
+            [[
+                'kodegiat' => '01',
+                'namagiat' => 'Kegiatan Uji',
+                'kode_rekening' => '1.1',
+                'akun' => 'Uji',
+                'idblrinci' => 'KOMP-1',
+                'komponen' => 'Komponen Uji',
+                'spek' => 'Spek',
+                'keterangan' => 'Keterangan',
+                'satuan' => 'Unit',
+                'harga_satuan' => 100,
+                'ppn_persen' => 12,
+                'volume_awal' => 1,
+                'volume_setelah' => 0.8,
+                'pagu_dasar' => 112,
+                'penyesuaian' => -22.4,
+                'pagu_hasil' => 89.6,
+            ]],
+            3
+        ), \Maatwebsite\Excel\Excel::XLSX);
+        $this->assertNotEmpty($xlsx);
     }
 }

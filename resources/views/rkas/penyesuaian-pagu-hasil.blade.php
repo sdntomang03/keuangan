@@ -17,7 +17,7 @@
             @endif
             <div class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-100">
                 <p>Jenis {{ ucfirst($jenis) }}. Untuk memindahkan volume antarbulan, kurangi volume bulan sumber dan tambahkan volume bulan tujuan. Total volume setelah penyesuaian tidak boleh melebihi total sisa volume setahun. PPN 12% hanya dihitung jika komponen RKAS memiliki pajak.</p>
-                <a href="{{ route('rkas.penyesuaian-pagu', array_filter(['kegiatan' => $kegiatanDipilih])) }}" class="shrink-0 font-bold underline">Pilih ulang komponen</a>
+                <a href="{{ route('rkas.penyesuaian-pagu', array_filter(['kegiatan' => $kegiatanDipilih, 'keterangan' => $keteranganDipilih])) }}" class="shrink-0 font-bold underline">Pilih ulang komponen</a>
             </div>
             @cannot('kelola-anggaran')
                 <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
@@ -34,6 +34,9 @@
                 <input type="hidden" name="jenis" value="{{ $jenis }}">
                 @if ($kegiatanDipilih)
                     <input type="hidden" name="kegiatan" value="{{ $kegiatanDipilih }}">
+                @endif
+                @if ($keteranganDipilih !== '')
+                    <input type="hidden" name="keterangan" value="{{ $keteranganDipilih }}">
                 @endif
             @foreach ($komponen as $item)
                 <section class="rounded-xl bg-white p-5 shadow-sm dark:bg-gray-800"

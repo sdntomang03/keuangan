@@ -36,6 +36,7 @@
                     <div class="min-w-[14rem] flex-1">
                         <label for="filter-kegiatan" class="mb-2 block text-sm font-bold text-gray-700 dark:text-gray-200">Filter kegiatan</label>
                         <select id="filter-kegiatan" name="kegiatan"
+                            onchange="document.getElementById('filter-keterangan').value = ''; this.form.submit()"
                             class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900 dark:text-white">
                             <option value="">Semua kegiatan</option>
                             @foreach ($daftarKegiatan as $kegiatan)
@@ -45,10 +46,22 @@
                             @endforeach
                         </select>
                     </div>
+                    <div class="min-w-[14rem] flex-1">
+                        <label for="filter-keterangan" class="mb-2 block text-sm font-bold text-gray-700 dark:text-gray-200">Filter keterangan</label>
+                        <select id="filter-keterangan" name="keterangan"
+                            class="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900 dark:text-white">
+                            <option value="">Semua keterangan</option>
+                            @foreach ($daftarKeterangan as $keterangan)
+                                <option value="{{ $keterangan }}" {{ $keteranganDipilih === $keterangan ? 'selected' : '' }}>
+                                    {{ $keterangan }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
                     <button type="submit" class="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-indigo-700">
                         Tampilkan
                     </button>
-                    @if ($kegiatanDipilih)
+                    @if ($kegiatanDipilih || $keteranganDipilih !== '')
                         <a href="{{ route('rkas.penyesuaian-pagu') }}"
                             class="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-bold text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700">
                             Hapus filter
@@ -71,6 +84,9 @@
                 @csrf
                 @if ($kegiatanDipilih)
                     <input type="hidden" name="kegiatan" value="{{ $kegiatanDipilih }}">
+                @endif
+                @if ($keteranganDipilih !== '')
+                    <input type="hidden" name="keterangan" value="{{ $keteranganDipilih }}">
                 @endif
                 @forelse ($komponenPerKegiatan as $items)
                     @php

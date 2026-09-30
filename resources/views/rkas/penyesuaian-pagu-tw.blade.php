@@ -26,6 +26,9 @@
                         </button>
                     </form>
                     <div class="flex flex-wrap gap-3">
+                        <a href="{{ route('rkas.penyesuaian-pagu.tw.export', ['tw' => $twDipilih]) }}" class="rounded-lg bg-green-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-green-700">
+                            Export Excel
+                        </a>
                         <a href="{{ route('rkas.penyesuaian-pagu.daftar', ['tw' => $twDipilih]) }}" class="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-bold text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700">
                             Daftar Penyesuaian
                         </a>

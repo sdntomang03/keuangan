@@ -101,6 +101,7 @@ Route::middleware(['permission:view-anggaran|kelola-anggaran|input-belanja'])->g
     Route::get('/rkas/penyesuaian-pagu', [PenyesuaianPaguController::class, 'index'])->name('rkas.penyesuaian-pagu');
     Route::get('/rkas/penyesuaian-pagu/daftar', [PenyesuaianPaguController::class, 'daftar'])->name('rkas.penyesuaian-pagu.daftar');
     Route::get('/rkas/penyesuaian-pagu/pagu-triwulan', [PenyesuaianPaguController::class, 'paguTriwulan'])->name('rkas.penyesuaian-pagu.tw');
+    Route::get('/rkas/penyesuaian-pagu/pagu-triwulan/export', [PenyesuaianPaguController::class, 'exportPaguTriwulan'])->name('rkas.penyesuaian-pagu.tw.export');
     Route::post('/rkas/penyesuaian-pagu/proses', [PenyesuaianPaguController::class, 'proses'])->name('rkas.penyesuaian-pagu.proses');
 
     Route::get('/akb', [AkbController::class, 'index'])->name('akb.index');
