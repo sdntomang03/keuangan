@@ -125,11 +125,12 @@
         // 5. Variabel Pelacak Status Lintas Halaman
         $lastStatus = '';
 
-        // 6. Ambil Tanggal BAST untuk Tanda Tangan
-        // Jika tanggal_bast kosong, maka gunakan tanggal hari ini sebagai cadangan
-        $tanggalTtd = $belanja->tanggal_bast
-        ? \Carbon\Carbon::parse($belanja->tanggal_bast)->translatedFormat('d F Y')
-        : \Carbon\Carbon::now()->translatedFormat('d F Y');
+        // 6. Gunakan tanggal dokumentasi foto untuk tanggal tanda tangan.
+        $fotoDenganTanggal = $belanja->fotos->first(function ($foto) {
+            return !empty($foto->tanggal);
+        });
+        $tanggalSumberTtd = $fotoDenganTanggal->tanggal ?? $belanja->tanggal_bast ?? now();
+        $tanggalTtd = \Carbon\Carbon::parse($tanggalSumberTtd)->translatedFormat('d F Y');
         @endphp
 
         {{-- ========================================================== --}}
@@ -205,7 +206,7 @@
                     <tr>
                         <td width="50%"></td>
                         <td width="50%" class="text-center">
-                            Jakarta, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}<br>
+                            Jakarta, {{ $tanggalTtd }}<br>
                             Kepala {{ $sekolah->nama_sekolah }},
                             <br><br><br><br><br>
                             <b><u>{{ $sekolah->nama_kepala_sekolah }}</u></b><br>

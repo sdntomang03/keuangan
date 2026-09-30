@@ -206,7 +206,7 @@
 
                                     @elseif($belanja->surats->count() > 0)
                                     {{-- Tombol Surat Sudah Ada (Hijau) --}}
-                                    <a href="{{ route('surat.index', $belanja->id) }}"
+                                    <a href="{{ route('surat.index', $belanja->id) }}" target="_blank"
                                         class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white border border-transparent rounded-md text-xs font-bold transition-all shadow-sm">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -218,7 +218,7 @@
 
                                     @else
                                     {{-- Tombol Belum Ada Surat (Oranye) --}}
-                                    <a href="{{ route('surat.index', $belanja->id) }}"
+                                    <a href="{{ route('surat.index', $belanja->id) }}" target="_blank"
                                         class="inline-flex items-center gap-1 px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white border border-transparent rounded-md text-xs font-bold transition-all shadow-sm">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -227,6 +227,30 @@
                                         Belum Ada Surat
                                     </a>
                                     @endif
+                                    <div class="mt-2">
+                                        @if($belanja->fotos->isNotEmpty())
+                                        <a href="{{ route('belanja.cetak_foto', $belanja->id) }}" target="_blank"
+                                            class="inline-flex items-center gap-1 rounded-md border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-700 shadow-sm transition-colors hover:bg-indigo-100"
+                                            title="Download dokumentasi foto SPJ">
+                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-3 3m0 0l-3-3m3 3V4">
+                                                </path>
+                                            </svg>
+                                            Dokumentasi Foto SPJ
+                                        </a>
+                                        @else
+                                        <span aria-disabled="true" title="Belum ada dokumentasi foto SPJ"
+                                            class="inline-flex cursor-not-allowed items-center gap-1 rounded-md border border-gray-200 bg-gray-100 px-3 py-1.5 text-xs font-bold text-gray-400">
+                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-3 3m0 0l-3-3m3 3V4">
+                                                </path>
+                                            </svg>
+                                            Dokumentasi Foto SPJ
+                                        </span>
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                             @empty
