@@ -110,6 +110,12 @@
                     <a href="{{ route('rkas.rekap') }}"
                         class="block py-1.5 text-sm {{ request()->routeIs('rkas.rekap') ? 'text-indigo-600 font-bold' : 'text-gray-500 hover:text-indigo-500' }}">Rekap
                         RKAS</a>
+                    <a href="{{ route('rkas.penyesuaian-pagu') }}"
+                        class="block py-1.5 text-sm {{ request()->routeIs('rkas.penyesuaian-pagu', 'rkas.penyesuaian-pagu.proses') ? 'text-indigo-600 font-bold' : 'text-gray-500 hover:text-indigo-500' }}">Penyesuaian Pagu</a>
+                    <a href="{{ route('rkas.penyesuaian-pagu.daftar') }}"
+                        class="block py-1.5 text-sm {{ request()->routeIs('rkas.penyesuaian-pagu.daftar') ? 'text-indigo-600 font-bold' : 'text-gray-500 hover:text-indigo-500' }}">Daftar Pergeseran/Perubahan</a>
+                    <a href="{{ route('rkas.penyesuaian-pagu.tw') }}"
+                        class="block py-1.5 text-sm {{ request()->routeIs('rkas.penyesuaian-pagu.tw') ? 'text-indigo-600 font-bold' : 'text-gray-500 hover:text-indigo-500' }}">Pagu TW Hasil Penyesuaian</a>
                     <a href="{{ route('akb.satuan') }}"
                         class="block py-1.5 text-sm text-gray-500 hover:text-indigo-500">Format Excel</a>
                     <a href="{{ route('arkas.index') }}" target="_blank" rel="noopener noreferrer"

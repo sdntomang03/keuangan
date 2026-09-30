@@ -23,6 +23,7 @@ use App\Http\Controllers\NpdController;
 use App\Http\Controllers\PajakController;
 use App\Http\Controllers\PenerimaanController;
 use App\Http\Controllers\PenomoranSuratController;
+use App\Http\Controllers\PenyesuaianPaguController;
 use App\Http\Controllers\PersediaanController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RealisasiController;
@@ -97,6 +98,10 @@ Route::middleware(['permission:view-anggaran|kelola-anggaran|input-belanja'])->g
     Route::get('/rkas/rekap', [RkasController::class, 'rekap'])->name('rkas.rekap');
     Route::get('/rkas/rincian', [RkasController::class, 'rincian'])->name('rkas.rincian');
     Route::get('/rkas/cetak-laporan', [RkasController::class, 'cetakLaporan'])->name('rkas.cetak_laporan');
+    Route::get('/rkas/penyesuaian-pagu', [PenyesuaianPaguController::class, 'index'])->name('rkas.penyesuaian-pagu');
+    Route::get('/rkas/penyesuaian-pagu/daftar', [PenyesuaianPaguController::class, 'daftar'])->name('rkas.penyesuaian-pagu.daftar');
+    Route::get('/rkas/penyesuaian-pagu/pagu-triwulan', [PenyesuaianPaguController::class, 'paguTriwulan'])->name('rkas.penyesuaian-pagu.tw');
+    Route::post('/rkas/penyesuaian-pagu/proses', [PenyesuaianPaguController::class, 'proses'])->name('rkas.penyesuaian-pagu.proses');
 
     Route::get('/akb', [AkbController::class, 'index'])->name('akb.index');
     Route::get('/akb/rincian', [AkbController::class, 'rincian'])->name('akb.rincian');
@@ -196,6 +201,7 @@ Route::middleware(['permission:kelola-anggaran'])->group(function () {
     // RKAS & AKB Master (Import & Update)
     Route::post('/rkas/import', [RkasController::class, 'import'])->name('rkas.import');
     Route::patch('/rkas/{id}/update-idkomponen', [RkasController::class, 'updateIdKomponen'])->name('rkas.update.idkomponen');
+    Route::post('/rkas/penyesuaian-pagu/simpan', [PenyesuaianPaguController::class, 'simpan'])->name('rkas.penyesuaian-pagu.simpan');
 
     Route::post('/akb/import', [AkbController::class, 'import'])->name('akb.import');
     Route::get('/akb/generate', [AkbController::class, 'generate'])->name('akb.generate');
