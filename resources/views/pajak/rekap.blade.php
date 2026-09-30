@@ -18,7 +18,29 @@
                 </a>
             </div>
 
+            <form method="GET" action="{{ route('pajak.rekap') }}"
+                class="mb-6 flex flex-col gap-3 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:flex-row sm:items-end sm:justify-between">
+                <div class="w-full sm:max-w-sm">
+                    <label for="periode" class="mb-1.5 block text-sm font-bold text-gray-700">Periode Rekap</label>
+                    <select id="periode" name="periode"
+                        class="w-full rounded-xl border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <option value="tahun" {{ $periode === 'tahun' ? 'selected' : '' }}>Tahunan (Semua Triwulan)</option>
+                        <option value="tw1" {{ $periode === 'tw1' ? 'selected' : '' }}>Triwulan I (Jan-Mar)</option>
+                        <option value="tw2" {{ $periode === 'tw2' ? 'selected' : '' }}>Triwulan II (Apr-Jun)</option>
+                        <option value="tw3" {{ $periode === 'tw3' ? 'selected' : '' }}>Triwulan III (Jul-Sep)</option>
+                        <option value="tw4" {{ $periode === 'tw4' ? 'selected' : '' }}>Triwulan IV (Okt-Des)</option>
+                    </select>
+                </div>
+                <button type="submit"
+                    class="inline-flex w-full items-center justify-center rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-indigo-700 sm:w-auto">
+                    Tampilkan Rekap
+                </button>
+            </form>
+
             <div class="bg-white border border-gray-200 shadow-sm rounded-3xl overflow-hidden">
+                <div class="border-b border-gray-100 bg-gray-50 px-6 py-3 text-sm font-semibold text-gray-600">
+                    Periode: <span class="text-gray-900">{{ $periodeText }}</span>
+                </div>
                 <table class="w-full text-sm text-left">
                     <thead
                         class="bg-gray-50 border-b border-gray-100 text-[10px] uppercase tracking-widest font-black text-gray-500">

@@ -126,18 +126,34 @@ class PajakController extends Controller
                 ->with('error', 'Silakan pilih Anggaran Aktif terlebih dahulu.');
         }
 
-        // 2. Ambil data sekolah untuk mengetahui triwulan yang sedang aktif
+        // 2. Gunakan triwulan aktif sebagai filter awal, namun izinkan pilihan tahunan.
         $sekolah = Sekolah::find(auth()->user()->sekolah_id);
-        $triwulanAktif = $sekolah->triwulan_aktif;
+        $triwulanAktif = (int) filter_var($sekolah->triwulan_aktif ?? 1, FILTER_SANITIZE_NUMBER_INT);
+        if ($triwulanAktif < 1 || $triwulanAktif > 4) {
+            $triwulanAktif = 1;
+        }
 
-        // 3. Ambil semua data pajak terkait anggaran & triwulan aktif ini
+        $pilihanPeriode = ['tahun', 'tw1', 'tw2', 'tw3', 'tw4'];
+        $periode = $request->query('periode', 'tw'.$triwulanAktif);
+        if (! in_array($periode, $pilihanPeriode, true)) {
+            $periode = 'tw'.$triwulanAktif;
+        }
+
+        $periodeText = [
+            'tahun' => 'Tahunan (Semua Triwulan)',
+            'tw1' => 'Triwulan I (Jan-Mar)',
+            'tw2' => 'Triwulan II (Apr-Jun)',
+            'tw3' => 'Triwulan III (Jul-Sep)',
+            'tw4' => 'Triwulan IV (Okt-Des)',
+        ][$periode];
+
+        // 3. Ambil data pajak sesuai anggaran dan periode yang dipilih.
         $pajaks = Pajak::with(['masterPajak'])
-            ->whereHas('belanja', function ($query) use ($anggaran, $triwulanAktif) {
-                // Filter berdasarkan anggaran aktif
+            ->whereHas('belanja', function ($query) use ($anggaran, $periode) {
                 $query->where('anggaran_id', $anggaran->id)
-                      // Tambahan: Filter berdasarkan triwulan di tabel belanja
-                      // (Sesuaikan nama kolom 'triwulan' jika di database Anda namanya berbeda, misal: 'triwulan_id')
-                    ->where('tw', $triwulanAktif);
+                    ->when($periode !== 'tahun', function ($belanjaQuery) use ($periode) {
+                        $belanjaQuery->where('tw', (int) substr($periode, 2));
+                    });
             })
             ->get();
 
@@ -173,7 +189,6 @@ class PajakController extends Controller
             }
         }
 
-        // Jangan lupa kirimkan juga variable $triwulanAktif ke view agar bisa ditampilkan
-        return view('pajak.rekap', compact('rekap', 'anggaran', 'triwulanAktif'));
+        return view('pajak.rekap', compact('rekap', 'anggaran', 'periode', 'periodeText'));
     }
 }
