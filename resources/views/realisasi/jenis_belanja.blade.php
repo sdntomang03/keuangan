@@ -34,34 +34,59 @@
     <div class="py-6">
         <div class="max-w-full mx-auto sm:px-6 lg:px-8">
 
-            {{-- KOTAK FILTER PERIODE (TAMBAHAN BARU) --}}
-            <div
-                class="bg-white shadow-sm rounded-xl border border-gray-200 p-4 mb-4 flex justify-between items-center print:hidden">
+            <div class="mb-4 flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm print:hidden sm:flex-row sm:items-center sm:justify-between">
                 <div class="flex items-center gap-2">
-                    <div class="p-1.5 bg-indigo-50 rounded-lg">
-                        <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="rounded-lg bg-indigo-50 p-1.5">
+                        <svg class="h-5 w-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z">
                             </path>
                         </svg>
                     </div>
-                    <span class="text-sm font-black text-gray-700 uppercase tracking-wider">Filter Periode</span>
+                    <span class="text-sm font-bold text-gray-700">Filter Periode</span>
                 </div>
 
-                {{-- Form Filter Dropdown --}}
-                <form method="GET" action="{{ request()->url() }}"
-                    class="flex items-center w-full md:w-auto mt-2 md:mt-0">
-                    <select name="periode" onchange="this.form.submit()"
-                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-indigo-500 focus:border-indigo-500 block w-full md:w-56 p-2.5 font-bold shadow-sm cursor-pointer transition-all">
-                        <option value="tahun" {{ $periode=='tahun' ? 'selected' : '' }}>1 Tahun Penuh</option>
-                        <option value="tw1" {{ $periode=='tw1' ? 'selected' : '' }}>Triwulan 1</option>
-                        <option value="tw2" {{ $periode=='tw2' ? 'selected' : '' }}>Triwulan 2</option>
-                        <option value="tw3" {{ $periode=='tw3' ? 'selected' : '' }}>Triwulan 3</option>
-                        <option value="tw4" {{ $periode=='tw4' ? 'selected' : '' }}>Triwulan 4</option>
-                    </select>
+                <form method="GET" action="{{ request()->url() }}" class="w-full sm:w-auto">
+                    <div x-data="{ open: false }" @click.away="open = false" class="relative z-20 w-full sm:w-96">
+                        <button type="button" @click="open = !open"
+                            class="flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-left text-sm shadow-sm transition hover:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <span class="truncate font-medium text-gray-700">{{ $periodeText }}</span>
+                            <svg class="ml-2 h-4 w-4 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div x-show="open" x-cloak x-transition
+                            class="absolute right-0 mt-2 w-full rounded-xl border border-gray-200 bg-white p-4 shadow-xl sm:w-[26rem]">
+                            <label class="flex cursor-pointer items-center gap-3 rounded-lg border-b border-gray-100 p-2.5 hover:bg-gray-50">
+                                <input type="checkbox" name="periode[]" value="tahun"
+                                    @change="if ($event.target.checked) $el.form.querySelectorAll('input[name=&quot;periode[]&quot;]:not([value=&quot;tahun&quot;])').forEach(input => input.checked = false);"
+                                    class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                    {{ in_array('tahun', $periode, true) ? 'checked' : '' }}>
+                                <span class="text-sm font-semibold text-gray-800">Tahunan (Semua)</span>
+                            </label>
+                            <div class="space-y-1 pt-2">
+                                <p class="px-2 text-[10px] font-bold uppercase tracking-wider text-gray-400">Triwulan</p>
+                                @php
+                                    $triwulans = ['tw1' => 'Triwulan I (Jan-Mar)', 'tw2' => 'Triwulan II (Apr-Jun)', 'tw3' => 'Triwulan III (Jul-Sep)', 'tw4' => 'Triwulan IV (Okt-Des)'];
+                                @endphp
+                                @foreach ($triwulans as $value => $label)
+                                <label class="flex cursor-pointer items-center gap-3 rounded-lg p-2 hover:bg-gray-50">
+                                    <input type="checkbox" name="periode[]" value="{{ $value }}"
+                                        @change="if ($event.target.checked) $el.form.querySelector('input[name=&quot;periode[]&quot;][value=&quot;tahun&quot;]').checked = false;"
+                                        class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                        {{ in_array($value, $periode, true) ? 'checked' : '' }}>
+                                    <span class="text-sm text-gray-700">{{ $label }}</span>
+                                </label>
+                                @endforeach
+                            </div>
+                            <button type="submit"
+                                class="mt-3 w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-indigo-700">
+                                Terapkan Filter
+                            </button>
+                        </div>
+                    </div>
                 </form>
             </div>
-            {{-- AKHIR KOTAK FILTER --}}
 
             {{-- TABEL DATA BAWAAN --}}
             <div class="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden">

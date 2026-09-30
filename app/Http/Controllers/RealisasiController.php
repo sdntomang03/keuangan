@@ -58,16 +58,31 @@ class RealisasiController extends Controller
         }
 
         $sekolah = auth()->user()->sekolah;
-        $tw = $request->get('tw', 'tahun');
+        $legacyTw = $request->input('tw');
+        $legacyTw = is_string($legacyTw) ? $legacyTw : null;
+        $periode = $request->input('periode', $legacyTw
+            ? [$legacyTw === 'tahun' ? 'tahun' : 'tw'.$legacyTw]
+            : ['tahun']);
+        $periode = is_array($periode) ? $periode : [$periode];
+        $periode = array_values(array_intersect(
+            array_filter($periode, 'is_string'),
+            ['tahun', 'tw1', 'tw2', 'tw3', 'tw4']
+        ));
+        if (empty($periode)) {
+            $periode = ['tahun'];
+        } elseif (in_array('tahun', $periode, true)) {
+            $periode = ['tahun'];
+        }
 
-        $bulanArray = $tw === 'tahun' ? null : $this->getBulanDariTw($tw);
+        $parsed = $this->parsePeriodeFilter($periode);
+        $periodeText = $parsed['periodeText'];
         $persenPpn = DasarPajak::where('nama_pajak', 'PPN')->value('persen') ?? 11;
 
         // Ambil data lewat Service (aktifkan flag multiplier PPN)
-        $dataRkas = $this->realisasiService->getRekapRkas($anggaran->id, $bulanArray, true, $persenPpn)
+        $dataRkas = $this->realisasiService->getRekapRkas($anggaran->id, $parsed['bulanArray'], true, $persenPpn)
             ->groupBy(['idbl', 'kodeakun']);
 
-        return view('realisasi.korek', compact('dataRkas', 'anggaran', 'tw', 'persenPpn', 'sekolah'));
+        return view('realisasi.korek', compact('dataRkas', 'anggaran', 'periode', 'periodeText', 'persenPpn', 'sekolah'));
     }
 
     public function jenisBelanja(Request $request)
@@ -78,10 +93,20 @@ class RealisasiController extends Controller
         }
 
         $sekolah = auth()->user()->sekolah;
-        $periode = $request->get('periode', 'tahun');
+        $periode = $request->input('periode', ['tahun']);
+        $periode = is_array($periode) ? $periode : [$periode];
+        $periode = array_values(array_intersect(
+            array_filter($periode, 'is_string'),
+            ['tahun', 'tw1', 'tw2', 'tw3', 'tw4']
+        ));
+        if (empty($periode)) {
+            $periode = ['tahun'];
+        } elseif (in_array('tahun', $periode, true)) {
+            $periode = ['tahun'];
+        }
 
         // Parsing periode lewat Trait
-        $parsed = $this->parsePeriodeFilter([$periode]);
+        $parsed = $this->parsePeriodeFilter($periode);
         $persenPpn = DasarPajak::where('nama_pajak', 'PPN')->value('persen') ?? 11;
 
         // Ambil data lewat Service (aktifkan flag multiplier PPN)

@@ -35,27 +35,51 @@
             $grandPersen = $grandAnggaran > 0 ? ($grandRealisasi / $grandAnggaran) * 100 : 0;
             @endphp
 
-            {{-- Navigasi Triwulan --}}
-            @php
-            $listNavigasi = [
-            'tahun' => 'Tahunan',
-            '1' => 'TW I',
-            '2' => 'TW II',
-            '3' => 'TW III',
-            '4' => 'TW IV',
-            ];
-            @endphp
-
-            <div class="flex justify-center mb-6 print:hidden">
-                <div
-                    class="inline-flex p-1.5 bg-gray-200/50 rounded-2xl border border-gray-200 shadow-inner backdrop-blur-sm">
-                    @foreach ($listNavigasi as $key => $label)
-                    <a href="{{ route('realisasi.korek', ['tw' => $key]) }}"
-                        class="px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 {{ $tw == $key ? 'bg-white text-indigo-600 shadow-md transform scale-105' : 'text-gray-500 hover:text-gray-800' }}">
-                        {{ $label }}
-                    </a>
-                    @endforeach
+            <div class="mb-6 flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm print:hidden sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <h3 class="text-sm font-bold text-gray-800">Filter Periode</h3>
+                    <p class="mt-1 text-xs text-gray-500">Pilih tahunan atau satu atau beberapa triwulan.</p>
                 </div>
+                <form method="GET" action="{{ route('realisasi.korek') }}" class="flex items-center gap-2">
+                    <div x-data="{ open: false }" @click.away="open = false" class="relative z-20 w-full sm:w-96">
+                        <button type="button" @click="open = !open"
+                            class="flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-left text-sm shadow-sm transition hover:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <span class="truncate font-medium text-gray-700">{{ $periodeText }}</span>
+                            <svg class="ml-2 h-4 w-4 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div x-show="open" x-cloak x-transition
+                            class="absolute right-0 mt-2 w-full rounded-xl border border-gray-200 bg-white p-4 shadow-xl sm:w-[26rem]">
+                            <label class="flex cursor-pointer items-center gap-3 rounded-lg border-b border-gray-100 p-2.5 hover:bg-gray-50">
+                                <input type="checkbox" name="periode[]" value="tahun"
+                                    @change="if ($event.target.checked) $el.form.querySelectorAll('input[name=&quot;periode[]&quot;]:not([value=&quot;tahun&quot;])').forEach(input => input.checked = false);"
+                                    class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                    {{ in_array('tahun', $periode, true) ? 'checked' : '' }}>
+                                <span class="text-sm font-semibold text-gray-800">Tahunan (Semua)</span>
+                            </label>
+                            <div class="space-y-1 pt-2">
+                                <p class="px-2 text-[10px] font-bold uppercase tracking-wider text-gray-400">Triwulan</p>
+                                @php
+                                    $triwulans = ['tw1' => 'Triwulan I (Jan-Mar)', 'tw2' => 'Triwulan II (Apr-Jun)', 'tw3' => 'Triwulan III (Jul-Sep)', 'tw4' => 'Triwulan IV (Okt-Des)'];
+                                @endphp
+                                @foreach ($triwulans as $value => $label)
+                                <label class="flex cursor-pointer items-center gap-3 rounded-lg p-2 hover:bg-gray-50">
+                                    <input type="checkbox" name="periode[]" value="{{ $value }}"
+                                        @change="if ($event.target.checked) $el.form.querySelector('input[name=&quot;periode[]&quot;][value=&quot;tahun&quot;]').checked = false;"
+                                        class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                        {{ in_array($value, $periode, true) ? 'checked' : '' }}>
+                                    <span class="text-sm text-gray-700">{{ $label }}</span>
+                                </label>
+                                @endforeach
+                            </div>
+                            <button type="submit"
+                                class="mt-3 w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-indigo-700">
+                                Terapkan Filter
+                            </button>
+                        </div>
+                    </div>
+                </form>
             </div>
 
             {{-- Header Kop Surat --}}
@@ -71,8 +95,7 @@
                         }}</span>
                 </p>
                 <p class="text-xs font-bold text-gray-500 mt-1 uppercase">
-                    PERIODE: {{ $tw == 'tahun' ? 'JANUARI - DESEMBER' : 'TRIWULAN ' . $tw }} TAHUN {{ $anggaran->tahun
-                    }}
+                    PERIODE: {{ strtoupper($periodeText) }} TAHUN {{ $anggaran->tahun }}
                 </p>
             </div>
 
@@ -80,8 +103,7 @@
             {{-- Menampilkan ringkasan Pagu, Realisasi, dan Sisa secara mencolok --}}
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-blue-500">
-                    <div class="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Pagu ({{ $tw == 'tahun'
-                        ? 'Thn' : 'TW '.$tw }})</div>
+                    <div class="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Pagu ({{ $periodeText }})</div>
                     <div class="mt-1 text-lg font-black text-gray-800 font-mono">
                         {{ number_format($grandAnggaran, 0, ',', '.') }}
                     </div>
@@ -197,7 +219,7 @@
                     <tfoot
                         class="bg-gray-900 text-white font-bold uppercase tracking-widest border-t-4 border-indigo-500">
                         <tr>
-                            <td class="px-6 py-5 text-right">TOTAL ({{ $tw == 'tahun' ? 'TAHUNAN' : 'TW ' . $tw }})</td>
+                            <td class="px-6 py-5 text-right">TOTAL ({{ strtoupper($periodeText) }})</td>
                             <td class="px-4 py-5 text-right font-mono text-base">
                                 {{ number_format($grandAnggaran, 0, ',', '.') }}</td>
                             <td class="px-4 py-5 text-right font-mono text-base text-yellow-400">
