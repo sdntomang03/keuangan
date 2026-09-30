@@ -58,8 +58,25 @@
         </div>
     </x-slot>
 
-    <div class="py-12">
+    <div class="py-12"
+        x-data="{
+            receiptModalOpen: @js((bool) ($errors->has('no_bukti') && old('belanja_id'))),
+            receiptId: @js(old('belanja_id', '')),
+            receiptNumber: @js(old('no_bukti', '')),
+            openReceiptModal(id, number) {
+                this.receiptId = id;
+                this.receiptNumber = number;
+                this.receiptModalOpen = true;
+            }
+        }">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            @if (session('success') || session('error'))
+            <div class="mb-5 rounded-xl border p-4 text-sm font-medium {{ session('success') ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-red-200 bg-red-50 text-red-800' }}"
+                role="status">
+                {{ session('success') ?? session('error') }}
+            </div>
+            @endif
+
             <div
                 class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg border border-gray-200 dark:border-gray-700">
                 <div class="p-6">
@@ -201,6 +218,19 @@
                                                         d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                                 </svg>
                                             </a>
+                                            @if($belanja->status === 'posted')
+                                            <button type="button"
+                                                @click="openReceiptModal(@js($belanja->id), @js($belanja->no_bukti))"
+                                                class="text-gray-400 hover:text-blue-600 transition-colors"
+                                                title="Ubah Nomor Bukti" aria-label="Ubah Nomor Bukti">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+                                                    viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                </svg>
+                                            </button>
+                                            @else
                                             <a href="{{ route('belanja.edit', $belanja->id) }}"
                                                 class="text-gray-400 hover:text-blue-600 transition-colors"
                                                 title="Edit Transaksi">
@@ -211,6 +241,7 @@
                                                         d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                                 </svg>
                                             </a>
+                                            @endif
 
                                             @if($belanja->status == 'posted')
                                             <a href="{{ route('surat.index', $belanja->id) }}" title="Cetak Surat"
@@ -336,6 +367,54 @@
                     <div class="mt-4 px-6 py-4 border-t border-gray-100 bg-gray-50">
                         {{ $belanjas->links() }}
                     </div>
+                </div>
+            </div>
+
+            <div x-show="receiptModalOpen" x-cloak
+                @keydown.escape.window="receiptModalOpen = false"
+                class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-900/50 p-4"
+                @click.self="receiptModalOpen = false">
+                <div x-show="receiptModalOpen" x-transition
+                    class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+                    <div class="mb-5 flex items-start justify-between gap-4">
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900">Ubah Nomor Bukti</h3>
+                            <p class="mt-1 text-sm text-gray-500">Transaksi sudah diposting. Hanya nomor bukti yang dapat diubah.</p>
+                        </div>
+                        <button type="button" @click="receiptModalOpen = false"
+                            class="rounded-lg p-1 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
+                            aria-label="Tutup modal">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <form method="POST" :action="'{{ route('belanja.update-no-bukti', ['id' => '__ID__']) }}'.replace('__ID__', receiptId)"
+                        class="space-y-5">
+                        @csrf
+                        @method('PATCH')
+                        <input type="hidden" name="belanja_id" :value="receiptId">
+                        <div>
+                            <label for="posted-no-bukti" class="mb-1.5 block text-sm font-semibold text-gray-700">Nomor Bukti</label>
+                            <input id="posted-no-bukti" type="text" name="no_bukti" x-model="receiptNumber"
+                                value="{{ old('no_bukti') }}" required
+                                class="w-full rounded-xl border-gray-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            @error('no_bukti')
+                            <p class="mt-1.5 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                            <button type="button" @click="receiptModalOpen = false"
+                                class="rounded-xl border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50">
+                                Batal
+                            </button>
+                            <button type="submit"
+                                class="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700">
+                                Simpan Nomor Bukti
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>

@@ -16,6 +16,7 @@ use App\Services\BelanjaService;
 use App\Traits\FinancialContextTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class BelanjaController extends Controller
 {
@@ -356,6 +357,10 @@ class BelanjaController extends Controller
     {
         // 1. Ambil data utama belanja
         $belanja = Belanja::findOrFail($id);
+        if ($belanja->status === Belanja::STATUS_POSTED) {
+            return redirect()->route('belanja.index')
+                ->with('error', 'Transaksi yang sudah diposting hanya dapat mengubah nomor bukti.');
+        }
 
         // 2. Ambil data sekolah (Pastikan cara ambilnya sesuai struktur DB Anda)
         // Jika sekolah berelasi dengan user yang login:
@@ -407,6 +412,11 @@ class BelanjaController extends Controller
     public function update(BelanjaRequest $request, $id)
     {
         $belanja = Belanja::findOrFail($id);
+        if ($belanja->status === Belanja::STATUS_POSTED) {
+            return redirect()->route('belanja.index')
+                ->with('error', 'Transaksi yang sudah diposting tidak dapat diedit. Ubah nomor bukti melalui tombol edit di daftar belanja.');
+        }
+
         $anggaran = $request->anggaran_data;
         $sekolah = auth()->user()->sekolah;
 
@@ -450,6 +460,35 @@ class BelanjaController extends Controller
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage())->withInput();
         }
+    }
+
+    public function updateNoBukti(Request $request, $id)
+    {
+        $belanja = Belanja::where('user_id', auth()->id())->findOrFail($id);
+        if ($belanja->status !== Belanja::STATUS_POSTED) {
+            return redirect()->route('belanja.index')
+                ->with('error', 'Nomor bukti melalui form ini hanya dapat diubah untuk transaksi yang sudah diposting.');
+        }
+
+        $validated = $request->validate([
+            'no_bukti' => [
+                'required',
+                'string',
+                Rule::unique('belanjas', 'no_bukti')->ignore($belanja->id),
+            ],
+        ], [
+            'no_bukti.required' => 'Nomor bukti wajib diisi.',
+            'no_bukti.unique' => 'Nomor bukti ini sudah digunakan pada transaksi lain.',
+        ]);
+
+        DB::transaction(function () use ($belanja, $validated) {
+            $belanja->update(['no_bukti' => $validated['no_bukti']]);
+            Bku::where('belanja_id', $belanja->id)
+                ->update(['no_bukti' => $validated['no_bukti']]);
+        });
+
+        return redirect()->route('belanja.index')
+            ->with('success', 'Nomor bukti berhasil diperbarui.');
     }
 
     public function editPenawaran($id)

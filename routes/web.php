@@ -66,6 +66,7 @@ Route::middleware(['permission:input-belanja'])->group(function () {
     Route::get('/belanja/create', [BelanjaController::class, 'create'])->name('belanja.create');
     Route::post('/belanja', [BelanjaController::class, 'store'])->name('belanja.store');
     Route::get('/belanja/{id}/edit', [BelanjaController::class, 'edit'])->name('belanja.edit');
+    Route::patch('/belanja/{id}/no-bukti', [BelanjaController::class, 'updateNoBukti'])->name('belanja.update-no-bukti');
     Route::put('/belanja/{id}', [BelanjaController::class, 'update'])->name('belanja.update');
     Route::delete('/belanja/{id}', [BelanjaController::class, 'destroy'])->name('belanja.destroy');
 
