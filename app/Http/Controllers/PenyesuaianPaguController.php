@@ -40,9 +40,13 @@ class PenyesuaianPaguController extends Controller
                     ->where('anggaran_id', $anggaran->id)
                     ->when($request->input('kegiatan'), fn ($query, $idbl) => $query->where('idbl', $idbl))),
             ],
+            'tw' => ['nullable', 'array'],
+            'tw.*' => ['required', 'integer', 'distinct', Rule::in([1, 2, 3, 4])],
         ]);
         $kegiatanDipilih = $request->input('kegiatan');
         $keteranganDipilih = (string) $request->input('keterangan', '');
+        $twDipilih = collect($request->input('tw', []))->map(fn ($tw) => (int) $tw)->unique()->sort()->values()->all();
+        $bulanDipilih = $this->bulanDariTriwulan($twDipilih);
         $daftarKegiatan = DB::table('rkas')
             ->leftJoin('kegiatans', 'kegiatans.idbl', '=', 'rkas.idbl')
             ->where('rkas.anggaran_id', $anggaran->id)
@@ -60,7 +64,7 @@ class PenyesuaianPaguController extends Controller
             ->orderBy('keterangan')
             ->pluck('keterangan');
 
-        $komponenPerKegiatan = $this->komponenQuery($anggaran->id)
+        $komponenPerKegiatan = $this->komponenQuery($anggaran->id, $bulanDipilih)
             ->when($kegiatanDipilih, fn ($query) => $query->where('idbl', $kegiatanDipilih))
             ->when($keteranganDipilih !== '', fn ($query) => $query->where('keterangan', $keteranganDipilih))
             ->get()
@@ -71,7 +75,7 @@ class PenyesuaianPaguController extends Controller
             ))
             ->groupBy(fn (Rkas $komponen) => $komponen->idbl ?: 'tanpa-kegiatan-'.$komponen->id);
 
-        return view('rkas.penyesuaian-pagu', compact('anggaran', 'komponenPerKegiatan', 'daftarKegiatan', 'daftarKeterangan', 'kegiatanDipilih', 'keteranganDipilih'));
+        return view('rkas.penyesuaian-pagu', compact('anggaran', 'komponenPerKegiatan', 'daftarKegiatan', 'daftarKeterangan', 'kegiatanDipilih', 'keteranganDipilih', 'twDipilih'));
     }
 
     public function daftar(Request $request)
@@ -246,6 +250,8 @@ class PenyesuaianPaguController extends Controller
                     ->where('anggaran_id', $anggaran->id)
                     ->when($request->input('kegiatan'), fn ($query, $idbl) => $query->where('idbl', $idbl))),
             ],
+            'tw' => ['nullable', 'array'],
+            'tw.*' => ['required', 'integer', 'distinct', Rule::in([1, 2, 3, 4])],
             'komponen' => ['required', 'array', 'min:1'],
             'komponen.*' => [
                 'required',
@@ -258,7 +264,9 @@ class PenyesuaianPaguController extends Controller
             'komponen.min' => 'Pilih minimal satu komponen untuk diproses.',
         ]);
 
-        $komponen = $this->komponenQuery($anggaran->id)
+        $twDipilih = collect($request->input('tw', []))->map(fn ($tw) => (int) $tw)->unique()->sort()->values()->all();
+        $bulanDipilih = $this->bulanDariTriwulan($twDipilih);
+        $komponen = $this->komponenQuery($anggaran->id, $bulanDipilih)
             ->with(['akbRincis' => fn ($query) => $query->where('anggaran_id', $anggaran->id)])
             ->whereIn('id', $request->input('komponen'))
             ->when($request->input('kegiatan'), fn ($query, $idbl) => $query->where('idbl', $idbl))
@@ -285,6 +293,7 @@ class PenyesuaianPaguController extends Controller
             'jenis' => $request->input('jenis'),
             'kegiatanDipilih' => $request->input('kegiatan'),
             'keteranganDipilih' => (string) $request->input('keterangan', ''),
+            'twDipilih' => $twDipilih,
         ]);
     }
 
@@ -309,6 +318,8 @@ class PenyesuaianPaguController extends Controller
                     ->where('anggaran_id', $anggaran->id)
                     ->when($request->input('kegiatan'), fn ($query, $idbl) => $query->where('idbl', $idbl))),
             ],
+            'tw' => ['nullable', 'array'],
+            'tw.*' => ['required', 'integer', 'distinct', Rule::in([1, 2, 3, 4])],
             'komponen' => ['required', 'array', 'min:1'],
             'komponen.*' => [
                 'required',
@@ -321,9 +332,10 @@ class PenyesuaianPaguController extends Controller
             'volume.*.*' => ['required', 'numeric', 'min:0', 'decimal:0,2'],
         ]);
 
-        $komponen = Rkas::query()
+        $twDipilih = collect($request->input('tw', []))->map(fn ($tw) => (int) $tw)->unique()->sort()->values()->all();
+        $bulanDipilih = $this->bulanDariTriwulan($twDipilih);
+        $komponen = $this->komponenQuery($anggaran->id, $bulanDipilih)
             ->with(['akbRincis' => fn ($query) => $query->where('anggaran_id', $anggaran->id)])
-            ->where('anggaran_id', $anggaran->id)
             ->whereIn('id', $validated['komponen'])
             ->when(($validated['keterangan'] ?? '') !== '', fn ($query) => $query->where('keterangan', $validated['keterangan']))
             ->get();
@@ -392,7 +404,7 @@ class PenyesuaianPaguController extends Controller
         }
 
         if ($rincianBerubah === []) {
-            return redirect()->route('rkas.penyesuaian-pagu', array_filter(['kegiatan' => $validated['kegiatan'] ?? null, 'keterangan' => $validated['keterangan'] ?? null]))
+            return redirect()->route('rkas.penyesuaian-pagu', array_filter(['kegiatan' => $validated['kegiatan'] ?? null, 'keterangan' => $validated['keterangan'] ?? null, 'tw' => $twDipilih]))
                 ->with('info', 'Tidak ada perubahan volume. Tidak ada catatan penyesuaian yang disimpan.');
         }
 
@@ -433,11 +445,11 @@ class PenyesuaianPaguController extends Controller
         });
 
         if (! $berhasilDisimpan) {
-            return redirect()->route('rkas.penyesuaian-pagu', array_filter(['kegiatan' => $validated['kegiatan'] ?? null, 'keterangan' => $validated['keterangan'] ?? null]))
+            return redirect()->route('rkas.penyesuaian-pagu', array_filter(['kegiatan' => $validated['kegiatan'] ?? null, 'keterangan' => $validated['keterangan'] ?? null, 'tw' => $twDipilih]))
                 ->with('info', 'Tidak ada perubahan volume. Tidak ada catatan rincian baru yang disimpan.');
         }
 
-        return redirect()->route('rkas.penyesuaian-pagu', array_filter(['kegiatan' => $validated['kegiatan'] ?? null, 'keterangan' => $validated['keterangan'] ?? null]))
+        return redirect()->route('rkas.penyesuaian-pagu', array_filter(['kegiatan' => $validated['kegiatan'] ?? null, 'keterangan' => $validated['keterangan'] ?? null, 'tw' => $twDipilih]))
             ->with('success', 'Perubahan volume berhasil disimpan sebagai catatan. Data RKAS tidak diubah.');
     }
 
@@ -468,15 +480,32 @@ class PenyesuaianPaguController extends Controller
         });
     }
 
-    private function komponenQuery(int $anggaranId): Builder
+    private function bulanDariTriwulan(array $triwulan): ?array
+    {
+        if ($triwulan === []) {
+            return null;
+        }
+
+        return collect($triwulan)
+            ->flatMap(fn (int $tw) => range(($tw - 1) * 3 + 1, $tw * 3))
+            ->unique()
+            ->sort()
+            ->values()
+            ->all();
+    }
+
+    private function komponenQuery(int $anggaranId, ?array $bulan = null): Builder
     {
         return Rkas::query()
             ->with(['kegiatan', 'korek'])
-            ->withSum(['akbrincis as pagu_setahun' => fn ($query) => $query->where('anggaran_id', $anggaranId)], 'nominal')
-            ->withSum(['belanjaRincis as realisasi_setahun' => function ($query) use ($anggaranId) {
+            ->withSum(['akbrincis as pagu_setahun' => fn ($query) => $query
+                ->where('anggaran_id', $anggaranId)
+                ->when($bulan, fn ($query) => $query->whereIn('bulan', $bulan))], 'nominal')
+            ->withSum(['belanjaRincis as realisasi_setahun' => function ($query) use ($anggaranId, $bulan) {
                 $query->whereHas('belanja', fn ($belanja) => $belanja
                     ->where('anggaran_id', $anggaranId)
                     ->where('status', 'posted'))
+                    ->when($bulan, fn ($query) => $query->whereIn('bulan', $bulan))
                     ->select(\Illuminate\Support\Facades\DB::raw('SUM(
                         CASE
                             WHEN (SELECT totalpajak FROM rkas WHERE rkas.idblrinci = belanja_rincis.idblrinci AND rkas.anggaran_id = '.$anggaranId.') > 0

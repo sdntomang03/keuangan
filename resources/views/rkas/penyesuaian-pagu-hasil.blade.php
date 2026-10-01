@@ -17,7 +17,7 @@
             @endif
             <div class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-100">
                 <p>Jenis {{ ucfirst($jenis) }}. Untuk memindahkan volume antarbulan, kurangi volume bulan sumber dan tambahkan volume bulan tujuan. Total volume setelah penyesuaian tidak boleh melebihi total sisa volume setahun. PPN 12% hanya dihitung jika komponen RKAS memiliki pajak.</p>
-                <a href="{{ route('rkas.penyesuaian-pagu', array_filter(['kegiatan' => $kegiatanDipilih, 'keterangan' => $keteranganDipilih])) }}" class="shrink-0 font-bold underline">Pilih ulang komponen</a>
+                <a href="{{ route('rkas.penyesuaian-pagu', array_filter(['kegiatan' => $kegiatanDipilih, 'keterangan' => $keteranganDipilih, 'tw' => $twDipilih])) }}" class="shrink-0 font-bold underline">Pilih ulang komponen</a>
             </div>
             @cannot('kelola-anggaran')
                 <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
@@ -38,6 +38,9 @@
                 @if ($keteranganDipilih !== '')
                     <input type="hidden" name="keterangan" value="{{ $keteranganDipilih }}">
                 @endif
+                @foreach ($twDipilih as $tw)
+                    <input type="hidden" name="tw[]" value="{{ $tw }}">
+                @endforeach
             @foreach ($komponen as $item)
                 <section class="rounded-xl bg-white p-5 shadow-sm dark:bg-gray-800"
                     data-component data-price="{{ (float) $item->hargasatuan }}" data-tax="{{ (float) $item->totalpajak > 0 ? $tarifPajak : 0 }}">
@@ -55,9 +58,9 @@
                             </p>
                         </div>
                         <div class="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
-                            <span class="text-gray-500 dark:text-gray-400">Pagu setahun</span>
+                            <span class="text-gray-500 dark:text-gray-400">{{ $twDipilih === [] ? 'Pagu setahun' : 'Pagu TW dipilih' }}</span>
                             <strong class="text-right text-gray-800 dark:text-gray-100">Rp{{ number_format((float) $item->pagu_setahun, 0, ',', '.') }}</strong>
-                            <span class="text-gray-500 dark:text-gray-400">Realisasi setahun</span>
+                            <span class="text-gray-500 dark:text-gray-400">{{ $twDipilih === [] ? 'Realisasi setahun' : 'Realisasi TW dipilih' }}</span>
                             <strong class="text-right text-gray-800 dark:text-gray-100">Rp{{ number_format((float) $item->realisasi_setahun, 0, ',', '.') }}</strong>
                         </div>
                     </div>

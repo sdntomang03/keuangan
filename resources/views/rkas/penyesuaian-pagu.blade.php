@@ -58,10 +58,24 @@
                             @endforeach
                         </select>
                     </div>
+                    <fieldset class="w-full">
+                        <legend class="mb-2 block text-sm font-bold text-gray-700 dark:text-gray-200">Filter triwulan</legend>
+                        <div class="flex flex-wrap gap-x-5 gap-y-2">
+                            @foreach (range(1, 4) as $tw)
+                                <label class="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                                    <input type="checkbox" name="tw[]" value="{{ $tw }}"
+                                        {{ in_array($tw, $twDipilih, true) ? 'checked' : '' }}
+                                        class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                    TW {{ $tw }}
+                                </label>
+                            @endforeach
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Pilih satu atau beberapa TW. Kosongkan semua untuk melihat setahun.</p>
+                    </fieldset>
                     <button type="submit" class="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-indigo-700">
                         Tampilkan
                     </button>
-                    @if ($kegiatanDipilih || $keteranganDipilih !== '')
+                    @if ($kegiatanDipilih || $keteranganDipilih !== '' || $twDipilih !== [])
                         <a href="{{ route('rkas.penyesuaian-pagu') }}"
                             class="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-bold text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700">
                             Hapus filter
@@ -88,6 +102,9 @@
                 @if ($keteranganDipilih !== '')
                     <input type="hidden" name="keterangan" value="{{ $keteranganDipilih }}">
                 @endif
+                @foreach ($twDipilih as $tw)
+                    <input type="hidden" name="tw[]" value="{{ $tw }}">
+                @endforeach
                 @forelse ($komponenPerKegiatan as $items)
                     @php
                         $kegiatan = $items->first()->kegiatan;
@@ -119,8 +136,8 @@
                                         <th class="w-12 px-4 py-3 text-center">Pilih</th>
                                         <th class="px-4 py-3 text-left">Komponen / spesifikasi</th>
                                         <th class="px-4 py-3 text-left">Akun</th>
-                                        <th class="px-4 py-3 text-right">Pagu setahun</th>
-                                        <th class="px-4 py-3 text-right">Realisasi setahun</th>
+                                        <th class="px-4 py-3 text-right">{{ $twDipilih === [] ? 'Pagu setahun' : 'Pagu TW dipilih' }}</th>
+                                        <th class="px-4 py-3 text-right">{{ $twDipilih === [] ? 'Realisasi setahun' : 'Realisasi TW dipilih' }}</th>
                                         <th class="px-4 py-3 text-right">Sisa pagu</th>
                                     </tr>
                                 </thead>

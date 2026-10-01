@@ -185,6 +185,21 @@ class PenyesuaianPaguTest extends TestCase
             ->assertSee('Komponen Uji')
             ->assertDontSee('Komponen Kegiatan Lain');
 
+        $this->get(route('rkas.penyesuaian-pagu', ['tw' => [1]]))
+            ->assertOk()
+            ->assertSee('Filter triwulan')
+            ->assertSee('Pagu TW dipilih')
+            ->assertSee('Realisasi TW dipilih')
+            ->assertSee('Rp800')
+            ->assertSee('Rp224')
+            ->assertViewHas('twDipilih', fn ($tw) => $tw === [1]);
+
+        $this->get(route('rkas.penyesuaian-pagu', ['tw' => [1, 3]]))
+            ->assertOk()
+            ->assertViewHas('twDipilih', fn ($tw) => $tw === [1, 3])
+            ->assertSee('Rp1.200')
+            ->assertSee('Rp224');
+
         $this->get(route('rkas.penyesuaian-pagu', [
             'kegiatan' => $kegiatan->idbl,
             'keterangan' => 'ATK untuk kelas',
@@ -199,11 +214,13 @@ class PenyesuaianPaguTest extends TestCase
         $this->post(route('rkas.penyesuaian-pagu.proses'), [
             'jenis' => 'pergeseran',
             'kegiatan' => $kegiatan->idbl,
+            'tw' => [1, 3],
             'komponen' => [$rkas->id, $rkasTanpaPpn->id],
         ])
             ->assertOk()
             ->assertSee('Bulan 1')
             ->assertSee('name="kegiatan" value="'.$kegiatan->idbl.'"', false)
+            ->assertViewHas('twDipilih', fn ($tw) => $tw === [1, 3])
             ->assertDontSee('Komponen Kegiatan Lain')
             ->assertSee('PPN 12%')
             ->assertSee('value="3"', false)
