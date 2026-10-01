@@ -47,6 +47,8 @@ class PenyesuaianPaguController extends Controller
         $keteranganDipilih = (string) $request->input('keterangan', '');
         $twDipilih = collect($request->input('tw', []))->map(fn ($tw) => (int) $tw)->unique()->sort()->values()->all();
         $bulanDipilih = $this->bulanDariTriwulan($twDipilih);
+        $twAktif = (int) (auth()->user()->sekolah?->triwulan_aktif ?? 0);
+        $komponenSudahDisesuaikan = $this->idblrinciSudahDisesuaikan($anggaran->id, $twAktif);
         $daftarKegiatan = DB::table('rkas')
             ->leftJoin('kegiatans', 'kegiatans.idbl', '=', 'rkas.idbl')
             ->where('rkas.anggaran_id', $anggaran->id)
@@ -75,7 +77,7 @@ class PenyesuaianPaguController extends Controller
             ))
             ->groupBy(fn (Rkas $komponen) => $komponen->idbl ?: 'tanpa-kegiatan-'.$komponen->id);
 
-        return view('rkas.penyesuaian-pagu', compact('anggaran', 'komponenPerKegiatan', 'daftarKegiatan', 'daftarKeterangan', 'kegiatanDipilih', 'keteranganDipilih', 'twDipilih'));
+        return view('rkas.penyesuaian-pagu', compact('anggaran', 'komponenPerKegiatan', 'daftarKegiatan', 'daftarKeterangan', 'kegiatanDipilih', 'keteranganDipilih', 'twDipilih', 'twAktif', 'komponenSudahDisesuaikan'));
     }
 
     public function daftar(Request $request)
@@ -115,6 +117,29 @@ class PenyesuaianPaguController extends Controller
             ->values();
 
         return view('rkas.penyesuaian-pagu-daftar', compact('anggaran', 'penyesuaian', 'rekeningRekap', 'twDipilih', 'twAktif'));
+    }
+
+    public function hapusRinci(Request $request, PenyesuaianPaguRinci $rinci)
+    {
+        abort_unless(auth()->user()->can('kelola-anggaran'), 403);
+        $anggaran = $request->anggaran_data;
+        if (! $anggaran) {
+            return redirect()->route('sekolah.index')->with('error', 'Silakan tentukan Anggaran Aktif terlebih dahulu.');
+        }
+
+        $penyesuaian = $rinci->penyesuaianPagu;
+        abort_unless($penyesuaian && (int) $penyesuaian->anggaran_id === (int) $anggaran->id, 404);
+
+        DB::transaction(function () use ($rinci, $penyesuaian) {
+            $rinci->delete();
+
+            if (! $penyesuaian->rincis()->exists()) {
+                $penyesuaian->delete();
+            }
+        });
+
+        return redirect()->route('rkas.penyesuaian-pagu.daftar', ['tw' => $penyesuaian->tw])
+            ->with('success', 'Rincian penyesuaian berhasil dihapus. Komponen dapat diproses kembali setelah seluruh rincian bulanannya dihapus.');
     }
 
     public function paguTriwulan(Request $request)
@@ -277,6 +302,14 @@ class PenyesuaianPaguController extends Controller
             throw ValidationException::withMessages(['komponen' => 'Komponen pilihan tidak sesuai dengan filter yang digunakan.']);
         }
 
+        $twAktif = (int) (auth()->user()->sekolah?->triwulan_aktif ?? 0);
+        $sudahDisesuaikan = $this->idblrinciSudahDisesuaikan($anggaran->id, $twAktif);
+        if ($komponen->contains(fn (Rkas $item) => in_array($item->idblrinci, $sudahDisesuaikan, true))) {
+            throw ValidationException::withMessages([
+                'komponen' => 'Komponen yang sudah memiliki rincian pada TW aktif harus dihapus terlebih dahulu sebelum diproses kembali.',
+            ]);
+        }
+
         $realisasiBulanan = $this->getVolumeRealisasiBulanan($anggaran->id, $komponen);
 
         $komponen->each(function (Rkas $item) use ($realisasiBulanan) {
@@ -344,6 +377,14 @@ class PenyesuaianPaguController extends Controller
             throw ValidationException::withMessages(['komponen' => 'Salah satu komponen tidak lagi tersedia pada anggaran aktif.']);
         }
 
+        $twAktif = (int) (auth()->user()->sekolah?->triwulan_aktif ?? 0);
+        $sudahDisesuaikan = $this->idblrinciSudahDisesuaikan($anggaran->id, $twAktif);
+        if ($komponen->contains(fn (Rkas $item) => in_array($item->idblrinci, $sudahDisesuaikan, true))) {
+            throw ValidationException::withMessages([
+                'komponen' => 'Komponen yang sudah memiliki rincian pada TW aktif harus dihapus terlebih dahulu sebelum diproses kembali.',
+            ]);
+        }
+
         $realisasiBulanan = $this->getVolumeRealisasiBulanan($anggaran->id, $komponen);
         $volumePerubahan = $validated['volume'];
 
@@ -408,12 +449,24 @@ class PenyesuaianPaguController extends Controller
                 ->with('info', 'Tidak ada perubahan volume. Tidak ada catatan penyesuaian yang disimpan.');
         }
 
-        $twAktif = auth()->user()->sekolah?->triwulan_aktif ?? 0;
         $berhasilDisimpan = DB::transaction(function () use ($anggaran, $validated, $rincianBerubah, $twAktif) {
             Anggaran::query()
                 ->whereKey($anggaran->id)
                 ->lockForUpdate()
                 ->firstOrFail();
+
+            $idblrinciDiproses = collect($rincianBerubah)->pluck('idblrinci')->unique()->all();
+            $sudahDisesuaikan = PenyesuaianPaguRinci::query()
+                ->whereIn('idblrinci', $idblrinciDiproses)
+                ->whereHas('penyesuaianPagu', fn ($query) => $query
+                    ->where('anggaran_id', $anggaran->id)
+                    ->where('tw', $twAktif))
+                ->exists();
+            if ($sudahDisesuaikan) {
+                throw ValidationException::withMessages([
+                    'komponen' => 'Komponen yang sudah memiliki rincian pada TW aktif harus dihapus terlebih dahulu sebelum diproses kembali.',
+                ]);
+            }
 
             $penyesuaian = PenyesuaianPagu::query()
                 ->where('anggaran_id', $anggaran->id)
@@ -491,6 +544,17 @@ class PenyesuaianPaguController extends Controller
             ->unique()
             ->sort()
             ->values()
+            ->all();
+    }
+
+    private function idblrinciSudahDisesuaikan(int $anggaranId, int $tw): array
+    {
+        return PenyesuaianPaguRinci::query()
+            ->whereHas('penyesuaianPagu', fn ($query) => $query
+                ->where('anggaran_id', $anggaranId)
+                ->where('tw', $tw))
+            ->distinct()
+            ->pluck('idblrinci')
             ->all();
     }
 

@@ -11,6 +11,16 @@
     <div class="py-8">
         <div class="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
             <section class="rounded-xl bg-white p-5 shadow-sm dark:bg-gray-800">
+                @if (session('success'))
+                    <div class="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-900/30 dark:text-green-200">
+                        {{ session('success') }}
+                    </div>
+                @endif
+                @if (session('error'))
+                    <div class="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/30 dark:text-red-200">
+                        {{ session('error') }}
+                    </div>
+                @endif
                 <form method="GET" action="{{ route('rkas.penyesuaian-pagu.daftar') }}" class="flex flex-wrap items-end gap-4">
                     <div class="w-full max-w-xs">
                         <label for="tw" class="mb-1 block text-sm font-bold text-gray-700 dark:text-gray-200">Tampilkan triwulan</label>
@@ -100,6 +110,9 @@
                                     <th class="px-4 py-3 text-right">Volume setelah</th>
                                     <th class="px-4 py-3 text-right">Selisih volume</th>
                                     <th class="px-4 py-3 text-right">Pagu dapat digeser/diubah</th>
+                                    @can('kelola-anggaran')
+                                        <th class="px-4 py-3 text-center">Aksi</th>
+                                    @endcan
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
@@ -121,6 +134,18 @@
                                                 <span class="block text-xs font-normal text-gray-500 dark:text-gray-400">termasuk PPN {{ $rinci->ppn_persen }}%</span>
                                             @endif
                                         </td>
+                                        @can('kelola-anggaran')
+                                            <td class="px-4 py-3 text-center">
+                                                <form action="{{ route('rkas.penyesuaian-pagu.rinci.destroy', $rinci) }}" method="POST"
+                                                    onsubmit="return confirm('Hapus rincian bulan ini? Komponen baru bisa diproses kembali setelah seluruh rincian bulannya dihapus.');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="rounded-lg px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50 dark:text-red-300 dark:hover:bg-red-900/30">
+                                                        Hapus rincian
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        @endcan
                                     </tr>
                                 @endforeach
                             </tbody>

@@ -143,10 +143,14 @@
                                 </thead>
                                 <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                                     @foreach ($items as $item)
+                                        @php
+                                            $sudahDisesuaikan = in_array($item->idblrinci, $komponenSudahDisesuaikan, true);
+                                        @endphp
                                         <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                                             <td class="px-4 py-3 text-center">
                                                 <input type="checkbox" name="komponen[]" value="{{ $item->id }}"
                                                     class="{{ $groupId }} rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                                    @disabled($sudahDisesuaikan)
                                                     x-model="selected">
                                             </td>
                                             <td class="px-4 py-3">
@@ -157,6 +161,11 @@
                                                 <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                                                     Volume {{ $item->koefisien ?: '-' }} {{ $item->satuan }}
                                                 </p>
+                                                @if ($sudahDisesuaikan)
+                                                    <p class="mt-1 text-xs font-semibold text-amber-700 dark:text-amber-300">
+                                                        Sudah dicatat pada anggaran ini · TW {{ $twAktif }}. Hapus seluruh rincian bulanannya sebelum input ulang.
+                                                    </p>
+                                                @endif
                                             </td>
                                             <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
                                                 {{ $item->korek->singkat ?? '-' }}

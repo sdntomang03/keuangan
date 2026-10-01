@@ -11,6 +11,7 @@ use App\Models\BelanjaRinci;
 use App\Models\Kegiatan;
 use App\Models\Korek;
 use App\Models\PenyesuaianPagu;
+use App\Models\PenyesuaianPaguRinci;
 use App\Models\Rekanan;
 use App\Models\Rkas;
 use App\Models\Sekolah;
@@ -343,10 +344,44 @@ class PenyesuaianPaguTest extends TestCase
             'jenis' => 'pergeseran',
             'komponen' => [$rkas->id, $rkasTanpaPpn->id],
             'volume' => $volume,
-        ])->assertRedirect(route('rkas.penyesuaian-pagu'))
-            ->assertSessionHas('success');
+        ])->assertSessionHasErrors('komponen');
         $this->assertDatabaseCount('penyesuaian_pagus', 1);
         $this->assertDatabaseCount('penyesuaian_pagu_rincis', 4);
+
+        $this->get(route('rkas.penyesuaian-pagu'))
+            ->assertOk()
+            ->assertSee('Sudah dicatat pada anggaran ini · TW 3')
+            ->assertSee('name="komponen[]" value="'.$rkas->id.'"', false)
+            ->assertSee('disabled', false);
+
+        $this->post(route('rkas.penyesuaian-pagu.proses'), [
+            'jenis' => 'perubahan',
+            'komponen' => [$rkas->id],
+        ])->assertSessionHasErrors('komponen');
+
+        $rincianKomponen = PenyesuaianPaguRinci::query()
+            ->where('idblrinci', $rkas->idblrinci)
+            ->get();
+        foreach ($rincianKomponen as $index => $rinci) {
+            $this->delete(route('rkas.penyesuaian-pagu.rinci.destroy', $rinci))
+                ->assertRedirect(route('rkas.penyesuaian-pagu.daftar', ['tw' => 3]))
+                ->assertSessionHas('success');
+
+            if ($index === 0) {
+                $this->assertContains($rkas->idblrinci, PenyesuaianPaguRinci::query()->pluck('idblrinci')->all());
+                $this->post(route('rkas.penyesuaian-pagu.proses'), [
+                    'jenis' => 'perubahan',
+                    'komponen' => [$rkas->id],
+                ])->assertSessionHasErrors('komponen');
+            }
+        }
+
+        $this->assertNotContains($rkas->idblrinci, PenyesuaianPaguRinci::query()->pluck('idblrinci')->all());
+        $this->get(route('rkas.penyesuaian-pagu'))
+            ->assertOk()
+            ->assertViewHas('komponenSudahDisesuaikan', fn ($idblrinci) => ! in_array($rkas->idblrinci, $idblrinci, true));
+        $this->assertDatabaseCount('penyesuaian_pagus', 1);
+        $this->assertDatabaseCount('penyesuaian_pagu_rincis', 1);
 
         $this->assertTrue(Schema::hasColumn('penyesuaian_pagu_rincis', 'idblrinci'));
         $this->assertFalse(Schema::hasColumn('penyesuaian_pagu_rincis', 'rkas_id'));
@@ -361,7 +396,9 @@ class PenyesuaianPaguTest extends TestCase
             ->assertSee('Rekap Kode Rekening')
             ->assertSee('5.1.1')
             ->assertSee('Rp112')
-            ->assertDontSee('Rp560');
+            ->assertDontSee('Rp560')
+            ->assertSee('Hapus rincian')
+            ->assertSee(route('rkas.penyesuaian-pagu.rinci.destroy', PenyesuaianPaguRinci::first()), false);
 
         $this->get(route('rkas.penyesuaian-pagu.daftar', ['tw' => 2]))
             ->assertOk()
