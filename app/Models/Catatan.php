@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Catatan extends Model
 {
@@ -11,5 +12,10 @@ class Catatan extends Model
     public function anggaran()
     {
         return $this->belongsTo(Anggaran::class);
+    }
+
+    public function lampirans(): HasMany
+    {
+        return $this->hasMany(CatatanLampiran::class);
     }
 }

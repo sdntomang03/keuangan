@@ -53,8 +53,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/anggaran/switch', [DashboardController::class, 'switch'])->name('anggaran.switch');
     Route::get('/cetak-cover', [CetakController::class, 'cetakCover'])->name('cetak.cover');
     Route::post('/anggaran/switch-tw', [DashboardController::class, 'switchTw'])->name('anggaran.switch-tw');
-    Route::resource('catatan', CatatanController::class)->only(['index', 'store', 'destroy']);
+    Route::resource('catatan', CatatanController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::patch('catatan/{catatan}/toggle-tl', [CatatanController::class, 'toggleTl'])->name('catatan.toggle-tl');
+    Route::delete('catatan/{catatan}/lampiran/{lampiran}', [CatatanController::class, 'destroyLampiran'])->name('catatan.lampiran.destroy');
+    Route::delete('catatan/{catatan}/lampiran-lama', [CatatanController::class, 'destroyLampiranLama'])->name('catatan.lampiran-lama.destroy');
 });
 
 // =========================================================================

@@ -2,60 +2,92 @@
 
 namespace App\Services;
 
+use App\Models\Anggaran;
 use App\Models\Catatan;
+use App\Models\CatatanLampiran;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Intervention\Image\Drivers\Gd\Driver;
-use Intervention\Image\ImageManager;
 
 class CatatanService
 {
-    public function simpanCatatan(array $data, $anggaran, $twAktif): Catatan
+    public function simpanCatatan(array $data, Anggaran $anggaran, int $twAktif): Catatan
     {
-        $filePath = null;
+        $paths = $this->simpanBerkas($data);
 
-        if (isset($data['file'])) {
-            $file = $data['file'];
-            $extension = strtolower($file->getClientOriginalExtension());
+        try {
+            return DB::transaction(function () use ($data, $anggaran, $twAktif, $paths) {
+                $catatan = Catatan::create([
+                    'anggaran_id' => $anggaran->id,
+                    'tw' => $twAktif,
+                    'catatan' => $data['catatan'],
+                    'is_tl' => $data['is_tl'] ?? false,
+                    'user_id' => auth()->id(),
+                ]);
 
-            // Daftar ekstensi yang dianggap gambar untuk dikonversi ke WebP
-            $imageExtensions = ['jpg', 'jpeg', 'png', 'webp'];
+                foreach ($paths as $path) {
+                    $catatan->lampirans()->create(['file_path' => $path]);
+                }
 
-            if (in_array($extension, $imageExtensions)) {
-                // Skenario 1: Konversi Gambar ke WebP
-                $filename = 'catatan_'.time().'_'.uniqid().'.webp';
+                return $catatan;
+            });
+        } catch (\Throwable $exception) {
+            Storage::disk('public')->delete($paths);
 
-                $manager = new ImageManager(new Driver);
-                $image = $manager->read($file->getRealPath());
-                $encoded = $image->toWebp(80);
-
-                Storage::disk('public')->put('catatan/'.$filename, $encoded);
-                $filePath = 'catatan/'.$filename;
-            } else {
-                // Skenario 2: Simpan Dokumen (PDF/Word/Excel) Sesuai Aslinya
-                $filename = 'dokumen_'.time().'_'.uniqid().'.'.$extension;
-
-                // Simpan file asli menggunakan storeAs ke disk public folder 'catatan'
-                $filePath = $file->storeAs('catatan', $filename, 'public');
-            }
+            throw $exception;
         }
+    }
 
-        return Catatan::create([
-            'anggaran_id' => $anggaran->id,
-            'tw' => $twAktif,
-            'catatan' => $data['catatan'],
-            'is_tl' => $data['is_tl'] ?? false,
-            'file_path' => $filePath,
-            'user_id' => auth()->id(),
-        ]);
+    public function perbaruiCatatan(Catatan $catatan, array $data, Anggaran $anggaran): void
+    {
+        $paths = $this->simpanBerkas($data);
+
+        try {
+            DB::transaction(function () use ($catatan, $data, $anggaran, $paths) {
+                $catatan->update([
+                    'anggaran_id' => $anggaran->id,
+                    'catatan' => $data['catatan'],
+                    'is_tl' => $data['is_tl'] ?? false,
+                ]);
+
+                foreach ($paths as $path) {
+                    $catatan->lampirans()->create(['file_path' => $path]);
+                }
+            });
+        } catch (\Throwable $exception) {
+            Storage::disk('public')->delete($paths);
+
+            throw $exception;
+        }
     }
 
     public function hapusCatatan(Catatan $catatan): void
     {
-        if ($catatan->file_path && Storage::disk('public')->exists($catatan->file_path)) {
-            Storage::disk('public')->delete($catatan->file_path);
+        $paths = $catatan->lampirans->pluck('file_path')->all();
+        if ($catatan->file_path) {
+            $paths[] = $catatan->file_path;
         }
 
-        $catatan->delete();
+        DB::transaction(fn () => $catatan->delete());
+        Storage::disk('public')->delete($paths);
+    }
+
+    public function hapusLampiran(CatatanLampiran $lampiran): void
+    {
+        $path = $lampiran->file_path;
+        $lampiran->delete();
+        Storage::disk('public')->delete($path);
+    }
+
+    public function hapusLampiranLama(Catatan $catatan): void
+    {
+        if (! $catatan->file_path) {
+            return;
+        }
+
+        $path = $catatan->file_path;
+        $catatan->update(['file_path' => null]);
+        Storage::disk('public')->delete($path);
     }
 
     public function toggleTindakLanjut(Catatan $catatan): void
@@ -63,5 +95,33 @@ class CatatanService
         $catatan->update([
             'is_tl' => ! $catatan->is_tl,
         ]);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function simpanBerkas(array $data): array
+    {
+        $files = $data['files'] ?? [];
+        if (isset($data['file'])) {
+            $files[] = $data['file'];
+        }
+
+        $paths = [];
+        try {
+            foreach ($files as $file) {
+                if (! $file instanceof UploadedFile) {
+                    continue;
+                }
+
+                $paths[] = $file->store('catatan', 'public');
+            }
+        } catch (\Throwable $exception) {
+            Storage::disk('public')->delete($paths);
+
+            throw $exception;
+        }
+
+        return $paths;
     }
 }

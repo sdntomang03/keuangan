@@ -11,9 +11,9 @@
                 </h3>
                 <p class="text-sm text-gray-500 mt-1">
                     {{ $sekolah->nama_sekolah ?? $sekolah->name ?? '' }}
-                    @isset($anggaran)
-                    <span class="mx-1">&middot;</span> {{ $anggaran->nama ?? $anggaran->tahun_anggaran ?? '' }}
-                    @endisset
+                    @if ($anggaran)
+                    <span class="mx-1">&middot;</span> Anggaran aktif: {{ $anggaran->nama_anggaran }} {{ $anggaran->tahun }}
+                    @endif
                 </p>
             </div>
         </div>
@@ -59,10 +59,29 @@
                     <h4 class="font-bold text-gray-800 mb-4 flex items-center">
                         <i class="fa fa-plus-circle text-blue-600 mr-2"></i> Tambah Catatan
                     </h4>
+                    @if ($anggarans->isEmpty())
+                    <p class="mb-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-800">
+                        Belum ada tahun anggaran untuk sekolah ini. Tambahkan anggaran sebelum membuat catatan.
+                    </p>
+                    @endif
 
                     <form action="{{ route('catatan.store') }}" method="POST" enctype="multipart/form-data"
                         class="space-y-4">
                         @csrf
+                        <div>
+                            <label for="anggaran_id" class="block text-sm font-semibold text-gray-700 mb-1">Tahun anggaran</label>
+                            <select id="anggaran_id" name="anggaran_id" required
+                                class="block w-full text-sm border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                @foreach ($anggarans as $pilihanAnggaran)
+                                <option value="{{ $pilihanAnggaran->id }}" {{ (string) old('anggaran_id', $anggaran?->id) === (string) $pilihanAnggaran->id ? 'selected' : '' }}>
+                                    {{ $pilihanAnggaran->nama_anggaran }} · {{ $pilihanAnggaran->tahun }}
+                                </option>
+                                @endforeach
+                            </select>
+                            @error('anggaran_id')
+                            <p class="text-xs text-rose-600 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
 
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1">Isi Catatan</label>
@@ -75,12 +94,15 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-1">Lampiran
-                                (opsional)</label>
-                            <input type="file" name="file"
-                                accept="image/png, image/jpeg, image/webp, application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Lampiran (opsional, maks. 10 berkas)</label>
+                            <input type="file" name="files[]" multiple
+                                accept="image/png, image/jpeg, image/webp, application/pdf"
                                 class="block w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 @error('file') border-rose-500 @enderror">
-                            @error('file')
+                            <p class="mt-1 text-xs text-gray-500">PDF atau gambar JPG, PNG, WEBP; maksimal 5 MB per berkas.</p>
+                            @error('files')
+                            <p class="text-xs text-rose-600 mt-1">{{ $message }}</p>
+                            @enderror
+                            @error('files.*')
                             <p class="text-xs text-rose-600 mt-1">{{ $message }}</p>
                             @enderror
                         </div>
@@ -92,7 +114,7 @@
                             Tandai sebagai Tindak Lanjut (TL)
                         </label>
 
-                        <button type="submit"
+                        <button type="submit" {{ $anggarans->isEmpty() ? 'disabled' : '' }}
                             class="w-full inline-flex justify-center items-center px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold shadow-sm transition-colors duration-200">
                             <i class="fa fa-save mr-2"></i> Simpan Catatan
                         </button>
@@ -108,8 +130,18 @@
                         class="p-6 border-b border-gray-100 bg-gray-50/50 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
                         <h4 class="font-bold text-gray-800">Daftar Catatan</h4>
 
-                        {{-- Filter Triwulan (GET, tidak perlu CSRF) --}}
-                        <form method="GET" class="flex items-center gap-2">
+                        {{-- Filter tahun dan triwulan catatan --}}
+                        <form method="GET" class="flex flex-wrap items-center gap-2">
+                            <label for="filter-anggaran" class="text-sm text-gray-600 whitespace-nowrap">Tahun:</label>
+                            <select id="filter-anggaran" name="anggaran" onchange="this.form.submit()"
+                                class="block w-44 pl-3 pr-8 py-2 text-sm border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+                                <option value="semua" {{ $filterAnggaran === 'semua' ? 'selected' : '' }}>Semua tahun</option>
+                                @foreach ($anggarans as $pilihanAnggaran)
+                                <option value="{{ $pilihanAnggaran->id }}" {{ $filterAnggaran === (string) $pilihanAnggaran->id ? 'selected' : '' }}>
+                                    {{ $pilihanAnggaran->nama_anggaran }} · {{ $pilihanAnggaran->tahun }}
+                                </option>
+                                @endforeach
+                            </select>
                             <label for="filter-tw" class="text-sm text-gray-600 whitespace-nowrap">Triwulan:</label>
                             <select id="filter-tw" name="tw" onchange="this.form.submit()"
                                 class="block w-36 pl-3 pr-8 py-2 text-sm border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
@@ -124,48 +156,8 @@
 
                     <div class="p-6 space-y-4">
                         @forelse ($catatans as $catatan)
-                        <div
+                        <div x-data="{ editOpen: false }"
                             class="flex flex-col sm:flex-row gap-4 p-4 border border-gray-100 rounded-xl hover:shadow-md transition-all duration-200 bg-white">
-
-                            {{-- KONTEN LAMPIRAN (GAMBAR ATAU DOKUMEN) --}}
-                            <div class="flex-shrink-0">
-                                @if ($catatan->file_path)
-                                @php
-                                $ext = strtolower(pathinfo($catatan->file_path, PATHINFO_EXTENSION));
-                                $isImage = in_array($ext, ['jpg', 'jpeg', 'png', 'webp']);
-                                @endphp
-
-                                @if($isImage)
-                                {{-- Tampilan Jika Berupa Gambar --}}
-                                <a href="{{ asset('storage/'.$catatan->file_path) }}" target="_blank" rel="noopener"
-                                    class="block group relative">
-                                    <img src="{{ asset('storage/'.$catatan->file_path) }}" alt="Lampiran catatan"
-                                        class="w-24 h-24 object-cover rounded-xl border border-gray-200 group-hover:opacity-95 transition">
-                                    <div
-                                        class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition rounded-xl flex items-center justify-center text-white text-xs font-medium gap-1">
-                                        <i class="fa fa-search-plus"></i>
-                                    </div>
-                                </a>
-                                @else
-                                {{-- Tampilan Jika Berupa Dokumen (PDF, Word, Excel) --}}
-                                <a href="{{ asset('storage/'.$catatan->file_path) }}" target="_blank" rel="noopener"
-                                    class="w-24 h-24 rounded-xl border border-gray-200 bg-gray-50 flex flex-col items-center justify-center text-gray-500 gap-1 hover:bg-gray-100 transition group">
-                                    <i
-                                        class="fa fa-file-alt text-2xl text-blue-500 group-hover:scale-110 transition-transform"></i>
-                                    <span
-                                        class="text-[10px] uppercase font-bold tracking-wider px-1 truncate max-w-[80px]">{{
-                                        $ext }}</span>
-                                </a>
-                                @endif
-                                @else
-                                {{-- Tampilan Jika Tanpa File --}}
-                                <div
-                                    class="w-24 h-24 rounded-xl border border-dashed border-gray-200 bg-gray-50 flex flex-col items-center justify-center text-gray-400 gap-1 select-none">
-                                    <i class="fa fa-image text-lg opacity-40"></i>
-                                    <span class="text-[10px] uppercase font-medium tracking-wider">Tanpa Lampiran</span>
-                                </div>
-                                @endif
-                            </div>
 
                             {{-- KONTEN UTAMA CATATAN --}}
                             <div class="flex-1 min-w-0 flex flex-col justify-between">
@@ -193,15 +185,46 @@
                                             {{ optional($catatan->created_at)->translatedFormat('d M Y, H:i') }}
                                         </span>
                                     </div>
+                                    <p class="mb-2 text-xs font-semibold text-indigo-700">
+                                        {{ $catatan->anggaran?->nama_anggaran }} · {{ $catatan->anggaran?->tahun }}
+                                    </p>
 
                                     {{-- Isi Teks Catatan --}}
                                     <p
                                         class="text-sm text-gray-700 whitespace-pre-line break-words leading-relaxed mb-3">
                                         {{ $catatan->catatan }}</p>
+
+                                    @php
+                                    $lampiranPaths = $catatan->lampirans->pluck('file_path');
+                                    if ($catatan->file_path) {
+                                        $lampiranPaths->prepend($catatan->file_path);
+                                    }
+                                    @endphp
+                                    @if ($lampiranPaths->isNotEmpty())
+                                    <div class="mb-3 flex flex-wrap gap-3">
+                                        @foreach ($lampiranPaths as $path)
+                                        @php
+                                        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+                                        $isImage = in_array($ext, ['jpg', 'jpeg', 'png', 'webp']);
+                                        @endphp
+                                        <a href="{{ asset('storage/'.$path) }}" target="_blank" rel="noopener"
+                                            class="flex h-24 w-24 items-center justify-center overflow-hidden rounded-xl border border-gray-200 bg-gray-50">
+                                            @if ($isImage)
+                                            <img src="{{ asset('storage/'.$path) }}" alt="Lampiran catatan"
+                                                class="h-full w-full object-cover">
+                                            @else
+                                            <span class="flex flex-col items-center gap-1 text-xs font-bold uppercase text-blue-600">
+                                                <i class="fa fa-file-pdf text-2xl"></i>{{ $ext }}
+                                            </span>
+                                            @endif
+                                        </a>
+                                        @endforeach
+                                    </div>
+                                    @endif
                                 </div>
 
                                 {{-- Footer Aksi (Tombol TL & Hapus Sejajar) --}}
-                                <div class="flex items-center justify-between pt-3 border-t border-gray-50 mt-auto">
+                                <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-gray-50 mt-auto">
                                     <form action="{{ route('catatan.toggle-tl', $catatan) }}" method="POST">
                                         @csrf
                                         @method('PATCH')
@@ -212,6 +235,11 @@
                                         </button>
                                     </form>
 
+                                    <button type="button" @click="editOpen = true"
+                                        class="text-xs font-semibold text-blue-700 hover:text-blue-900">
+                                        <i class="fa fa-edit mr-1"></i> Edit
+                                    </button>
+
                                     <form action="{{ route('catatan.destroy', $catatan->id) }}" method="POST"
                                         onsubmit="return confirm('Apakah Anda yakin ingin menghapus catatan ini?');">
                                         @csrf
@@ -221,6 +249,105 @@
                                             <i class="fa fa-trash"></i> Hapus
                                         </button>
                                     </form>
+                                </div>
+                            </div>
+
+                            <div x-show="editOpen" x-cloak
+                                @keydown.escape.window="editOpen = false"
+                                class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true"
+                                aria-labelledby="edit-catatan-title-{{ $catatan->id }}">
+                                <div class="flex min-h-screen items-center justify-center px-4 py-8">
+                                    <div class="fixed inset-0 bg-gray-900/60" @click="editOpen = false"></div>
+                                    <div class="relative z-10 w-full max-w-2xl rounded-xl bg-white p-6 shadow-2xl">
+                                        <div class="mb-5 flex items-center justify-between">
+                                            <h3 id="edit-catatan-title-{{ $catatan->id }}" class="text-lg font-bold text-gray-900">
+                                                Edit Catatan
+                                            </h3>
+                                            <button type="button" @click="editOpen = false"
+                                                class="rounded-lg px-2 py-1 text-gray-500 hover:bg-gray-100 hover:text-gray-800"
+                                                aria-label="Tutup modal">✕</button>
+                                        </div>
+                                        @if ($catatan->file_path || $catatan->lampirans->isNotEmpty())
+                                        <div class="mb-4 space-y-2">
+                                            <h4 class="text-sm font-semibold text-gray-700">Lampiran saat ini</h4>
+                                            @if ($catatan->file_path)
+                                            <div class="flex items-center justify-between gap-3 rounded-lg border p-3">
+                                                <a href="{{ asset('storage/'.$catatan->file_path) }}" target="_blank" rel="noopener"
+                                                    class="truncate text-sm text-blue-700 hover:underline">
+                                                    {{ basename($catatan->file_path) }}
+                                                </a>
+                                                <form action="{{ route('catatan.lampiran-lama.destroy', $catatan) }}" method="POST"
+                                                    onsubmit="return confirm('Hapus lampiran ini? Berkas akan dihapus permanen.');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50">
+                                                        <i class="fa fa-trash mr-1"></i> Hapus
+                                                    </button>
+                                                </form>
+                                            </div>
+                                            @endif
+                                            @foreach ($catatan->lampirans as $lampiran)
+                                            <div class="flex items-center justify-between gap-3 rounded-lg border p-3">
+                                                <a href="{{ asset('storage/'.$lampiran->file_path) }}" target="_blank" rel="noopener"
+                                                    class="truncate text-sm text-blue-700 hover:underline">
+                                                    {{ basename($lampiran->file_path) }}
+                                                </a>
+                                                <form action="{{ route('catatan.lampiran.destroy', [$catatan, $lampiran]) }}" method="POST"
+                                                    onsubmit="return confirm('Hapus lampiran ini? Berkas akan dihapus permanen.');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50">
+                                                        <i class="fa fa-trash mr-1"></i> Hapus
+                                                    </button>
+                                                </form>
+                                            </div>
+                                            @endforeach
+                                        </div>
+                                        @endif
+                                        <form action="{{ route('catatan.update', $catatan) }}" method="POST"
+                                            enctype="multipart/form-data" class="space-y-4">
+                                            @csrf
+                                            @method('PATCH')
+                                            <div>
+                                                <label class="mb-1 block text-sm font-semibold text-gray-700">Tahun anggaran</label>
+                                                <select name="anggaran_id" required class="block w-full rounded-lg border-gray-300 text-sm">
+                                                    @foreach ($anggarans as $pilihanAnggaran)
+                                                    <option value="{{ $pilihanAnggaran->id }}" {{ (int) $catatan->anggaran_id === (int) $pilihanAnggaran->id ? 'selected' : '' }}>
+                                                        {{ $pilihanAnggaran->nama_anggaran }} · {{ $pilihanAnggaran->tahun }}
+                                                    </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="mb-1 block text-sm font-semibold text-gray-700">Isi catatan</label>
+                                                <textarea name="catatan" rows="4" required
+                                                    class="block w-full rounded-lg border-gray-300 text-sm">{{ $catatan->catatan }}</textarea>
+                                            </div>
+                                            <label class="flex items-center gap-2 text-sm text-gray-700">
+                                                <input type="checkbox" name="is_tl" value="1" {{ $catatan->is_tl ? 'checked' : '' }}>
+                                                Tandai sebagai Tindak Lanjut
+                                            </label>
+                                            <div>
+                                                <label class="mb-1 block text-sm font-semibold text-gray-700">Tambah lampiran</label>
+                                                <input type="file" name="files[]" multiple accept="image/png,image/jpeg,image/webp,application/pdf"
+                                                    class="block w-full text-sm text-gray-600">
+                                                <p class="mt-1 text-xs text-gray-500">PDF atau gambar JPG, PNG, WEBP; maksimal 5 MB per berkas.</p>
+                                                @error('files.*')
+                                                <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
+                                                @enderror
+                                            </div>
+                                            <div class="flex justify-end gap-3 border-t pt-4">
+                                                <button type="button" @click="editOpen = false"
+                                                    class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">
+                                                    Batal
+                                                </button>
+                                                <button type="submit"
+                                                    class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+                                                    Simpan Perubahan
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
                                 </div>
                             </div>
                         </div>
