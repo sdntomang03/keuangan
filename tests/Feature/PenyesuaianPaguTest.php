@@ -74,6 +74,7 @@ class PenyesuaianPaguTest extends TestCase
         $akb = Akb::create([
             'idblrinci' => $rkas->idblrinci,
             'anggaran_id' => $anggaran->id,
+            'bulan9' => 400,
         ]);
         foreach ([[1, 5, 500], [2, 3, 300], [7, 4, 400]] as [$bulan, $volume, $nominal]) {
             AkbRinci::create([
@@ -231,10 +232,12 @@ class PenyesuaianPaguTest extends TestCase
             ->assertViewHas('komponen', fn ($items) => $items->firstWhere('id', $rkas->id)->volume_akb->get(1) === 5.0
                 && $items->firstWhere('id', $rkas->id)->volume_akb->get(2) === 3.0
                 && $items->firstWhere('id', $rkas->id)->volume_akb->get(7) === 4.0
+                && $items->firstWhere('id', $rkas->id)->volume_akb->get(9) === 4.0
                 && $items->firstWhere('id', $rkas->id)->volume_akb->get(11) === 0.0
                 && $items->firstWhere('id', $rkas->id)->volume_tersisa->get(1) === 3.0
                 && $items->firstWhere('id', $rkas->id)->volume_tersisa->get(2) === 3.0
-                && $items->firstWhere('id', $rkas->id)->volume_tersisa->get(7) === 4.0);
+                && $items->firstWhere('id', $rkas->id)->volume_tersisa->get(7) === 4.0
+                && $items->firstWhere('id', $rkas->id)->volume_tersisa->get(9) === 4.0);
 
         $this->post(route('rkas.penyesuaian-pagu.proses'), [
             'jenis' => 'pergeseran',
@@ -252,7 +255,7 @@ class PenyesuaianPaguTest extends TestCase
             ->assertSee('name="keterangan" value="ATK untuk kelas"', false);
 
         $volume = [
-            $rkas->id => array_replace(array_fill(1, 12, 0), [1 => 3, 2 => 3, 7 => 4]),
+            $rkas->id => array_replace(array_fill(1, 12, 0), [1 => 3, 2 => 3, 7 => 4, 9 => 4]),
             $rkasTanpaPpn->id => array_replace(array_fill(1, 12, 0), [1 => 4]),
         ];
         $volume[$rkas->id][1] = 2;
@@ -261,7 +264,7 @@ class PenyesuaianPaguTest extends TestCase
         $volume[$rkasTanpaPpn->id][1] = 1;
 
         $volumeTidakValid = $volume;
-        $volumeTidakValid[$rkas->id][11] = 6;
+        $volumeTidakValid[$rkas->id][11] = 7;
         $this->post(route('rkas.penyesuaian-pagu.simpan'), [
             'jenis' => 'pergeseran',
             'komponen' => [$rkas->id, $rkasTanpaPpn->id],
@@ -270,7 +273,7 @@ class PenyesuaianPaguTest extends TestCase
         $this->assertDatabaseCount('penyesuaian_pagus', 0);
 
         $volumeTidakBerubah = [
-            $rkas->id => array_replace(array_fill(1, 12, 0), [1 => 3, 2 => 3, 7 => 4]),
+            $rkas->id => array_replace(array_fill(1, 12, 0), [1 => 3, 2 => 3, 7 => 4, 9 => 4]),
             $rkasTanpaPpn->id => array_replace(array_fill(1, 12, 0), [1 => 4]),
         ];
         $this->post(route('rkas.penyesuaian-pagu.simpan'), [

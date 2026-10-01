@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\PaguTriwulanExport;
+use App\Models\Akb;
 use App\Models\AkbRinci;
 use App\Models\Anggaran;
 use App\Models\BelanjaRinci;
@@ -529,7 +530,7 @@ class PenyesuaianPaguController extends Controller
 
     private function getVolumeAkbBulanan(int $anggaranId, $komponen)
     {
-        return AkbRinci::query()
+        $volumeRinci = AkbRinci::query()
             ->select('idblrinci', 'bulan')
             ->selectRaw('SUM(akb_rincis.volume) as volume_pagu')
             ->where('anggaran_id', $anggaranId)
@@ -538,6 +539,33 @@ class PenyesuaianPaguController extends Controller
             ->get()
             ->groupBy('idblrinci')
             ->map(fn ($items) => $items->keyBy('bulan'));
+
+        $akbMaster = Akb::query()
+            ->where('anggaran_id', $anggaranId)
+            ->whereIn('idblrinci', $komponen->pluck('idblrinci')->unique())
+            ->get()
+            ->keyBy('idblrinci');
+
+        return $komponen->mapWithKeys(function (Rkas $item) use ($volumeRinci, $akbMaster) {
+            $volumePerBulan = $volumeRinci->get($item->idblrinci, collect());
+            $akb = $akbMaster->get($item->idblrinci);
+            $hargaSatuan = (float) $item->hargasatuan;
+            $pajak = (float) ($akb?->pajak ?? 0);
+            $pengaliPajak = $pajak > 0 ? 1 + ($pajak / 100) : 1;
+
+            $bulan = collect(range(1, 12))->mapWithKeys(function (int $nomorBulan) use ($volumePerBulan, $akb, $hargaSatuan, $pengaliPajak) {
+                $rinci = $volumePerBulan->get($nomorBulan);
+                $volume = $rinci
+                    ? (float) $rinci->volume_pagu
+                    : ($hargaSatuan > 0
+                        ? round((float) ($akb?->{"bulan{$nomorBulan}"} ?? 0) / ($hargaSatuan * $pengaliPajak), 2)
+                        : 0);
+
+                return [$nomorBulan => (object) ['volume_pagu' => $volume]];
+            });
+
+            return [$item->idblrinci => $bulan];
+        });
     }
 
     private function normalisasiVolumeBulanan($volumeAkbKomponen)
