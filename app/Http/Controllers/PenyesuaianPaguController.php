@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\PaguTriwulanExport;
+use App\Models\AkbRinci;
 use App\Models\Anggaran;
 use App\Models\BelanjaRinci;
 use App\Models\PenyesuaianPagu;
@@ -292,7 +293,6 @@ class PenyesuaianPaguController extends Controller
         $twDipilih = collect($request->input('tw', []))->map(fn ($tw) => (int) $tw)->unique()->sort()->values()->all();
         $bulanDipilih = $this->bulanDariTriwulan($twDipilih);
         $komponen = $this->komponenQuery($anggaran->id, $bulanDipilih)
-            ->with(['akbRincis' => fn ($query) => $query->where('anggaran_id', $anggaran->id)])
             ->whereIn('id', $request->input('komponen'))
             ->when($request->input('kegiatan'), fn ($query, $idbl) => $query->where('idbl', $idbl))
             ->when($request->input('keterangan') !== null && $request->input('keterangan') !== '', fn ($query) => $query->where('keterangan', $request->input('keterangan')))
@@ -310,11 +310,15 @@ class PenyesuaianPaguController extends Controller
             ]);
         }
 
+        $volumeAkbBulanan = $this->getVolumeAkbBulanan($anggaran->id, $komponen);
         $realisasiBulanan = $this->getVolumeRealisasiBulanan($anggaran->id, $komponen);
 
-        $komponen->each(function (Rkas $item) use ($realisasiBulanan) {
+        $komponen->each(function (Rkas $item) use ($volumeAkbBulanan, $realisasiBulanan) {
+            $item->volume_akb = $this->normalisasiVolumeBulanan(
+                $volumeAkbBulanan->get($item->idblrinci, collect())
+            );
             $item->volume_tersisa = $this->hitungVolumeTersisa(
-                $item,
+                $item->volume_akb,
                 $realisasiBulanan->get($item->idblrinci, collect())
             );
         });
@@ -368,7 +372,6 @@ class PenyesuaianPaguController extends Controller
         $twDipilih = collect($request->input('tw', []))->map(fn ($tw) => (int) $tw)->unique()->sort()->values()->all();
         $bulanDipilih = $this->bulanDariTriwulan($twDipilih);
         $komponen = $this->komponenQuery($anggaran->id, $bulanDipilih)
-            ->with(['akbRincis' => fn ($query) => $query->where('anggaran_id', $anggaran->id)])
             ->whereIn('id', $validated['komponen'])
             ->when(($validated['keterangan'] ?? '') !== '', fn ($query) => $query->where('keterangan', $validated['keterangan']))
             ->get();
@@ -385,6 +388,7 @@ class PenyesuaianPaguController extends Controller
             ]);
         }
 
+        $volumeAkbBulanan = $this->getVolumeAkbBulanan($anggaran->id, $komponen);
         $realisasiBulanan = $this->getVolumeRealisasiBulanan($anggaran->id, $komponen);
         $volumePerubahan = $validated['volume'];
 
@@ -398,7 +402,8 @@ class PenyesuaianPaguController extends Controller
                 ]);
             }
 
-            $volumeTersisa = $this->hitungVolumeTersisa($item, $realisasiBulanan->get($item->idblrinci, collect()));
+            $volumeAkb = $this->normalisasiVolumeBulanan($volumeAkbBulanan->get($item->idblrinci, collect()));
+            $volumeTersisa = $this->hitungVolumeTersisa($volumeAkb, $realisasiBulanan->get($item->idblrinci, collect()));
             $totalVolumeAwal = 0;
             $totalVolumeSetelah = 0;
             foreach (range(1, 12) as $bulan) {
@@ -415,7 +420,8 @@ class PenyesuaianPaguController extends Controller
 
         $rincianBerubah = [];
         foreach ($komponen as $item) {
-            $volumeTersisa = $this->hitungVolumeTersisa($item, $realisasiBulanan->get($item->idblrinci, collect()));
+            $volumeAkb = $this->normalisasiVolumeBulanan($volumeAkbBulanan->get($item->idblrinci, collect()));
+            $volumeTersisa = $this->hitungVolumeTersisa($volumeAkb, $realisasiBulanan->get($item->idblrinci, collect()));
             $ppnPersen = (float) $item->totalpajak > 0 ? self::TARIF_PAJAK : 0;
             foreach (range(1, 12) as $bulan) {
                 $volumeAwal = round((float) $volumeTersisa[$bulan], 2);
@@ -521,12 +527,29 @@ class PenyesuaianPaguController extends Controller
             ->map(fn ($items) => $items->keyBy('bulan'));
     }
 
-    private function hitungVolumeTersisa(Rkas $item, $realisasiKomponen)
+    private function getVolumeAkbBulanan(int $anggaranId, $komponen)
     {
-        $paguBulanan = $item->akbRincis->groupBy('bulan');
+        return AkbRinci::query()
+            ->select('idblrinci', 'bulan')
+            ->selectRaw('SUM(akb_rincis.volume) as volume_pagu')
+            ->where('anggaran_id', $anggaranId)
+            ->whereIn('idblrinci', $komponen->pluck('idblrinci')->unique())
+            ->groupBy('idblrinci', 'bulan')
+            ->get()
+            ->groupBy('idblrinci')
+            ->map(fn ($items) => $items->keyBy('bulan'));
+    }
 
-        return collect(range(1, 12))->mapWithKeys(function (int $bulan) use ($paguBulanan, $realisasiKomponen) {
-            $volumePagu = (float) ($paguBulanan->get($bulan, collect())->sum('volume'));
+    private function normalisasiVolumeBulanan($volumeAkbKomponen)
+    {
+        return collect(range(1, 12))->mapWithKeys(fn (int $bulan) => [
+            $bulan => (float) ($volumeAkbKomponen->get($bulan)->volume_pagu ?? 0),
+        ]);
+    }
+
+    private function hitungVolumeTersisa($volumeAkb, $realisasiKomponen)
+    {
+        return $volumeAkb->mapWithKeys(function (float $volumePagu, int $bulan) use ($realisasiKomponen) {
             $volumeRealisasi = (float) ($realisasiKomponen->get($bulan)->volume_realisasi ?? 0);
 
             return [$bulan => max(0, $volumePagu - $volumeRealisasi)];

@@ -69,7 +69,11 @@
                         @for ($bulan = 1; $bulan <= 12; $bulan++)
                             <label class="rounded-lg border border-gray-200 p-3 dark:border-gray-700">
                                 <span class="block text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Bulan {{ $bulan }}</span>
-                                <span class="mt-2 block text-xs text-gray-500 dark:text-gray-400">Volume belum direalisasi</span>
+                                <span class="mt-2 block text-xs text-gray-500 dark:text-gray-400">Volume AKB / Satuan</span>
+                                <span class="mt-0.5 block text-sm font-semibold text-gray-800 dark:text-gray-100">
+                                    {{ number_format($item->volume_akb->get($bulan, 0), 2, ',', '.') }} {{ $item->satuan }}
+                                </span>
+                                <span class="mt-2 block text-xs text-gray-500 dark:text-gray-400">Sisa volume belum direalisasi</span>
                                 <span class="mt-0.5 block text-sm font-semibold text-gray-800 dark:text-gray-100">
                                     {{ number_format($item->volume_tersisa->get($bulan, 0), 2, ',', '.') }} {{ $item->satuan }}
                                 </span>
