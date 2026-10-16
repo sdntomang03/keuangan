@@ -52,10 +52,21 @@ dan lebih sulit ditebak, tetapi bukan perlindungan akses: setiap endpoint tetap
 harus memeriksa kepemilikan/sekolah/permission. Temuan akses lintas-sekolah di
 atas harus diperbaiki dengan authorization/scoping meskipun ID dienkode.
 
+## Rincian Per Komponen
+
+Halaman `akb.rincian` menyediakan pilihan nilai bulanan `Nominal` atau
+`Volume`. Nilai dan total bulanan/triwulan/tahunan diambil dari `akb_rincis`;
+pilihan volume ditampilkan dengan dua angka desimal. Komponen ditampilkan
+berdasarkan keberadaan rincian AKB di periode yang dipilih. Baris subtotal
+kegiatan dan grand total hanya ditampilkan pada mode nominal.
+
 ## Validasi
 
 - `php artisan route:list --json` berhasil.
 - Semua action route aplikasi lolos pemeriksaan keberadaan class dan method.
+- `php artisan test --filter=AkbRincianTest`: lulus; nilai bulanan mode volume
+  dan nominal, serta subtotal/grand total yang hanya tampil pada mode nominal,
+  diverifikasi.
 - `php artisan test --filter=BelanjaAuthorizationTest`: lulus (1 test, 5
   assertions).
 - `php artisan test`: 27 lulus, 3 gagal. Dua test `PasswordUpdateTest` menerima

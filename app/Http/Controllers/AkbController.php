@@ -57,6 +57,9 @@ class AkbController extends Controller
         }
 
         $tampilan = $request->get('tampilan', 'bulanan');
+        $jenisNilai = $request->validate([
+            'jenis_nilai' => 'sometimes|in:nominal,volume',
+        ])['jenis_nilai'] ?? 'nominal';
 
         $dataRkas = Rkas::with([
             'kegiatan', 'korek',
@@ -64,20 +67,20 @@ class AkbController extends Controller
         ])
             ->where('anggaran_id', $anggaran->id)
             ->get()
-            ->map(function ($rkas) {
+            ->map(function ($rkas) use ($jenisNilai) {
                 for ($i = 1; $i <= 12; $i++) {
-                    $rkas->{"bln_$i"} = $rkas->akbrincis->where('bulan', $i)->sum('nominal');
+                    $rkas->{"bln_$i"} = $rkas->akbrincis->where('bulan', $i)->sum($jenisNilai);
                 }
                 $rkas->tw_1 = $rkas->bln_1 + $rkas->bln_2 + $rkas->bln_3;
                 $rkas->tw_2 = $rkas->bln_4 + $rkas->bln_5 + $rkas->bln_6;
                 $rkas->tw_3 = $rkas->bln_7 + $rkas->bln_8 + $rkas->bln_9;
                 $rkas->tw_4 = $rkas->bln_10 + $rkas->bln_11 + $rkas->bln_12;
-                $rkas->total_akb_setahun = $rkas->akbrincis->sum('nominal');
+                $rkas->total_akb_setahun = $rkas->akbrincis->sum($jenisNilai);
 
                 return $rkas;
             });
 
-        return view('akb.rkas', compact('dataRkas', 'tampilan', 'anggaran'));
+        return view('akb.rkas', compact('dataRkas', 'tampilan', 'anggaran', 'jenisNilai'));
     }
 
     public function generate(Request $request)

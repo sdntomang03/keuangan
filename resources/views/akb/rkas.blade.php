@@ -103,6 +103,18 @@
                     </option>
                 </select>
             </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 font-bold text-indigo-600">Rincian Bulanan</label>
+                <select name="jenis_nilai"
+                    class="mt-1 block w-40 rounded-md border-indigo-500 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm bg-indigo-50">
+                    <option value="nominal" {{ request('jenis_nilai', 'nominal') == 'nominal' ? 'selected' : '' }}>
+                        Nominal
+                    </option>
+                    <option value="volume" {{ request('jenis_nilai') == 'volume' ? 'selected' : '' }}>
+                        Volume
+                    </option>
+                </select>
+            </div>
             <div class="flex gap-2">
                 <button type="submit"
                     class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm transition">Filter</button>
@@ -127,17 +139,15 @@
     $mapTriwulan = [1 => [1, 2, 3], 2 => [4, 5, 6], 3 => [7, 8, 9], 4 => [10, 11, 12]];
     $filterTw = request('filter_tw');
     $tampilan = request('tampilan', 'bulanan');
+    $jenisNilai = $jenisNilai ?? 'nominal';
+    $presisi = $jenisNilai == 'volume' ? 2 : 0;
+    $labelNilai = $jenisNilai == 'volume' ? 'Volume AKB' : 'Nominal AKB';
 
     $targetMonths = $filterTw ? $mapTriwulan[$filterTw] : range(1, 12);
     $targetQuarters = $filterTw ? [$filterTw] : [1, 2, 3, 4];
 
     $filteredRkas = $dataRkas->filter(function ($item) use ($targetMonths) {
-    $sumTarget = 0;
-    foreach ($targetMonths as $m) {
-    $prop = "bln_$m";
-    $sumTarget += $item->$prop;
-    }
-    return $sumTarget > 0;
+    return $item->akbrincis->contains(fn ($rinci) => in_array($rinci->bulan, $targetMonths));
     });
 
     $groupedRkas = $filteredRkas->groupBy('idbl');
@@ -160,6 +170,7 @@
                     </p>
                     <p class="text-xs text-gray-500 mt-1">
                         Mode: {{ $tampilan == 'triwulan' ? 'Rekap Triwulan' : 'Rincian Bulanan' }}
+                        ({{ $jenisNilai == 'volume' ? 'Volume' : 'Nominal' }})
                         {{ $filterTw ? '(Triwulan '.$filterTw.')' : '(Setahun Penuh)' }}
                     </p>
                 </div>
@@ -178,7 +189,7 @@
                             </th>
                             <th rowspan="2"
                                 class="border border-gray-300 px-2 py-2 align-middle text-right w-28 bg-gray-50 print:bg-gray-100">
-                                Total RKAS<br><span class="text-[9px] font-normal">(Setahun)</span>
+                                {{ $labelNilai }}<br><span class="text-[9px] font-normal">(Setahun)</span>
                             </th>
 
                             @if($tampilan == 'triwulan')
@@ -258,7 +269,7 @@
                             </td>
                             <td
                                 class="border border-gray-300 px-2 py-1.5 text-right font-bold bg-yellow-50 text-indigo-700 print:bg-yellow-100 print:text-black">
-                                {{ number_format($rkas->total_akb_setahun, 0, ',', '.') }}
+                                {{ number_format($rkas->total_akb_setahun, $presisi, ',', '.') }}
                             </td>
 
                             {{-- Kolom Dinamis (TW / Bulan) --}}
@@ -266,14 +277,14 @@
                             @foreach($targetQuarters as $tw)
                             <td class="border border-gray-300 px-2 py-1.5 text-right font-medium">
                                 @php $propTw = "tw_$tw"; $valTw = $rkas->$propTw; @endphp
-                                {{ $valTw > 0 ? number_format($valTw, 0, ',', '.') : '-' }}
+                                {{ $valTw > 0 ? number_format($valTw, $presisi, ',', '.') : '-' }}
                             </td>
                             @endforeach
                             @else
                             @foreach ($targetMonths as $m)
                             <td class="border border-gray-300 px-1 py-1.5 text-right">
                                 @php $propBln = "bln_$m"; $valBln = $rkas->$propBln; @endphp
-                                {{ $valBln > 0 ? number_format($valBln, 0, ',', '.') : '-' }}
+                                {{ $valBln > 0 ? number_format($valBln, $presisi, ',', '.') : '-' }}
                             </td>
                             @endforeach
                             @endif
@@ -282,6 +293,7 @@
                         @endforeach
 
                         {{-- 4. BARIS SUB TOTAL KEGIATAN --}}
+                        @if($jenisNilai !== 'volume')
                         <tr class="bg-blue-50 border-y-2 border-blue-200 print:bg-blue-100 print:border-black">
                             <td colspan="3"
                                 class="border border-gray-300 px-3 py-2 text-right text-[10px] font-black text-blue-900 print:text-black uppercase tracking-widest">
@@ -289,7 +301,7 @@
                             </td>
                             <td
                                 class="border border-gray-300 px-2 py-2 text-right font-bold text-blue-900 bg-blue-100/50 print:text-black print:bg-blue-200">
-                                {{ number_format($itemsByKegiatan->sum('total_akb_setahun'), 0, ',', '.') }}
+                                {{ number_format($itemsByKegiatan->sum('total_akb_setahun'), $presisi, ',', '.') }}
                             </td>
 
                             @if($tampilan == 'triwulan')
@@ -297,7 +309,7 @@
                             <td
                                 class="border border-gray-300 px-2 py-2 text-right font-bold text-blue-900 print:text-black">
                                 @php $propTw = "tw_$tw"; $subTotalTw = $itemsByKegiatan->sum($propTw); @endphp
-                                {{ $subTotalTw > 0 ? number_format($subTotalTw, 0, ',', '.') : '-' }}
+                                {{ $jenisNilai == 'volume' || $subTotalTw > 0 ? number_format($subTotalTw, $presisi, ',', '.') : '-' }}
                             </td>
                             @endforeach
                             @else
@@ -305,11 +317,12 @@
                             <td
                                 class="border border-gray-300 px-1 py-2 text-right font-bold text-blue-900 print:text-black">
                                 @php $propBln = "bln_$m"; $subTotalBln = $itemsByKegiatan->sum($propBln); @endphp
-                                {{ $subTotalBln > 0 ? number_format($subTotalBln, 0, ',', '.') : '-' }}
+                                {{ $jenisNilai == 'volume' || $subTotalBln > 0 ? number_format($subTotalBln, $presisi, ',', '.') : '-' }}
                             </td>
                             @endforeach
                             @endif
                         </tr>
+                        @endif
                         @empty
                         <tr>
                             <td colspan="{{ $totalKolom }}" class="text-center py-8 text-gray-500 font-medium">
@@ -320,7 +333,7 @@
                     </tbody>
 
                     {{-- 5. FOOTER GRAND TOTAL --}}
-                    @if($filteredRkas->isNotEmpty())
+                    @if($filteredRkas->isNotEmpty() && $jenisNilai !== 'volume')
                     <tfoot class="bg-gray-800 text-white font-bold print:bg-gray-800 print:text-white">
                         <tr>
                             <td colspan="3"
@@ -329,21 +342,21 @@
                             </td>
                             <td
                                 class="border border-gray-700 px-2 py-3 text-right bg-yellow-500/20 text-yellow-300 text-sm print:text-yellow-300">
-                                {{ number_format($filteredRkas->sum('total_akb_setahun'), 0, ',', '.') }}
+                                {{ number_format($filteredRkas->sum('total_akb_setahun'), $presisi, ',', '.') }}
                             </td>
 
                             @if($tampilan == 'triwulan')
                             @foreach($targetQuarters as $tw)
                             <td class="border border-gray-700 px-2 py-3 text-right text-gray-100 print:text-white">
                                 @php $propTw = "tw_$tw"; $grandTotalTw = $filteredRkas->sum($propTw); @endphp
-                                {{ $grandTotalTw > 0 ? number_format($grandTotalTw, 0, ',', '.') : '-' }}
+                                {{ $jenisNilai == 'volume' || $grandTotalTw > 0 ? number_format($grandTotalTw, $presisi, ',', '.') : '-' }}
                             </td>
                             @endforeach
                             @else
                             @foreach ($targetMonths as $m)
                             <td class="border border-gray-700 px-1 py-3 text-right text-gray-100 print:text-white">
                                 @php $propBln = "bln_$m"; $grandTotalBln = $filteredRkas->sum($propBln); @endphp
-                                {{ $grandTotalBln > 0 ? number_format($grandTotalBln, 0, ',', '.') : '-' }}
+                                {{ $jenisNilai == 'volume' || $grandTotalBln > 0 ? number_format($grandTotalBln, $presisi, ',', '.') : '-' }}
                             </td>
                             @endforeach
                             @endif
