@@ -14,6 +14,7 @@ use App\Models\Rkas;
 use App\Models\Sekolah;
 use App\Services\BelanjaService;
 use App\Traits\FinancialContextTrait;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -306,7 +307,8 @@ class BelanjaController extends Controller
     public function show($id)
     {
         // Mengambil data belanja beserta relasinya
-        $belanja = Belanja::with(['rekanan', 'rincis.rkas', 'pajaks.masterPajak', 'user', 'korek'])
+        $belanja = $this->belanjaMilikSekolahQuery()
+            ->with(['rekanan', 'rincis.rkas', 'pajaks.masterPajak', 'user', 'korek'])
             ->findOrFail($id);
 
         // Mengambil data kegiatan untuk menampilkan nama kegiatan (opsional jika idbl adalah foreign key)
@@ -356,7 +358,7 @@ class BelanjaController extends Controller
     public function edit($id)
     {
         // 1. Ambil data utama belanja
-        $belanja = Belanja::findOrFail($id);
+        $belanja = $this->belanjaMilikSekolahQuery()->findOrFail($id);
         if ($belanja->status === Belanja::STATUS_POSTED) {
             return redirect()->route('belanja.index')
                 ->with('error', 'Transaksi yang sudah diposting hanya dapat mengubah nomor bukti.');
@@ -411,7 +413,7 @@ class BelanjaController extends Controller
 
     public function update(BelanjaRequest $request, $id)
     {
-        $belanja = Belanja::findOrFail($id);
+        $belanja = $this->belanjaMilikSekolahQuery()->findOrFail($id);
         if ($belanja->status === Belanja::STATUS_POSTED) {
             return redirect()->route('belanja.index')
                 ->with('error', 'Transaksi yang sudah diposting tidak dapat diedit. Ubah nomor bukti melalui tombol edit di daftar belanja.');
@@ -493,7 +495,7 @@ class BelanjaController extends Controller
 
     public function editPenawaran($id)
     {
-        $belanja = Belanja::with('rincis')->findOrFail($id);
+        $belanja = $this->belanjaMilikSekolahQuery()->with('rincis')->findOrFail($id);
 
         return view('belanja.edit_penawaran', compact('belanja'));
     }
@@ -509,7 +511,7 @@ class BelanjaController extends Controller
             'items' => 'required|array',
         ]);
 
-        $belanja = Belanja::findOrFail($id);
+        $belanja = $this->belanjaMilikSekolahQuery()->findOrFail($id);
 
         DB::transaction(function () use ($request, $belanja) {
 
@@ -521,7 +523,7 @@ class BelanjaController extends Controller
 
             // 2. UPDATE HARGA BARANG (CHILD)
             foreach ($request->items as $rinciId => $hargaPenawaran) {
-                BelanjaRinci::where('id', $rinciId)->update([
+                $belanja->rincis()->whereKey($rinciId)->update([
                     'harga_penawaran' => $hargaPenawaran,
                 ]);
             }
@@ -532,7 +534,9 @@ class BelanjaController extends Controller
 
     public function duplicate(Request $request, $id)
     {
-        $original = Belanja::with(['rincis', 'pajaks'])->findOrFail($id);
+        $original = $this->belanjaMilikSekolahQuery()
+            ->with(['rincis', 'pajaks'])
+            ->findOrFail($id);
         $anggaran = $request->anggaran_data ?? $original->anggaran;
         $sekolah = Sekolah::find($anggaran->sekolah_id);
 
@@ -569,7 +573,9 @@ class BelanjaController extends Controller
     // JSON Endpoints juga menjadi ramping berkat Trait getBulanDariTw
     public function getJson($id)
     {
-        $belanja = Belanja::with(['rincis', 'rekanan', 'pajaks.masterPajak', 'korek', 'kegiatan', 'rkas'])->findOrFail($id);
+        $belanja = $this->belanjaMilikSekolahQuery()
+            ->with(['rincis', 'rekanan', 'pajaks.masterPajak', 'korek', 'kegiatan', 'rkas'])
+            ->findOrFail($id);
 
         $bulanTw = $this->getBulanDariTw($belanja->tw); // Menggunakan Trait
 
@@ -623,5 +629,13 @@ class BelanjaController extends Controller
         }
 
         return response()->json($result);
+    }
+
+    private function belanjaMilikSekolahQuery(): Builder
+    {
+        $sekolahId = auth()->user()?->sekolah_id;
+        abort_unless($sekolahId, 404);
+
+        return Belanja::whereHas('user', fn ($query) => $query->where('sekolah_id', $sekolahId));
     }
 }

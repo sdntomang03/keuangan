@@ -315,7 +315,7 @@
                     <td class="text-center">{{
                         \Carbon\Carbon::parse($detail->tanggal_kegiatan)->locale('id')->translatedFormat('l, d F Y') }}
                     </td>
-                    <td>{!! strip_tags($detail->materi) !!}</td>
+                    <td>{{ strip_tags($detail->materi) }}</td>
                     <td></td> {{-- Kolom TTD Kosong --}}
                 </tr>
                 @empty

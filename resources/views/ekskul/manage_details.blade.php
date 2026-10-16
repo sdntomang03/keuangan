@@ -225,7 +225,7 @@
                                                 WIB</span>
                                         </td>
                                         <td class="px-4 py-3 text-sm text-gray-700">
-                                            {!! $detail->materi !!}
+                                            {{ $detail->materi }}
                                         </td>
                                         <td class="px-4 py-3 text-center">
                                             @if($detail->foto_kegiatan)

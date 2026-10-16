@@ -1,67 +1,63 @@
-# Audit Controller dan Route
+# Audit Controller, Route, dan Keamanan
 
 Tanggal pemeriksaan: 15 Oktober 2026
 
-Pemeriksaan mencakup seluruh file controller di `app/Http/Controllers`, action
-route Laravel hasil `php artisan route:list`, serta referensi statis di
-`app/`, `resources/`, `routes/`, dan `tests/`. "Tidak ditemukan referensi" di
-bawah ini berarti tidak ada pemanggilan yang terdeteksi di kode repository;
-hal itu tidak membuktikan route tidak dipakai oleh integrasi eksternal atau
-diakses langsung.
+## Pembersihan yang dilakukan
 
-## Controller dan method yang tidak terhubung
+Menghapus controller/action dan view yang tidak memiliki route atau pemanggil
+internal:
 
-| Status | Controller / method | Temuan |
-|---|---|---|
-| **TIDAK TERPAKAI** | [`Coba`](app/Http/Controllers/Coba.php) | Tidak mempunyai route dan tidak ditemukan pemanggilan dari kode lain. Semua action publiknya (`index`, `banding`, `rkas`, `anggaran`) tidak terhubung. |
-| **TIDAK TERPAKAI** | [`AkbController::updateIdKomponen`](app/Http/Controllers/AkbController.php) | Tidak didaftarkan sebagai action route. Inline edit AKB justru mengirim PATCH ke route `rkas.update.idkomponen`, yang ditangani `RkasController::updateIdKomponen`. |
-| **TIDAK TERPAKAI** | [`EkskulController::cetakSemua`](app/Http/Controllers/EkskulController.php) | Tidak didaftarkan sebagai route dan tidak ditemukan pemanggilan dari kode lain. |
-| **TIDAK TERPAKAI** | [`SuratController::cetakBundel`](app/Http/Controllers/SuratController.php) | Tidak didaftarkan sebagai route dan tidak ditemukan pemanggilan dari kode lain. Route `belanja.downloadBundel` adalah action berbeda (`downloadBundel`). |
+- `Coba` dan empat view di `resources/views/coba/`.
+- `CetakController::cetakCover` dan view `cetak_cover`.
+- `AkbController::updateIdKomponen` (edit AKB menggunakan action milik
+  `RkasController`).
+- `EkskulController::cetakSemua` dan route ekskul yang tidak memiliki action
+  (`edit`, `update`), beserta view `ekskul.edit`.
+- `Admin\UserController::create` dan view `admin.users.tambah` (form tambah user
+  tersedia sebagai modal pada halaman index).
+- `RkasController::rincian` dan route tak terpakai `rkas.rincian`. View
+  `resources/views/akb/rkas.blade.php` tetap digunakan oleh
+  `AkbController::rincian` pada route `akb.rincian` dan dipertahankan.
+- `SuratController::cetakSatuan` dan `SuratController::cetakBundel`.
+- Route yang tak memiliki pemanggil internal: `api.npd.saldo`,
+  `belanja.export_excel`, `belanja.downloadBundel`, `cetak.cover`,
+  `ekskul.edit`, `rkas.rincian`, dan `surat.cetak_satuan`.
 
-## Kandidat route yang tidak dipakai di kode repository
+Resource routes dibatasi agar tidak mengekspos action yang tidak tersedia:
+`admin.sekolah` tidak lagi membuat `show`/`destroy`, `admin.users` tidak lagi
+membuat `show`/`create`, dan resource `setting.rekanan` serta
+`setting.kegiatan` tidak lagi membuat `show`.
 
-Route berikut ada di registrasi Laravel tetapi tidak ditemukan pemanggil internal
-berupa nama route maupun URL statis. Verifikasi access log, bookmark pengguna,
-dan integrasi eksternal sebelum menghapusnya.
+Pembersihan didasarkan pada pencarian rute Laravel dan referensi dalam
+`app/`, `resources/`, `routes/`, serta `tests/`. Itu tidak mendeteksi pemakaian
+oleh klien eksternal atau URL yang disimpan/bookmark. Route yang dihapus perlu
+dipulihkan bila masih dipakai integrasi di luar repository.
 
-| Status | Nama route | Endpoint | Catatan |
+## Temuan keamanan
+
+| Severity | Lokasi | Temuan | Status |
 |---|---|---|---|
-| **KANDIDAT TIDAK TERPAKAI** | `admin.users.create` | `GET /admin/users/create` | Form tambah user tersedia sebagai modal pada halaman index dan mengirim langsung ke route `store`; tidak ditemukan tautan ke halaman `create`. |
-| **KANDIDAT TIDAK TERPAKAI** | `api.npd.saldo` | `GET /api/npd/cek-saldo` | Tidak ditemukan pemanggil di view atau JavaScript aplikasi. |
-| **KANDIDAT TIDAK TERPAKAI** | `belanja.export_excel` | `GET /belanja/export-excel` | Tidak ditemukan pemanggil di view atau JavaScript aplikasi. |
-| **KANDIDAT TIDAK TERPAKAI** | `belanja.downloadBundel` | `GET /belanja/{id}/download-bundel` | Tidak ditemukan pemanggil di view atau JavaScript aplikasi. |
-| **KANDIDAT TIDAK TERPAKAI** | `cetak.cover` | `GET /cetak-cover` | Tidak ditemukan pemanggil di view atau JavaScript aplikasi. |
-| **KANDIDAT TIDAK TERPAKAI** | `ekskul.edit` | `GET /ekskul/edit/{id}` | Tidak ditemukan pemanggil di view atau JavaScript aplikasi. |
-| **KANDIDAT TIDAK TERPAKAI** | `rkas.rincian` | `GET /rkas/rincian` | Tidak ditemukan pemanggil di view atau JavaScript aplikasi. |
-| **KANDIDAT TIDAK TERPAKAI** | `surat.cetak_satuan` | `GET /surat/cetak-satuan/{id}/{jenis}` | Tidak ditemukan pemanggil di view atau JavaScript aplikasi. |
+| HIGH | `app/Http/Controllers/EkskulController.php:362,385`; `resources/views/ekskul/cetak_absensi.blade.php:373` | Nilai `materi` dapat disimpan oleh user berizin dan dirender sebagai HTML tanpa escape. Stored XSS dapat berjalan saat user lain membuka absensi. | Diperbaiki dengan escaping pada seluruh output materi di view ekskul. |
+| HIGH | `app/Http/Controllers/BelanjaController.php:309,359,414` | `show`, `edit`, dan `update` mengambil belanja berdasarkan ID tanpa pembatasan sekolah/anggaran pengguna. User berizin input-belanja berpotensi membaca atau mengubah transaksi sekolah lain. | Diperbaiki dengan scope sekolah untuk semua operasi berbasis ID; rincian update dibatasi ke transaksi induknya. |
 
-Route seperti `api.rkas.data`, `belanja.json`, `penerimaan.edit`, `sts.edit`,
-`rkas.update.idkomponen`, `kegiatan.cek_komponen`, dan
-`admin.korek.update_jenis_belanja` **tidak** dimasukkan sebagai kandidat:
-pemanggilnya menggunakan URL yang dirakit langsung di JavaScript, bukan nama
-route Laravel.
+Temuan berasal dari review kode dan route statis, bukan exploit pada deployment
+hidup. Regression test `BelanjaAuthorizationTest` memverifikasi bahwa user tidak
+dapat membaca atau mengubah transaksi sekolah lain dan tetap dapat membaca
+transaksi sekolahnya sendiri.
 
-## Route resource dengan action controller yang tidak tersedia
+## Hashids
 
-Route resource di bawah menghasilkan endpoint yang action-nya belum ada di
-controller. Ini bukan sekadar kandidat route tak terpakai: jika endpoint
-tersebut diakses, request akan gagal karena method handler tidak tersedia.
-
-| Route resource | Action yang tidak tersedia |
-|---|---|
-| `admin.sekolah` | `show`, `destroy` pada [`Admin\SekolahController`](app/Http/Controllers/Admin/SekolahController.php) |
-| `admin.users` | `show` pada [`Admin\UserController`](app/Http/Controllers/Admin/UserController.php) |
-| `setting.rekanan` | `show` pada [`RekananController`](app/Http/Controllers/RekananController.php) |
-| `setting.kegiatan` | `show` pada [`KegiatanController`](app/Http/Controllers/KegiatanController.php) |
-
-Pertimbangkan membatasi route resource dengan `only()` atau `except()` sesuai
-action yang memang didukung, atau lengkapi method controller jika endpoint
-tersebut dibutuhkan.
+`vinkla/hashids` belum dipasang. Hashids dapat membuat ID URL tidak berurutan
+dan lebih sulit ditebak, tetapi bukan perlindungan akses: setiap endpoint tetap
+harus memeriksa kepemilikan/sekolah/permission. Temuan akses lintas-sekolah di
+atas harus diperbaiki dengan authorization/scoping meskipun ID dienkode.
 
 ## Validasi
 
-- `php artisan route:list --json` berhasil dijalankan untuk memetakan route.
-- `php artisan test`: 26 lulus, 3 gagal. Kegagalan yang terlihat adalah dua
-  test update password menerima 403 dan `BelanjaTest` tidak menemukan
-  `Database\Factories\SekolahFactory`; audit ini hanya menambahkan dokumentasi,
-  tidak mengubah kode aplikasi.
+- `php artisan route:list --json` berhasil.
+- Semua action route aplikasi lolos pemeriksaan keberadaan class dan method.
+- `php artisan test --filter=BelanjaAuthorizationTest`: lulus (1 test, 5
+  assertions).
+- `php artisan test`: 27 lulus, 3 gagal. Dua test `PasswordUpdateTest` menerima
+  403; `BelanjaTest` gagal karena `Database\Factories\SekolahFactory` tidak
+  ditemukan. Kegagalan yang sama sudah ada sebelum pembersihan ini.

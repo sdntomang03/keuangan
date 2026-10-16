@@ -149,16 +149,6 @@ class AkbController extends Controller
         return response()->json($formattedData);
     }
 
-    public function updateIdKomponen(Request $request, $id)
-    {
-        $request->validate(['idkomponen' => 'required|string|max:255']);
-        $item = Rkas::findOrFail($id);
-        $item->idkomponen = $request->idkomponen;
-        $item->save();
-
-        return response()->json(['status' => 'success', 'message' => 'Berhasil diupdate']);
-    }
-
     public function indexPerbandingan(Request $request)
     {
         $anggaran = $request->anggaran_data;

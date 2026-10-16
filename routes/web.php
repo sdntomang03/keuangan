@@ -13,7 +13,6 @@ use App\Http\Controllers\BarangController;
 use App\Http\Controllers\BelanjaController;
 use App\Http\Controllers\BkuController;
 use App\Http\Controllers\CatatanController;
-use App\Http\Controllers\CetakController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EkskulController;
 use App\Http\Controllers\EkskulLaporanController;
@@ -51,7 +50,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::post('/anggaran/switch', [DashboardController::class, 'switch'])->name('anggaran.switch');
-    Route::get('/cetak-cover', [CetakController::class, 'cetakCover'])->name('cetak.cover');
     Route::post('/anggaran/switch-tw', [DashboardController::class, 'switchTw'])->name('anggaran.switch-tw');
     Route::resource('catatan', CatatanController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::patch('catatan/{catatan}/toggle-tl', [CatatanController::class, 'toggleTl'])->name('catatan.toggle-tl');
@@ -98,7 +96,6 @@ Route::middleware(['permission:view-anggaran|kelola-anggaran|input-belanja'])->g
     Route::get('/rkas', [RkasController::class, 'index'])->name('rkas.index');
     Route::get('/rkas/anggaran', [RkasController::class, 'anggaran'])->name('rkas.anggaran');
     Route::get('/rkas/rekap', [RkasController::class, 'rekap'])->name('rkas.rekap');
-    Route::get('/rkas/rincian', [RkasController::class, 'rincian'])->name('rkas.rincian');
     Route::get('/rkas/cetak-laporan', [RkasController::class, 'cetakLaporan'])->name('rkas.cetak_laporan');
     Route::get('/rkas/penyesuaian-pagu', [PenyesuaianPaguController::class, 'index'])->name('rkas.penyesuaian-pagu');
     Route::get('/rkas/penyesuaian-pagu/daftar', [PenyesuaianPaguController::class, 'daftar'])->name('rkas.penyesuaian-pagu.daftar');
@@ -150,11 +147,9 @@ Route::middleware(['permission:view-anggaran|kelola-anggaran|input-belanja'])->g
     // NPD (Read Only)
     Route::get('/npd', [NpdController::class, 'index'])->name('npd.index');
     Route::get('/npd/export', [NpdController::class, 'exportExcel'])->name('npd.export');
-    Route::get('/api/npd/cek-saldo', [NpdController::class, 'getSaldoAnggaran'])->name('api.npd.saldo');
 
     // Surat & Cetak
     Route::get('/surat/manage/{belanjaId}', [SuratController::class, 'index'])->name('surat.index');
-    Route::get('/surat/cetak-satuan/{id}/{jenis}', [SuratController::class, 'cetakSatuan'])->name('surat.cetak_satuan');
     Route::get('/surat/cetaksatuanpdf/{id}/{jenis}', [SuratController::class, 'cetakSatuanPdf'])->name('surat.cetakSatuanPdf');
     Route::get('/surat/cetakparsialpdf/{id}', [SuratController::class, 'cetakParsialPdf'])->name('surat.cetakParsialPdf');
     Route::get('/surat/download-semua-parsial/{belanjaId}', [SuratController::class, 'downloadSemuaParsial'])->name('surat.download_semua_parsial');
@@ -167,8 +162,6 @@ Route::middleware(['permission:view-anggaran|kelola-anggaran|input-belanja'])->g
     Route::get('/surat/cover-lpj', [SuratController::class, 'createCoverLpj'])->name('surat.cover_lpj.create');
     Route::post('/surat/cover-lpj/cetak', [SuratController::class, 'generateCoverPdf'])->name('surat.cover_lpj.generate');
     Route::get('/belanja/cetak-foto/{id}', [SuratController::class, 'cetakFotoSpj'])->name('belanja.cetak_foto');
-    Route::get('/belanja/export-excel', [SuratController::class, 'exportExcel'])->name('belanja.export_excel');
-    Route::get('/belanja/{id}/download-bundel', [SuratController::class, 'downloadBundel'])->name('belanja.downloadBundel');
     Route::get('/cetak/kop', [SuratController::class, 'cetakKopPdf'])->name('cetak.kop');
     Route::get('/surat/download-normal-zip/', [\App\Http\Controllers\SuratController::class, 'downloadSemuaNormalZip'])->name('surat.download_normal_zip');
 
@@ -268,8 +261,8 @@ Route::middleware(['permission:kelola-anggaran'])->group(function () {
         Route::get('/kegiatan/template', [SettingController::class, 'downloadTemplateKegiatan'])->name('kegiatan.template');
         Route::post('/kegiatan/import', [SettingController::class, 'importKegiatanStore'])->name('kegiatan.import.store');
 
-        Route::resource('rekanan', RekananController::class);
-        Route::resource('kegiatan', KegiatanController::class);
+        Route::resource('rekanan', RekananController::class)->except(['show']);
+        Route::resource('kegiatan', KegiatanController::class)->except(['show']);
     });
 
     // Perencanaan Manual
@@ -300,8 +293,6 @@ Route::middleware(['permission:input-ekskul|kelola-anggaran'])->group(function (
 
     Route::group(['prefix' => 'ekskul', 'as' => 'ekskul.'], function () {
         Route::get('/index/{belanjaId?}', [EkskulController::class, 'index'])->name('index');
-        Route::get('/edit/{id}', [EkskulController::class, 'edit'])->name('edit');
-        Route::put('/update/{id}', [EkskulController::class, 'update'])->name('update');
         Route::get('/create/{belanjaId?}', [EkskulController::class, 'create'])->name('create');
         Route::get('/get-rekening', [EkskulController::class, 'getRekening'])->name('get_rekening');
         Route::get('/get-komponen', [EkskulController::class, 'getKomponen'])->name('get_komponen');
@@ -337,8 +328,8 @@ Route::middleware(['permission:input-ekskul|kelola-anggaran'])->group(function (
 Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
 
     // Sekolah & Users
-    Route::resource('sekolah', AdminSekolahController::class);
-    Route::resource('users', AdminUserController::class);
+    Route::resource('sekolah', AdminSekolahController::class)->except(['show', 'destroy']);
+    Route::resource('users', AdminUserController::class)->except(['show', 'create']);
     Route::patch('/users/{user}/reset-password', [AdminUserController::class, 'resetPassword'])->name('users.reset-password');
     Route::post('/roles', [AdminUserController::class, 'storeRole'])->name('roles.store');
     Route::put('/roles/{role}/permissions', [AdminUserController::class, 'updateRolePermissions'])->name('roles.update_permissions');

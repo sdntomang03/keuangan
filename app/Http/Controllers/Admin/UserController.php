@@ -33,14 +33,6 @@ class UserController extends Controller
         return view('admin.users.index', compact('users', 'roles', 'permissions', 'sekolahs'));
     }
 
-    public function create()
-    {
-        $roles = Role::all();
-        $sekolahs = \App\Models\Sekolah::all();
-
-        return view('admin.users.tambah', compact('roles', 'sekolahs'));
-    }
-
     public function store(Request $request)
     {
         $request->validate([

@@ -72,40 +72,6 @@ class RkasController extends Controller
         return back()->with('success', "Sukses! {$hasil['count']} baris RKAS berhasil disinkronkan.");
     }
 
-    public function rincian(Request $request)
-    {
-        $anggaran = $request->anggaran_data;
-
-        if (! $anggaran) {
-            return redirect()->route('sekolah.index')
-                ->with('error', 'Silakan tentukan Anggaran Aktif terlebih dahulu.');
-        }
-
-        $tampilan = $request->get('tampilan', 'bulanan');
-
-        // Logika query ASLI milik Anda (Tetap Dipertahankan)
-        $dataRkas = Rkas::with(['kegiatan', 'korek'])
-            ->where('anggaran_id', $anggaran->id)
-            ->withSum(['akbrincis as total_akb_setahun' => function ($q) use ($anggaran) {
-                $q->where('anggaran_id', $anggaran->id);
-            }], 'nominal')
-            ->withSum(['akbrincis as bln_1' => fn ($q) => $q->where('anggaran_id', $anggaran->id)->where('bulan', 1)], 'nominal')
-            ->withSum(['akbrincis as bln_2' => fn ($q) => $q->where('anggaran_id', $anggaran->id)->where('bulan', 2)], 'nominal')
-            ->withSum(['akbrincis as bln_3' => fn ($q) => $q->where('anggaran_id', $anggaran->id)->where('bulan', 3)], 'nominal')
-            ->withSum(['akbrincis as bln_4' => fn ($q) => $q->where('anggaran_id', $anggaran->id)->where('bulan', 4)], 'nominal')
-            ->withSum(['akbrincis as bln_5' => fn ($q) => $q->where('anggaran_id', $anggaran->id)->where('bulan', 5)], 'nominal')
-            ->withSum(['akbrincis as bln_6' => fn ($q) => $q->where('anggaran_id', $anggaran->id)->where('bulan', 6)], 'nominal')
-            ->withSum(['akbrincis as bln_7' => fn ($q) => $q->where('anggaran_id', $anggaran->id)->where('bulan', 7)], 'nominal')
-            ->withSum(['akbrincis as bln_8' => fn ($q) => $q->where('anggaran_id', $anggaran->id)->where('bulan', 8)], 'nominal')
-            ->withSum(['akbrincis as bln_9' => fn ($q) => $q->where('anggaran_id', $anggaran->id)->where('bulan', 9)], 'nominal')
-            ->withSum(['akbrincis as bln_10' => fn ($q) => $q->where('anggaran_id', $anggaran->id)->where('bulan', 10)], 'nominal')
-            ->withSum(['akbrincis as bln_11' => fn ($q) => $q->where('anggaran_id', $anggaran->id)->where('bulan', 11)], 'nominal')
-            ->withSum(['akbrincis as bln_12' => fn ($q) => $q->where('anggaran_id', $anggaran->id)->where('bulan', 12)], 'nominal')
-            ->get();
-
-        return view('akb.rkas', compact('dataRkas', 'tampilan', 'anggaran'));
-    }
-
     public function anggaran(Request $request)
     {
         $anggaran = $request->anggaran_data;

@@ -370,7 +370,7 @@
 
             <div class="materi-box">
                 <div class="materi-label">Uraian / Materi Kegiatan:</div>
-                <div class="materi-text">{!! $detail->materi !!}</div>
+                <div class="materi-text">{{ $detail->materi }}</div>
             </div>
         </div>
 
@@ -448,7 +448,7 @@
                         <td class="text-center">{{
                             \Carbon\Carbon::parse($detail->tanggal_kegiatan)->locale('id')->translatedFormat('l, d F Y')
                             }}</td>
-                        <td>{!! strip_tags($detail->materi) !!}</td>
+                        <td>{{ strip_tags($detail->materi) }}</td>
                         <td class="text-center">@if($detail->foto_kegiatan) <span
                                 style="color: green; font-weight: bold;">✓ Ada</span> @else <span
                                 style="color: red;">-</span> @endif</td>
