@@ -18,6 +18,7 @@ use App\Http\Controllers\EkskulController;
 use App\Http\Controllers\EkskulLaporanController;
 use App\Http\Controllers\KegiatanController;
 use App\Http\Controllers\KegiatanManualController;
+use App\Http\Controllers\LaporanBulananController;
 use App\Http\Controllers\NpdController;
 use App\Http\Controllers\PajakController;
 use App\Http\Controllers\PenerimaanController;
@@ -128,6 +129,9 @@ Route::middleware(['permission:view-anggaran|kelola-anggaran|input-belanja'])->g
 
     // BKU, STS, PAJAK (Read Only)
     Route::get('/bku', [BkuController::class, 'index'])->name('bku.index');
+    Route::get('/laporan-bulanan', [LaporanBulananController::class, 'index'])->name('laporan-bulanan.index');
+    Route::get('/laporan-bulanan/{id}/cetak', [LaporanBulananController::class, 'print'])->name('laporan-bulanan.print');
+    Route::get('/laporan-bulanan/{id}/realisasi', [LaporanBulananController::class, 'realisasi'])->name('laporan-bulanan.realisasi');
     Route::get('/sts', [StsController::class, 'index'])->name('sts.index');
     Route::get('/pajak/siap-setor', [PajakController::class, 'siapSetor'])->name('pajak.siap-setor');
     Route::get('/pajak/rekap', [PajakController::class, 'rekap'])->name('pajak.rekap');
@@ -190,6 +194,12 @@ Route::middleware(['permission:view-anggaran|kelola-anggaran|input-belanja'])->g
 // Permission: 'kelola-anggaran'
 // =========================================================================
 Route::middleware(['permission:kelola-anggaran'])->group(function () {
+
+    Route::get('/laporan-bulanan/create', [LaporanBulananController::class, 'create'])->name('laporan-bulanan.create');
+    Route::post('/laporan-bulanan', [LaporanBulananController::class, 'store'])->name('laporan-bulanan.store');
+    Route::get('/laporan-bulanan/{id}/edit', [LaporanBulananController::class, 'edit'])->name('laporan-bulanan.edit');
+    Route::put('/laporan-bulanan/{id}', [LaporanBulananController::class, 'update'])->name('laporan-bulanan.update');
+    Route::delete('/laporan-bulanan/{id}', [LaporanBulananController::class, 'destroy'])->name('laporan-bulanan.destroy');
 
     // Profil Sekolah
     Route::get('/settings', [SekolahController::class, 'index'])->name('sekolah.index');

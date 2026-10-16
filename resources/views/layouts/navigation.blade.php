@@ -173,7 +173,7 @@
             @endcan
             {{-- Dropdown Pembukuan --}}
             <div
-                x-data="{ open: {{ request()->routeIs('bku.*', 'npd.*', 'realisasi.*', 'pajak.*', 'sts.*') ? 'true' : 'false' }} }">
+                x-data="{ open: {{ request()->routeIs('bku.*', 'npd.*', 'realisasi.*', 'pajak.*', 'sts.*', 'laporan-bulanan.*') ? 'true' : 'false' }} }">
                 <button @click="open = !open"
                     class="flex items-center justify-between w-full px-3 py-2.5 text-sm font-bold text-gray-600 rounded-lg dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                     <div class="flex items-center">
@@ -194,6 +194,9 @@
                     <a href="{{ route('bku.index') }}"
                         class="block py-1.5 text-sm {{ request()->routeIs('bku.*') ? 'text-indigo-600 font-bold' : 'text-gray-500 hover:text-indigo-500' }}">Buku
                         Kas Umum (BKU)</a>
+                    <a href="{{ route('laporan-bulanan.index') }}"
+                        class="block py-1.5 text-sm {{ request()->routeIs('laporan-bulanan.*') ? 'text-indigo-600 font-bold' : 'text-gray-500 hover:text-indigo-500' }}">Laporan
+                        Bulanan</a>
                     <a href="{{ route('npd.index') }}"
                         class="block py-1.5 text-sm {{ request()->routeIs('npd.*') ? 'text-indigo-600 font-bold' : 'text-gray-500 hover:text-indigo-500' }}">Nota
                         Pencairan (NPD)</a>

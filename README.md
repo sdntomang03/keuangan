@@ -34,6 +34,7 @@ Aplikasi ini memastikan bahwa setiap rupiah yang dikeluarkan memiliki dasar pere
 - **Monitoring & Reporting**:
   - Pelacakan sisa dana di tangan bendahara secara real-time.
   - Dashboard monitoring triwulanan.
+  - Pengisian dan cetak laporan SPTJM serta laporan realisasi bulanan; penerimaan terhubung ke transaksi Penerimaan/BKU, belanja posted dikelompokkan menurut `jenis_belanja` pada Korek, dan pagu belanja mengacu pada RKAS.
 - **Security**: Autentikasi multi-user dengan proteksi data berbasis `sekolah_id`.
 
 ---
